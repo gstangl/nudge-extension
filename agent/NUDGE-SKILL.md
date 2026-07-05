@@ -92,6 +92,17 @@ nudge is ONE line: `nudge_X ✓ <Ergebnis in ≤8 Worten>`. Only questions or
 real blockers earn more text. Explicit `/nudge` asks for the list — then
 one line per open nudge, nothing more.
 
+## 4a. Quiet execution (fewer, smaller cards)
+
+Zed can only collapse what exists — the agent controls HOW MUCH exists.
+While working nudges:
+- BATCH shell steps: one Bash call with `&&` instead of five calls — five
+  cards become one.
+- Keep tool RESULTS tiny: pipe to `grep`/`tail`/`wc -l`; never cat whole
+  files into a result when a slice answers the question.
+- Card labels ≤ 5 words (`description`), no step narration between calls.
+- Screenshots/verification: one shot per nudge, not a gallery.
+
 ## 4b. No nudge citations in code
 
 NEVER write nudge provenance into code comments („Gerald via Nudge", pin ids,
