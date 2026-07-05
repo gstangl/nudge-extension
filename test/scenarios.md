@@ -9,6 +9,10 @@ backlog for new ones.
 
 ## A. Picking & Marking
 
+**Fixture findings (Suite F, 2026-07-05):**
+- **A-9** Pick on an `<a href>` (dropdown item, nav link) FOLLOWED the link — preventDefault on pointerdown does not cancel the trailing click; a hash link re-routed the SPA, a real link would unload the page mid-composer. Fix: swallow EXACTLY the one trailing click of the pick gesture at document capture (not a time window — that killed the next deliberate click and broke md-pdf's file dialog). ✅ Suite F F2.
+- **A-10** finder rejected legit ids with short segments (`#g-modal-title`, `#dz-card` — any ≤2-char part fails its wordLike heuristic) and produced brittle class paths that broke on re-render. Fix: prefer a real, unique, non-machine-looking id before finder (DevTools convention). ✅ Suite F F1/F3.
+
 | # | Edge case | Root cause / lesson | Status |
 |---|---|---|---|
 | A-1 | Pick on live re-rendering UI opened no composer (v2 comment rail) | mousedown→re-render destroys target→click never fires; ProseMirror layer overlays rail | ✅ pointerdown pick (suite passes) · 🔧 add explicit leg: demo button that re-renders itself on mousedown → pick still opens composer |

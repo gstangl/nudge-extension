@@ -170,7 +170,18 @@
   }
   // shortest UNIQUE selector via vendored @medv/finder (up to 300ms search) —
   // only at commit points (click/retarget/lasso), never in the mousemove path
+  // Prefer a REAL id (DevTools convention): unique in the document and not
+  // machine-looking. finder's wordLike heuristic rejects legit ids with short
+  // segments (#g-modal-title, #dz-card — any segment ≤2 chars) and degrades to
+  // brittle class paths that break on the next re-render (Suite F fixture
+  // finding, 2026-07-05). Machine-looking = framework-generated (:r5:, hex
+  // hashes, long digit runs) — those stay with finder's heuristics.
+  const MACHINE_ID = /[:]|\d{3,}|[0-9a-f]{8,}/i
   function cssPath(node) {
+    const id = node.id
+    if (id && !MACHINE_ID.test(id)) {
+      try { if (document.querySelectorAll(`#${CSS.escape(id)}`).length === 1) return `#${CSS.escape(id)}` } catch { /* invalid selector */ }
+    }
     try { return window.__nudgeFinder(node, { timeoutMs: 300 }) } catch { return fastPath(node) }
   }
   // computed styles, categorized (stagewise pattern) — the agent reads
@@ -271,9 +282,24 @@
   // ProseMirror layer additionally overlays the rail area). preventDefault on
   // pointerdown also suppresses the whole downstream mouse cascade — pick mode
   // takes the interaction over completely.
+  // The pick acts on POINTERDOWN — but canceling pointerdown does NOT cancel
+  // the trailing CLICK (only the compatibility mouse events). An anchor under
+  // the pick would still navigate (hash links re-route SPAs, real links unload
+  // the page mid-composer — Suite F fixture finding, 2026-07-05). Swallow EXACTLY
+  // the one trailing click of the pick gesture — not a time window, which would
+  // also kill the user's next deliberate click (that broke the file dialog in
+  // Suite E). A short deadline clears the flag if the click never arrives (the
+  // picked node got detached before click, so the sequence never completes).
+  let eatNextClick = 0 // timestamp deadline; 0 = nothing pending
+  function onClickSuppress(e) {
+    if (inOverlay(e)) return
+    if (mode === 'picking') { e.preventDefault(); e.stopPropagation(); return }
+    if (eatNextClick && Date.now() < eatNextClick) { eatNextClick = 0; e.preventDefault(); e.stopPropagation() }
+  }
   function onClick(e) {
     if (mode !== 'picking' || inOverlay(e) || !e.isPrimary) return
     e.preventDefault(); e.stopPropagation()
+    eatNextClick = Date.now() + 700 // consume the trailing click, or lapse
     const t = e.target
     if (!(t instanceof Element)) return
     // The PICK is the mark — no send needed, and for ELEMENTS no screenshot:
@@ -907,6 +933,7 @@
   }
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
+  document.addEventListener('click', onClickSuppress, true)
   document.addEventListener('keydown', onDocKeyDown, true)
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'nudge-toggle') setMode(mode === 'off' ? 'idle' : 'off')
@@ -936,6 +963,7 @@
       document.removeEventListener('visibilitychange', onVisibility)
       document.removeEventListener('mousemove', onMove, true)
       document.removeEventListener('pointerdown', onClick, true)
+      document.removeEventListener('click', onClickSuppress, true)
       document.removeEventListener('keydown', onDocKeyDown, true)
       document.removeEventListener('pointerdown', onDocPointerDown, true)
       host.remove()
