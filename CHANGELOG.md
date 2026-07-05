@@ -18,6 +18,33 @@ bump lands here in the same change — no silent releases.
   mit Abdeckungsstatus (✅ automatisiert · 🔧 lohnt · 🥁 Drill · 📖 dokumentiert)
   und priorisiertem Backlog für neue Suite-Beine.
 
+## Bridge 0.11.0 — 2026-07-05 (Brutal-Härtung: Suite D + drei Funde gefixt)
+
+### Added
+- **Suite D „Bridge Brutal"** (`test/bridge-brutal.mjs`, Seitenport 4798,
+  14 Legs): Store-Shape-Fuzz, Path-Traversal, Payload-/Heartbeat-Fuzz,
+  **Identity-Truth-Kontrakt** (Toolbar darf nie lügen: Owner-Wechsel gepusht,
+  toter Owner fällt ≤ 17 s um, Stille wird ehrlich dunkel, nie > 1 Owner),
+  WS-Abuse, 100er-Parallel-Sturm, SIGKILL-Sturm, feindliche Sockets,
+  Bind-Surface, Watcher-vor-Bridge. Protokoll + Threat model in
+  `test/protocols.md` (Abschnitt Suite D).
+
+### Fixed
+- **Bridge crashte beim Start** bei gültig-JSON-aber-falsch-geformter
+  store.json (`null`, `[]`, `{pins:"x"}`): Shape wird jetzt validiert und läuft
+  in denselben Recovery-Pfad (Backup + seq-Floor) wie unparsebares JSON. Vorher
+  hätte der Native Host den crashenden Prozess endlos neu gestartet (E-11).
+- **Client-Felder ungedeckelt**: url/title/ua, Single-Target
+  (outerHTML/innerText/styles/xpath), Console-Zeilen, Annotations — alles
+  Fremd-Input, jetzt gekappt; ein bösartiger/kaputter Client konnte store.json
+  auf MB aufblähen (E-12).
+- **/agent/heartbeat ohne Body-Limit und ungetypt**: liest jetzt über readBody
+  (413 ab MAX_BODY); pid/since müssen endliche Zahlen sein (sonst 400), Roster-
+  Felder gedeckelt — String-/NaN-Identitäten degradierten Owner-Wahl und
+  Roster-Keys (E-13).
+- Suite A: Kaltstart-Barriere (Status-Punkt grün) von 5 s auf 15 s — flakte
+  unter Last; Verhaltens-Asserts bleiben eng (G-6).
+
 ## Bridge 0.10.2 — 2026-07-05 (Opt-in-Zaun: /nudge ist die einzige Anmeldung)
 
 ### Changed

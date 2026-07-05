@@ -11,6 +11,11 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
   recovery (Backup + seq-Floor aus Inbox), Owner-Wechsel-Broadcast, 413,
   atomic persist. Nach JEDER Bridge-Änderung mitlaufen lassen.
+- `node test/bridge-brutal.mjs` — **Suite D (Bridge Brutal)**, Seitenport 4798:
+  adversarial battery — the bridge must survive everything a hostile/buggy local
+  client or a mangled disk can throw at it, and the identity surface must never
+  lie. Run after ANY bridge/store/watcher change, together with the hardening
+  suite. ~90 s (identity-truth legs wait on real freshness clocks).
 - `node test/live-drill.mjs` — **Suite B**, live chain: REAL bridge, REAL global
   store, estimate app on :5185 + a throwaway generic app. Run before "releases"
   and after infra changes (bridge lifecycle, store, hooks). Writes `[TEST-…]`
@@ -59,6 +64,48 @@ the backlog for new legs lives there (section „Building new legs").
 | B3 | **Resolve loop on the live page**: feed chip + evidence against the real store | ✅ 2026-07-05 |
 | B4 | **Generic web app**: framework-free static page (python http.server) — pick, selection, prompt land identically. Nudge is app-agnostic | ✅ 2026-07-05 |
 | B5 | **Self-healing**: kill the bridge → content script reports → SW `connectNative` → native host revives it detached (~8 s). Playwright needs the host manifest in `<user-data-dir>/NativeMessagingHosts` (script handles it) | ✅ 2026-07-05 |
+
+## Suite D — Bridge Brutal (bridge-brutal.mjs)
+
+The bridge's own protocol. Two contracts, tested adversarially:
+
+**1. Survival.** The bridge NEVER dies and NEVER blocks, whatever arrives on
+the port or sits on disk. A bridge that "survives" by crashing fails the leg —
+every leg re-asserts process liveness.
+
+**2. Identity truth.** The extension UI always shows WHICH agent is connected,
+via text and indicators, and that display can never lie:
+- `/.identity` + every WS snapshot carry `agentLabel`, `agentLive` and the full
+  roster (`agents[]`, exactly ONE `owner:true`).
+- Every ownership/label/liveness change is PUSHED to all tabs (no polling).
+- A dead owner falls over to the next fresh session in ≤ 17 s (12 s freshness
+  + 5 s sweep); its roster entry vanishes on the same clock.
+- Total silence (no watcher) goes dark honestly: `agentLive:false`,
+  `agentLabel:null` pushed in ≤ 15 s. Green never lies.
+- UI side (toolbar label, status tooltip, dropdown owner row) is asserted in
+  Suite A; D5 proves the bridge feed those surfaces draw from.
+
+Threat model (accepted, documented): the port binds 127.0.0.1 only (D13) and
+CORS is localhost-only (Suite A), but any LOCAL process of the same user can
+POST heartbeats/pins — the machine boundary is the trust boundary. Single-user
+machine by design; no auth inside it.
+
+| # | Attack | Last |
+|---|--------|------|
+| D1 | **Store shape fuzz**: 6 valid-JSON-wrong-shape stores (`null`, `[]`, string, number, pins-not-array, seq-not-finite) → bridge serves, backup written, seq floor holds. Pre-0.11.0 these CRASHED the bridge at startup (native host would crash-loop it) | ✅ 2026-07-05 |
+| D2 | **Path traversal + method abuse**: 11 traversal attempts on /shots, /comments, /demo (`..`, `%2F`, `%00`, `//etc/passwd`) leak nothing; PUT/PATCH/HEAD/TRACE create nothing; legit shot still served | ✅ 2026-07-05 |
+| D3 | **Payload fuzz** on /comments: `__proto__`/constructor pollution, 60k-deep nesting, wrong-typed fields, 5000 targets, 2 MB outerHTML, 1 MB url, console flood, annotation bomb, garbage screenshot → all capped (store ≤ 10 kB after 12 hostile bodies), never a crash | ✅ 2026-07-05 |
+| D4 | **Heartbeat fuzz**: 7 malformed identities → 400 (typed: pid/since must be finite numbers); huge identity fields → capped in roster (label 60, session 32, project/branch 60, host 20, firstMsg 90); 6 MB heartbeat → 413 | ✅ 2026-07-05 |
+| D5 | **IDENTITY TRUTH** (the core contract, see above): takeover pushed, manual choice sticky + pushed, dead owner → fallback pushed in 12 s, dead entry gone from roster, silence → dark in 12.5 s, ≤ 1 owner in every frame ever pushed | ✅ 2026-07-05 |
+| D6 | **WS abuse**: 30 clients, garbage/binary frames, 200 kB hello, fake agent hello → hello url capped, agent not counted as tab, broadcast still reaches everyone | ✅ 2026-07-05 |
+| D7 | **Concurrency storm**: 100 parallel POSTs → 100 unique monotonic ids, store parses; resolve×delete races answer 200/404 (never 5xx/crash); 50 parallel selection posts | ✅ 2026-07-05 |
+| D8 | **Restart-storm durability**: 5× SIGKILL mid-traffic → every 201-acked pin survives (atomic rename), no tmp residue | ✅ 2026-07-05 |
+| D9 | **Hostile sockets**: half-open POST (claimed 500 kB, sent 10 B, held open) blocks nobody; raw garbage bytes on the port shrugged off | ✅ 2026-07-05 |
+| D10 | **Oversize artillery**: 6 MB body → 413; lying Content-Length survived | ✅ 2026-07-05 |
+| D11 | **Owner endpoint abuse**: string pid → 404 (strict typing), unknown pid → 404, garbage → 400, valid → 200 | ✅ 2026-07-05 |
+| D12 | **Snapshot diet under history**: 60 pins / 50 resolved → WS snapshot ships ≤ 40 done, HTTP keeps full history | ✅ 2026-07-05 |
+| D13 | **Bind surface**: LAN IP refused, 127.0.0.1 only | ✅ 2026-07-05 |
+| D14 | **Watcher resilience**: armed before the bridge exists → registers as soon as it comes up (retry loops) | ✅ 2026-07-05 |
 
 ## Suite C — manual drills (trigger-bound)
 

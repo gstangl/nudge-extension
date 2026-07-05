@@ -26,20 +26,30 @@ const STORE_FILE = path.join(STORE_DIR, 'store.json')
 // ---------- cached read / write ----------
 let cache = null
 let cacheMtime = -1
+// Parsing alone is not enough: a hand edit / partial write / old schema can be
+// valid JSON of the WRONG SHAPE (`null`, `[]`, {pins:"x"}, {seq:"x"}). Those
+// crashed the bridge on the first pins.filter — BEFORE it listened, so the
+// native host crash-looped it (found by the brutal suite, 2026-07-05).
+function usable(c) {
+  return !!c && typeof c === 'object' && !Array.isArray(c) && Array.isArray(c.pins) && Number.isFinite(c.seq)
+}
 function load() {
   let m = 0
   try { m = fs.statSync(STORE_FILE).mtimeMs } catch { m = 0 }
   if (!cache || m !== cacheMtime) {
-    try {
-      cache = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'))
-    } catch (e) {
+    let parsed, reason = null
+    try { parsed = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8')) } catch (e) { reason = e.message }
+    if (reason == null && !usable(parsed)) reason = 'wrong shape'
+    if (reason == null) {
+      cache = parsed
+    } else {
       cache = { seq: seqFloorFromInbox(), pins: [] }
-      // NEVER silently wipe: a corrupt store gets backed up, and the seq floor
+      // NEVER silently wipe: an unusable store gets backed up, and the seq floor
       // from the inbox mirrors prevents id reuse for everything ever issued
       if (fs.existsSync(STORE_FILE)) {
         const bak = `${STORE_FILE}.corrupt-${Date.now()}`
         try { fs.copyFileSync(STORE_FILE, bak) } catch { /* readonly fs — nothing to save */ }
-        console.error(`[nudge-store] store.json UNREADABLE (${e.message}) — backed up to ${bak}, starting empty at seq ${cache.seq}`)
+        console.error(`[nudge-store] store.json UNUSABLE (${reason}) — backed up to ${bak}, starting empty at seq ${cache.seq}`)
       }
     }
     cacheMtime = m
@@ -73,17 +83,46 @@ const emit = (kind, pin) => { for (const fn of listeners) fn(kind, pin) }
 export const getPins = () => load().pins
 export const getPin = (id) => load().pins.find(p => p.id === id)
 
+// EVERY client field is untrusted input. The extension sends bounded data, but
+// the bridge must stay healthy no matter what posts on the port: an uncapped
+// url/target/outerHTML would bloat store.json, and every load/persist/broadcast
+// pays for it forever (brutal-suite finding, 2026-07-05).
+const cap = (v, n) => { const s = String(v ?? ''); return s ? s.slice(0, n) : '' }
+const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
+function sanitizeStyles(styles) {
+  if (!styles || typeof styles !== 'object') return null
+  try { return JSON.stringify(styles).length > 20_000 ? null : styles } catch { return null }
+}
+function sanitizeRect(r) {
+  if (!r || typeof r !== 'object') return null
+  const { x, y, w, h, width, height, top, left, dpr } = r
+  const out = { x, y, w, h, width, height, top, left, dpr }
+  for (const k of Object.keys(out)) if (!Number.isFinite(out[k])) delete out[k]
+  return Object.keys(out).length ? out : null
+}
+function sanitizeTarget(t) {
+  if (!t || typeof t !== 'object') return null
+  return {
+    selector: cap(t.selector, 500),
+    source: capOrNull(t.source, 500),
+    xpath: capOrNull(t.xpath, 500),
+    innerText: cap(t.innerText, 300),
+    outerHTML: cap(t.outerHTML, 4000),
+    styles: sanitizeStyles(t.styles),
+    rect: sanitizeRect(t.rect),
+  }
+}
 // Multi-selection (Shift+Klick): several elements are ONE mark/prompt.
 // Cap + per-element trim keep store.json bounded no matter what a client posts.
 function sanitizeTargets(targets) {
   if (!Array.isArray(targets) || targets.length < 2) return null
   return targets.slice(0, 12).map(t => ({
-    selector: String(t.selector || ''),
-    source: t.source || null,
-    xpath: t.xpath || null,
-    innerText: String(t.innerText || '').slice(0, 300),
-    outerHTML: String(t.outerHTML || '').slice(0, 1200),
-    styles: t.styles || null,
+    selector: cap(t?.selector, 500),
+    source: t?.source ? cap(t.source, 500) : null,
+    xpath: t?.xpath ? cap(t.xpath, 500) : null,
+    innerText: cap(t?.innerText, 300),
+    outerHTML: cap(t?.outerHTML, 1200),
+    styles: sanitizeStyles(t?.styles),
   }))
 }
 
@@ -147,16 +186,16 @@ export function addPin(payload) {
     id,
     status: 'open',
     createdAt: new Date().toISOString(),
-    author: String(payload.author || '').slice(0, 80) || null,
-    text: String(payload.text || '').slice(0, 4000),
-    url: payload.url || '',
-    title: payload.title || '',
-    ua: payload.ua || null,
-    viewport: payload.viewport || null,
-    target: payload.target || null,
+    author: cap(payload.author, 80) || null,
+    text: cap(payload.text, 4000),
+    url: cap(payload.url, 2000),
+    title: cap(payload.title, 300),
+    ua: capOrNull(payload.ua, 300),
+    viewport: sanitizeRect(payload.viewport),
+    target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
-    annotations: payload.annotations || null,
-    console: Array.isArray(payload.console) ? payload.console.slice(-20) : null,
+    annotations: (() => { try { return payload.annotations && JSON.stringify(payload.annotations).length <= 100_000 ? payload.annotations : null } catch { return null } })(),
+    console: Array.isArray(payload.console) ? payload.console.slice(-20).map(l => cap(l, 500)) : null,
   }
   if (payload.screenshot) pin.screenshot = saveImage(id, '', payload.screenshot)
   if (payload.screenshotFull) pin.screenshotFull = saveImage(id, '_full', payload.screenshotFull)
