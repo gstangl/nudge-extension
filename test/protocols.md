@@ -4,8 +4,13 @@ Structured testing in three suites. Every entry: what it guards, how it runs,
 last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run.
 
 **Runners**
-- `node test/e2e.mjs` — **Suite A**, isolated: own bridge on a fresh `/tmp` store,
-  demo page. Run after ANY extension/bridge change. All-or-nothing (first FAIL exits).
+- `node test/e2e.mjs` — **Suite A**, isolated: own bridge on side port 4720 +
+  fresh `/tmp` store, demo page; the test browser's extension is re-pointed via
+  `chrome.storage.local.nudgePort`. Run after ANY extension/bridge change.
+  All-or-nothing (first FAIL exits).
+- `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
+  prompts against md-pdf, estimate (ProseMirror) and media, started from this
+  worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.
 - `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
   Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
@@ -26,15 +31,15 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 the backlog for new legs lives there (section „Building new legs").
 
 **Standing rules**
-- Suite A wins port 4700 ITSELF (kill → spawn → verify /.identity.workspace = /tmp,
-  retry — Chrome's native host revives the live bridge within moments) and restores
-  nothing — restart the
-  live bridge after (or let the extension/native host revive it: that IS B5).
+- **Tests NEVER touch port 4700.** Every suite runs its own bridge on its own
+  side port (A:4720 · E:4721 · D:4798 · hardening/bench:4799) and re-points the
+  TEST browser's extension via `chrome.storage.local.nudgePort` (0.16.3). The
+  live bridge keeps serving Gerald through every run. History: suites used to
+  steal 4700 — his toolbar showed „Agent: suite-e" (2026-07-05, G-7).
+- Suites verify their bridge by EXACT store path (`/.identity.store`), not by
+  workspace dirname — two `/tmp` test stores look identical by dirname.
 - Never reset the store seq; test pins carry a `[TEST-…]` prefix and are removed
   by id, evidence files included.
-- WHILE Suite A runs, the REAL extension in Gerald's Chrome attaches to the TEST
-  bridge (shared port 4700): real marks/prompts placed in that window land in the
-  /tmp store and vanish with it. Known, accepted — don't pin during a suite run.
 - The store is GLOBAL (`~/.claude/nudge/`); agent wiring is user-level
   (`~/.claude/settings.json` hooks, `~/.claude/skills/nudge/`). No project config.
 
@@ -106,6 +111,19 @@ machine by design; no auth inside it.
 | D12 | **Snapshot diet under history**: 60 pins / 50 resolved → WS snapshot ships ≤ 40 done, HTTP keeps full history | ✅ 2026-07-05 |
 | D13 | **Bind surface**: LAN IP refused, 127.0.0.1 only | ✅ 2026-07-05 |
 | D14 | **Watcher resilience**: armed before the bridge exists → registers as soon as it comes up (retry loops) | ✅ 2026-07-05 |
+
+## Suite E — Real Apps (real-apps.mjs)
+
+The demo page proves mechanics; the real apps prove the product. Apps start
+from this worktree on side ports (5313 md-pdf · 5315 estimate · 5318 media).
+
+| # | Guards | Last |
+|---|--------|------|
+| E1 | **md-pdf**: pick on the dropzone (DOM-only, innermost element inside the card); load a REAL document (dynamic file input → filechooser, staging step, »Generate document«) and pick inside the PagedJS print preview | ✅ 2026-07-05 |
+| E4 | **Input hygiene on a real form**: typed values NEVER reach element-owned channels (innerText/outerHTML/styles/targets/selector/xpath) — DOM properties are not serialized. Page-owned surfaces (title/url) carry what the page puts there: md-pdf reflects the Dokumenttitel field into document.title — the app's exposure, reported faithfully | ✅ 2026-07-05 |
+| E2 | **estimate/ProseMirror — the A-2 case**: open a real document, pick a paragraph, DETACH the node before send (clone+replace = PM re-render) → pick-time rect + selector survive via the fallback chain | ✅ 2026-07-05 |
+| E3 | **media grid**: picked thumb in a grid of near-identical cards yields a UNIQUE selector pointing at the right card; shift-multi across two cards (first click already with ⇧ — A-7 convention) | ✅ 2026-07-05 |
+| E5 | **Cross-app queue truth**: open pins on md-pdf AND media → each tab's count shows only its own route | ✅ 2026-07-05 |
 
 ## Suite C — manual drills (trigger-bound)
 
