@@ -92,6 +92,24 @@ try {
   if (old.replaced !== true) fail('older same-session watcher must be told replaced')
   done('session-keyed roster (dedupe + replaced signal to the old watcher)')
 
+  // --- H7: opt-in fence — a watcher without a deliberate label refuses to run ---
+  const { spawn: sp } = await import('node:child_process')
+  const noLabel = sp('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
+    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT) }, stdio: ['ignore', 'ignore', 'pipe'],
+  })
+  let errOut = ''
+  noLabel.stderr.on('data', c => { errOut += c })
+  const code = await new Promise(r => { noLabel.on('exit', r); setTimeout(() => { noLabel.kill(); r(-1) }, 3000) })
+  if (code !== 1 || !errOut.includes('Opt-in')) fail(`fence: watcher without label must refuse (exit ${code}, err: ${errOut.slice(0, 80)})`)
+  const withLabel = sp('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
+    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'fence-ok' }, stdio: 'ignore',
+  })
+  await new Promise(r => setTimeout(r, 2500))
+  const idn3 = await (await fetch(`http://localhost:${PORT}/.identity`)).json()
+  withLabel.kill()
+  if (!idn3.agents.some(a => a.label === 'fence-ok')) fail('fence: labeled watcher must register')
+  done('opt-in fence (no label -> refuses; labeled -> registers)')
+
   // --- H3: oversize body -> 413, connection answered (no hanging socket) ---
   const big = await fetch('http://localhost:4799/comments', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },

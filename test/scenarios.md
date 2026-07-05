@@ -85,7 +85,7 @@ backlog for new ones.
 | G-2 | SessionStart pkill'd ALL watchers (pre-roster leftover) — killed standbys | hooks must match the ownership model | 📖 fixed; watch for on model changes |
 | G-3 | Nudge provenance leaked into product code comments („Gerald via Nudge …") | comments state constraints; provenance → commit message (skill §4b) | 🔧 grep-leg in Suite A: `via Nudge` must not match under apps/ packages/ |
 | G-4 | Real tabs attach to the TEST bridge during a 4700 suite run | shared port window — don't nudge during runs | ✅ standing rule (protocols) |
-| G-5 | Fresh agents (never opened before) spawned watcher processes they never asked for | the SessionStart hook ORDERED every new session to arm immediately; UserPromptSubmit nagged too → arming is now OPT-IN (only on Gerald's explicit „übernimm die Nudges") | ✅ fixed in wiring; 📖 process rule (drift leg guards the files) |
+| G-5 | Fresh agents (never opened before) spawned watcher processes they never asked for | the SessionStart hook ORDERED every new session to arm immediately; UserPromptSubmit nagged too → arming is now OPT-IN (only on Gerald's explicit „übernimm die Nudges") | ✅ wiring fixed + TECHNICAL fence: watcher exits(1) without NUDGE_AGENT_LABEL — /nudge is the only registration path (hardening H7) |
 
 ## Building new legs — order of value
 

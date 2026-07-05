@@ -18,6 +18,21 @@ bump lands here in the same change — no silent releases.
   mit Abdeckungsstatus (✅ automatisiert · 🔧 lohnt · 🥁 Drill · 📖 dokumentiert)
   und priorisiertem Backlog für neue Suite-Beine.
 
+## Bridge 0.10.2 — 2026-07-05 (Opt-in-Zaun: /nudge ist die einzige Anmeldung)
+
+### Changed
+- **Technischer Opt-in-Zaun im Watcher** (Katalog G-5, Härtung H7): ohne
+  bewusst gesetztes `NUDGE_AGENT_LABEL` verweigert `watch-nudges.mjs` den
+  Start (exit 1, klare Meldung) — der Default-Fallback „Ordner #pid" entfällt.
+  Nur Geralds `/nudge` (der Skill setzt das Themen-Label) meldet eine Session
+  bei der Extension an; versehentliches Armen durch übereifrige Agenten ist
+  damit physisch unmöglich, nicht nur per Regel. Skill-Kontrakt entsprechend
+  geschärft („Invoking /nudge IS the registration"); Doppel-Armen bleibt
+  harmlos (Bridge ersetzt den älteren Watcher derselben Session).
+- Härtungs-Suite: neues Bein H7 (ohne Label → verweigert; mit Label →
+  registriert sich im Roster); `latency-bench` armt seinen Test-Watcher
+  jetzt explizit mit Label.
+
 ## Bridge 0.10.1 — 2026-07-05 (Lifecycle: inaktive Sessions verschwinden)
 
 ### Fixed
