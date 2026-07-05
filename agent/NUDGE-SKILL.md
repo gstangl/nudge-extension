@@ -40,11 +40,12 @@ Say NOTHING about the connection unless something is wrong; then one line:
 
 ## Watch mode (live following — the prompt channel)
 
-Every session that should react live arms its own watcher. The BRIDGE keeps a
-ROSTER: all watchers stay alive (losers idle in silent standby), Gerald picks
-the owner in the browser toolbar dropdown; newest wins only as fallback. Being
-chosen prints one line („Watch-Kanal übernommen") — from then on new nudges
-wake THIS session. Arming is therefore always safe and never steals visibly:
+**Arming is OPT-IN — NEVER arm proactively.** Fresh sessions got watcher
+processes injected they never asked for (Gerald 2026-07-05); a session arms
+ONLY when Gerald explicitly says so („übernimm die Nudges", „nenn dich X",
+designating it as the nudge/bugfix channel). The BRIDGE keeps a ROSTER of
+armed sessions (losers idle in silent standby), Gerald picks the owner in the
+browser toolbar dropdown; newest wins only as fallback among armed ones:
 `Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
 ALWAYS set the topic label — it is how Gerald recognizes the session in the
 dropdown (Zed thread titles summarize the same conversation, so they converge).

@@ -12,4 +12,4 @@ if ! lsof -tnP -iTCP:4700 -sTCP:LISTEN >/dev/null 2>&1; then
   (nohup node "$BRIDGE" >/tmp/nudge-bridge.log 2>&1 &)
 fi
 
-echo '{"suppressOutput":true,"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"[Nudge] Live-Watch ist in dieser neuen Session noch NICHT aktiv (Watcher sind session-gebunden; ein eventueller alter wurde soeben beendet). Arme ihn jetzt sofort: Monitor({ command: \"node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs\", persistent: true, description: \"Nudge-Watch — <Projektordner dieser Session>\" }). Danach gilt: neuer Nudge = Prompt von Gerald, sofort behandeln (nudge-Skill, oldest-first)."}}'
+echo '{"suppressOutput":true,"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"[Nudge] Watcher-Arming ist OPT-IN: NIEMALS proaktiv armen. Nur wenn Gerald es ausdrücklich sagt (z. B. \"übernimm die Nudges\") den nudge-Skill Watch mode nutzen."}}'

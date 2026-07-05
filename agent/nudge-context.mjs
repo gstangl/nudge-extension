@@ -21,7 +21,7 @@ let status = 'Bridge ✗ (nicht erreichbar)'
 try {
   const res = await fetch('http://127.0.0.1:4700/.identity', { signal: AbortSignal.timeout(400) })
   const id = await res.json()
-  status = id.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${id.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Prompts werden nur gespeichert! Watcher armen (nudge-Skill Watch mode).'
+  status = id.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${id.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert. NICHT proaktiv armen; nur wenn Gerald es sagt („übernimm die Nudges").'
 } catch { /* bridge down */ }
 
 const pins = store?.pins || []
