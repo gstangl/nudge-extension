@@ -5,6 +5,17 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## Bridge 0.10.1 — 2026-07-05 (Lifecycle: inaktive Sessions verschwinden)
+
+### Fixed
+- **Watcher überleben ihre Session nicht mehr** (Gerald: „inaktive Sessions
+  einfach killen"): (1) Waisen-Check — Session-Prozess tot (Re-Parent an
+  launchd) → exit; (2) Standby + Session-Transcript > 60 min idle → exit
+  (der gewählte Owner idle-exitet nie); (3) Roster ist SESSION-keyed — armt
+  dieselbe Session neu, ersetzt der neue Watcher den alten, der alte bekommt
+  `replaced` und beendet sich. Tote Einträge altern weiterhin in Sekunden aus
+  der Liste (12 s Frische-Fenster).
+
 ## [0.16.1] — 2026-07-05
 
 ### Fixed

@@ -80,6 +80,22 @@ const IDENTITY = {
 // Only the owner prints wake lines; being (re)chosen prints ONE line so the
 // session knows it is on duty again.
 let isOwner = null // unknown until the first reply
+
+// Lifecycle (Gerald: inactive sessions get KILLED, stale names must vanish).
+// Three tripwires, checked every 5 s / per heartbeat:
+// 1) orphaned — the session process died, we got re-parented to launchd: exit
+// 2) replaced — the SAME session armed a newer watcher (bridge tells us): exit
+// 3) abandoned — standby AND the session transcript idle > 60 min: exit
+//    (the OWNER never idle-exits: it is the chosen wake channel)
+const TRANSCRIPT = process.env.CLAUDE_CODE_SESSION_ID
+  ? path.join(os.homedir(), '.claude', 'projects', process.cwd().replace(/\//g, '-'), `${process.env.CLAUDE_CODE_SESSION_ID}.jsonl`)
+  : null
+setInterval(() => {
+  if (process.ppid === 1) process.exit(0) // orphan
+  if (isOwner === false && TRANSCRIPT) {
+    try { if (Date.now() - fs.statSync(TRANSCRIPT).mtimeMs > 60 * 60_000) process.exit(0) } catch { /* keep running */ }
+  }
+}, 5000)
 function heartbeat() {
   fetch(`http://127.0.0.1:${PORT}/agent/heartbeat`, {
     method: 'POST',
@@ -88,7 +104,8 @@ function heartbeat() {
     signal: AbortSignal.timeout(1000),
   })
     .then(r => r.json())
-    .then(({ owner }) => {
+    .then(({ owner, replaced }) => {
+      if (replaced) process.exit(0) // same session armed a newer watcher
       if (owner === true && isOwner === false) console.log('Watch-Kanal übernommen — diese Session ist jetzt Owner.')
       isOwner = owner !== false
     })

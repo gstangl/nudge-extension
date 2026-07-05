@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.10.0'
+const VERSION = '0.10.1'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -84,7 +84,13 @@ function handle(req, res) {
       if (!who?.since) return json(res, 400, { error: 'heartbeat needs {label, pid, since}' })
       const was = agentLive()
       const prevPid = agent?.pid, prevLabel = agent?.label
-      roster.set(who.pid, {
+      // ONE roster entry per session: keyed by session id (pid as fallback).
+      // An OLDER watcher of a session that armed a newer one is told to die.
+      const key = who.session ? `s:${who.session}` : `p:${who.pid}`
+      const existing = roster.get(key)
+      if (existing && existing.pid !== who.pid && existing.since > who.since)
+        return json(res, 200, { ok: true, owner: false, replaced: true })
+      roster.set(key, {
         label: String(who.label || '?').slice(0, 60), pid: who.pid, since: who.since,
         session: who.session || null, project: who.project || null, branch: who.branch || null,
         host: who.host || null, firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
