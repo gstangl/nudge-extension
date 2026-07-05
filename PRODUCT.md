@@ -1,0 +1,113 @@
+# Nudge — Product Definition
+
+2026-07-05 · Owner: Gerald · Register: PM. One page; the technical frame lives in
+`README.md`, the test contract in `test/protocols.md`.
+
+## What Nudge is
+
+**UI prompting for the Zed agent — built for pixel nudging.** You pick an
+element (or circle a region) in the running UI, say what you want, and the
+agent in Zed acts on it with full context: selector, xpath, text, styles,
+console (and a screenshot for region marks). Open prompts stay subtly visible
+as amber dots; everything else is fire-and-forget.
+
+## Why "Nudge" (renamed from "Pin", 2026-07-05)
+
+The pin was never the point — it is just the gesture. The CORE of the app is
+**nudging: polishing the last details of a rendered UI** — spacing, alignment,
+type, the final pixels. For UI designers this is one of the hardest parts of
+agentic development: it has to happen ON the presentation layer, deterministic
+and visual, where prose prompts ("etwas mehr Abstand") are weakest and pointing
+is everything. Nudge names that job; "Pin" named the mechanism.
+
+## USP — what everything else is subordinated to
+
+1. **Zed-IDE integration is the core.** Prompts land in the agent that owns the
+   codebase — not in a chat next to it. The agent fixes, verifies, resolves
+   with before/after evidence. No other tool in this class targets Zed.
+2. **Speed.** Mark → agent knows it in ~1 s (event-time push, tiny payload
+   first, live wake). The connection state is always visible and never lies
+   (grey/red/amber/green = off / no bridge / no agent / agent live).
+3. **Rapid-fire work sessions.** Fire 10 changes faster than the agent works —
+   the store IS the queue: strictly ordered, oldest-first, nothing lost,
+   in-page toast when each one is done.
+4. **Best-in-class UI picking.** Gliding highlight, layer chips (pick the
+   ancestor you meant), Shift+Klick multi-select ("tausche diese beiden"),
+   freehand lasso, pick-without-send ("das hier").
+
+## Core: the connection must be reliable — and visibly so
+
+The bridge between the Chrome extension and the Zed agent is the product's
+backbone. It is self-healing (native host + session hooks) AND its state is
+always visible, in both directions:
+
+- [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
+      red no bridge / amber no agent / **green = agent live**. Green never lies
+      (heartbeat-backed).
+- [x] **Chrome, per nudge dot:** amber = accepted/stored, green = agent live,
+      gone = done (history with check marks lives in the queue popover only).
+- [x] **Chrome, per prompt:** feedback the moment you send — „nudge_X — agent
+      arbeitet" (send), „gespeichert — kein Agent" (clock), „Bridge offline —
+      Warteschlange" (alert), „nudge_X erledigt" (check).
+- [x] **Chrome, feedback feed:** all events listed unobtrusively top right —
+      small chips with Lucide icons, max 4, self-fading. Connection losses and
+      recoveries land there too.
+- [x] **Zed, standing:** every message carries `[Nudge] Bridge ✓ · Agent-Watch ✓`
+      + the current mark + queue count (UserPromptSubmit hook).
+- [x] **Zed, live:** new prompts wake the agent (~1 s) and completions are
+      reported in the conversation.
+
+## Goals
+
+- [x] Works on ANY localhost app — framework-agnostic by design (extension,
+      not dev-server middleware). Roots apps are the first user, not the limit.
+- [x] Prompt + context arrive as one unit the agent can act on without asking back.
+- [x] The current mark is ambient agent context ("das hier" just works).
+- [x] Connection truth at every step: icon, send-toast, per-message status line.
+- [x] Evidence loop: resolve captures the after-state, invisibly.
+- [x] Works for every Claude agent in every project: global store (~/.claude/nudge),
+      user-level skill + hooks, zero per-project config (2026-07-05).
+- [ ] Team-ready: one extension install + one setup script per person.
+
+## Non-goals
+
+- **No annotation/collaboration tool.** No persistent markers, no threads, no
+  assignees — that is the Estimate comments feature, not Nudge.
+- **No history.** Only "what is marked NOW" and the open queue matter; resolved
+  prompts persist solely as evidence for the agent.
+- **No browser automation or audits.** Agent→browser (navigate, click, Lighthouse)
+  is Playwright/browser-tools territory.
+- **No own agent, no cloud, no accounts** (anti-Stagewise-app): localhost is the
+  trust boundary, Zed is the brain.
+- **No framework adapters** (anti-Frontman): nothing that only works in Vite/Next/Astro.
+
+## Accepted trade-offs — the price of the USP
+
+- **Chrome-only, manual install** (Load unpacked + one setup script, per person).
+  Price of `captureVisibleTab`-quality screenshots and full generality; a
+  dev-server plugin would be zero-install but framework-bound and screenshot-less.
+- **Bridge lifecycle is owned by Chrome** (native messaging host starts it
+  detached; SessionStart hook remains as fallback). Residual: if Chrome AND all
+  sessions are gone, nothing runs — by design (no daemon).
+- **Pull-based agent delivery under the hood** (Zed has no push channel —
+  maintainer-confirmed). The Monitor wake + hook context make it FEEL push;
+  a mid-task prompt waits until the agent's current step yields.
+- **One live-watch session at a time.** The newest session owns the wake channel:
+  its SessionStart hook pkills every older watcher — the loser notices only via
+  its dead Monitor task (no handover signal). Parallel sessions read the same
+  store but don't get woken. Accepted trade-off: prompts are processed once,
+  and the browser status stays honest (whoever heartbeats, heartbeats).
+- **Source hints are generic, not resolved.** data-* attributes where frameworks
+  provide them, selector/xpath/text otherwise; mapping to code stays the agent's
+  job (it has the repo). No server-side sourcemap machinery.
+- **localhost trust boundary:** any local process can post/resolve prompts.
+  Accepted for a dev tool; never expose the port. Since bridge 0.5.0 CORS is
+  restricted to localhost origins — foreign websites can no longer read
+  /selection, /comments or /shots via the browser.
+
+## Scoreboard (what "good" means)
+
+- Mark → agent context: **< 2 s** · Prompt → wake: **< 2 s** (measured ~1 s)
+- Rapid-fire: 10 prompts in 2 min → 10 processed oldest-first, 0 lost
+- Picker feel: glide + fades, no jumps, no zombie overlays
+- Chain truth: icon state matches reality in 100% of failure drills (T13)
