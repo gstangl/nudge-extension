@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.10.2'
+const VERSION = '0.11.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -75,25 +75,27 @@ function handle(req, res) {
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")
   // instead of just "bridge reachable".
-  if (req.method === 'POST' && url.pathname === '/agent/heartbeat') {
-    let body = ''
-    req.on('data', c => { body += c })
-    req.on('end', () => {
-      let who = null
-      try { who = JSON.parse(body) } catch { /* identity required since 0.15.x */ }
-      if (!who?.since) return json(res, 400, { error: 'heartbeat needs {label, pid, since}' })
+  if (req.method === 'POST' && url.pathname === '/agent/heartbeat')
+    return readBody(req, res, (who) => { // readBody = 400 on non-JSON, 413 past MAX_BODY
+      // identity required since 0.15.x — and TYPED: pid/since must be finite
+      // numbers or roster keys and owner election degrade into NaN comparisons
+      if (!Number.isFinite(who?.pid) || !Number.isFinite(who?.since))
+        return json(res, 400, { error: 'heartbeat needs {label, pid:number, since:number}' })
       const was = agentLive()
       const prevPid = agent?.pid, prevLabel = agent?.label
       // ONE roster entry per session: keyed by session id (pid as fallback).
       // An OLDER watcher of a session that armed a newer one is told to die.
-      const key = who.session ? `s:${who.session}` : `p:${who.pid}`
+      const key = who.session ? `s:${String(who.session).slice(0, 32)}` : `p:${who.pid}`
       const existing = roster.get(key)
       if (existing && existing.pid !== who.pid && existing.since > who.since)
         return json(res, 200, { ok: true, owner: false, replaced: true })
       roster.set(key, {
         label: String(who.label || '?').slice(0, 60), pid: who.pid, since: who.since,
-        session: who.session || null, project: who.project || null, branch: who.branch || null,
-        host: who.host || null, firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
+        session: who.session ? String(who.session).slice(0, 32) : null,
+        project: who.project ? String(who.project).slice(0, 60) : null,
+        branch: who.branch ? String(who.branch).slice(0, 60) : null,
+        host: who.host ? String(who.host).slice(0, 20) : null,
+        firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
         lastSeen: Date.now(),
       })
       const own = currentOwner()
@@ -104,8 +106,6 @@ function handle(req, res) {
       if ((!was && agentLive()) || agent?.pid !== prevPid || agent?.label !== prevLabel) broadcast(snapshot())
       return json(res, 200, { ok: true, owner })
     })
-    return
-  }
   // toolbar dropdown: Gerald picks which session owns the wake channel
   if (req.method === 'POST' && url.pathname === '/agent/owner')
     return readBody(req, res, ({ pid }) => {

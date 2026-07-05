@@ -73,7 +73,9 @@ try {
   await page.goto('http://localhost:4700/demo')
 
   // --- connection: status dot goes green (WS connected) ---
-  await page.locator('.pill .status.ok').waitFor({ timeout: 5000 })
+  // 15 s: this is the COLD-START barrier (extension boot + WS + first snapshot
+  // under load), not a behavior assertion — flip timings are asserted in A12/D5
+  await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   await until(async () => ((await page.locator('.pill .status').getAttribute('title')) || '').includes('suite-a'), 5000, 'owner label in the status tooltip')
   await until(async () => ((await page.locator('.pill .who').textContent()) || '').includes('suite-a'), 5000, 'session label visible in the toolbar')
   // session dropdown: roster row with identity, owner marked

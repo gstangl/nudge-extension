@@ -62,6 +62,9 @@ backlog for new ones.
 | E-7 | Selection posts (hover frequency!) rebroadcast the full pin list | skip broadcast for kind='selection' | 🔧 mini-leg: WS client sees NO pins frame on POST /selection |
 | E-8 | Wake latency 23.7 ms via fs.watch (FSEvents coalescing) | WS push path: 2.1 ms median (11.4×) | ✅ latency-bench (reference values in protocols.md) |
 | E-9 | WS push beat the POST response (line before fetch resolved) | broadcast fires before HTTP reply — consumers must buffer | ✅ bench `early` buffer (lesson encoded there) |
+| E-11 | Valid-JSON-wrong-shape store (`null`, `[]`, `{pins:"x"}`) CRASHED the bridge at startup — before it listened; native host would crash-loop it | JSON.parse succeeding ≠ usable: shape must be validated (pins array + finite seq) → same recovery path as unparsable JSON | ✅ brutal D1 (fixed 0.11.0) |
+| E-12 | Un-capped client fields (url, title, single target outerHTML/styles, console lines) could bloat store.json to MBs — every load/persist/broadcast pays forever | EVERY client field is untrusted input; extension sends bounded data but the bridge must not trust | ✅ brutal D3 (fixed 0.11.0) |
+| E-13 | /agent/heartbeat read its body with NO size cap (memory blow) and accepted string/NaN pid/since (roster keys + owner election degrade into NaN comparisons) | readBody (MAX_BODY → 413) + typed identity: pid/since finite numbers or 400; roster fields capped | ✅ brutal D4 (fixed 0.11.0) |
 | E-10 | Ghost WS clients after laptop sleep (stale tabs list, dead broadcast targets) | ping/pong 30 s, terminate silent peers | 🥁 C-drill (lid close) — timing not CI-worthy |
 
 ## F. Ownership & Sessions
@@ -73,7 +76,7 @@ backlog for new ones.
 | F-3 | Takeover ping-pong (sessions re-arm on Monitor end) | standby instead of exit + manual choice | ✅ H5 (sticky choice beats newer) |
 | F-4 | Same session armed twice → duplicate roster entries / flapping | roster keyed by CLAUDE_CODE_SESSION_ID; old watcher told `replaced` | ✅ hardening H6 |
 | F-5 | Watcher survived its dead session (33-min zombie with stale label) | ppid→1 orphan exit; standby idle >60 min (transcript mtime) exits; owner never idle-exits | 🥁 C-drill (kill parent, observe roster) — ppid automation possible via intermediate shell, medium effort |
-| F-6 | Anonymous/legacy heartbeats kept a dead label alive | identity required (400 without {label,pid,since}) | 🔧 one-line leg: body-less heartbeat → 400 |
+| F-6 | Anonymous/legacy heartbeats kept a dead label alive | identity required + typed (400 without finite pid/since) | ✅ brutal D4 |
 | F-7 | Bench/manual test watchers hijacked the real channel & polluted the global store (nudge_72/79) | tests NEVER on port 4700 → side port 4799; test pins carry [TEST-…] or get deleted by id | ✅ standing rule + all runners on 4799 |
 | F-8 | Suite A silently depended on some real session's heartbeat | suite simulates its own live agent | ✅ (own heartbeat, labeled suite-a) |
 
@@ -85,11 +88,14 @@ backlog for new ones.
 | G-2 | SessionStart pkill'd ALL watchers (pre-roster leftover) — killed standbys | hooks must match the ownership model | 📖 fixed; watch for on model changes |
 | G-3 | Nudge provenance leaked into product code comments („Gerald via Nudge …") | comments state constraints; provenance → commit message (skill §4b) | 🔧 grep-leg in Suite A: `via Nudge` must not match under apps/ packages/ |
 | G-4 | Real tabs attach to the TEST bridge during a 4700 suite run | shared port window — don't nudge during runs | ✅ standing rule (protocols) |
+| G-6 | Suite A flaked at the FIRST UI assert (status dot green) under load — cold start (extension boot + WS + first snapshot) needs > 5 s | startup barriers get generous timeouts (15 s); behavior asserts keep tight ones (flip timing = A12/D5) | ✅ e2e barrier widened (3× stable) |
 | G-5 | Fresh agents (never opened before) spawned watcher processes they never asked for | the SessionStart hook ORDERED every new session to arm immediately; UserPromptSubmit nagged too → arming is now OPT-IN (only on Gerald's explicit „übernimm die Nudges") | ✅ wiring fixed + TECHNICAL fence: watcher exits(1) without NUDGE_AGENT_LABEL — /nudge is the only registration path (hardening H7) |
 
 ## Building new legs — order of value
 
-1. ~~A-8~~ done (0.16.2, Suite-A-Leg „chrome inert“)
+1. ~~A-8~~ done (0.16.2, Suite-A-Leg „chrome inert“) · ~~F-6~~ done (brutal D4)
+   · Suite D (bridge-brutal.mjs, 14 legs) covers E-11/E-12/E-13 and the
+   identity-truth contract end-to-end
 2. **C-1 sub-pixel centring** (catches a whole visual-regression class for free)
 3. **A-2 detached-element fallback** (the very first real-usage bug — regression-worthy)
 4. **E-6 prune + E-7 selection-broadcast + F-6 identity-400** (three cheap H-legs, one PR)
