@@ -14,25 +14,20 @@ const EXT = path.join(HERE, '../extension')
 const STORE = '/tmp/pin-e2e-store'
 fs.rmSync(STORE, { recursive: true, force: true })
 
-// Win port 4700 against Chrome's self-healing: the native host revives the LIVE
-// bridge within moments of a kill (that is B5 working as designed) — so kill,
-// spawn our own, then VERIFY via /.identity that the answering bridge uses OUR
-// test store; otherwise the run would silently pollute the global store.
-let bridge
-for (let attempt = 0; ; attempt++) {
-  try { execSync('kill $(lsof -ti :4700 -sTCP:LISTEN) 2>/dev/null; true', { shell: '/bin/bash' }) } catch { /* already free */ }
-  bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
-    env: { ...process.env, NUDGE_STORE: STORE },
-    stdio: ['ignore', 'ignore', 'inherit'],
-  })
-  await new Promise(r => setTimeout(r, 500))
-  try {
-    const id = await (await fetch('http://localhost:4700/.identity')).json()
-    if (id.workspace === path.dirname(STORE)) break // our bridge owns the port
-  } catch { /* not up yet */ }
-  bridge.kill()
-  if (attempt >= 9) { console.error('FAIL: could not win port 4700 from the live bridge'); process.exit(1) }
-  await new Promise(r => setTimeout(r, 300))
+// OWN side port — the live bridge on 4700 keeps serving Gerald untouched.
+// The extension in the TEST browser is re-pointed via chrome.storage.nudgePort
+// (see below); stealing 4700 once showed a test agent in the real toolbar.
+const TESTPORT = 4720
+let bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
+  env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(TESTPORT) }, stdio: ['ignore', 'ignore', 'inherit'],
+})
+{
+  let up = false
+  for (let i = 0; i < 25 && !up; i++) {
+    await new Promise(r => setTimeout(r, 200))
+    try { up = (await (await fetch(`http://localhost:${TESTPORT}/.identity`)).json()).store === STORE } catch { /* not yet */ }
+  }
+  if (!up) { console.error('FAIL: test bridge did not come up on side port'); process.exit(1) }
 }
 
 const fail = (msg) => { console.error('FAIL:', msg); bridge.kill(); process.exit(1) }
@@ -46,10 +41,10 @@ const until = async (fn, ms, what) => {
 // amber and every „Agent arbeitet" expectation depends on whether some real
 // session happens to run a watcher (bit us 2026-07-05 after the Nudge rename).
 const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', pid: process.pid, since: Date.now() }) }
-const heartbeat = setInterval(() => { fetch('http://localhost:4700/agent/heartbeat', HB).catch(() => {}) }, 2000)
-await fetch('http://localhost:4700/agent/heartbeat', HB).catch(() => {})
+const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
+await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
 // identity: the owner label is visible to agents (hook) and the extension
-const idn = await (await fetch('http://localhost:4700/.identity')).json()
+const idn = await (await fetch(`http://localhost:${TESTPORT}/.identity`)).json()
 if (idn.agentLabel !== 'suite-a') { console.error('FAIL: agentLabel missing: ' + JSON.stringify(idn.agentLabel)); process.exit(1) }
 console.log('PASS agent identity (heartbeat label -> /.identity)')
 
@@ -57,9 +52,9 @@ let ctx
 try {
   // --- CORS boundary (bridge 0.5.0): foreign origins get NO CORS headers,
   //     localhost origins are reflected ---
-  const evil = await fetch('http://localhost:4700/selection', { headers: { Origin: 'https://evil.example' } })
+  const evil = await fetch(`http://localhost:${TESTPORT}/selection`, { headers: { Origin: 'https://evil.example' } })
   if (evil.headers.get('access-control-allow-origin')) { console.error('FAIL: CORS must not allow foreign origins'); process.exit(1) }
-  const good = await fetch('http://localhost:4700/selection', { headers: { Origin: 'http://localhost:5185' } })
+  const good = await fetch(`http://localhost:${TESTPORT}/selection`, { headers: { Origin: 'http://localhost:5185' } })
   if (good.headers.get('access-control-allow-origin') !== 'http://localhost:5185') { console.error('FAIL: CORS must reflect localhost origins'); process.exit(1) }
   console.log('PASS CORS boundary (foreign origin blocked, localhost reflected)')
 
@@ -68,9 +63,13 @@ try {
     viewport: { width: 1280, height: 900 },
     args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
   })
+  // re-point THIS browser's extension at the test bridge before any page loads
+  let sw = ctx.serviceWorkers()[0]
+  if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 10000 })
+  await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), TESTPORT)
   const page = ctx.pages()[0] || await ctx.newPage()
   page.on('console', m => { if (m.type() === 'warning') console.error('  [browser]', m.text()) })
-  await page.goto('http://localhost:4700/demo')
+  await page.goto(`http://localhost:${TESTPORT}/demo`)
 
   // --- connection: status dot goes green (WS connected) ---
   // 15 s: this is the COLD-START barrier (extension boot + WS + first snapshot
@@ -129,12 +128,12 @@ try {
   //     NO screenshot for elements (browser-tools-mcp style; screenshots are
   //     exclusive to the Kreis tool). The chip then retargets to the card. ---
   await until(async () => {
-    const sel = await (await fetch('http://localhost:4700/selection')).json()
+    const sel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
     return !!sel.selector && !!sel.xpath && !sel.screenshot
   }, 5000, 'element selection published DOM-only (no screenshot)')
   await page.locator('.composer .layers button', { hasText: 'card-conversion' }).click()
   await until(async () => {
-    const sel = await (await fetch('http://localhost:4700/selection')).json()
+    const sel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
     return sel.selector === '#card-conversion' && !sel.screenshot
   }, 5000, 'chip retarget updates selection (still DOM-only)')
 
@@ -142,7 +141,7 @@ try {
   await page.locator('.composer .cancel').click()
   await page.waitForTimeout(200)
   if (await page.locator('.composer').isVisible()) fail('composer did not close on Abbrechen')
-  const selAfterCancel = await (await fetch('http://localhost:4700/selection')).json()
+  const selAfterCancel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
   if (selAfterCancel.selector !== '#card-conversion') fail('selection lost after cancel')
   // store.json does not even exist yet — a pure mark must create NO pin
   if (fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length) fail('cancel must not create a pin')
@@ -192,7 +191,7 @@ try {
 
   // --- resolve: feed chip + badge clears; element pins get NO after-shot
   //     (no before-shot to compare — that stays a Kreis-pin feature) ---
-  await fetch('http://localhost:4700/comments/nudge_1/resolve', { method: 'POST' })
+  await fetch(`http://localhost:${TESTPORT}/comments/nudge_1/resolve`, { method: 'POST' })
   await page.locator('.feed .item', { hasText: 'nudge_1 done' }).waitFor({ timeout: 5000 }) // in-page loop closure
   await until(async () => !(await page.locator('.pill .count.show').count()), 5000, 'badge cleared after resolve')
   await until(async () => !(await page.locator('.dot:visible').count()), 3000, 'dot gone after resolve')
@@ -243,7 +242,7 @@ try {
   console.log('PASS SPA navigation badge refilter (hashchange/popstate)')
 
   // --- evidence loop lives on for Kreis pins: resolve nudge_2 -> after-shot ---
-  await fetch('http://localhost:4700/comments/nudge_2/resolve', { method: 'POST' })
+  await fetch(`http://localhost:${TESTPORT}/comments/nudge_2/resolve`, { method: 'POST' })
   await until(() => store().pins[1].screenshotAfter, 10000, 'lasso after-shot in store')
   // late re-check: the WS-snapshot backlog path must not capture for element
   // pins either (it once did — the +500ms check above only won by timing)
@@ -256,7 +255,7 @@ try {
   await ta.waitFor({ timeout: 3000 })
   await page.locator('.banner').click({ modifiers: ['Shift'], position: { x: 10, y: 10 } })
   await until(async () => {
-    const sel = await (await fetch('http://localhost:4700/selection')).json()
+    const sel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
     return sel.targets?.length === 2 && !sel.screenshot
   }, 5000, 'multi selection published (2 targets, DOM-only)')
   const meta = await page.locator('.composer .meta').textContent()
@@ -291,7 +290,7 @@ try {
   // a text-less pin (legacy „nur Markierung" shape) posted directly: the queue must
   // say WHAT is marked, the × must remove it entirely, its dot must disappear
   const pageUrl = await page.evaluate(() => location.href)
-  await fetch('http://localhost:4700/comments', {
+  await fetch(`http://localhost:${TESTPORT}/comments`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: '', url: pageUrl, target: { selector: '#card-source', innerText: 'Energy sources' } }),
   })

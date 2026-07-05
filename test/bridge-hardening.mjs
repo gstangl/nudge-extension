@@ -26,7 +26,7 @@ const bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
   let up = false
   for (let i = 0; i < 20 && !up; i++) {
     await new Promise(r => setTimeout(r, 200))
-    try { up = (await (await fetch(`http://localhost:${PORT}/.identity`)).json()).workspace === path.dirname(STORE) } catch { /* not up */ }
+    try { up = (await (await fetch(`http://localhost:${PORT}/.identity`)).json()).store === STORE } catch { /* not up */ }
   }
   if (!up) fail('bridge did not come up on side port')
 }

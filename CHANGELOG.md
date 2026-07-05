@@ -5,6 +5,31 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## [0.16.3] + Bridge 0.11.1 — 2026-07-05 (Tests raus aus dem Live-Port; Suite E Real Apps)
+
+### Fixed
+- **Test-Agent in Geralds echter Toolbar** („Agent: suite-e", G-7): Suiten
+  mussten Port 4700 erobern, weil die Extension ihn hardcodete — dein Chrome
+  hing während Testläufen an der Test-Bridge. Jetzt: Test-Browser werden per
+  `chrome.storage.local.nudgePort` umgelenkt (vor dem ersten Seiten-Load, via
+  Service Worker), Suite A → 4720, Suite E → 4721. **Tests berühren 4700 nie
+  mehr**; die Live-Bridge liefert durchgehend. Echte Chrome-Profile setzen den
+  Key nie und bleiben auf 4700.
+- Bridge `NUDGE_NO_RELOAD=1`: Reload-Watch abschaltbar — eine Worktree-Bridge
+  darf einer Extension, deren Ladepfad auf dem ausgecheckten Branch fehlt,
+  keinen Reload schicken (hätte sie bis zum manuellen Neuladen getötet).
+- `/.identity` exponiert `store` (exakter Pfad): Suiten verifizieren ihre
+  Test-Bridge nicht mehr über den Workspace-Dirname (zwei `/tmp`-Stores sahen
+  identisch aus — ein Debug-Prozess auf dem Suite-Port unterlief den Check).
+
+### Added
+- **Suite E „Real Apps"** (`test/real-apps.mjs`): md-pdf, estimate, media aus
+  dem Worktree auf Seitenports — echtes Dokument laden (PagedJS-Vorschau),
+  **A-2 endlich automatisiert** (ProseMirror-Node detached vor dem Senden →
+  Pick-Zeit-Rect überlebt), Selector-Eindeutigkeit im Asset-Grid,
+  Input-Hygiene-Grenze (element-eigene Kanäle nie, seiten-eigene ehrlich),
+  Cross-App-Queue-Wahrheit. Protokoll in `test/protocols.md`.
+
 ## [0.16.2] — 2026-07-05
 
 ### Fixed

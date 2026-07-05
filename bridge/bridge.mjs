@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.11.0'
+const VERSION = '0.11.1'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -71,7 +71,7 @@ function handle(req, res) {
   res.cors = corsFor(req)
   if (req.method === 'OPTIONS') { res.writeHead(204, res.cors); return res.end() }
   if (req.method === 'GET' && url.pathname === '/.identity')
-    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), agentLive: agentLive(), agentLabel: agentLive() ? agent?.label || null : null, agents: agentsForClient(), tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: agentLive(), agentLabel: agentLive() ? agent?.label || null : null, agents: agentsForClient(), tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")
   // instead of just "bridge reachable".
@@ -257,9 +257,14 @@ store.onChange((kind, pin) => {
 })
 
 // ---------- dev auto-reload: extension files changed -> extension reloads itself ----------
+// NUDGE_NO_RELOAD=1 disables the watch: when the bridge runs from a WORKTREE
+// while Chrome's unpacked extension points at the canonical path (missing on a
+// foreign branch), a reload broadcast would kill the extension until a manual
+// re-load — edits in the worktree must not trigger it (2026-07-05).
 const EXT_DIR = path.join(HERE, '../extension')
 let reloadTimer
 try {
+  if (process.env.NUDGE_NO_RELOAD) throw new Error('reload watch disabled')
   fs.watch(EXT_DIR, { recursive: true }, (_event, filename) => {
     if (filename && path.basename(filename).startsWith('.')) return // .DS_Store etc.
     clearTimeout(reloadTimer)

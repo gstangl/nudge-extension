@@ -10,8 +10,14 @@
 // styles, console + network errors, dual screenshots, author.
 ;(() => {
   if (window.top !== window) return // top frame only
-  const HTTP = 'http://localhost:4700'
-  const WS = 'ws://localhost:4700'
+  // Bridge endpoints. TEST SUITES may re-point them via
+  // chrome.storage.local.nudgePort (set through the extension's service worker
+  // BEFORE pages load) — real Chrome never sets it and stays on 4700. Root
+  // cause: suites used to STEAL port 4700 from the live bridge, and Gerald's
+  // real toolbar briefly showed the suite's test agent („Agent: suite-e",
+  // 2026-07-05). Tests never touch the live port again.
+  let HTTP = 'http://localhost:4700'
+  let WS = 'ws://localhost:4700'
   const ACCENT = '#b45a38'
 
   // ---------- shadow root + styles ----------
@@ -937,5 +943,13 @@
   }, 5000)
 
   setMode('idle') // PoC: overlay visible by default on localhost; Alt+C / toolbar icon toggles
-  connect()
+  // resolve the (test-only) port override, THEN open the connection
+  try {
+    chrome.storage.local.get('nudgePort')
+      .then(({ nudgePort }) => {
+        if (nudgePort) { HTTP = `http://localhost:${nudgePort}`; WS = `ws://localhost:${nudgePort}` }
+        connect()
+      })
+      .catch(() => connect())
+  } catch { connect() }
 })()

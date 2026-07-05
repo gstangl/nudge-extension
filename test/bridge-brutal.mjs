@@ -36,7 +36,7 @@ async function up(timeoutMs = 5000) {
   while (Date.now() - t0 < timeoutMs) {
     try {
       const idn = await (await fetch(`${B}/.identity`, { signal: AbortSignal.timeout(500) })).json()
-      if (idn.workspace === path.dirname(STORE)) return idn
+      if (idn.store === STORE) return idn
     } catch { /* not yet */ }
     await sleep(120)
   }

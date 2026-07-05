@@ -1,6 +1,6 @@
 {
   "name": "@roots/nudge-bridge",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "type": "module",
   "description": "Pin bridge: HTTP+WS for the Chrome extension; the agent reads the global store files. Lifecycle owned by Chrome (native host).",

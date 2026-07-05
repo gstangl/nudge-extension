@@ -12,7 +12,7 @@ backlog for new ones.
 | # | Edge case | Root cause / lesson | Status |
 |---|---|---|---|
 | A-1 | Pick on live re-rendering UI opened no composer (v2 comment rail) | mousedown→re-render destroys target→click never fires; ProseMirror layer overlays rail | ✅ pointerdown pick (suite passes) · 🔧 add explicit leg: demo button that re-renders itself on mousedown → pick still opens composer |
-| A-2 | Picked element detached before send (ProseMirror re-render) → rect 0/0/0/0, 1 kB corner screenshot | editors replace DOM nodes between pick and send | 🔧 leg: pick → `el.remove()` via evaluate → send → payload rect equals pick-time rect (fallback chain live→selector→pick-rect) |
+| A-2 | Picked element detached before send (ProseMirror re-render) → rect 0/0/0/0, 1 kB corner screenshot | editors replace DOM nodes between pick and send | ✅ Suite E E2 (real ProseMirror in estimate: clone+replace before send → pick-time rect survives) |
 | A-3 | Foreign pointer events polluted the Freeform stroke (points from a second stream) | pointermove without pointerId/buttons guard | ✅ implicit (lasso leg); guard: only stroke-initiating pointer + primary button |
 | A-4 | `setPointerCapture` throws on synthetic events (tests) | spec allows InvalidPointerId | ✅ implicit (try/catch; suite is synthetic) |
 | A-5 | Freeform SVG was 300×150 despite `inset:0` | replaced elements don't stretch from inset; need explicit 100vw/100vh | ✅ implicit (lasso leg would fail) |
@@ -87,7 +87,8 @@ backlog for new ones.
 | G-1 | Installed skill/hooks drifted from repo | copies, not symlinks — Suite A diff leg | ✅ „agent wiring in sync" |
 | G-2 | SessionStart pkill'd ALL watchers (pre-roster leftover) — killed standbys | hooks must match the ownership model | 📖 fixed; watch for on model changes |
 | G-3 | Nudge provenance leaked into product code comments („Gerald via Nudge …") | comments state constraints; provenance → commit message (skill §4b) | 🔧 grep-leg in Suite A: `via Nudge` must not match under apps/ packages/ |
-| G-4 | Real tabs attach to the TEST bridge during a 4700 suite run | shared port window — don't nudge during runs | ✅ standing rule (protocols) |
+| G-4 | Real tabs attach to the TEST bridge during a 4700 suite run | ELIMINATED: tests never touch 4700 any more (see G-7) | ✅ obsolete since 0.16.3 |
+| G-7 | Suite stole port 4700 → Gerald's LIVE toolbar showed the test agent („Agent: suite-e", screenshot 2026-07-05) while he was nudging | extension hardcoded the port; suites had to win 4700 → `chrome.storage.local.nudgePort` override (test browsers only, set via service worker BEFORE pages load), suites on side ports 4720/4721, exact-store identity check, bridge `NUDGE_NO_RELOAD` guard (worktree bridge must not reload an extension whose load path is missing) | ✅ fixed 0.16.3 / bridge 0.11.1 (Suite A+E run against side ports while the live bridge serves) |
 | G-6 | Suite A flaked at the FIRST UI assert (status dot green) under load — cold start (extension boot + WS + first snapshot) needs > 5 s | startup barriers get generous timeouts (15 s); behavior asserts keep tight ones (flip timing = A12/D5) | ✅ e2e barrier widened (3× stable) |
 | G-5 | Fresh agents (never opened before) spawned watcher processes they never asked for | the SessionStart hook ORDERED every new session to arm immediately; UserPromptSubmit nagged too → arming is now OPT-IN (only on Gerald's explicit „übernimm die Nudges") | ✅ wiring fixed + TECHNICAL fence: watcher exits(1) without NUDGE_AGENT_LABEL — /nudge is the only registration path (hardening H7) |
 
