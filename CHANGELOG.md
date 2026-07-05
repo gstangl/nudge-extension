@@ -5,6 +5,29 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## [0.16.4] — 2026-07-05 (Suite F Fixture Gauntlet; zwei Picker-Bugs gefixt)
+
+### Fixed
+- **Pick auf einem Link folgte dem href** (A-9): preventDefault auf pointerdown
+  unterdrueckt den nachlaufenden Klick NICHT — ein Hash-Link routete die SPA um,
+  ein echter Link haette die Seite mitten im Composer verlassen. Jetzt wird genau
+  der EINE nachlaufende Klick der Pick-Geste am Document-Capture geschluckt (kein
+  Zeitfenster — das killte den naechsten bewussten Klick und brach den Datei-Dialog
+  von md-pdf). Gefunden von Suite F (Flowbite-Dropdown).
+- **Selector-Qualitaet auf echten Templates** (A-10): finder verwarf legitime ids
+  mit kurzen Segmenten (#g-modal-title, #dz-card — jedes <=2-Zeichen-Teil scheitert
+  an seiner wordLike-Heuristik) und lieferte bruechige Klassenpfade, die beim
+  naechsten Re-Render brachen. Jetzt: echte, eindeutige, nicht maschinell wirkende
+  id hat Vorrang (DevTools-Konvention), sonst finder.
+
+### Added
+- **Suite F "Fixture Gauntlet"** (`test/fixture-gauntlet.mjs`): Dritt-UIs aus dem
+  Netz, VENDORED unter `test/fixtures/` (Flowbite/Tailwind-Komponenten + TodoMVC
+  React; Quellen/Lizenzen in `fixtures/README.md`) — Modal mit Backdrop-Outside-
+  Close, Dropdown/Anchor, Sticky-Header-Tabelle (40 Zeilen), CSS-Transform-Eltern,
+  Shadow-DOM-Web-Component, z-9999-Toast, React-Re-Render zwischen Pick und Send.
+  Hermetisch (kein Netz zur Testzeit). Fixtures sind Testmaterial, nie Produktcode.
+
 ## [0.16.3] + Bridge 0.11.1 — 2026-07-05 (Tests raus aus dem Live-Port; Suite E Real Apps)
 
 ### Fixed

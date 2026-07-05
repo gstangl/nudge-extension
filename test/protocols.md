@@ -11,6 +11,11 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 - `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
   prompts against md-pdf, estimate (ProseMirror) and media, started from this
   worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.
+- `node test/fixture-gauntlet.mjs` — **Suite F (Fixture Gauntlet)**, side port
+  4722, static server 5320: third-party UI idioms from the internet, VENDORED
+  under `test/fixtures/` (Flowbite/Tailwind components + TodoMVC React; sources +
+  licenses in `fixtures/README.md`). Proves the picker against the wild, not just
+  our own apps. Refetch fixtures deliberately, then re-run.
 - `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
   Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
@@ -124,6 +129,23 @@ from this worktree on side ports (5313 md-pdf · 5315 estimate · 5318 media).
 | E2 | **estimate/ProseMirror — the A-2 case**: open a real document, pick a paragraph, DETACH the node before send (clone+replace = PM re-render) → pick-time rect + selector survive via the fallback chain. Library data comes through vite's proxy from the worker (:8787) — if that backend is down the leg SKIPS honestly instead of reddening the suite | ✅ 2026-07-05 |
 | E3 | **media grid**: picked thumb in a grid of near-identical cards yields a UNIQUE selector pointing at the right card; shift-multi across two cards (first click already with ⇧ — A-7 convention) | ✅ 2026-07-05 |
 | E5 | **Cross-app queue truth**: open pins on md-pdf AND media → each tab's count shows only its own route | ✅ 2026-07-05 |
+
+## Suite F — Fixture Gauntlet (fixture-gauntlet.mjs)
+
+Third-party pages from the internet, vendored so runs are hermetic. Suite E
+proves OUR apps; Suite F proves the wild — the Tailwind/Flowbite idioms and
+re-render frameworks production UIs are actually built from. Two real extension
+bugs surfaced here (see run log 2026-07-05).
+
+| # | Guards | Last |
+|---|--------|------|
+| F1 | **Flowbite modal (A-8 in the wild)**: modal with a backdrop outside-close survives the toolbar click AND an in-modal pick — the exact „Finale Version freigeben?" trap, now against real Flowbite JS | ✅ 2026-07-05 |
+| F2 | **Dropdown / anchor**: pick a menu item (an `<a href>`) → selector captured, the href is NOT followed, the page does not navigate (trailing-click suppression) | ✅ 2026-07-05 |
+| F3 | **Scroll + near-identical table**: deep pick after scrolling has a viewport-relative rect; row 35 of 40 near-identical rows is uniquely addressed (right INV number) | ✅ 2026-07-05 |
+| F4 | **CSS-transformed parent**: element under `scale()+rotate()` → selection rect equals the VISUAL box (getBoundingClientRect) within 2 px | ✅ 2026-07-05 |
+| F5 | **Shadow DOM**: click into a closed-ish web component retargets to the HOST element (documented boundary — the picker addresses the host, not the shadow internals) | ✅ 2026-07-05 |
+| F6 | **z-index 9999 toast**: an aggressive page z-index cannot cover the picker; the toast is pickable with its innerText | ✅ 2026-07-05 |
+| F7 | **TodoMVC React re-render**: pick a todo, toggle another (React rebuilds the keyed list) between pick and send → selector, rect and innerText all survive | ✅ 2026-07-05 |
 
 ## Suite C — manual drills (trigger-bound)
 

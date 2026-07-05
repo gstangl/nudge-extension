@@ -1,0 +1,132 @@
+<!doctype html>
+<!--
+  Tailwind Gauntlet — Nudge test fixture (NOT a product page).
+  Composed from real-world Tailwind/Flowbite component patterns (MIT) so the
+  suites can pick against the UI idioms production apps actually use:
+  sticky navbar, dropdown, modal with backdrop + outside-click close, drawer,
+  toast at z-index 9999, data table with sticky header, a CSS-TRANSFORMED
+  section (rect math!), a shadow-DOM web component, and a long scroll run.
+  Assets are VENDORED (vendor/) — no network at test time. Sources/licenses:
+  fixtures/README.md.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tailwind Gauntlet</title>
+<script src="vendor/tailwind-play.js"></script>
+<link rel="stylesheet" href="vendor/flowbite.min.css">
+</head>
+<body class="bg-gray-50">
+
+<!-- sticky navbar with dropdown (Flowbite pattern) -->
+<nav id="g-nav" class="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-2.5 flex items-center gap-4">
+  <span id="g-brand" class="text-xl font-semibold">Gauntlet Corp</span>
+  <button id="g-dd-btn" data-dropdown-toggle="g-dd" class="text-white bg-blue-700 hover:bg-blue-800 rounded-lg text-sm px-4 py-2">
+    Projects ▾
+  </button>
+  <div id="g-dd" class="hidden z-50 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
+    <ul class="py-2 text-sm text-gray-700">
+      <li><a id="g-dd-item-1" class="block px-4 py-2 hover:bg-gray-100" href="#alpha">Alpha</a></li>
+      <li><a id="g-dd-item-2" class="block px-4 py-2 hover:bg-gray-100" href="#beta">Beta</a></li>
+    </ul>
+  </div>
+  <button id="g-modal-btn" data-modal-target="g-modal" data-modal-toggle="g-modal" class="ml-auto text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm px-4 py-2">
+    Release freigeben?
+  </button>
+</nav>
+
+<!-- modal with backdrop; Flowbite closes it on backdrop click (the A-8 trap) -->
+<div id="g-modal" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full">
+  <div class="relative p-4 w-full max-w-md">
+    <div class="relative bg-white rounded-lg shadow">
+      <div class="p-4 border-b rounded-t flex items-center justify-between">
+        <h3 id="g-modal-title" class="text-lg font-semibold text-gray-900">Finale Version freigeben?</h3>
+        <button data-modal-hide="g-modal" class="text-gray-400 hover:bg-gray-200 rounded-lg w-8 h-8" aria-label="Close">×</button>
+      </div>
+      <div class="p-4">
+        <p id="g-modal-body" class="text-sm text-gray-600">Diese Aktion veröffentlicht Build 4711 für alle Kunden.</p>
+      </div>
+      <div class="p-4 border-t flex gap-2">
+        <button id="g-modal-ok" data-modal-hide="g-modal" class="text-white bg-blue-700 rounded-lg text-sm px-4 py-2">Freigeben</button>
+        <button data-modal-hide="g-modal" class="bg-gray-100 rounded-lg text-sm px-4 py-2">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="max-w-4xl mx-auto p-6 space-y-10">
+
+  <!-- data table, sticky header inside a scroll container -->
+  <section>
+    <h2 class="text-lg font-semibold mb-3">Invoices</h2>
+    <div id="g-table-wrap" class="relative overflow-y-auto h-48 shadow-md rounded-lg bg-white">
+      <table class="w-full text-sm text-left text-gray-600">
+        <thead class="text-xs uppercase bg-gray-100 sticky top-0">
+          <tr><th class="px-6 py-3">Invoice</th><th class="px-6 py-3">Customer</th><th class="px-6 py-3">Amount</th></tr>
+        </thead>
+        <tbody id="g-table-body" class="divide-y"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- CSS-transformed card: scale+rotate parent — client rects vs layout rects -->
+  <section>
+    <h2 class="text-lg font-semibold mb-3">Transformed</h2>
+    <div class="h-56 grid place-items-center">
+      <div id="g-transformed" style="transform: scale(0.8) rotate(3deg)" class="bg-white shadow-lg rounded-xl p-6 w-72">
+        <h3 id="g-tx-title" class="font-semibold">Skaliert &amp; rotiert</h3>
+        <p id="g-tx-body" class="text-sm text-gray-600 mt-1">Dieses Element lebt unter einem CSS-Transform-Elternteil.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- shadow-DOM web component -->
+  <section>
+    <h2 class="text-lg font-semibold mb-3">Web Component</h2>
+    <g-card id="g-shadow-host"></g-card>
+  </section>
+
+  <!-- long scroll run to push the footer target far down -->
+  <section id="g-filler" class="space-y-4"></section>
+
+  <section class="pb-24">
+    <div id="g-deep-card" class="bg-white shadow rounded-xl p-6">
+      <h3 id="g-deep-title" class="font-semibold">Tief unten</h3>
+      <p class="text-sm text-gray-600">Nur nach langem Scrollen erreichbar.</p>
+    </div>
+  </section>
+</main>
+
+<!-- toast pinned at an aggressive z-index -->
+<div id="g-toast" class="fixed bottom-5 right-5 bg-gray-900 text-white text-sm rounded-lg px-4 py-3 shadow-lg" style="z-index: 9999">
+  Build 4711 deployed
+</div>
+
+<script src="vendor/flowbite.min.js"></script>
+<script>
+  // table rows: 40 near-identical rows (selector uniqueness + sticky header)
+  const tb = document.getElementById('g-table-body')
+  for (let i = 1; i <= 40; i++) {
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td class="px-6 py-3">INV-${1000 + i}</td><td class="px-6 py-3">Kunde ${i}</td><td class="px-6 py-3">€ ${i * 110},00</td>`
+    tb.appendChild(tr)
+  }
+  // filler paragraphs for the scroll run
+  const filler = document.getElementById('g-filler')
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('p')
+    p.className = 'text-gray-500'
+    p.textContent = `Absatz ${i + 1} — Fülltext für die Scroll-Strecke.`
+    filler.appendChild(p)
+  }
+  // shadow-DOM component (open root, like Nudge's own overlay)
+  customElements.define('g-card', class extends HTMLElement {
+    connectedCallback() {
+      const r = this.attachShadow({ mode: 'open' })
+      r.innerHTML = `<style>.c{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15);padding:20px;font-family:sans-serif}</style>
+        <div class="c"><b id="s-title">Shadow-Titel</b><p id="s-body">Inhalt in einer Shadow-Root.</p></div>`
+    }
+  })
+</script>
+</body>
+</html>
