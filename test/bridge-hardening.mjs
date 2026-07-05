@@ -77,6 +77,21 @@ try {
   if (aAgain.owner !== true || bAgain.owner !== false) fail(`sticky choice violated: A=${aAgain.owner} B=${bAgain.owner}`)
   done('roster + manual owner choice (sticky against newer B)')
 
+  // --- H6: one roster entry per SESSION; older watcher of the same session
+  //     is told it was replaced (Gerald: no stale names, ever) ---
+  const hbS = (pid, since) => fetch('http://localhost:4799/agent/heartbeat', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label: 'thread-X', pid, since, session: 'abc12345' }),
+  })
+  await hbS(10, 5000)
+  await hbS(11, 6000) // same session re-armed with a newer watcher
+  const idn2 = await (await fetch('http://localhost:4799/.identity')).json()
+  const xEntries = idn2.agents.filter(a => a.session === 'abc12345')
+  if (xEntries.length !== 1 || xEntries[0].pid !== 11) fail(`session dedupe: ${JSON.stringify(xEntries)}`)
+  const old = await (await hbS(10, 5000)).json()
+  if (old.replaced !== true) fail('older same-session watcher must be told replaced')
+  done('session-keyed roster (dedupe + replaced signal to the old watcher)')
+
   // --- H3: oversize body -> 413, connection answered (no hanging socket) ---
   const big = await fetch('http://localhost:4799/comments', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
