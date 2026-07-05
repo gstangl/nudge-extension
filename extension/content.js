@@ -21,6 +21,15 @@
   const root = host.attachShadow({ mode: 'open' })
   document.documentElement.appendChild(host)
 
+  // Nudge chrome must be INERT for the page: clicks on the pill/queue/composer
+  // bubble (composed) to document and count as outside-clicks — they dismissed
+  // page popovers before one could pick them (bit Gerald 2026-07-05,
+  // „Finale Version freigeben?"). Inner handlers run first (host is last in
+  // the bubble path), then we stop everything here.
+  for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'focusin']) {
+    host.addEventListener(type, (e) => e.stopPropagation())
+  }
+
   const sheet = new CSSStyleSheet()
   sheet.replaceSync(globalThis.__nudgeCss) // styles.js, loaded before this script
   root.adoptedStyleSheets = [sheet]

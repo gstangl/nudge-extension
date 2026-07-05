@@ -92,6 +92,26 @@ try {
   const after = await page.locator('.pill').boundingBox()
   if (Math.abs(after.x - before.x) < 200 || Math.abs(after.y - before.y) < 100) fail(`pill did not move: ${JSON.stringify({ before, after })}`)
 
+  // --- A-8: our chrome is INERT for the page — a transient popover with an
+  //     outside-click closer must survive the pill click and remain pickable ---
+  await page.evaluate(() => {
+    const pop = document.createElement('div')
+    pop.id = 'page-pop'
+    pop.textContent = 'Finale Version freigeben?'
+    pop.style.cssText = 'position:fixed;left:40px;bottom:40px;background:#fff;border:1px solid #999;padding:10px;z-index:10;'
+    document.body.appendChild(pop)
+    document.addEventListener('click', (e) => { if (!pop.contains(e.target)) pop.remove() }) // typical outside-close
+    document.addEventListener('pointerdown', (e) => { if (!pop.contains(e.target)) pop.remove() })
+  })
+  await page.locator('.pill .btn-pick').click() // this click must NOT reach the page
+  if (!(await page.locator('#page-pop').count())) fail('pill click dismissed the page popover (A-8)')
+  await page.locator('#page-pop').click() // pick the popover itself
+  await page.locator('textarea[placeholder*="Nudge"]').waitFor({ timeout: 3000 })
+  await page.locator('.composer .cancel').click()
+  await page.evaluate(() => document.getElementById('page-pop')?.remove())
+  await page.keyboard.press('Escape')
+  console.log('PASS chrome inert (page popover survives pill click, stays pickable)')
+
   // --- pick mode with layer chips: click INTO the card (hits inner li), then
   //     pick the card via its chip ---
   await page.locator('.pill .btn-pick').click()
