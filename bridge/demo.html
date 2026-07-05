@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Pin PoC — Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --accent:#b45a38; --line:#e3ded7; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:-apple-system,'Helvetica Neue',sans-serif; color:var(--ink); background:#faf8f5; padding:64px; max-width:1100px; margin:0 auto; }
+  .eyebrow { letter-spacing:.2em; font-size:11px; color:var(--muted); text-transform:uppercase; }
+  h1 { font-size:44px; line-height:1.1; margin:12px 0 8px; }
+  h1 em { font-style:normal; color:var(--muted); }
+  p.lede { color:var(--muted); max-width:640px; margin:16px 0 48px; line-height:1.5; }
+  section { border-top:2px solid var(--ink); padding:24px 0 48px; }
+  section h2 { font-size:22px; margin-bottom:24px; }
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .card { background:#fff; border:1px solid var(--line); border-left:3px solid var(--accent); padding:20px; }
+  .card h3 { font-size:15px; margin-bottom:12px; }
+  .card .tag { font-size:10px; letter-spacing:.15em; color:var(--accent); text-transform:uppercase; }
+  .card ul { list-style:none; margin-top:8px; }
+  .card li { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .card li span:last-child { color:var(--muted); font-size:11px; }
+  .banner { background:var(--accent); color:#fff; text-align:center; padding:14px; font-family:ui-monospace,monospace; font-size:14px; margin-top:24px; }
+</style>
+</head>
+<body>
+  <div class="eyebrow" data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="12:4">Roots · Energy</div>
+  <h1 data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="14:4">Electrons in.<br><em>Heat out.</em></h1>
+  <p class="lede" data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="17:4">
+    Testseite für den Pin-PoC. Markiere ein Element, schreib einen Kommentar —
+    er landet als strukturierter Kontext samt Screenshot beim Agenten in Zed.
+  </p>
+
+  <section data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="23:4">
+    <h2>What we build</h2>
+    <div class="cards">
+      <div class="card" id="card-source" data-astro-source-file="src/components/Card.astro" data-astro-source-loc="8:2">
+        <div class="tag">Source</div>
+        <h3>Energy sources</h3>
+        <ul><li><span>Electricity</span><span>kW electric</span></li><li><span>Air</span><span>kW thermal</span></li><li><span>Ground</span><span>kW thermal</span></li></ul>
+      </div>
+      <div class="card" id="card-conversion" data-astro-source-file="src/components/Card.astro" data-astro-source-loc="8:2">
+        <div class="tag">Conversion</div>
+        <h3>Heat pump</h3>
+        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>
+      </div>
+      <div class="card" id="card-delivery" data-astro-source-file="src/components/Card.astro" data-astro-source-loc="8:2">
+        <div class="tag">Delivery</div>
+        <h3>In the flats</h3>
+        <ul><li><span>Heating</span><span>kW thermal</span></li><li><span>Cooling</span><span>kW thermal</span></li><li><span>Hot water</span><span>kW thermal</span></li></ul>
+      </div>
+    </div>
+    <div class="banner" data-astro-source-file="src/components/ScopBanner.astro" data-astro-source-loc="3:1">SCOP 3.5 to 7×</div>
+  </section>
+  <script>
+    // Testsignale für den Console-/Netzwerk-Beifang der Pin-Extension
+    console.error('Demo-Fehler: SCOP-Wert konnte nicht geladen werden (Testdaten)')
+    fetch('/api/scop-values').catch(() => {}) // -> 404 von der Bridge
+  </script>
+</body>
+</html>

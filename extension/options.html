@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Roots Nudge — Options</title>
+<style>
+  body { font-family: -apple-system, 'Helvetica Neue', sans-serif; max-width: 420px; margin: 48px auto; color: #1a1a1a; }
+  h1 { font-size: 18px; }
+  label { display: block; font-size: 13px; color: #6b6b6b; margin: 20px 0 6px; }
+  input { width: 100%; padding: 9px 12px; font-size: 14px; border: 1px solid #ddd6cd; border-radius: 8px; outline-color: #b45a38; }
+  .hint { font-size: 12px; color: #8a8378; margin-top: 8px; }
+  .saved { color: #3fa34d; font-size: 12px; margin-left: 8px; opacity: 0; transition: opacity .3s; }
+  .saved.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <h1>Roots Nudge</h1>
+  <label for="author">Your name (attached to every nudge)<span class="saved" id="saved">saved ✓</span></label>
+  <input id="author" placeholder="e.g. Gerald" autocomplete="off">
+  <p class="hint">Saved as you type (syncs across your Chrome profiles).</p>
+  <script src="options.js"></script>
+</body>
+</html>
