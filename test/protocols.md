@@ -17,6 +17,9 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   pins and cleans them up itself (never resets seq).
 - **Suite C** — manual drills, each tied to a trigger ("run after X changed").
 
+**Edge-case catalog:** `scenarios.md` — every bug/lesson with coverage status;
+the backlog for new legs lives there (section „Building new legs").
+
 **Standing rules**
 - Suite A wins port 4700 ITSELF (kill → spawn → verify /.identity.workspace = /tmp,
   retry — Chrome's native host revives the live bridge within moments) and restores

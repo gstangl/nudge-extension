@@ -5,6 +5,19 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## [0.16.2] — 2026-07-05
+
+### Fixed
+- **Toolbar-Klick schloss Seiten-Popovers** (z. B. „Finale Version freigeben?"):
+  Events aus unserer Chrome bubbeln composed bis zum document und zählten als
+  Outside-Click — transiente UI ließ sich nicht nudgen. Alle Pointer-/Maus-/
+  Klick-/Fokus-Events stoppen jetzt an der Host-Grenze (Katalog A-8).
+
+### Added
+- `test/scenarios.md`: Edge-Case-Katalog aller Bugs/Lektionen der Build-Sessions
+  mit Abdeckungsstatus (✅ automatisiert · 🔧 lohnt · 🥁 Drill · 📖 dokumentiert)
+  und priorisiertem Backlog für neue Suite-Beine.
+
 ## Bridge 0.10.1 — 2026-07-05 (Lifecycle: inaktive Sessions verschwinden)
 
 ### Fixed
