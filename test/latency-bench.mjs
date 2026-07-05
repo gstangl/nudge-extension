@@ -29,7 +29,7 @@ async function measure(mode, extraEnv) {
   const env = { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT) }
   const bridge = await winPort(env)
   const watcher = spawn('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
-    env: { ...env, ...extraEnv }, stdio: ['ignore', 'pipe', 'ignore'],
+    env: { ...env, NUDGE_AGENT_LABEL: 'latency-bench', ...extraEnv }, stdio: ['ignore', 'pipe', 'ignore'],
   })
   const waiters = new Map() // id -> resolve(t)
   const early = new Map() // WS push can beat the POST response — buffer lines by id

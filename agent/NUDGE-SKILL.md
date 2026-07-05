@@ -40,12 +40,16 @@ Say NOTHING about the connection unless something is wrong; then one line:
 
 ## Watch mode (live following — the prompt channel)
 
-**Arming is OPT-IN — NEVER arm proactively.** Fresh sessions got watcher
-processes injected they never asked for (Gerald 2026-07-05); a session arms
-ONLY when Gerald explicitly says so („übernimm die Nudges", „nenn dich X",
-designating it as the nudge/bugfix channel). The BRIDGE keeps a ROSTER of
-armed sessions (losers idle in silent standby), Gerald picks the owner in the
-browser toolbar dropdown; newest wins only as fallback among armed ones:
+**Invoking /nudge IS the registration.** A session becomes available to the
+extension ONLY through Gerald: he types /nudge (or „übernimm die Nudges" /
+„nenn dich X") in the session he wants — then FIRST arm the watcher (topic
+label!), then list/process the queue. NEVER arm without that explicit gesture.
+The fence is also technical: the watcher REFUSES to start without
+NUDGE_AGENT_LABEL, so arming outside this path is impossible; double-arming
+is harmless (the bridge replaces the older sibling of the same session).
+The BRIDGE keeps a ROSTER of armed sessions (losers idle in silent standby),
+Gerald picks the owner in the browser toolbar dropdown; newest wins only as
+fallback among armed ones:
 `Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
 ALWAYS set the topic label — it is how Gerald recognizes the session in the
 dropdown (Zed thread titles summarize the same conversation, so they converge).

@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.10.1'
+const VERSION = '0.10.2'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)

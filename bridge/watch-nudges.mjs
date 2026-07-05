@@ -40,7 +40,15 @@ function scanPins(pins) {
 // (Zed/CLI), start time, session id, and the thread's FIRST USER MESSAGE
 // (read from the session transcript via the inherited CLAUDE_CODE_SESSION_ID).
 const SINCE = Date.now()
-const LABEL = process.env.NUDGE_AGENT_LABEL || `${path.basename(process.cwd())} #${process.pid % 10000}`
+// OPT-IN FENCE (G-5): a session appears in the extension ONLY after Gerald
+// invoked /nudge there — that path sets the topic label. Without a deliberate
+// NUDGE_AGENT_LABEL this watcher refuses to run, so accidental arming by
+// eager agents is physically impossible (no default dir+pid label any more).
+if (!process.env.NUDGE_AGENT_LABEL) {
+  console.error('[nudge-watch] verweigert: NUDGE_AGENT_LABEL fehlt — Armen ist Opt-in, ausschließlich via /nudge (Skill setzt das Themen-Label).')
+  process.exit(1)
+}
+const LABEL = process.env.NUDGE_AGENT_LABEL
 function gitBranch() {
   try { return execSync('git branch --show-current', { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || null } catch { return null }
 }
