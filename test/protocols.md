@@ -16,6 +16,10 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   under `test/fixtures/` (Flowbite/Tailwind components + TodoMVC React; sources +
   licenses in `fixtures/README.md`). Proves the picker against the wild, not just
   our own apps. Refetch fixtures deliberately, then re-run.
+- `node test/hook-optin.mjs` — **Suite G (Hook Opt-in Gate)**, side port 4797:
+  proves the UserPromptSubmit hook stays SILENT in every session that did not arm
+  via /nudge (its session id is not in the roster) — even with a full store and a
+  live owner. Run after ANY hook change.
 - `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
   Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
@@ -146,6 +150,21 @@ bugs surfaced here (see run log 2026-07-05).
 | F5 | **Shadow DOM**: click into a closed-ish web component retargets to the HOST element (documented boundary — the picker addresses the host, not the shadow internals) | ✅ 2026-07-05 |
 | F6 | **z-index 9999 toast**: an aggressive page z-index cannot cover the picker; the toast is pickable with its innerText | ✅ 2026-07-05 |
 | F7 | **TodoMVC React re-render**: pick a todo, toggle another (React rebuilds the keyed list) between pick and send → selector, rect and innerText all survive | ✅ 2026-07-05 |
+
+## Suite G — Hook Opt-in Gate (hook-optin.mjs)
+
+The immanent guarantee Gerald asked for: a session becomes Nudge-aware ONLY by
+his hand (typing /nudge, which arms a watcher → its session id enters the
+roster). The UserPromptSubmit hook runs in EVERY session but reveals Nudge
+context only to roster members; everyone else is silent. The SessionStart hook
+injects nothing at all any more (it only ensures the bridge is up).
+
+| # | Guards | Last |
+|---|--------|------|
+| G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, and a live owner in the store | ✅ 2026-07-05 |
+| G2 | **No session id → silence**: a session without CLAUDE_CODE_SESSION_ID cannot prove participation → nothing | ✅ 2026-07-05 |
+| G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and queue line | ✅ 2026-07-05 |
+| G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-05 |
 
 ## Suite C — manual drills (trigger-bound)
 

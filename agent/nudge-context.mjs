@@ -1,15 +1,24 @@
-// UserPromptSubmit hook (USER-LEVEL: runs in every project) — Pin: ONLY two
+// UserPromptSubmit hook (USER-LEVEL: runs in every project) — Nudge: ONLY two
 // things matter on every message: (1) does the chain work, (2) what is marked
 // RIGHT NOW. No backlog listing — older prompts live behind /pins on demand.
 // The current mark is the NEWEST pin regardless of status (a just-answered mark
 // stays the referent for follow-ups) within a 15-minute freshness window.
 // Store is GLOBAL (~/.claude/nudge) — one truth for every agent in every project.
-// Exits silently when Pin is not in play (no store at all).
+//
+// OPT-IN GATE (immanent, 2026-07-05): this hook runs in EVERY session, but only
+// a session that PARTICIPATES in Nudge may see Nudge context — one that invoked
+// /nudge and thereby armed a watcher, so its CLAUDE_CODE_SESSION_ID is in the
+// bridge roster. Every other session (a CI agent, an unrelated task) gets TOTAL
+// SILENCE. Before, any existing global store leaked status + mark + queue into
+// every agent, and a foreign agent adopted the owner's session as its own
+// (Gerald's screenshot: „Die neuen Nudges gehören der suite-e-Session"). No
+// roster membership, no output — full stop.
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-const PIN_DIR = path.join(os.homedir(), '.claude', 'nudge')
+const PORT = Number(process.env.NUDGE_PORT || 4700)
+const PIN_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'nudge')
 
 let store = null
 try { store = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'store.json'), 'utf8')) } catch { /* no store yet */ }
@@ -17,12 +26,21 @@ let selection = null
 try { selection = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'selection.json'), 'utf8')) } catch { /* none yet */ }
 if (!store && !selection) process.exit(0)
 
-let status = 'Bridge ✗ (nicht erreichbar)'
+// The gate: is THIS session armed? Ask the bridge for the roster and match our
+// own session id. Bridge down / no session id / not in roster → silent exit.
+// (A just-typed /nudge is not armed YET — the skill arms it; context appears on
+// the NEXT prompt. The skill itself surfaces everything on that first run.)
+const mySession = (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8)
+let status
 try {
-  const res = await fetch('http://127.0.0.1:4700/.identity', { signal: AbortSignal.timeout(400) })
+  const res = await fetch(`http://127.0.0.1:${PORT}/.identity`, { signal: AbortSignal.timeout(400) })
   const id = await res.json()
-  status = id.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${id.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert. NICHT proaktiv armen; nur wenn Gerald es sagt („übernimm die Nudges").'
-} catch { /* bridge down */ }
+  const armed = mySession && (id.agents || []).some(a => a.session === mySession)
+  if (!armed) process.exit(0) // this session does not participate in Nudge — say nothing
+  status = id.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${id.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert.'
+} catch {
+  process.exit(0) // bridge unreachable → can't prove participation → stay silent
+}
 
 const pins = store?.pins || []
 const newestPin = [...pins].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0]
