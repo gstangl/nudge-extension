@@ -121,7 +121,7 @@ from this worktree on side ports (5313 md-pdf · 5315 estimate · 5318 media).
 |---|--------|------|
 | E1 | **md-pdf**: pick on the dropzone (DOM-only, innermost element inside the card); load a REAL document (dynamic file input → filechooser, staging step, »Generate document«) and pick inside the PagedJS print preview | ✅ 2026-07-05 |
 | E4 | **Input hygiene on a real form**: typed values NEVER reach element-owned channels (innerText/outerHTML/styles/targets/selector/xpath) — DOM properties are not serialized. Page-owned surfaces (title/url) carry what the page puts there: md-pdf reflects the Dokumenttitel field into document.title — the app's exposure, reported faithfully | ✅ 2026-07-05 |
-| E2 | **estimate/ProseMirror — the A-2 case**: open a real document, pick a paragraph, DETACH the node before send (clone+replace = PM re-render) → pick-time rect + selector survive via the fallback chain | ✅ 2026-07-05 |
+| E2 | **estimate/ProseMirror — the A-2 case**: open a real document, pick a paragraph, DETACH the node before send (clone+replace = PM re-render) → pick-time rect + selector survive via the fallback chain. Library data comes through vite's proxy from the worker (:8787) — if that backend is down the leg SKIPS honestly instead of reddening the suite | ✅ 2026-07-05 |
 | E3 | **media grid**: picked thumb in a grid of near-identical cards yields a UNIQUE selector pointing at the right card; shift-multi across two cards (first click already with ⇧ — A-7 convention) | ✅ 2026-07-05 |
 | E5 | **Cross-app queue truth**: open pins on md-pdf AND media → each tab's count shows only its own route | ✅ 2026-07-05 |
 
