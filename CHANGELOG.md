@@ -5,6 +5,20 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## [0.16.5] — 2026-07-05 (Immanenter Opt-in-Gate: fremde Agents sehen Nudge NICHT mehr)
+
+### Fixed
+- **Fremde Agents bekamen Nudge-Kontext** (G-8): der Opt-in-Zaun (0.10.2) stoppte
+  das ARMEN, nicht das INFORMIEREN. Der UserPromptSubmit- und der SessionStart-
+  Hook laufen user-level in JEDER Session und injizierten Nudge-Status/Markierung/
+  Queue, sobald irgendein globaler Store existierte — ein CI-Agent bezog sich auf
+  die Owner-Session („Die neuen Nudges gehoeren der suite-e-Session", Geralds
+  Screenshot). Jetzt IMMANENT: der Kontext-Hook zeigt Nudge NUR Sessions, deren
+  id im Bridge-Roster steht (also via /nudge gearmt). Keine Roster-Mitgliedschaft
+  → komplette Stille. SessionStart injiziert gar nichts mehr (stellt nur die
+  Bridge sicher). Bewiesen von Suite G (4 Legs), Hooks port-/store-konfigurierbar
+  fuer hermetische Tests.
+
 ## [0.16.4] — 2026-07-05 (Suite F Fixture Gauntlet; zwei Picker-Bugs gefixt)
 
 ### Fixed
