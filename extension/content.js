@@ -839,8 +839,16 @@
   setInterval(() => { if (dots.children.length) positionDots() }, 1500) // SPA re-renders move anchors without scroll
   function showQueue() {
     renderQueue()
-    const r = pill.getBoundingClientRect()
-    Object.assign(queue.style, { top: r.bottom + 8 + 'px', right: Math.max(8, window.innerWidth - r.right) + 'px' })
+    const W = 420 // must match .queue width in styles.js
+    const pillR = pill.getBoundingClientRect()
+    const badge = pill.querySelector('.count').getBoundingClientRect()
+    const caretX = badge.left + badge.width / 2 // viewport x of the clicked badge
+    // anchor the popover so its caret can reach the badge, clamped to the viewport
+    const left = Math.max(8, Math.min(caretX - 32, window.innerWidth - W - 8))
+    // caret stays clear of the rounded corners
+    const caret = Math.max(16, Math.min(caretX - left, W - 16))
+    Object.assign(queue.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
+    queue.style.setProperty('--caret-x', caret + 'px')
     queue.classList.add('on')
   }
   function hideQueue() { queue.classList.remove('on') }

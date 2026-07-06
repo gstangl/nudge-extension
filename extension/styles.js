@@ -93,15 +93,28 @@
 
     /* queue popover: what the badge number MEANS — read-only peek, midnight family */
     .queue {
-      position: fixed; width: 320px; pointer-events: auto; z-index: 2;
+      position: fixed; width: 420px; pointer-events: auto; z-index: 2;
       background: ${MID}; border: 1px solid ${MID_3}; border-radius: 12px;
       box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(14,19,24,.45);
-      overflow: hidden; opacity: 0; transform: translateY(-4px); pointer-events: none;
+      opacity: 0; transform: translateY(-4px); pointer-events: none;
       transition: opacity .16s ease-out, transform .16s ease-out;
     }
+    /* Caret pointing UP at the badge the user clicked (--caret-x = badge centre,
+       relative to the popover's left edge). Two triangles: outer = border colour,
+       inner = header fill offset down 1.5px so ~1px of border shows on the edges.
+       No overflow:hidden on .queue (it would clip the caret) — the header rounds
+       its own top corners, the transparent last row rounds via the parent. */
+    .queue::before, .queue::after {
+      content: ""; position: absolute; width: 0; height: 0;
+      left: var(--caret-x, 32px); transform: translateX(-50%);
+      border-left: 8px solid transparent; border-right: 8px solid transparent;
+    }
+    .queue::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
+    .queue::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
     .queue.on { opacity: 1; transform: none; pointer-events: auto; }
     .queue .q-head {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
+      border-radius: 11px 11px 0 0;
       font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 550;
       letter-spacing: .01em;
     }
