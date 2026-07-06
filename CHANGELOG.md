@@ -5,6 +5,18 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## [0.16.6] — 2026-07-05 (Queue-Popover: Caret + breiter fuer lesbarere Prompts)
+
+### Changed
+- **Queue-Popover ist jetzt ein echtes Popover mit Caret** (Gerald): ein
+  Dreieck an der Oberkante zeigt genau auf die Badge, auf die geklickt wurde
+  (--caret-x = Badge-Mitte, viewport-genau ausgerichtet, an den Viewport-
+  Rand geklemmt). `overflow:hidden` entfiel (haette das Caret abgeschnitten) —
+  die abgerundeten Ecken tragen jetzt der Header (oben) und die transparente
+  letzte Zeile (unten, ueber den Eltern-Radius).
+- **Breiter: 320 → 420 px** — laengere Zeilen, die Prompt-Texte sind deutlich
+  besser lesbar (Geralds Beispieltexte umbrechen auf 3 statt ~6 Zeilen).
+
 ## [0.16.5] — 2026-07-05 (Immanenter Opt-in-Gate: fremde Agents sehen Nudge NICHT mehr)
 
 ### Fixed
