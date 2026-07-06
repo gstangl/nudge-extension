@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.11.1'
+const VERSION = '0.11.6'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -102,21 +102,29 @@ function handle(req, res) {
       agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
       const owner = agent?.pid === who.pid
       if (owner) agentSeenAt = Date.now()
-      // liveness flip OR ownership/label change -> the toolbar must not lie
-      if ((!was && agentLive()) || agent?.pid !== prevPid || agent?.label !== prevLabel) broadcast(snapshot())
+      // Push on: liveness flip, ownership/label change, OR the visible session
+      // list changed — a NEW session joining (or a label change / re-appearance)
+      // must reach the Switch-session dropdown at once, even when a sticky owner
+      // means it doesn't become owner (else it only showed on the next unrelated
+      // broadcast — minutes later; Gerald 2026-07-06).
+      if ((!was && agentLive()) || agent?.pid !== prevPid || agent?.label !== prevLabel || rosterSig() !== lastBroadcastSig) pushSnapshot()
       return json(res, 200, { ok: true, owner })
     })
   // toolbar dropdown: Gerald picks which session owns the wake channel
   if (req.method === 'POST' && url.pathname === '/agent/owner')
-    return readBody(req, res, ({ pid }) => {
-      const target = freshAgents().find(a => a.pid === pid)
+    return readBody(req, res, ({ pid, session }) => {
+      // pick by SESSION id (stable) when given, pid only as fallback — so a
+      // session that re-armed (new watcher pid) is still selectable, and the
+      // sticky choice survives its re-arms (Gerald 2026-07-06: 404 on a session
+      // whose pid had moved / that had just ended)
+      const target = freshAgents().find(a => (session && a.session === session) || a.pid === pid)
       if (!target) return json(res, 404, { error: 'no such live agent' })
-      chosenPid = pid
+      chosenKey = agentKey(target)
       const own = currentOwner()
       agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
       agentSeenAt = Date.now() // chosen = live by decree until its next heartbeat confirms
-      log(`owner chosen: ${own?.label} (#${pid})`)
-      broadcast(snapshot())
+      log(`owner chosen: ${own?.label} (${chosenKey})`)
+      pushSnapshot()
       json(res, 200, { ok: true, owner: own?.label })
     })
   if (req.method === 'GET' && url.pathname === '/comments')
@@ -139,13 +147,15 @@ function handle(req, res) {
     })
   if (req.method === 'POST' && url.pathname === '/comments')
     return readBody(req, res, (payload) => {
-      const pin = store.addPin(payload)
-      log(`stored ${pin.id}: "${pin.text.slice(0, 60)}" @ ${pin.target?.selector || pin.url}${pin.author ? ` (${pin.author})` : ''}`)
+      // owner is passed SEPARATELY and decided server-side — a client-sent
+      // payload.owner is never read, so provenance can't be spoofed
+      const pin = store.addPin(payload, ownerStamp())
+      log(`stored ${pin.id}: "${pin.text.slice(0, 60)}" @ ${pin.target?.selector || pin.url}${pin.owner ? ` [${pin.owner.label}]` : ''}`)
       json(res, 201, { id: pin.id })
     })
   const m = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/resolve$/)
   if (req.method === 'POST' && m)
-    return store.resolvePin(m[1]) ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
+    return store.resolvePin(m[1], ownerStamp()) ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
   // discard from the queue popover (×) — remove entirely, not a work outcome
   const md = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)$/)
   if (req.method === 'DELETE' && md) {
@@ -189,24 +199,35 @@ if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
 let agentSeenAt = 0
 let agent = null // the session owning the wake channel (subset of the roster)
 const roster = new Map() // pid -> full identity + lastSeen (standby sessions incl.)
-let chosenPid = null // sticky manual choice from the toolbar dropdown
+let chosenKey = null // sticky manual choice from the dropdown — session-keyed (survives re-arms)
+const agentKey = (a) => a.session ? `s:${a.session}` : `p:${a.pid}`
 const freshAgents = () => { const now = Date.now(); return [...roster.values()].filter(a => now - a.lastSeen < 12_000) }
+// stable signature of the VISIBLE session list (pid+label of every fresh agent) —
+// changes iff a session joins, leaves the fresh window, or renames itself; drives
+// prompt Switch-session-dropdown updates without spamming on plain heartbeats
+const rosterSig = () => freshAgents().map(a => `${a.pid}:${a.label}`).sort().join('|')
 function currentOwner() {
   const f = freshAgents()
   if (!f.length) return null
-  if (chosenPid != null) { const c = f.find(a => a.pid === chosenPid); if (c) return c } // sticky until that session dies
+  if (chosenKey) { const c = f.find(a => agentKey(a) === chosenKey); if (c) return c } // sticky until that session dies
   return f.reduce((a, b) => (b.since >= a.since ? b : a)) // fallback: newest
 }
+// provenance stamp for a nudge: WHO owns the channel right now (immutable once
+// written onto a pin) — so a later owner switch never relabels an existing nudge
+const ownerStamp = () => { const o = currentOwner(); return o ? { label: o.label, session: o.session } : null }
 const agentLive = () => Date.now() - agentSeenAt < 10_000
 const agentsForClient = () => freshAgents().map(a => ({ ...a, owner: a.pid === agent?.pid }))
 let lastBroadcastLive = false
-setInterval(() => { // liveness flip or an owner dying -> update the extension
+let lastBroadcastSig = '' // rosterSig() at the last snapshot push — compare against
+// THIS (not the tick start) so a session leaving the 12 s fresh window is caught
+// (its expiry is time-based; both reads inside one tick already see it gone)
+const pushSnapshot = () => { lastBroadcastLive = agentLive(); lastBroadcastSig = rosterSig(); broadcast(snapshot()) }
+setInterval(() => { // liveness flip, an owner dying, or a session leaving -> update
   for (const [pid, a] of roster) if (Date.now() - a.lastSeen > 60_000) roster.delete(pid)
   const own = currentOwner()
   const changed = own?.pid !== agent?.pid
   if (changed) agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
-  const l = agentLive()
-  if (l !== lastBroadcastLive || changed) { lastBroadcastLive = l; broadcast(snapshot()) }
+  if (agentLive() !== lastBroadcastLive || changed || rosterSig() !== lastBroadcastSig) pushSnapshot()
 }, 5000)
 
 // ---------- WebSocket surface (live sync to the extension) ----------
@@ -249,7 +270,7 @@ wss.on('connection', (ws) => {
 // extension; a resolve additionally asks the browser for the after-shot evidence
 store.onChange((kind, pin) => {
   if (kind === 'selection') return // picks are hover-frequency; tabs render nothing from it
-  broadcast(snapshot())
+  pushSnapshot() // keeps lastBroadcastSig fresh too, so roster pushes don't double-fire
   // after-shot evidence only for pins that HAD a before-shot (lasso/Kreis) —
   // element pins are DOM-only by design, nothing to compare against
   if (kind === 'resolved' && pin.screenshot && !pin.screenshotAfter)

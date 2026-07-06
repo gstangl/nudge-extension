@@ -89,6 +89,10 @@ export const getPin = (id) => load().pins.find(p => p.id === id)
 // pays for it forever (brutal-suite finding, 2026-07-05).
 const cap = (v, n) => { const s = String(v ?? ''); return s ? s.slice(0, n) : '' }
 const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
+// owner provenance stamp: { label, session } of the agent that owned the channel
+const sanitizeOwner = (o) => (o && typeof o === 'object' && (o.label || o.session))
+  ? { label: cap(o.label, 60) || null, session: o.session ? cap(o.session, 32) : null }
+  : null
 function sanitizeStyles(styles) {
   if (!styles || typeof styles !== 'object') return null
   try { return JSON.stringify(styles).length > 20_000 ? null : styles } catch { return null }
@@ -191,6 +195,11 @@ export function addPin(payload) {
     url: cap(payload.url, 2000),
     title: cap(payload.title, 300),
     ua: capOrNull(payload.ua, 300),
+    // owner = the agent session that held the watch channel WHEN this nudge
+    // arrived (the bridge stamps it server-side). Immutable: a later owner
+    // switch never relabels an existing nudge — provenance stays put (Gerald
+    // 2026-07-05: "damit das erhalten bleibt").
+    owner: sanitizeOwner(payload.owner),
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
@@ -206,11 +215,14 @@ export function addPin(payload) {
   return pin
 }
 
-export function resolvePin(id) {
+export function resolvePin(id, ownerFallback) {
   const pin = getPin(id)
   if (!pin) return null
   pin.status = 'resolved'
   pin.resolvedAt = new Date().toISOString()
+  // attribute done work: if the nudge arrived with no agent on channel, stamp
+  // the session that resolved it — a done row always names WHO handled it
+  if (!pin.owner) pin.owner = sanitizeOwner(ownerFallback)
   persist()
   emit('resolved', pin) // notify first, mirror after
   writeInboxMirror(pin)
@@ -265,7 +277,7 @@ export function pruneResolved(maxAgeMs = 7 * 24 * 3600e3) {
 // ---------- projections (one per consumer, together on purpose) ----------
 /** HTTP GET /comments — structured summary for scripts/tools. */
 export function pinSummary(p) {
-  return { id: p.id, status: p.status, author: p.author, text: p.text, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
+  return { id: p.id, status: p.status, author: p.author, owner: p.owner?.label, text: p.text, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
 }
 // speaking label for text-less prompts — same wording as the extension queue
 // (label parity: browser and agent describe a mark identically)
@@ -287,7 +299,7 @@ export function pinLine(p) {
 /** WS push — what the extension needs for badge, queue popover + open-prompt dots. */
 export function pinForClient(p) {
   return {
-    id: p.id, status: p.status, author: p.author, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
+    id: p.id, status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
