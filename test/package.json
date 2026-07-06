@@ -1,16 +1,18 @@
 {
-  "name": "test",
+  "name": "nudge-test",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Nudge test suites. `npm test` runs the fast Vitest units (unit/); the .mjs files are the spawned-bridge integration/e2e harnesses, run per protocols.md (node test/<suite>.mjs).",
+  "type": "commonjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "playwright": "^1.61.1"
+  },
+  "devDependencies": {
+    "vitest": "~3.2.0"
   }
 }
