@@ -57,12 +57,13 @@
       position: fixed; width: 340px; pointer-events: auto; z-index: 3;
       background: ${MID}; border: 1px solid ${MID_3}; border-radius: 12px;
       box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(14,19,24,.45);
-      overflow: hidden; opacity: 0; transform: translateY(-4px); pointer-events: none;
+      opacity: 0; transform: translateY(-4px); pointer-events: none;
       transition: opacity .16s ease-out, transform .16s ease-out;
     }
     .who-menu.on { opacity: 1; transform: none; pointer-events: auto; }
     .who-menu .q-head {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
+      border-radius: 11px 11px 0 0;
       font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 550;
     }
     .who-menu .w-row { padding: 10px 14px; border-bottom: 1px solid ${MID_2}; cursor: pointer; }
@@ -99,18 +100,19 @@
       opacity: 0; transform: translateY(-4px); pointer-events: none;
       transition: opacity .16s ease-out, transform .16s ease-out;
     }
-    /* Caret pointing UP at the badge the user clicked (--caret-x = badge centre,
-       relative to the popover's left edge). Two triangles: outer = border colour,
-       inner = header fill offset down 1.5px so ~1px of border shows on the edges.
-       No overflow:hidden on .queue (it would clip the caret) — the header rounds
-       its own top corners, the transparent last row rounds via the parent. */
-    .queue::before, .queue::after {
+    /* Caret pointing UP at whatever the user clicked (--caret-x = anchor centre,
+       relative to the popover's left edge). Shared by the toolbar popovers (Nudge
+       History + Switch session). Two triangles: outer = border colour, inner =
+       header fill offset down 1.5px so ~1px of border shows on the edges. No
+       overflow:hidden (it would clip the caret) — the header rounds its own top
+       corners, the transparent last row rounds via the parent. */
+    .queue::before, .queue::after, .who-menu::before, .who-menu::after {
       content: ""; position: absolute; width: 0; height: 0;
       left: var(--caret-x, 32px); transform: translateX(-50%);
       border-left: 8px solid transparent; border-right: 8px solid transparent;
     }
-    .queue::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
-    .queue::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
+    .queue::before, .who-menu::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
+    .queue::after, .who-menu::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
     .queue.on { opacity: 1; transform: none; pointer-events: auto; }
     .queue .q-head {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
@@ -119,16 +121,18 @@
       letter-spacing: .01em;
     }
     .queue .q-row {
-      display: flex; align-items: center; gap: 8px; padding: 9px 14px;
-      font-size: 12px; color: rgba(242,239,234,.85);
+      display: flex; align-items: flex-start; gap: 8px; padding: 9px 14px;
+      font-size: 12px; line-height: 18px; color: rgba(242,239,234,.85);
       border-bottom: 1px solid ${MID_2};
     }
     .queue .q-row:last-child { border-bottom: 0; }
     .queue .q-row { cursor: pointer; }
-    .queue .q-row.open { align-items: flex-start; }
-    .queue .q-row.open .q-dot { margin-top: 1px; }
-    .queue .q-row.open .q-id, .queue .q-row.open .q-age { margin-top: 1px; }
-    .queue .q-row.open .q-text { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.5; }
+    /* Collapsed and open share the SAME first-line geometry: every item (dot,
+       id, text, age, ×) has an 18px first-line box, top-aligned via flex-start —
+       so expanding only reveals more wrapped lines BELOW. Toggling used to swap
+       align-items + margins + line-height at once, jittering the icon and text
+       on every open/close (Gerald 2026-07-05). */
+    .queue .q-row.open .q-text { white-space: normal; overflow: visible; text-overflow: clip; }
     .queue .q-dot {
       flex: none; width: 18px; height: 18px; border-radius: 50%;
       background: ${MID_DEEP}; border: 2px solid ${PAPER};
@@ -140,9 +144,17 @@
     .queue .q-hand { transform-box: view-box; transform-origin: 50% 50%; }
     .queue .q-row.live .q-hand { animation: q-sweep 4s linear infinite; }
     @keyframes q-sweep { to { transform: rotate(360deg) } }
-    .queue .q-id { font-family: ${MONO}; font-size: 10px; color: rgba(242,239,234,.45); flex: none; }
-    .queue .q-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .queue .q-age { flex: none; font-size: 10px; color: rgba(242,239,234,.4); }
+    .queue .q-id { font-family: ${MONO}; font-size: 10px; line-height: 18px; color: rgba(242,239,234,.45); flex: none; }
+    .queue .q-text { flex: 1; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* owning agent session (immutable per nudge) — a muted tag so provenance
+       stays visible even after the channel owner changes */
+    .queue .q-who {
+      flex: none; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 10px; line-height: 18px; color: rgba(242,239,234,.42);
+      font-variation-settings: "wght" 550;
+    }
+    .queue .q-who:not(:empty)::before { content: "· "; color: rgba(242,239,234,.28); }
+    .queue .q-age { flex: none; font-size: 10px; line-height: 18px; color: rgba(242,239,234,.4); }
     .queue .q-x {
       flex: none; width: 18px; height: 18px; border: 0; border-radius: 6px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; padding: 0;
@@ -263,9 +275,11 @@
     .composer .send:disabled { opacity: .45; cursor: default; }
 
     /* ---------- feedback feed: monochrome chips, colour = status only ---------- */
+    /* feedback chips stack directly UNDER the toolbar (left-aligned to it, even
+       gaps) and follow the pill when it moves — placeFeed() sets top/left/maxWidth */
     .feed {
-      position: fixed; top: 64px; right: 20px; display: flex; flex-direction: column;
-      align-items: flex-end; gap: 6px; pointer-events: none; max-width: 340px;
+      position: fixed; display: flex; flex-direction: column;
+      align-items: flex-start; gap: 8px; pointer-events: none;
     }
     .feed .item {
       display: flex; align-items: center; gap: 8px;

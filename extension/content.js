@@ -60,7 +60,7 @@
   // prompts (what the count MEANS). No management UI on the page — resolving
   // stays the agent's job; this is a peek, in the composer's midnight language.
   const queue = el('div', 'queue', '<div class="q-head"></div><div class="q-list"></div>')
-  const whoMenu = el('div', 'who-menu', '<div class="q-head">Connected sessions — click to hand over</div><div class="w-list"></div>')
+  const whoMenu = el('div', 'who-menu', '<div class="q-head">Switch session</div><div class="w-list"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
   // DIN Var, self-contained: @font-face cannot load from a shadow-root adopted
@@ -113,6 +113,29 @@
     const cx = Math.min(Math.max(4, x), window.innerWidth - w - 4)
     const cy = Math.min(Math.max(4, y), window.innerHeight - h - 4)
     Object.assign(pill.style, { left: cx + 'px', top: cy + 'px', right: 'auto', bottom: 'auto' })
+    // everything that hangs off the toolbar follows it while it moves
+    placeFeed()
+    if (queue.classList.contains('on')) anchorPopover(queue, pill.querySelector('.count'), 420)
+    if (whoMenu.classList.contains('on')) anchorPopover(whoMenu, pill.querySelector('.who'), 340)
+  }
+  // the feedback chips live directly under the toolbar and track it (the pill
+  // moves) — left-aligned to the pill, capped to its width so they sit tidily
+  // under it instead of floating in the screen corner
+  function placeFeed() {
+    const r = pill.getBoundingClientRect()
+    Object.assign(feed.style, { top: (r.bottom + 8) + 'px', left: r.left + 'px', right: 'auto', maxWidth: Math.max(220, r.width) + 'px' })
+  }
+  // position a toolbar popover directly under the pill, caret pointing at its
+  // anchor (badge / session label), clamped to the viewport. Used on OPEN and
+  // on every drag — the popovers belong to the toolbar and move with it.
+  function anchorPopover(popover, anchorEl, W) {
+    const pillR = pill.getBoundingClientRect()
+    const a = anchorEl.getBoundingClientRect()
+    const caretX = a.left + a.width / 2
+    const left = Math.max(8, Math.min(caretX - 32, window.innerWidth - W - 8))
+    const caret = Math.max(16, Math.min(caretX - left, W - 16))
+    Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
+    popover.style.setProperty('--caret-x', caret + 'px')
   }
   chrome.storage.local.get('nudgePillPos', ({ nudgePillPos }) => {
     if (nudgePillPos) requestAnimationFrame(() => placePill(nudgePillPos.x, nudgePillPos.y))
@@ -139,6 +162,7 @@
   addEventListener('resize', () => { // keep the pill inside the viewport
     const r = pill.getBoundingClientRect()
     if (pill.style.left) placePill(r.left, r.top)
+    else placeFeed() // pill at its default (right-anchored) spot — feed still tracks it
   }, { passive: true })
 
   // ---------- shared: selector, source hint, styles ----------
@@ -631,6 +655,7 @@
     item.className = `item ${kind === 'alert' || kind === 'clock' ? 'warn' : 'ok'}`
     item.innerHTML = `<svg viewBox="0 0 24 24">${FEED_ICONS[kind] || FEED_ICONS.check}</svg><span></span>`
     item.querySelector('span').textContent = text
+    placeFeed() // anchor under the toolbar at its CURRENT position before showing
     feed.appendChild(item)
     while (feed.children.length > 4) feed.firstChild.remove() // unobtrusive: short list
     requestAnimationFrame(() => item.classList.add('show'))
@@ -713,8 +738,10 @@
       else l3.remove()
       row.addEventListener('click', async () => {
         try {
-          await fetch(`${HTTP}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: a.pid }) })
-          notify('check', `Owner: ${a.label}`)
+          // address the session by its id (stable across re-arms), pid as fallback
+          const r = await fetch(`${HTTP}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: a.pid, session: a.session }) })
+          if (r.ok) notify('check', `Owner: ${a.label}`)
+          else notify('alert', `${a.label} nicht mehr aktiv`) // gone since the list was drawn — never claim success
         } catch { notify('alert', 'Bridge offline') }
         whoMenu.classList.remove('on')
       })
@@ -725,8 +752,7 @@
     e.stopPropagation()
     if (whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
     renderWhoMenu()
-    const r = pill.getBoundingClientRect()
-    Object.assign(whoMenu.style, { top: r.bottom + 8 + 'px', right: Math.max(8, window.innerWidth - r.right) + 'px' })
+    anchorPopover(whoMenu, pill.querySelector('.who'), 340) // 340 = .who-menu width in styles.js
     whoMenu.classList.add('on')
   })
 
@@ -767,9 +793,10 @@
     for (const p of open) {
       const row = document.createElement('div')
       row.className = 'q-row' + (wsOk && agentLive ? ' live' : '')
-      row.innerHTML = `${Q_CLOCK}<span class="q-id"></span><span class="q-text"></span><span class="q-age"></span><button class="q-x" title="Dismiss nudge">×</button>`
+      row.innerHTML = `${Q_CLOCK}<span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span><button class="q-x" title="Dismiss nudge">×</button>`
       row.querySelector('.q-id').textContent = p.id
       row.querySelector('.q-text').textContent = p.text || markLabel(p)
+      row.querySelector('.q-who').textContent = p.owner?.label || '' // which session owns this nudge (stamped at arrival, immutable)
       row.querySelector('.q-age').textContent = ageOf(p.createdAt)
       qAccordion(row, p.id)
       row.querySelector('.q-x').addEventListener('click', async (e) => {
@@ -792,9 +819,10 @@
       for (const p of pageDone) {
         const row = document.createElement('div')
         row.className = 'q-row done'
-        row.innerHTML = `${Q_CHECK}<span class="q-id"></span><span class="q-text"></span><span class="q-age"></span>`
+        row.innerHTML = `${Q_CHECK}<span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span>`
         row.querySelector('.q-id').textContent = p.id
         row.querySelector('.q-text').textContent = p.text || markLabel(p)
+        row.querySelector('.q-who').textContent = p.owner?.label || ''
         row.querySelector('.q-age').textContent = ageOf(p.resolvedAt || p.createdAt)
         qAccordion(row, p.id)
         list.appendChild(row)
@@ -839,16 +867,7 @@
   setInterval(() => { if (dots.children.length) positionDots() }, 1500) // SPA re-renders move anchors without scroll
   function showQueue() {
     renderQueue()
-    const W = 420 // must match .queue width in styles.js
-    const pillR = pill.getBoundingClientRect()
-    const badge = pill.querySelector('.count').getBoundingClientRect()
-    const caretX = badge.left + badge.width / 2 // viewport x of the clicked badge
-    // anchor the popover so its caret can reach the badge, clamped to the viewport
-    const left = Math.max(8, Math.min(caretX - 32, window.innerWidth - W - 8))
-    // caret stays clear of the rounded corners
-    const caret = Math.max(16, Math.min(caretX - left, W - 16))
-    Object.assign(queue.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
-    queue.style.setProperty('--caret-x', caret + 'px')
+    anchorPopover(queue, pill.querySelector('.count'), 420) // 420 = .queue width in styles.js
     queue.classList.add('on')
   }
   function hideQueue() { queue.classList.remove('on') }
@@ -869,7 +888,7 @@
     const who = pill.querySelector('.who')
     const showWho = wsOk && (agentLive && !!agentLabel || agents.length > 0)
     who.textContent = agentLive && agentLabel ? agentLabel : (agents.length ? `${agents.length} sessions` : '')
-    who.title = showWho ? 'Connected sessions — click to choose the owner' : ''
+    who.title = showWho ? 'Switch session — pick which agent gets your nudges' : ''
     who.style.display = showWho ? 'inline-block' : 'none'
     pill.querySelector('.who-sep').style.display = showWho ? 'inline-block' : 'none'
     const openCount = pagePins.filter(p => p.status === 'open').length
