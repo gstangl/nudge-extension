@@ -179,7 +179,10 @@ function saveImage(id, suffix, dataUrl) {
   return `shots/${file}`
 }
 
-export function addPin(payload) {
+// `owner` is a SEPARATE arg, never read from payload: the bridge passes the
+// server-decided owner stamp so a client can NEVER inject or spoof provenance
+// (bulletproof binding — Gerald 2026-07-05: "nicht gekidnappt").
+export function addPin(payload, owner) {
   const s = load()
   // ids must NEVER be reused (watchers dedup by id; a recycled id is silently
   // swallowed — happened live 2026-07-04 after a manual seq reset). Guard against
@@ -196,10 +199,10 @@ export function addPin(payload) {
     title: cap(payload.title, 300),
     ua: capOrNull(payload.ua, 300),
     // owner = the agent session that held the watch channel WHEN this nudge
-    // arrived (the bridge stamps it server-side). Immutable: a later owner
-    // switch never relabels an existing nudge — provenance stays put (Gerald
-    // 2026-07-05: "damit das erhalten bleibt").
-    owner: sanitizeOwner(payload.owner),
+    // arrived (server-decided, from the `owner` arg — payload.owner is IGNORED).
+    // Immutable: a later owner switch never relabels an existing nudge —
+    // provenance stays put (Gerald 2026-07-05: "damit das erhalten bleibt").
+    owner: sanitizeOwner(owner),
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
@@ -314,6 +317,8 @@ function writeInboxMirror(pin) {
   fs.mkdirSync(INBOX_DIR, { recursive: true })
   const src = pin.target?.source ? `\n- source: \`${pin.target.source}\`` : ''
   const who = pin.author ? `\n- author: ${pin.author}` : ''
+  // provenance in the file an agent reads: WHICH session this nudge belongs to
+  const owns = pin.owner?.label ? `\n- agent: ${pin.owner.label}` : ''
   const con = pin.console?.length ? `\n\n## Console\n\`\`\`\n${pin.console.join('\n')}\n\`\`\`\n` : ''
   const many = pin.targets?.length
     ? `\n\n## Elemente (${pin.targets.length})\n${pin.targets.map((t, i) => `${i + 1}. \`${t.selector}\`${t.source ? ` — \`${t.source}\`` : ''}`).join('\n')}\n`
@@ -321,5 +326,5 @@ function writeInboxMirror(pin) {
   const after = pin.screenshotAfter ? `\n## Beweis (nachher)\n\n![after](../${pin.screenshotAfter})\n` : ''
   const quote = pin.text || `_(${markLabel(pin)} — reference for "das hier" in chat)_`
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
-    `# ${pin.id} - ${pin.status}\n\n> ${quote}\n\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
+    `# ${pin.id} - ${pin.status}\n\n> ${quote}\n\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
 }

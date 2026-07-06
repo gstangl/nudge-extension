@@ -42,6 +42,10 @@ backlog for new ones.
 | C-3 | Grip icon blurry | hand-rolled 10×16 viewBox, subpixel radii — use stock Lucide geometry in the shared stroke pipeline | 📖 (visual; design-shots runner exists for eyes) |
 | C-4 | Queue silently dropped oldest beyond 25 | cap without feedback | 📖 chip exists; unit-ish, low value |
 | C-5 | Accordion expansion lost on live re-render | queue re-renders on every WS snapshot — persist expanded ids | ✅ implicit (accordion leg toggles across renders) |
+| C-6 | Queue row TYPOGRAPHY + icon jittered on every open/close — the `.open` state swapped align-items + margin-top + line-height at once, so a one-line nudge changed height/baseline | collapsed and open must share ONE first-line geometry (18px line box, flex-start); only wrapping toggles | ✅ Suite A (accordion no-jitter: dot/id/text hold position across toggles; fixed 0.16.7) |
+| C-7 | Toolbar popovers floated unattached — no caret pointing at what was clicked | a caret at `--caret-x` = anchor centre (badge / session label), clamped to the popover; overflow:hidden removed (it clipped the caret) | ✅ Suite A (queue + Switch-session caret aligned to their anchors; fixed 0.16.6 / 0.16.11) |
+| C-8 | Feedback chips floated in the screen corner, overlapping the toolbar | anchor the feed directly UNDER the pill (left-aligned, even gaps) and track the movable pill via placeFeed | ✅ Suite A (feed under toolbar Δleft<3, Δtop 2–20; follows the pill on drag; fixed 0.16.12) |
+| C-9 | An OPEN popover (Switch session / Nudge History) stayed put when the toolbar was dragged — position was computed only on open | reposition open popovers on every drag (shared anchorPopover), caret stays on its anchor | ✅ Suite A (popover follows the dragged toolbar, caret aligned; fixed 0.16.14) |
 
 ## D. Extension lifecycle (orphans, reload, queue)
 
@@ -52,6 +56,7 @@ backlog for new ones.
 | D-3 | Event fired in the ≤5 s window before orphan detection → „Extension context invalidated" | guard chrome.* call sites with `alive()` | 🥁 same drill |
 | D-4 | Two tabs flushed the same offline queue → double-send | only the visible tab flushes | 🔧 leg: two pages in one context, bridge down→up, queue flushes exactly once (store count) |
 | D-5 | Failed WS attempts log red console lines | browser-mandated; one line per reconnect while bridge down | 📖 unavoidable; self-healing keeps it rare |
+| D-6 | After a bridge RESTART, an already-open tab keeps the OLD extension — the new bridge never saw the pre-restart file change, so no reload broadcast; and runtime.reload can't re-inject into a live tab | dev-loop truth: touch an extension file AFTER the bridge is stable to broadcast reload; a stubborn tab needs chrome://extensions reload + Cmd+R | 📖 documented dev-loop drill (bit Gerald 2026-07-06) — worktree/canonical split amplifies it |
 
 ## E. Bridge & Store
 
@@ -83,6 +88,23 @@ backlog for new ones.
 | F-6 | Anonymous/legacy heartbeats kept a dead label alive | identity required + typed (400 without finite pid/since) | ✅ brutal D4 |
 | F-7 | Bench/manual test watchers hijacked the real channel & polluted the global store (nudge_72/79) | tests NEVER on port 4700 → side port 4799; test pins carry [TEST-…] or get deleted by id | ✅ standing rule + all runners on 4799 |
 | F-8 | Suite A silently depended on some real session's heartbeat | suite simulates its own live agent | ✅ (own heartbeat, labeled suite-a) |
+| F-9 | A newly-armed session took MINUTES to appear in the Switch-session dropdown — the bridge only broadcast on liveness/owner change; a new NON-owner session (sticky owner set) never triggered a push | broadcast whenever the visible session list changes (join/label/leave), compared to the LAST sent signature (also catches the 12s-fresh-window expiry) | ✅ brutal D16 (join <1s, leave <15s; fixed bridge 0.11.5) |
+| F-10 | Switch-session showed „Owner: X" even on failure, and a re-armed session (new watcher pid) 404'd — the dropdown addressed sessions by process pid | client checks res.ok (honest „nicht mehr aktiv"); ownership is SESSION-keyed, survives re-arms; only a truly dead session 404s | ✅ brutal D17 (fixed bridge 0.11.6 / ext 0.16.13) |
+
+## H. Provenance (owner binding — the "Nudge History")
+
+The badge-click popover = the **Nudge History**: open nudges + a DONE history,
+each row bound to its owning agent session. The binding is the robustness Gerald
+leans on — bulletproofed in Suite H (`provenance.mjs`), display in Suite A.
+
+| # | Edge case | Root cause / lesson | Status |
+|---|-----------|---------------------|--------|
+| H-1 | A foreign agent could relabel a nudge by taking the channel (header showed the CURRENT owner for every row) | stamp the owner AT ARRIVAL onto the pin, immutable; display per-row, not from the live header | ✅ Suite H H2/H3, Suite A (owner shown) |
+| H-2 | A client could POST a forged `owner` | owner is a server-decided arg to addPin, payload.owner never read — spoofing structurally impossible | ✅ Suite H H1 |
+| H-3 | Resolve by a different session could reassign the nudge | resolve only fills owner when it was null (offline arrival); an owned nudge is never touched | ✅ Suite H H4/H5/H7 |
+| H-4 | Owner could be lost on crash / a huge label could bloat the store | persisted in store.json (survives SIGKILL); label/session capped 60/32 | ✅ Suite H H6/H8 |
+| H-5 | A discarded nudge's id could be reused → a new nudge inherits a dead binding | ids strictly monotonic, never reused (seq floor) | ✅ Suite H H9 |
+| H-6 | Retention: resolved nudges (with their owner) are pruned after 7 days | binding is immutable WHILE it exists; permanent history is a separate retention decision (open) | 📖 documented — decide if the History should keep resolved nudges longer |
 
 ## G. Agent wiring & process
 
