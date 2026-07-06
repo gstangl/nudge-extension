@@ -16,6 +16,20 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   under `test/fixtures/` (Flowbite/Tailwind components + TodoMVC React; sources +
   licenses in `fixtures/README.md`). Proves the picker against the wild, not just
   our own apps. Refetch fixtures deliberately, then re-run.
+- `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
+  4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
+  four simultaneous tabs with four armed sessions and churning ownership — per-app
+  binding, per-route isolation (no cross-app leak), concurrent interleaved creation
+  under a heartbeat/resolve storm. Reuses running dev servers; skips unreachable.
+- `node test/battletest.mjs` — **Suite I (Kidnap Battletest)**, side port 4793,
+  static 5321: END-TO-END through the real extension — a nudge is set in a new app
+  under one owner, then 4 attacker agents storm the bridge (heartbeats, /agent/owner
+  grabs, stranger resolves, forged posts) trying to kidnap channel + nudge. Owner
+  binding + captured context must not budge. The rock-solid proof.
+- `node test/provenance.mjs` — **Suite H (Provenance)**, side port 4794: the
+  bulletproof proof that a nudge's owning agent session is stamped at arrival and
+  stays bound FOREVER — un-spoofable, un-kidnappable. Run after ANY change to
+  owner stamping, the roster, or resolve.
 - `node test/hook-optin.mjs` — **Suite G (Hook Opt-in Gate)**, side port 4797:
   proves the UserPromptSubmit hook stays SILENT in every session that did not arm
   via /nudge (its session id is not in the roster) — even with a full store and a
@@ -59,7 +73,7 @@ the backlog for new legs lives there (section „Building new legs").
 | A1 | **Report completeness (element)**: DOM-only — text, url, title, ua, viewport, unique selector, xpath, innerText, source hint, outerHTML, categorized styles, console incl. `[net]` ≥400. NO screenshot (element pins are DOM-only) | ✅ 2026-07-05 |
 | A2 | **Capture accuracy** (dpr derived from bitmap÷viewport, not trusted) | ✅ 2026-07-05 |
 | A3 | **Pick = mark**: element selection published on pick DOM-ONLY (no screenshot, no flicker), chip retarget updates it, Abbrechen keeps selection, creates NO pin | ✅ 2026-07-05 |
-| A4 | **Prompt tracking**: badge counts this route's open prompts, clears on resolve; ONE amber dot per marked element while its prompt is open (0.9.0 product revision — no popovers/threads, dot click opens the queue), dots gone after resolve/discard, hidden in evidence shots. Badge CLICK → queue popover (id · text · age, midnight style), closes on Escape/outside/empty | ✅ 2026-07-05 |
+| A4 | **Prompt tracking**: badge counts this route's open prompts, clears on resolve; ONE amber dot per marked element while its prompt is open (0.9.0 product revision — no popovers/threads, dot click opens the queue), dots gone after resolve/discard, hidden in evidence shots. Badge CLICK → queue popover (id · text · age, midnight style), closes on Escape/outside/empty. **Caret aligned to the badge (C-7); a row does NOT jitter on accordion toggle (C-6, dot/id hold their offset)** | ✅ 2026-07-06 |
 | A5 | **Resolve (element)**: HTTP resolve → „pin_X erledigt"-chip, badge drops, NO after-shot (element = DOM-only). Freeform pins keep the before/after evidence loop (asserted in A6) | ✅ 2026-07-05 |
 | A6 | **Freeform (region)**: stroke stored, centroid selector, AND a screenshot (only the Freeform tool captures) + resolve → after-shot evidence loop | ✅ 2026-07-05 |
 | A7 | **SPA refilter**: hashchange/popstate refilter the badge (route = pathname+hash; query deliberately ignored) | ✅ 2026-07-05 |
@@ -68,6 +82,11 @@ the backlog for new legs lives there (section „Building new legs").
 | A10 | **Queue management (0.9.0)**: text-less prompt shows a speaking label („Markierung: ‚innerText'" / N Elemente / selector); row × discards via DELETE (store + inbox + shots weg, feed chip „verworfen"); dots lifecycle asserted (3 → 2 after discard) | ✅ 2026-07-05 |
 | A12 | **Zustands-Feedback 0.12.0**: Punkt GRÜN bei agentLive (Suite-Heartbeat), amber sonst; Badge zählt nur OFFENE, verschwindet bei 0; Erledigt-History im Queue-Popover (q-div „Erledigt", Zeile mit grünem Check, resolvedAt-Alter) | ✅ 2026-07-05 |
 | A11 | **Härtung 0.10.0**: CORS-Grenze (fremder Origin → keine CORS-Header, localhost reflektiert); leeres Senden = reine Markierung, KEIN Pin; Klick-Konvention (normaler Klick setzt Multi auf Einzel zurück, nur ⇧ sammelt); Agent-Wiring-Drift-Check (Repo = installiert) als Schlussbein | ✅ 2026-07-05 |
+
+**Toolbar chrome geometry (2026-07-06):** Suite A also locks in the popover
+carets (queue → badge, Switch-session → its label, C-7), the accordion no-jitter
+(C-6) and the feed sitting under the toolbar (C-8, Δleft<3/Δtop 2–20). Full
+catalog in `scenarios.md` groups C/D/F.
 
 ## Suite B — live chain, automated (live-drill.mjs)
 
@@ -165,6 +184,60 @@ injects nothing at all any more (it only ensures the bridge is up).
 | G2 | **No session id → silence**: a session without CLAUDE_CODE_SESSION_ID cannot prove participation → nothing | ✅ 2026-07-05 |
 | G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and queue line | ✅ 2026-07-05 |
 | G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-05 |
+
+## Suite H — Provenance (provenance.mjs)
+
+The **Nudge History** (the badge-click popover: open nudges + a DONE history,
+each row naming its agent) rests on one contract Gerald leans the bridge's
+robustness on: **once a nudge is created it stays bound to the agent session
+that owned the channel at that instant — forever, and no other process or agent
+can kidnap it.** Bulletproofed here from every angle.
+
+| # | Attack on the binding | Last |
+|---|-----------------------|------|
+| H1 | **Client spoof**: a forged `owner` in the POST body (object/string/array) is IGNORED — owner is a separate server-decided arg, never read from the payload | ✅ 2026-07-05 |
+| H2 | **Heartbeat owner switch**: newer session takes the channel → existing nudge keeps its owner | ✅ 2026-07-05 |
+| H3 | **Dropdown pick** (`/agent/owner`): Gerald re-chooses the channel owner → existing nudges unchanged, only NEW ones take the chosen owner | ✅ 2026-07-05 |
+| H4 | **Resolve by a stranger**: B resolves an A-owned nudge → stays A | ✅ 2026-07-05 |
+| H5 | **Double/triple resolve**: idempotent, owner never drifts | ✅ 2026-07-05 |
+| H6 | **SIGKILL + restart**: owner is persisted (store.json), survives a crash | ✅ 2026-07-05 |
+| H7 | **Offline nudge**: created with no channel owner → attributed to the RESOLVER; then immutable against a later owner | ✅ 2026-07-05 |
+| H8 | **Bounded stamp**: a 5000-char roster label is capped to 60 — a hostile session can't bloat pins | ✅ 2026-07-05 |
+| H9 | **Discard + no id reuse**: DELETE removes the nudge entirely; ids never reused → a new nudge can't inherit a dead binding | ✅ 2026-07-05 |
+| H10 | **Concurrency**: 30 parallel creates under one owner all stamp it, ids unique | ✅ 2026-07-05 |
+| H11 | **Projection parity**: owner present + consistent in the HTTP summary (label) and the WS snapshot (object) | ✅ 2026-07-05 |
+
+Display side (that the History SHOWS the owner per row) is asserted in Suite A
+("badge queue popover … owner shown").
+
+## Suite I — Kidnap Battletest (battletest.mjs)
+
+The Nudge History binding proven through the FULL stack, adversarially. A nudge
+is created in a new app (Tailwind Gauntlet fixture) through the real extension
+while Owner-Alpha holds the channel; then 4 attacker agents storm the bridge for
+5 s trying to steal both the channel and that nudge.
+
+| # | Guards | Last |
+|---|--------|------|
+| I1 | Nudge set via the real browser UI is owned by Owner-Alpha; the captured context (selector→#g-brand, xpath, innerText, url) is correct | ✅ 2026-07-05 |
+| I2 | **Kidnap storm**: ~84 rounds × 4 agents × 5 attack types (newest-wins heartbeats, /agent/owner grabs, stranger resolve, forged-owner post, bogus mutate) → owner + captured context never budge (asserted every round) | ✅ 2026-07-05 |
+| I3 | Channel ownership IS reassignable (a kidnapper can become channel owner), but each nudge keeps ITS owner: old stays Alpha, a new nudge belongs to the new owner | ✅ 2026-07-05 |
+| I4 | The Nudge History UI shows each nudge's true per-row owner even when the header/channel owner is now a kidnapper | ✅ 2026-07-05 |
+| I5 | The inbox file an agent reads carries the owning agent + captured selector + url — no kidnapper can claim the forwarded context | ✅ 2026-07-05 |
+
+## Suite J — Cross-App + Multi-Session (cross-app.mjs)
+
+The whole system under realistic load: four real apps open at once, four agent
+sessions armed in parallel, ownership churning — Gerald's "mehrere Sessions
+gleichzeitig". Uses whatever dev servers are running (md-pdf :5313, estimate
+:5315, media :5318, website :4321); skips an app that isn't up.
+
+| # | Guards | Last |
+|---|--------|------|
+| J1 | One nudge on EACH app, each created while a DIFFERENT session owned the channel → each bound to its own session; context captured on the real DOM | ✅ 2026-07-05 (4/4 apps) |
+| J2 | **Per-route isolation**: each tab's badge + History show ONLY that app's nudge with its own owner — no cross-app leakage | ✅ 2026-07-05 |
+| J3 | **Concurrent storm**: interleaved creation across all tabs under rotating ownership + a heartbeat/stranger-resolve storm → every nudge correctly attributed, ids strictly monotonic, none lost | ✅ 2026-07-05 |
+| J4 | After the churn, each tab's Nudge History is still route-correct with the right per-row owners | ✅ 2026-07-05 |
 
 ## Suite C — manual drills (trigger-bound)
 

@@ -405,6 +405,89 @@ try {
     pass('D14 watcher resilience (armed into the void -> registers once the bridge exists)')
   }
 
+  // ---------- D15: owner provenance — stamped at arrival, IMMUTABLE across a
+  //     later owner switch (Gerald: a nudge must not get a new context when the
+  //     channel owner changes); offline-created nudges get attributed on resolve
+  {
+    bridge.kill(); await sleep(200)
+    fs.rmSync(STORE, { recursive: true, force: true }); startBridge()
+    if (!await up()) fail('D15: restart failed')
+    await hb({ label: 'Agent-A', pid: 701, since: 1000, session: 'provA' }); await sleep(200)
+    const n1 = await (await post('/comments', { text: 't', url: `${B}/x`, target: { selector: '#x' } })).json()
+    await hb({ label: 'Agent-B', pid: 702, since: 2000, session: 'provB' }); await sleep(200)
+    const n2 = await (await post('/comments', { text: 't', url: `${B}/x`, target: { selector: '#x' } })).json()
+    const own = async () => Object.fromEntries((await (await fetch(`${B}/comments`)).json()).map(p => [p.id, p.owner]))
+    let o = await own()
+    if (o[n1.id] !== 'Agent-A' || o[n2.id] !== 'Agent-B') fail(`D15: stamp wrong (${o[n1.id]}/${o[n2.id]})`)
+    await fetch(`${B}/comments/${n1.id}/resolve`, { method: 'POST' }) // B is owner now
+    o = await own()
+    if (o[n1.id] !== 'Agent-A') fail(`D15: owner MUTATED on resolve (${o[n1.id]}) — provenance not preserved`)
+    // offline create → resolve-fallback attributes the resolver
+    await new Promise(r => setTimeout(r, 12500)) // let A+B age out of the roster
+    const n3 = await (await post('/comments', { text: 't', url: `${B}/x`, target: { selector: '#x' } })).json()
+    if ((await own())[n3.id] != null) fail('D15: offline nudge should have null owner')
+    await hb({ label: 'Agent-C', pid: 703, since: 3000, session: 'provC' }); await sleep(200)
+    await fetch(`${B}/comments/${n3.id}/resolve`, { method: 'POST' })
+    if ((await own())[n3.id] !== 'Agent-C') fail('D15: resolve-fallback did not attribute Agent-C')
+    await assertAlive('D15')
+    pass('D15 owner provenance (stamped at arrival, immutable across owner switch + resolve; offline → resolver)')
+  }
+
+  // ---------- D16: roster changes are PUSHED to the dropdown promptly — a new
+  //     session joining while a sticky owner is set must reach the extension at
+  //     once (not minutes later on the next unrelated broadcast; Gerald 2026-07-06)
+  {
+    bridge.kill(); await sleep(200); fs.rmSync(STORE, { recursive: true, force: true }); startBridge()
+    if (!await up()) fail('D16: restart failed')
+    await hb({ label: 'Sticky-A', pid: 810, since: 1000, session: 'stA' })
+    await post('/agent/owner', { pid: 810 }) // A is the sticky owner
+    const keepA = setInterval(() => hb({ label: 'Sticky-A', pid: 810, since: 1000, session: 'stA' }), 1500)
+    await sleep(300)
+    const seen = []
+    const ws = new WebSocket(`ws://127.0.0.1:${PORT}`)
+    ws.on('message', m => { const j = JSON.parse(m); if (j.type === 'pins') seen.push(j.agents.map(a => a.label).sort().join(',')) })
+    await new Promise(r => ws.on('open', r)); await sleep(200)
+    seen.length = 0
+    // a NEW session joins; A stays sticky owner (B never becomes owner)
+    const t0 = Date.now()
+    const keepB = setInterval(() => hb({ label: 'Joiner-B', pid: 811, since: 2000, session: 'stB' }), 1500)
+    await hb({ label: 'Joiner-B', pid: 811, since: 2000, session: 'stB' })
+    let joinMs = null
+    for (let i = 0; i < 20 && !joinMs; i++) { await sleep(150); if (seen.some(s => s.includes('Joiner-B'))) joinMs = Date.now() - t0 }
+    if (!joinMs) fail('D16: new session not pushed to the dropdown (sticky owner masked it)')
+    if (joinMs > 3000) fail(`D16: new session took ${joinMs} ms to push (too slow)`)
+    // B leaves -> gone from the pushed list within the fresh window + a sweep
+    clearInterval(keepB); seen.length = 0; const t1 = Date.now()
+    let leaveMs = null
+    for (let i = 0; i < 45 && !leaveMs; i++) { await sleep(500); const last = seen.at(-1); if (last !== undefined && !last.includes('Joiner-B')) leaveMs = Date.now() - t1 }
+    ws.close(); clearInterval(keepA)
+    if (!leaveMs) fail('D16: left session never removed from the pushed list')
+    await assertAlive('D16')
+    pass(`D16 roster pushes (join in ${joinMs} ms under a sticky owner; leave in ${(leaveMs / 1000).toFixed(1)} s)`)
+  }
+
+  // ---------- D17: ownership is SESSION-keyed — survives a re-arm (new watcher
+  //     pid), pick works by session even with a stale pid, dead session -> 404
+  //     (Gerald 2026-07-06: 404 on a session whose pid moved / that had ended)
+  {
+    bridge.kill(); await sleep(200); fs.rmSync(STORE, { recursive: true, force: true }); startBridge()
+    if (!await up()) fail('D17: restart failed')
+    await hb({ label: 'Sess-A', pid: 820, since: 1000, session: 'reA' }); await sleep(150)
+    const pick = await (await post('/agent/owner', { session: 'reA', pid: 820 })).json()
+    if (pick.owner !== 'Sess-A') fail(`D17: initial pick failed ${JSON.stringify(pick)}`)
+    // A re-arms: SAME session, NEW watcher pid
+    await hb({ label: 'Sess-A', pid: 821, since: 1000, session: 'reA' }); await sleep(150)
+    const a = (await (await fetch(`${B}/.identity`)).json()).agents.find(x => x.session === 'reA')
+    if (!a || a.pid !== 821) fail('D17: re-arm did not replace the pid')
+    if (!a.owner) fail('D17: sticky owner LOST after re-arm (pid changed) — the exact 404 cause')
+    // picking with the now-STALE pid still works because session wins
+    if ((await post('/agent/owner', { session: 'reA', pid: 820 })).status !== 200) fail('D17: session pick with stale pid should still work')
+    // a dead / unknown session -> honest 404
+    if ((await post('/agent/owner', { session: 'ghost', pid: 99999 })).status !== 404) fail('D17: dead session must 404')
+    await assertAlive('D17')
+    pass('D17 session-keyed ownership (survives re-arm/new pid; stale-pid pick works; dead session -> 404)')
+  }
+
   console.log('\nSuite D — Bridge Brutal: ALL PASS')
 } finally {
   bridge.kill()

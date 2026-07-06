@@ -115,8 +115,8 @@
     Object.assign(pill.style, { left: cx + 'px', top: cy + 'px', right: 'auto', bottom: 'auto' })
     // everything that hangs off the toolbar follows it while it moves
     placeFeed()
-    if (queue.classList.contains('on')) anchorPopover(queue, pill.querySelector('.count'), 420)
-    if (whoMenu.classList.contains('on')) anchorPopover(whoMenu, pill.querySelector('.who'), 340)
+    if (queue.classList.contains('on')) trackPopover(queue)
+    if (whoMenu.classList.contains('on')) trackPopover(whoMenu)
   }
   // the feedback chips live directly under the toolbar and track it (the pill
   // moves) — left-aligned to the pill, capped to its width so they sit tidily
@@ -125,9 +125,9 @@
     const r = pill.getBoundingClientRect()
     Object.assign(feed.style, { top: (r.bottom + 8) + 'px', left: r.left + 'px', right: 'auto', maxWidth: Math.max(220, r.width) + 'px' })
   }
-  // position a toolbar popover directly under the pill, caret pointing at its
-  // anchor (badge / session label), clamped to the viewport. Used on OPEN and
-  // on every drag — the popovers belong to the toolbar and move with it.
+  // OPEN: position the popover under the pill, caret pointing at its anchor
+  // (badge / session label), clamped to the viewport — and REMEMBER the offset
+  // to the pill so a later drag translates the whole thing RIGIDLY.
   function anchorPopover(popover, anchorEl, W) {
     const pillR = pill.getBoundingClientRect()
     const a = anchorEl.getBoundingClientRect()
@@ -136,6 +136,16 @@
     const caret = Math.max(16, Math.min(caretX - left, W - 16))
     Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
     popover.style.setProperty('--caret-x', caret + 'px')
+    popover._dx = left - pillR.left // offset from the pill; keep it constant on drag
+    popover._w = W
+  }
+  // DRAG: move the OPEN popover by the SAME delta as the pill — window + caret
+  // travel together as one unit (the popover belongs to the toolbar). No caret
+  // recompute → it never slides while the window stays put (Gerald 2026-07-06).
+  function trackPopover(popover) {
+    const pillR = pill.getBoundingClientRect()
+    const left = Math.max(8, Math.min(pillR.left + (popover._dx || 0), window.innerWidth - (popover._w || 340) - 8))
+    Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px' })
   }
   chrome.storage.local.get('nudgePillPos', ({ nudgePillPos }) => {
     if (nudgePillPos) requestAnimationFrame(() => placePill(nudgePillPos.x, nudgePillPos.y))

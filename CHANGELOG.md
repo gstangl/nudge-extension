@@ -5,6 +5,129 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## Bridge 0.11.5 - 2026-07-06 (Neue Sessions erscheinen sofort im Dropdown)
+
+### Fixed
+- **Neu armierte Sessions brauchten Minuten, bis sie im Switch-session-Dropdown
+  auftauchten** (Gerald): die Bridge broadcastete nur bei Liveness-/Owner-Wechsel.
+  Trat eine neue Session dem Roster bei, ohne Owner zu werden (weil ein Sticky-
+  Owner gesetzt war), erfuhr die Extension nichts davon - bis zufaellig ein
+  anderer Broadcast (Owner-Wechsel, Nudge) kam. Jetzt broadcastet die Bridge,
+  sobald sich die sichtbare Session-Liste aendert (Beitritt/Label/Abgang) -
+  Vergleich gegen die zuletzt gesendete Signatur, damit auch das Ablaufen des
+  12-s-Frische-Fensters erkannt wird. Beitritt < 1 s, Abgang < 15 s.
+  Beweis: Suite D Leg D16.
+
+## Bridge 0.11.4 — 2026-07-05 (Kidnap-Battletest: rock solid)
+
+## Bridge 0.11.4 — 2026-07-05 (Kidnap-Battletest: rock solid)
+
+### Added
+- **Suite I „Kidnap Battletest"** (`test/battletest.mjs`): End-to-End durch die
+  echte Extension — Nudge in einer neuen App (Gauntlet-Fixture) unter Owner-Alpha
+  gesetzt, dann stürmen 4 Angreifer-Agenten die Bridge (Newest-wins-Heartbeats,
+  /agent/owner-Grabs, Fremd-Resolve, geforderte Posts) ~84 Runden lang. Owner-
+  Binding UND abgegriffener Kontext (Selector/xpath/innerText/url) bleiben
+  unveraendert (jede Runde geprueft). Kanal ist neu zuweisbar, der Nudge nicht.
+- Inbox-Spiegel (die Datei, die ein Agent liest) traegt jetzt `agent: <Owner>` —
+  die Zugehoerigkeit ist dort sichtbar, kein Kaper kann den Kontext beanspruchen.
+
+## Bridge 0.11.3 — 2026-07-05 (Provenance bulletproof + benannt: „Nudge History")
+
+### Changed
+- **Owner-Binding ist jetzt bulletproof** (Gerald: "nicht gekidnappt"): `owner`
+  wird als SEPARATES Server-Argument an `addPin` uebergeben, nie aus dem Client-
+  Payload gelesen — ein geforderter `owner` im Body ist strukturell wirkungslos.
+- **Suite H „Provenance"** (`test/provenance.mjs`, 11 Legs) beweist das Binding
+  gegen jeden Kaper-Vektor: Client-Spoof, Owner-Wechsel (Heartbeat + Dropdown),
+  Fremd-Resolve, Doppel-Resolve, SIGKILL-Persistenz, Offline→Resolver, gekappter
+  Stempel, Discard-ohne-ID-Reuse, 30er-Nebenlaeufigkeit, Projektions-Paritaet.
+  Suite A prueft zusaetzlich die ANZEIGE (Owner pro Zeile).
+- Die Badge-Klick-Flaeche heisst jetzt **Nudge History** (offene Nudges + DONE-
+  Historie, jede Zeile an ihre Agent-Session gebunden) — in Protokoll + Scenarios.
+
+## [0.16.15] - 2026-07-06 (Popover wandert STARR mit, nicht nur das Caret)
+
+### Fixed
+- Im rechten Bildschirmbereich klemmte das offene Popover am Viewport-Rand fest -
+  beim Ziehen rutschte nur das Caret, das Fenster blieb stehen (Gerald). Jetzt
+  wandert das Popover beim Ziehen um denselben Betrag wie die Toolbar (Offset beim
+  Oeffnen gemerkt, Caret bleibt fix relativ zum Fenster) - Fenster + Caret als
+  eine Einheit. Suite A: Popover-follows-drag prueft beide Richtungen.
+
+## [0.16.14] - 2026-07-06 (Popovers folgen der beweglichen Toolbar)
+
+### Fixed
+- **Ein offenes Popover (Switch session / Nudge History) blieb zurueck,
+  wenn man die Toolbar verschob** (Gerald): die Position wurde nur beim
+  Oeffnen berechnet. Jetzt wandern offene Popovers beim Ziehen mit (das
+  Caret bleibt aufs Anker-Element ausgerichtet) - gemeinsamer
+  anchorPopover-Helper fuer Oeffnen UND Drag. Suite A: Popover-follows-drag.
+
+## [0.16.13] + Bridge 0.11.6 - 2026-07-06 (Switch-session: kein falscher Erfolg, robust gegen Re-Arm)
+
+### Fixed
+- **Switch-session meldete "Owner: X" auch bei Fehlschlag** (Gerald sah
+  `POST /agent/owner 404` in der Konsole, waehrend der Chip Erfolg zeigte):
+  Der Klick klickte eine Session an, die nicht mehr lebte. Der Handler
+  prueft jetzt res.ok und meldet ehrlich "<Session> nicht mehr aktiv"
+  statt faelschlich Erfolg.
+- **Ownership ist jetzt SESSION-basiert statt pid-basiert** (Bridge 0.11.6):
+  das Dropdown adressiert die Session ueber ihre id; eine re-armierte
+  Session (neuer Watcher-pid) bleibt waehlbar und behaelt die Sticky-Wahl.
+  Nur eine wirklich tote/unbekannte Session gibt noch 404. Suite D Leg D17.
+
+## [0.16.12] - 2026-07-06 (Feedback-Chips unter der Toolbar)
+
+### Changed
+- Die Feedback-Chips (Agent/Owner/nudge-done ...) erscheinen jetzt sauber
+  gestapelt DIREKT UNTER der Toolbar, linksbuendig zu ihr und mit
+  gleichmaessigen Abstaenden - statt lose oben rechts am Bildschirm. Sie
+  folgen dem beweglichen Pill (placeFeed trackt seine Position).
+
+## [0.16.11] - 2026-07-05 (Switch-session-Popover mit Caret)
+
+### Changed
+- Das Switch-session-Fenster ist jetzt ein echtes Popover mit Caret, das
+  aufs Session-Label zeigt - identisch zur Nudge History. Caret-CSS wird
+  DRY zwischen beiden geteilt; overflow:hidden raus, Ecken ueber Header +
+  letzte Zeile gerundet. Der Composer hatte sein Caret (.tip) bereits.
+
+## [0.16.10] — 2026-07-05 (Session-Dropdown: "Switch session")
+
+### Changed
+- Titel "Change session" -> "Switch session" (Gerald).
+
+## [0.16.9] — 2026-07-05 (Session-Dropdown: klarere Beschriftung)
+
+### Changed
+- Session-Dropdown-Titel „Connected sessions — click to hand over" → **„Change
+  session"** (Gerald: „hand over" war missverstaendlich, gerade bei nur einer
+  Session; „session" ist das etablierte Vokabular). Tooltip: „Change session —
+  pick which agent gets your nudges".
+
+## [0.16.8] + Bridge 0.11.2 — 2026-07-05 (Nudge merkt sich seine Agent-Session)
+
+### Added
+- **Jeder Nudge traegt jetzt seine Owner-Session** (Gerald): die Bridge stempelt
+  beim Eintreffen server-seitig, WELCHE Agent-Session den Watch-Kanal hielt
+  (`owner: {label, session}`). UNVERAENDERLICH — ein spaeterer Owner-Wechsel
+  relabelt bestehende Nudges nie, der Kontext bleibt erhalten. Nudges, die ohne
+  Agent ankamen, werden beim Aufloesen der aufloesenden Session zugeschrieben.
+  Das Queue-Popover zeigt das Label pro Zeile (gedaempft, zwischen Text und
+  Alter). Beweis: Suite D Leg D15 (Stempel immutabel ueber Owner-Wechsel +
+  Resolve; Offline-Nudge -> Resolver).
+
+## [0.16.7] — 2026-07-05 (Queue-Zeilen: kein Jitter mehr beim Auf-/Zuklappen)
+
+### Fixed
+- **Typografie + Icon sprangen beim Auf-/Zuklappen** einer Queue-Zeile (Gerald):
+  der open-Zustand schaltete align-items (center→flex-start), margin-top (+1px)
+  UND line-height (normal→1.5) gleichzeitig um — bei einzeiligen Nudges aenderte
+  das die Zeilenhoehe und verschob Dot/Id/Text. Jetzt teilen collapsed und open
+  dieselbe Erste-Zeilen-Geometrie (18px Zeilenbox, flex-start), nur das Umbrechen
+  toggelt. Relative Drift ueber 4 Toggles: 0,00 px gemessen.
+
 ## [0.16.6] — 2026-07-05 (Queue-Popover: Caret + breiter fuer lesbarere Prompts)
 
 ### Changed

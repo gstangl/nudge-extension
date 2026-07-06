@@ -80,18 +80,39 @@ try {
   // session dropdown: roster row with identity, owner marked
   await page.locator('.pill .who').click()
   await page.locator('.who-menu.on .w-row.is-owner', { hasText: 'suite-a' }).waitFor({ timeout: 3000 })
+  // it is a real popover: the caret points at the session label it opened from (C-7)
+  const whoCaretΔ = await page.evaluate(() => {
+    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const m = r.querySelector('.who-menu'), who = r.querySelector('.pill .who').getBoundingClientRect()
+    const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
+    return Math.abs(caretX - (who.left + who.width / 2))
+  })
+  if (whoCaretΔ > 1.5) fail(`Switch-session caret not aligned to its label (Δ ${whoCaretΔ})`)
   await page.keyboard.press('Escape')
   await until(async () => !(await page.locator('.who-menu.on').count()), 2000, 'dropdown closes on Escape')
 
-  // --- movable toolbar: drag the grip, position changes and persists ---
+  // --- movable toolbar: drag the grip, position changes and persists; an OPEN
+  //     popover belongs to the toolbar and must MOVE WITH it (Gerald 2026-07-06) ---
+  await page.locator('.pill .who').click() // open Switch session before dragging
+  await page.locator('.who-menu.on').waitFor({ timeout: 3000 })
+  const menuBefore = await page.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.who-menu').getBoundingClientRect().left)
   const before = await page.locator('.pill').boundingBox()
   const grip = await page.locator('.pill .grip').boundingBox()
   await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
   await page.mouse.down()
-  await page.mouse.move(grip.x - 300, grip.y + 150, { steps: 5 })
+  await page.mouse.move(260, 480, { steps: 6 }) // big move: unclamps the popover so its follow is unmistakable
   await page.mouse.up()
   const after = await page.locator('.pill').boundingBox()
   if (Math.abs(after.x - before.x) < 200 || Math.abs(after.y - before.y) < 100) fail(`pill did not move: ${JSON.stringify({ before, after })}`)
+  const followGeo = await page.evaluate(() => {
+    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const m = r.querySelector('.who-menu'), who = r.querySelector('.pill .who').getBoundingClientRect()
+    const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
+    return { left: m.getBoundingClientRect().left, on: m.classList.contains('on'), caretΔ: Math.abs(caretX - (who.left + who.width / 2)) }
+  })
+  if (!followGeo.on || Math.abs(followGeo.left - menuBefore) < 100) fail(`open popover did not follow the dragged toolbar (${menuBefore} → ${followGeo.left})`)
+  if (followGeo.caretΔ > 1.5) fail(`popover caret misaligned after drag (Δ ${followGeo.caretΔ})`)
+  await page.keyboard.press('Escape')
 
   // --- A-8: our chrome is INERT for the page — a transient popover with an
   //     outside-click closer must survive the pill click and remain pickable ---
@@ -164,6 +185,17 @@ try {
   await ta.fill('Die Heat-pump-Karte braucht mehr Abstand zum Titel.')
   await page.locator('.composer .send').click()
   await page.locator('.feed .item', { hasText: 'nudge_1' }).waitFor({ timeout: 8000 })
+  // the feedback chips sit directly UNDER the toolbar, left-aligned to it (not
+  // floating in the screen corner) — placeFeed tracks the movable pill
+  {
+    const geo = await page.evaluate(() => {
+      const r = document.getElementById('__roots-nudge-host').shadowRoot
+      const f = r.querySelector('.feed').getBoundingClientRect(), p = r.querySelector('.pill').getBoundingClientRect()
+      return { dLeft: Math.abs(f.left - p.left), dTop: f.top - p.bottom }
+    })
+    if (geo.dLeft > 3) fail(`feed not left-aligned to the toolbar (Δleft ${geo.dLeft})`)
+    if (geo.dTop < 2 || geo.dTop > 20) fail(`feed not directly under the toolbar (Δtop ${geo.dTop})`)
+  }
 
   const pin = store().pins[0]
   if (pin.target.selector !== '#card-conversion') fail(`selector: ${pin.target.selector}`)
@@ -185,9 +217,26 @@ try {
   // --- badge click -> read-only queue popover shows what the number means ---
   await page.locator('.pill .count').click()
   await page.locator('.queue.on .q-row', { hasText: 'nudge_1' }).waitFor({ timeout: 3000 })
+  // provenance in the list: each row names the agent session that owns the nudge
+  // (stamped at arrival, immutable) — so Gerald sees which agent it belongs to
+  const who1 = await page.locator('.queue.on .q-row', { hasText: 'nudge_1' }).locator('.q-who').textContent()
+  if (who1 !== 'suite-a') fail(`queue row must show the owning session, got "${who1}"`)
+  // caret aligned to the badge (C-7) + a row must NOT jitter on accordion toggle (C-6):
+  // collapsed and open share one first-line geometry, so dot/id hold their offset
+  const qgeo = await page.evaluate(() => {
+    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const q = r.querySelector('.queue'), badge = r.querySelector('.pill .count').getBoundingClientRect()
+    const caretX = q.getBoundingClientRect().left + parseFloat(q.style.getPropertyValue('--caret-x'))
+    const row = r.querySelector('.queue .q-row')
+    const rel = () => { const t = s => row.querySelector(s).getBoundingClientRect(), tx = t('.q-text'); return `${(t('.q-dot').top - tx.top).toFixed(1)}|${(t('.q-id').top - tx.top).toFixed(1)}` }
+    const a = rel(); row.click(); const b = rel(); row.click(); const c = rel()
+    return { caretΔ: Math.abs(caretX - (badge.left + badge.width / 2)), a, b, c }
+  })
+  if (qgeo.caretΔ > 1.5) fail(`queue caret not aligned to the badge (Δ ${qgeo.caretΔ})`)
+  if (qgeo.a !== qgeo.b || qgeo.a !== qgeo.c) fail(`queue row jitters on accordion toggle (${qgeo.a} → ${qgeo.b} → ${qgeo.c})`)
   await page.keyboard.press('Escape')
   await until(async () => !(await page.locator('.queue.on').count()), 2000, 'queue closes on Escape')
-  console.log('PASS badge queue popover (open, content, Escape)')
+  console.log('PASS badge queue popover (open, content, owner shown, Escape)')
 
   // --- resolve: feed chip + badge clears; element pins get NO after-shot
   //     (no before-shot to compare — that stays a Kreis-pin feature) ---
