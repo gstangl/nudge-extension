@@ -2,7 +2,8 @@ import { chromium } from 'playwright'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-const EXT = '/Users/gst/Developer/roots-apps/nudge/extension'
+const HERE = path.dirname(new URL(import.meta.url).pathname)
+const EXT = path.join(HERE, '../extension')
 const ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1400, height: 900 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
 const page = ctx.pages()[0]
 await page.goto('http://localhost:4700/demo')
