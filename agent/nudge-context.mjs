@@ -31,18 +31,33 @@ if (!store && !selection) process.exit(0)
 // (A just-typed /nudge is not armed YET — the skill arms it; context appears on
 // the NEXT prompt. The skill itself surfaces everything on that first run.)
 const mySession = (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8)
-let status
+const hostOf = (u) => { try { return new URL(u).host } catch { return '' } }
+let status, identity
 try {
   const res = await fetch(`http://127.0.0.1:${PORT}/.identity`, { signal: AbortSignal.timeout(400) })
-  const id = await res.json()
-  const armed = mySession && (id.agents || []).some(a => a.session === mySession)
+  identity = await res.json()
+  const armed = mySession && (identity.agents || []).some(a => a.session === mySession)
   if (!armed) process.exit(0) // this session does not participate in Nudge — say nothing
-  status = id.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${id.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert.'
+  status = identity.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${identity.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert.'
 } catch {
   process.exit(0) // bridge unreachable → can't prove participation → stay silent
 }
 
-const pins = store?.pins || []
+// ORIGIN-AWARE (2026-07-07): this session sees only ITS OWN nudges (a nudge is
+// stamped by the bridge with the agent that owns its host) and only a selection
+// on a host it owns — so parallel dev servers don't leak marks into the wrong agent.
+const myKey = mySession ? `s:${mySession}` : null
+const ownersMap = new Map(identity.owners || [])
+const agentKeyOf = (a) => a.session ? `s:${a.session}` : `p:${a.pid}`
+const ownsHost = (host) => {
+  const key = ownersMap.get(host) || ownersMap.get('*')
+  if (key) return key === myKey
+  const newest = (identity.agents || []).reduce((a, b) => (!a || b.since >= a.since ? b : a), null)
+  return !!newest && agentKeyOf(newest) === myKey
+}
+// mine = stamped to me, OR ownerless (offline arrival) but on a host I own
+const pins = (store?.pins || []).filter(p => (p.owner?.session === mySession) || (!p.owner?.session && ownsHost(hostOf(p.url))))
+if (selection && !ownsHost(hostOf(selection.url))) selection = null
 const newestPin = [...pins].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0]
 const selAt = selection ? Date.parse(selection.at) : 0
 const pinAt = newestPin ? Date.parse(newestPin.createdAt) : 0

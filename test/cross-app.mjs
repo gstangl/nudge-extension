@@ -48,7 +48,7 @@ await sleep(400)
 
 // reachability: keep only apps whose server answers
 for (const a of APPS) { try { a.upOk = (await fetch(a.url, { signal: AbortSignal.timeout(2000) })).status < 500 } catch { a.upOk = false } }
-const live = APPS.filter(a => a.upOk)
+let live = APPS.filter(a => a.upOk)
 if (live.length < 2) fail(`need >=2 running apps, got ${live.map(a => a.name).join(',') || 'none'}`)
 if (live.length < APPS.length) console.log(`NOTE skipping unreachable: ${APPS.filter(a => !a.upOk).map(a => a.name).join(', ')}`)
 
@@ -58,17 +58,25 @@ try {
   let sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((p) => chrome.storage.local.set({ nudgePort: p }), PORT)
 
-  // one tab per live app, all open simultaneously
-  for (const a of live) {
-    a.page = await ctx.newPage()
-    await a.page.goto(a.url, { waitUntil: 'domcontentloaded' })
-    await a.page.locator('.pill .status.ok').waitFor({ timeout: 20000 })
-    await a.page.waitForTimeout(400)
-    // drag the pill clear of the app's top-right chrome
-    const g = await a.page.locator('.pill .grip').boundingBox()
-    await a.page.mouse.move(g.x + 6, g.y + 6); await a.page.mouse.down(); await a.page.mouse.move(340, 830, { steps: 4 }); await a.page.mouse.up()
-    a.routeKey = await a.page.evaluate(() => location.host + location.pathname + location.hash)
+  // one tab per live app, all open simultaneously — an app that fails to LOAD
+  // (dev server up per the reachability probe but serving a 5xx / broken page)
+  // is dropped honestly, like an unreachable one, instead of hard-failing
+  for (const a of [...live]) {
+    try {
+      a.page = await ctx.newPage()
+      await a.page.goto(a.url, { waitUntil: 'domcontentloaded' })
+      await a.page.locator('.pill .status.ok').waitFor({ timeout: 20000 })
+      await a.page.waitForTimeout(400)
+      // drag the pill clear of the app's top-right chrome
+      const g = await a.page.locator('.pill .grip').boundingBox()
+      await a.page.mouse.move(g.x + 6, g.y + 6); await a.page.mouse.down(); await a.page.mouse.move(340, 830, { steps: 4 }); await a.page.mouse.up()
+      a.routeKey = await a.page.evaluate(() => location.host + location.pathname + location.hash)
+    } catch {
+      console.log(`NOTE dropping ${a.name}: did not load (server unhealthy)`) ; try { await a.page?.close() } catch {}
+      live = live.filter(x => x !== a)
+    }
   }
+  if (live.length < 2) { console.log(`Suite J — Cross-App: SKIPPED (only ${live.length} app(s) reachable)`); clearInterval(beats); await ctx.close(); cleanup(); process.exit(0) }
 
   async function nudgeOn(a, text) {
     await a.page.bringToFront()

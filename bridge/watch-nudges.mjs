@@ -14,6 +14,7 @@ const STORE_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 
 const PORT = Number(process.env.NUDGE_PORT || 4700) // the bridge is port-configurable — its clients must be too
 const STORE = path.join(STORE_DIR, 'store.json')
 const seen = new Set()
+const seenId = new Set() // ids ever woken for — a later key on a known id = an amendment
 let first = true
 
 function scan() {
@@ -21,15 +22,32 @@ function scan() {
   try { pins = JSON.parse(fs.readFileSync(STORE, 'utf8')).pins } catch { return } // mid-write — next event retries
   scanPins(pins)
 }
+// ORIGIN-AWARE wake: a nudge is stamped by the bridge with the agent that owns
+// its host (localhost:port). Wake for a pin if it belongs to ME — a parallel
+// dev server's nudges thus reach only its own agent. A nudge without a
+// session-level owner (offline arrival, pid-keyed agent) falls back to the old
+// global gate (the owner watcher wakes). Gerald 2026-07-07.
+const MY_SESSION = (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8)
 function scanPins(pins) {
   for (const p of pins) {
-    const key = p.id + (p.createdAt || '') // recycled ids must still wake (2026-07-04 lesson)
+    // a fresh nudge AND every amendment must wake: fold the latest amendment's
+    // timestamp into the key so a touched pin looks "new" again (recycled ids
+    // must still wake too — 2026-07-04 lesson)
+    const lastAmend = p.amendments?.length ? p.amendments[p.amendments.length - 1] : null
+    const key = p.id + (p.createdAt || '') + (lastAmend?.at || '')
     if (p.status !== 'open' || seen.has(key)) continue
-    seen.add(key)
-    if (!first && isOwner !== false) { // standby sessions track silently
-      const sel = p.target?.selector || '?'
-      const text = p.text ? p.text.slice(0, 120) : '[Nur Markierung — Gerald referenziert sie gleich im Chat]'
-      console.log(`Neuer Pin ${p.id}: ${text} @ ${sel} — ${p.url}`)
+    const isAmendWake = seenId.has(p.id) // known id, new key -> Gerald appended a follow-up
+    seen.add(key); seenId.add(p.id)
+    const mine = !!(p.owner?.session && MY_SESSION && p.owner.session === MY_SESSION)
+    const ownerless = !p.owner?.session // no session-level owner -> use the global gate
+    if (!first && (mine || (ownerless && isOwner !== false))) {
+      if (isAmendWake && lastAmend) {
+        console.log(`Nudge ${p.id} ergänzt: ${lastAmend.text.slice(0, 120)} — ${p.url}`)
+      } else {
+        const sel = p.target?.selector || '?'
+        const text = p.text ? p.text.slice(0, 120) : '[Nur Markierung — Gerald referenziert sie gleich im Chat]'
+        console.log(`Neuer Pin ${p.id}: ${text} @ ${sel} — ${p.url}`)
+      }
     }
   }
   first = false

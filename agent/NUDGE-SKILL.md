@@ -28,10 +28,18 @@ Say NOTHING about the connection unless something is wrong; then one line:
 - `curl -s --max-time 2 http://localhost:4700/.identity` → `{version, agentLive, agentLabel, tabs}`.
 - `agentLabel` names the OWNING session (project dir + pid) — if it is not
   yours, another session processes the nudges; arming here takes over.
-- **Refused → don't rush to fix it yourself**: the chain SELF-HEALS — any open
-  localhost tab makes Chrome restart the bridge via the native host within ~10 s.
-  Re-check once. Only if Chrome isn't running (or no tab is open), start manually:
-  `(nohup node /Users/gst/Developer/roots-apps/nudge/bridge/bridge.mjs >/tmp/nudge-bridge.log 2>&1 &)`
+- **Refused → heal the chain, don't just hand-start the bridge.** Chrome owns the
+  bridge lifecycle (native host), so in order:
+  1. **Chrome not running → open it.** `pgrep -x "Google Chrome" >/dev/null || open -a "Google Chrome"`.
+     Opening Chrome starts the extension's service worker, which starts the bridge
+     via the native host (`sw.js` calls `ensureBridge()` on SW start — no localhost
+     tab needed for the bridge itself). Wait ~5 s, then re-check `/.identity`.
+  2. **Chrome running but bridge refused → self-heal.** Any open localhost tab makes
+     the extension restart the bridge within ~10 s. Re-check once.
+  3. **Last resort only** (native host not installed, or still down after the above):
+     `(nohup node /Users/gst/Developer/roots-apps/nudge/bridge/bridge.mjs >/tmp/nudge-bridge.log 2>&1 &)`
+  Fire the nudge overlay itself still needs a localhost app tab open — but arming +
+  heartbeat (green icon) work as soon as the bridge is up.
 - `agentLive: false` → no watcher heartbeating: arm watch mode (below).
 - Browser side: status circle grey = overlay off, red = no bridge, amber = bridge
   but no agent listening, green = agent live. The feedback FEED (chips top right)
@@ -58,9 +66,51 @@ carry the session identity so Gerald sees at a glance who owns the channel.
 If Gerald NAMES the session ("nenn dich Nudge-Dev"), arm with the env override —
 it becomes the label in the browser toolbar:
 `Monitor({ command: "NUDGE_AGENT_LABEL='Nudge-Dev' node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — Nudge-Dev" })`
+
+**Right after arming, print an IDENTITY line so Gerald can match this session to
+the browser toolbar** (his explicit need — the toolbar shows the label, this ties
+it to a localhost). The script POLLS until this session's first heartbeat lands
+in the roster (up to ~8 s) — an immediate curl would race the watcher and print
+"?" for a session that is arming fine. Run and show the output verbatim:
+```
+node -e 'const me=(process.env.CLAUDE_CODE_SESSION_ID||"").slice(0,8);(async()=>{let j=null,mine=null;for(let i=0;i<16;i++){try{j=await(await fetch("http://localhost:4700/.identity",{signal:AbortSignal.timeout(1500)})).json();mine=(j.agents||[]).find(a=>a.session===me);if(mine)break}catch{}await new Promise(r=>setTimeout(r,500))}if(!j){console.log("Bridge ✗ — kein Report");return}console.log(`Nudge aktiv · „${mine?.label||"?"}" · session ${me}`);for(const r of j.routes||[]){const own=r.owner?.session===me?" ← DIESE Session":"";const fb=r.viaFallback?" ⚠ nur Fallback (im Switch-session-Dropdown fixieren)":"";console.log(`  ${r.host} → ${r.owner?.label||"—"}${own}${fb}`)}if(!(j.routes||[]).length)console.log("  (keine localhost-Tabs offen)")})()'
+```
+The label is your `NUDGE_AGENT_LABEL` (== the toolbar `Agent:` text); `session` is
+the un-collidable key — the same id8 shows on each row of the browser's
+Switch-session dropdown, so Gerald can match chat ↔ toolbar 1:1 even when two
+sessions share a label. A route `⚠ nur Fallback` means that localhost has NO
+live explicit owner and only reaches an agent via newest-wins — if that host is
+someone else's app (e.g. estimate on :5175), tell Gerald to pin the RIGHT session
+on it in the Switch-session dropdown, or its nudges land here by accident. Re-run
+this any time Gerald asks "which localhost am I / who owns what".
 **On wake, treat the nudge as if Gerald had typed it into the conversation**: fetch
 details, do the work, verify, resolve. The watcher also heartbeats the bridge —
 that is what turns the browser icon green.
+A wake line `Nudge X ergänzt: …` means Gerald **appended a follow-up to an
+already-sent nudge** (append-only): re-read the inbox `X.md` — the original plus
+every `> **Nachtrag:**` is ONE work order, newest first is the latest thought.
+An amendment can land mid-task; fold it into the same fix, do not treat it as a
+separate nudge, and resolve X only once the whole order (original + nachträge) is
+addressed.
+
+## Port scope — parallel localhosts (one worktree per app)
+
+Several worktrees can each run their own app on their own port (see the /local
+skill). The store is ONE flat global list and the compact pin line drops the
+origin — so pins from other windows look identical here. When this session is
+bound to ONE localhost, scope to it:
+
+- **Your port** = the vite serving THIS worktree. The /local recap named it
+  (`Nudge-Scope: :<port>`); else it is the listening vite whose cwd is under
+  `$PWD`.
+- **Arm with the port in the label** so Gerald tells the windows apart in the
+  toolbar dropdown: `NUDGE_AGENT_LABEL='<app> :<port>'`.
+- **Filter the queue**: in `store.json` process ONLY pins whose `url` contains
+  `:<port>`. A pin on another port belongs to another window — skip it, never
+  resolve it. The full `url` (with port) lives in `store.json` and
+  `inbox/<id>.md`; the compact list alone can't tell two apps apart.
+- No scope (single localhost, no worktree stack) → no filter, whole queue as
+  before.
 
 ## 1. "Was ist markiert?" — the deictic recipe
 

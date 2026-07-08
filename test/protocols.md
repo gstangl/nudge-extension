@@ -16,6 +16,23 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   under `test/fixtures/` (Flowbite/Tailwind components + TodoMVC React; sources +
   licenses in `fixtures/README.md`). Proves the picker against the wild, not just
   our own apps. Refetch fixtures deliberately, then re-run.
+- `node test/origin-routing.mjs` — **Suite K (Origin routing)**, side port 4783:
+  parallel localhosts route to their own agents — per-host ownership + stamping,
+  per-client snapshot, reassign immutability, and REAL watchers waking only for
+  their own host. Run after any ownership/watcher/hook change.
+- `node test/toolbar-ux.mjs` — **Suite L (Toolbar & popover UX)**, side port 4785:
+  the localhost is always a clean pill (never inline `:port`), only one popover
+  open at a time, P/F tool hotkeys are tightly gated, reduced-motion is honoured.
+  Run after any toolbar/popover/label/hotkey change.
+- `node test/page-inertness.mjs` — **Suite M (Page inertness)**, page server 5192:
+  reaching for the toolbar must not dismiss the page's own UI — a near-miss click
+  around the toolbar is absorbed (the "moat"), a genuine outside click still
+  dismisses, and clicking a Nudge widget never leaks. Run after any host/overlay/
+  pointer-events/moat change.
+- `node test/amend.mjs` — **Suite N (Amend)**, side port 4788: append-only
+  follow-ups to an open nudge — original immutable + inbox mirror, order,
+  resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
+  History "+ ergänzen" UI round-trips. Run after any store/amend/watcher/queue change.
 - `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
   4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
   four simultaneous tabs with four armed sessions and churning ownership — per-app
@@ -65,6 +82,28 @@ the backlog for new legs lives there (section „Building new legs").
   by id, evidence files included.
 - The store is GLOBAL (`~/.claude/nudge/`); agent wiring is user-level
   (`~/.claude/settings.json` hooks, `~/.claude/skills/nudge/`). No project config.
+- **Process hygiene.** Suites (and ad-hoc Playwright repros) that spawn a bridge
+  or REAL watchers can leak them if a run is interrupted — a leaked watcher on a
+  side port silently pollutes later runs (a ghost agent appears in the switcher).
+  Clean up by SIDE PORT / test store, never blanket. **NEVER blanket-kill
+  `watch-nudges` processes**: they are usually Gerald's REAL armed sessions
+  heartbeating 4700 (2026-07-07 — a cleanup grep flagged his live watchers as
+  „strays"). Before killing anything, check the live roster
+  (`curl -s localhost:4700/.identity`) — if a name matches, it is real; leave it.
+- **Test every affordance of an input, not one happy path.** A green submit test
+  can hide a dead-end field: Suite N5 passed on ⌘↩ while the amend field was
+  UNUSABLE for Gerald — no visible send button, and Shift+Enter (what he pressed)
+  was a newline, not send (2026-07-07). For any text input assert the FULL
+  contract: the visible control (button) works, EACH key path a human tries
+  (Enter, ⌘↩), the NEGATIVE (what must NOT submit — Shift+Enter → newline), and
+  the POST-submit state (field clears/closes, no double-send). "It posts on ⌘↩"
+  is not "a human can send it."
+- **Reproduce page-interaction bugs against the REAL page, not from theory.** The
+  toolbar-dismiss bugs only became clear by starting the actual site
+  (`website`: `npm run start`, then trigger `.nav__cta`) and instrumenting what
+  fired — the dismiss mechanism was NOT what the first guess assumed. Read the
+  page's own dismiss code (e.g. `packages/ui/src/popover.ts`) to know the exact
+  event + phase, THEN build a hermetic leg (Suite M) that replays that mechanism.
 
 ## Suite A — isolated, automated (e2e.mjs)
 
@@ -238,6 +277,93 @@ gleichzeitig". Uses whatever dev servers are running (md-pdf :5313, estimate
 | J2 | **Per-route isolation**: each tab's badge + History show ONLY that app's nudge with its own owner — no cross-app leakage | ✅ 2026-07-05 |
 | J3 | **Concurrent storm**: interleaved creation across all tabs under rotating ownership + a heartbeat/stranger-resolve storm → every nudge correctly attributed, ids strictly monotonic, none lost | ✅ 2026-07-05 |
 | J4 | After the churn, each tab's Nudge History is still route-correct with the right per-row owners | ✅ 2026-07-05 |
+
+## Suite K — Origin routing (origin-routing.mjs)
+
+The multi-localhost model (Gerald opens many worktrees, each its own dev server;
+a nudge on a localhost must reach THAT worktree's agent, not a single global
+owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
+
+| # | Guards | Last |
+|---|--------|------|
+| K1 | Per-host routing: nudges on :5185/:5186 stamp their host's agent; an unassigned host falls back to the newest agent | ✅ 2026-07-07 |
+| K2 | Per-client snapshot: each tab sees the owner of ITS host (5185→A, 5186→B) | ✅ 2026-07-07 |
+| K3 | Reassign a host to another agent → existing nudges keep their owner, new ones take the new agent | ✅ 2026-07-07 |
+| K4 | **Two REAL watcher processes each wake ONLY for their own host** (A←5185, B←5186, no cross-wake) — the payoff | ✅ 2026-07-07 |
+| K5 | `/.identity.routes` maps every open localhost tab → its owner {label, session} and flags `viaFallback`; `127.0.0.1:X` folds into `localhost:X` (one host, one owner) | ✅ 2026-07-08 |
+| K6 | **`viaFallback` tells the truth when the picked agent dies**: the flag flips the moment the pick leaves the fresh window (derived from actual resolution) — a `has(host)` check lied for up to ~17 s until the sweep | ✅ 2026-07-08 |
+
+## Suite L — Toolbar & popover UX (toolbar-ux.mjs)
+
+Locks in the toolbar/popover polish (2026-07-07) so a later refactor can't break
+it silently. Own bridge on 4785, own page server on 5196; two sessions armed
+with Gerald-style port-suffixed labels ("Estimate Templates :5175").
+
+| # | Guards | Last |
+|---|--------|------|
+| L1 | Localhost is a pill on the switcher rows + the toolbar name is clean; no row shows an inline `:port` | ✅ 2026-07-07 |
+| L2 | Connection feed chip ("Agent: …") shows a clean name + a localhost pill, never an inline `:port` | ✅ 2026-07-07 |
+| L3 | Only one popover open at a time — Nudge History ↔ Switch-session are mutually exclusive | ✅ 2026-07-07 |
+| L4 | P/F hotkeys switch tools when the overlay is active, and are suppressed while typing in a page field | ✅ 2026-07-07 |
+| L5 | `prefers-reduced-motion: reduce` collapses the overlay's transitions (no gliding highlight / spinning clock) | ✅ 2026-07-07 |
+| L6 | An orphaned tab (extension reload) shows the „⌘R" hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-08 |
+
+## Suite M — Page inertness (page-inertness.mjs)
+
+The Nudge overlay is a full-screen `pointer-events:none` host over the page, so a
+click that MISSES the toolbar falls through. On a page whose modal uses a
+backdrop that hides on outside-click (roots' RequestPopover), that means
+reaching for the toolbar dismissed the page's popover (Gerald 2026-07-07). Fixed
+with a thin "moat": near-miss clicks around visible Nudge chrome are absorbed at
+window-capture (idle/composing only — picking/drawing need page clicks). A second
+leak: dropdowns that detect outside-clicks with a document CAPTURE-phase
+pointerdown (roots' own `@roots/ui` `actionMenu`) fire before the host
+bubble-stop, so a widget click retargeted to the host closed them. Fixed by
+swallowing a genuine widget hit's pointerdown at window-capture — our controls
+act on `click`; grip/draw/composer keep their own pointerdown.
+
+| # | Guards | Last |
+|---|--------|------|
+| M1 | A near-miss click (≤12px) around the toolbar is absorbed — the page's modal survives | ✅ 2026-07-07 |
+| M2 | A genuine outside click (far from the toolbar) still dismisses the modal — the moat stays tight | ✅ 2026-07-07 |
+| M3 | Clicking a Nudge widget (Pick) never leaks to the page | ✅ 2026-07-07 |
+| M4 | A document capture-phase pointerdown dropdown (à la @roots/ui `actionMenu`) stays open when reaching for the toolbar, and Pick still activates | ✅ 2026-07-07 |
+| M5 | The widget-pointerdown swallow left our own controls intact (composer typing + grip drag) | ✅ 2026-07-07 |
+
+**Dismiss-mechanism checklist** — page UI closes on "outside interaction" in
+several ways; each is its own leak against a full-screen `pointer-events:none`
+overlay. Cover the space, don't chase bugs one at a time. When a NEW page pattern
+dismisses a control on toolbar contact, first identify which row it is:
+
+| Mechanism | How it dismisses | Covered |
+|---|---|---|
+| Backdrop element, `click`/bubble → hide | near-miss falls THROUGH to the backdrop | M1–M3 (moat) |
+| `document` **capture-phase** pointerdown/mousedown, `contains(target)` check | widget click retargets to host = "outside" | M4 (window-capture swallow) |
+| `document` **bubble-phase** click/pointerdown | widget click bubbles to document | host bubble-stop (Suite A #4) |
+| Native Popover API light-dismiss (`popover` attr) | browser-internal on pointerdown | ⬜ untested frontier |
+| `<dialog>` / `::backdrop` | backdrop click / Esc | ⬜ untested frontier |
+| `focusout` / `blur` (focus leaves the widget) | focus moves into the overlay | ⬜ untested frontier |
+
+Note the two orthogonal axes: **event** (pointerdown vs mousedown vs click) ×
+**phase** (capture vs bubble). Our defence has to hold on all of them; the
+window-capture swallow is the only hop that beats a page's capture-phase listener
+(registration order can't be won on `document`). Any change to the swallow MUST
+keep grip/draw/composer exempt (M5) — they need their own pointerdown.
+
+## Suite N — Amend (amend.mjs)
+
+Append-only follow-ups (0.19.0). Gerald sends a nudge, then wants to add one more
+thought to the SAME nudge. Original text is immutable (provenance); nachträge
+accrue in `amendments`. `POST /comments/:id/amend {text}`.
+
+| # | Guards | Last |
+|---|--------|------|
+| N1 | An open nudge takes a follow-up: original immutable, stored with timestamp, inbox mirror carries original + Nachtrag | ✅ 2026-07-07 |
+| N2 | Multiple follow-ups accrue in order; an empty/whitespace follow-up is rejected (400) | ✅ 2026-07-07 |
+| N3 | A resolved nudge refuses a follow-up (409, no re-open); unknown id is 404 | ✅ 2026-07-07 |
+| N4 | **A REAL watcher wakes on the fresh nudge AND re-wakes on the amendment** (the owning agent sees the follow-up) | ✅ 2026-07-07 |
+| N5 | History "+ ergänzen" round-trips (via the send button): follow-up reaches the store, the "+N" badge shows, AND its text is readable under the expanded row | ✅ 2026-07-07 |
+| N6 | Submit contract: **Enter sends, Shift+Enter is a newline (not send), the field clears after a send** — N5 alone was green while the field was unsendable (no button, ⌘↩-only) | ✅ 2026-07-07 |
 
 ## Suite C — manual drills (trigger-bound)
 

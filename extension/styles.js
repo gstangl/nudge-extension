@@ -46,15 +46,43 @@
     .pill .status.half { background: ${AMBER}; }
     .pill .sep { width: 1px; height: 16px; background: ${MID_2}; margin: 0 4px; }
     .pill .who {
-      display: none; max-width: 150px; padding: 0 10px 0 4px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-size: 12px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 400;
-      letter-spacing: .01em; cursor: pointer; user-select: none;
+      display: none; align-items: center; padding: 0 6px 0 4px;
+      cursor: pointer; user-select: none;
     }
-    .pill .who:hover { color: ${PAPER}; }
+    /* "Agent:" kind label — the Pick/Freeform button typeface (wght 500, brighter),
+       so it reads as a label and the session name behind it as its value */
+    .pill .who-kind {
+      flex: none; margin-right: 5px; font-size: 12px; line-height: 18px;
+      color: rgba(242,239,234,.68); font-variation-settings: "wght" 500; letter-spacing: .01em;
+    }
+    .pill .who-kind:empty { display: none; }
+    .pill .who:hover .who-kind { color: ${PAPER}; }
+    .pill .who-label {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;
+      font-size: 12px; line-height: 18px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 400; letter-spacing: .01em;
+    }
+    .pill .who:hover .who-label { color: ${PAPER}; }
+    /* owner session id8 — quiet mono, no frame (vs the framed host pill), visible
+       without any click so the /nudge chat report matches the toolbar at a glance */
+    .pill .who-id {
+      flex: none; margin-left: 6px; font-family: ${MONO}; font-size: 10px; line-height: 18px;
+      letter-spacing: 0; font-variation-settings: normal; color: rgba(242,239,234,.35);
+    }
+    .pill .who-id:empty { display: none; }
+    .pill .who:hover .who-id { color: rgba(242,239,234,.6); }
+    /* subtle localhost tag next to the session in the TOOLBAR (this tab's host).
+       Box height = 14 lh + 2 padding + 2 border = 18px, exactly the label's line
+       box, so align-items:center puts chip and text on ONE clean baseline. */
+    .pill .who-host {
+      flex: none; font-family: ${MONO}; font-size: 10px; line-height: 14px; font-variation-settings: normal; letter-spacing: 0;
+      color: rgba(242,239,234,.5); background: rgba(242,239,234,.05);
+      border: 1px solid rgba(242,239,234,.10); border-radius: 5px;
+      padding: 1px 5px; margin-left: 6px; white-space: nowrap;
+    }
+    .pill .who-host:empty { display: none; }
     /* session dropdown: who owns the wake channel — midnight family like the queue */
     .who-menu {
-      position: fixed; width: 340px; pointer-events: auto; z-index: 3;
+      position: fixed; width: 460px; pointer-events: auto; z-index: 3;
       background: ${MID}; border: 1px solid ${MID_3}; border-radius: 12px;
       box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(14,19,24,.45);
       opacity: 0; transform: translateY(-4px); pointer-events: none;
@@ -69,10 +97,18 @@
     .who-menu .w-row { padding: 10px 14px; border-bottom: 1px solid ${MID_2}; cursor: pointer; }
     .who-menu .w-row:last-child { border-bottom: 0; }
     .who-menu .w-row:hover { background: rgba(242,239,234,.06); }
-    .who-menu .w-row.is-owner .w-line1 { color: ${GREEN}; }
-    .who-menu .w-line1 { font-size: 12px; color: ${PAPER}; font-variation-settings: "wght" 600; }
-    .who-menu .w-line2 { font-size: 10px; color: rgba(242,239,234,.5); margin-top: 2px; font-family: ${MONO}; }
-    .who-menu .w-line3 { font-size: 11px; color: rgba(242,239,234,.45); margin-top: 3px; font-style: italic; }
+    .who-menu .w-row.is-owner .w-name { color: ${GREEN}; }
+    .who-menu .w-line1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 18px; color: ${PAPER}; font-variation-settings: "wght" 600; }
+    .who-menu .w-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 18px; }
+    /* subtle localhost tag, right-aligned per session row — box = 14 lh + 2 pad + 2 border = 18px = the name's line box */
+    .who-menu .w-host {
+      flex: none; font-family: ${MONO}; font-size: 10px; line-height: 14px; font-variation-settings: normal; letter-spacing: 0;
+      color: rgba(242,239,234,.5); background: rgba(242,239,234,.05);
+      border: 1px solid rgba(242,239,234,.10); border-radius: 5px;
+      padding: 1px 5px; white-space: nowrap;
+    }
+    .who-menu .w-line2 { font-size: 10px; color: rgba(242,239,234,.5); margin-top: 6px; font-family: ${MONO}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .who-menu .w-line3 { font-size: 11px; color: rgba(242,239,234,.45); margin-top: 5px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pill button {
       display: flex; align-items: center; gap: 6px; border: 0; cursor: pointer;
       background: transparent; color: rgba(242,239,234,.68); font-size: 12px;
@@ -115,13 +151,21 @@
     .queue::after, .who-menu::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
     .queue.on { opacity: 1; transform: none; pointer-events: auto; }
     .queue .q-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       border-radius: 11px 11px 0 0;
       font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 550;
       letter-spacing: .01em;
     }
+    .queue .q-head-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .queue .q-head-host {
+      flex: none; font-family: ${MONO}; font-size: 10px; line-height: 14px; letter-spacing: 0;
+      color: rgba(242,239,234,.5); background: rgba(242,239,234,.05);
+      border: 1px solid rgba(242,239,234,.10); border-radius: 5px;
+      padding: 1px 5px; white-space: nowrap; font-variation-settings: normal;
+    }
     .queue .q-row {
-      display: flex; align-items: flex-start; gap: 8px; padding: 9px 14px;
+      display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 9px 14px;
       font-size: 12px; line-height: 18px; color: rgba(242,239,234,.85);
       border-bottom: 1px solid ${MID_2};
     }
@@ -163,6 +207,45 @@
     }
     .queue .q-x:hover { background: rgba(242,239,234,.14); color: ${PAPER}; }
     .queue .q-x:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
+    /* "+N" follow-up count on a nudge that carries amendments */
+    .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; font-variation-settings: "wght" 600; }
+    /* "+ ergänzen" button — same ghost language as × */
+    .queue .q-add {
+      flex: none; width: 18px; height: 18px; border: 0; border-radius: 6px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+      background: transparent; color: rgba(242,239,234,.4); font-size: 15px; line-height: 1;
+      font-family: ${SANS}; transition: background .12s, color .12s;
+    }
+    .queue .q-add:hover { background: rgba(242,239,234,.14); color: ${PAPER}; }
+    .queue .q-add:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
+    .queue .q-row.amending .q-add { background: rgba(180,90,56,.22); color: ${ACCENT}; }
+    /* follow-ups — readable under the row when it's EXPANDED or being amended */
+    .queue .q-amend-list { display: none; flex: 0 0 100%; flex-direction: column; gap: 4px; margin-top: 4px; }
+    .queue .q-row.open .q-amend-list, .queue .q-row.amending .q-amend-list { display: flex; }
+    .queue .q-amend-item {
+      font-size: 12px; line-height: 1.45; color: rgba(242,239,234,.72); white-space: pre-wrap;
+      padding-left: 10px; border-left: 2px solid rgba(180,90,56,.55);
+    }
+    /* the input panel: a full-width row, only while amending */
+    .queue .q-amend { display: none; flex: 0 0 100%; margin-top: 6px; }
+    .queue .q-row.amending .q-amend { display: block; }
+    .queue .q-amend-row { display: flex; align-items: flex-end; gap: 6px; }
+    .queue .q-amend-input {
+      flex: 1; min-width: 0; box-sizing: border-box; resize: none; min-height: 34px; max-height: 120px;
+      border: 1px solid ${MID_3}; border-radius: 8px; padding: 7px 9px; background: ${MID_DEEP};
+      font-family: ${SANS}; font-size: 12px; line-height: 1.4; color: ${PAPER}; caret-color: ${ACCENT};
+    }
+    .queue .q-amend-input::placeholder { color: rgba(242,239,234,.32); }
+    .queue .q-amend-input:focus-visible { outline: none; border-color: ${ACCENT}; }
+    /* subtle send button, right of the input — brightens to terracotta on hover */
+    .queue .q-amend-send {
+      flex: none; width: 34px; height: 34px; border: 1px solid ${MID_3}; border-radius: 8px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+      background: ${MID_DEEP}; color: rgba(242,239,234,.5); transition: background .12s, color .12s, border-color .12s;
+    }
+    .queue .q-amend-send svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .queue .q-amend-send:hover { color: ${ACCENT}; border-color: ${ACCENT}; background: rgba(180,90,56,.14); }
+    .queue .q-amend-send:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
     .queue .q-div {
       padding: 7px 14px 5px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
@@ -254,7 +337,8 @@
     }
     .composer textarea {
       width: 100%; border: 0; outline: 0; resize: none; padding: 13px 14px;
-      font-size: 13px; line-height: 1.5; min-height: 78px; font-family: ${SANS};
+      font-size: 13px; line-height: 1.5; min-height: 78px; max-height: 210px; overflow-y: auto;
+      font-family: ${SANS};
       color: ${PAPER}; background: transparent; caret-color: ${PAPER};
     }
     .composer textarea::placeholder { color: rgba(242,239,234,.32); }
@@ -296,5 +380,20 @@
     .feed .item svg { width: 14px; height: 14px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .feed .item.ok svg { color: ${GREEN}; }
     .feed .item.warn svg { color: ${AMBER}; }
+    .feed .item .feed-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* localhost as a clean pill in the feed chip — same language as the switcher tag */
+    .feed .item .feed-host {
+      flex: none; font-family: ${MONO}; font-size: 10px; line-height: 14px; letter-spacing: 0;
+      color: rgba(242,239,234,.5); background: rgba(242,239,234,.06);
+      border: 1px solid rgba(242,239,234,.12); border-radius: 5px;
+      padding: 1px 5px; white-space: nowrap;
+    }
+    /* Respect the OS motion setting. This sheet is scoped to the overlay's shadow
+       root, so the universal selector only touches Nudge chrome: the gliding
+       highlight snaps, the clock stops spinning, chips appear without a slide —
+       nothing on the host page is affected. */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+    }
   `
 })()
