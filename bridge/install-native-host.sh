@@ -5,10 +5,9 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # Unpacked extension ids derive from the DIRECTORY PATH (sha256 -> a-p alphabet);
-# moving the extension folder CHANGES the id. This default matches
-# /Users/gst/Developer/roots-apps/nudge/extension — on other machines/paths pass
+# moving the extension folder CHANGES the id. This default matches # /Users/gst/Developer/nudge-extension/extension — on other machines/paths pass
 # the id from chrome://extensions as $1.
-EXT_ID="${1:-pnobkoaalohemdbokjikojiabnnbpjck}"
+EXT_ID="${1:-aeaijfdmfidmcjmjjpmgbionkpdmibnm}"
 NODE_BIN="$(command -v node || echo /usr/local/bin/node)"
 WRAPPER="$HERE/native-host-wrapper.sh"
 MANIFEST_DIR="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"

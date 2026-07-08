@@ -1,0 +1,4 @@
+node_modules/
+extension/version.txt
+*.log
+.DS_Store

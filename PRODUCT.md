@@ -1,7 +1,12 @@
 # Nudge — Product Definition
 
 2026-07-05 · Owner: Gerald · Register: PM. One page; the technical frame lives in
-`README.md`, the test contract in `test/protocols.md`.
+`README.md`, the test contract in `test/protocols.md`. Standalone repo since
+2026-07-08 (extracted from the roots-apps monorepo — zero code dependencies).
+
+**Mission: a strong, bidirectional, always-honest connection between the Zed
+IDE (where the agent owns the code) and Google Chrome (where the rendered UI
+lives).** Everything below serves that line.
 
 ## What Nudge is
 

@@ -8,7 +8,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-const EXT = '/Users/gst/Developer/roots-apps/nudge/extension'
+const HERE = path.dirname(new URL(import.meta.url).pathname)
+const EXT = path.join(HERE, '../extension')
 const PIN = path.join(os.homedir(), '.claude', 'nudge')
 const api = async (p) => (await fetch(`http://localhost:4700${p}`)).json()
 const results = []

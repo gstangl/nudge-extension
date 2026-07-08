@@ -37,7 +37,7 @@ Say NOTHING about the connection unless something is wrong; then one line:
   2. **Chrome running but bridge refused → self-heal.** Any open localhost tab makes
      the extension restart the bridge within ~10 s. Re-check once.
   3. **Last resort only** (native host not installed, or still down after the above):
-     `(nohup node /Users/gst/Developer/roots-apps/nudge/bridge/bridge.mjs >/tmp/nudge-bridge.log 2>&1 &)`
+     `(nohup node /Users/gst/Developer/nudge-extension/bridge/bridge.mjs >/tmp/nudge-bridge.log 2>&1 &)`
   Fire the nudge overlay itself still needs a localhost app tab open — but arming +
   heartbeat (green icon) work as soon as the bridge is up.
 - `agentLive: false` → no watcher heartbeating: arm watch mode (below).
@@ -58,14 +58,14 @@ is harmless (the bridge replaces the older sibling of the same session).
 The BRIDGE keeps a ROSTER of armed sessions (losers idle in silent standby),
 Gerald picks the owner in the browser toolbar dropdown; newest wins only as
 fallback among armed ones:
-`Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+`Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
 ALWAYS set the topic label — it is how Gerald recognizes the session in the
 dropdown (Zed thread titles summarize the same conversation, so they converge).
 The description is VISIBLE as the collapsed tool card in Zed's panel — it must
 carry the session identity so Gerald sees at a glance who owns the channel.
 If Gerald NAMES the session ("nenn dich Nudge-Dev"), arm with the env override —
 it becomes the label in the browser toolbar:
-`Monitor({ command: "NUDGE_AGENT_LABEL='Nudge-Dev' node /Users/gst/Developer/roots-apps/nudge/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — Nudge-Dev" })`
+`Monitor({ command: "NUDGE_AGENT_LABEL='Nudge-Dev' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — Nudge-Dev" })`
 
 **Right after arming, print an IDENTITY line so Gerald can match this session to
 the browser toolbar** (his explicit need — the toolbar shows the label, this ties

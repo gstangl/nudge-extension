@@ -12,14 +12,14 @@ sich mit „✓ erledigt" zurück in deinen Browser. Funktioniert auf jeder
 
 - macOS mit **Google Chrome** und **Node.js** (`node -v` sollte etwas ausgeben)
 - **Claude Code** (in Zed oder als CLI)
-- Das `roots-apps`-Repository lokal (darin lebt der Nudge-Code: `nudge/`)
+- Dieses Repository (`nudge-extension`) lokal geklont
 
 ## Installation — einmalig, ~5 Minuten
 
 ### 1. Bridge-Abhängigkeit installieren
 
 ```bash
-cd <dein-pfad-zu>/roots-apps/nudge/bridge
+cd <dein-pfad-zu>/nudge-extension/bridge
 npm install
 ```
 
@@ -28,14 +28,14 @@ npm install
 1. In Chrome `chrome://extensions` öffnen.
 2. Rechts oben den Schalter **„Entwicklermodus"** aktivieren.
 3. **„Entpackte Erweiterung laden"** klicken und diesen Ordner auswählen:
-   `roots-apps/nudge/extension/`
+   `nudge-extension/extension/`
 4. Die Karte „Roots Nudge" erscheint. **Kopiere die ID** (lange Buchstabenkette
    unter dem Namen, z. B. `ianmgpfbb…`) — die brauchst du im nächsten Schritt.
 
 ### 3. Native Host registrieren (Chrome verwaltet ab dann die Bridge)
 
 ```bash
-cd <dein-pfad-zu>/roots-apps/nudge/bridge
+cd <dein-pfad-zu>/nudge-extension/bridge
 ./install-native-host.sh <deine-extension-id>
 ```
 
@@ -45,7 +45,7 @@ Leben — du musst nie ein Terminal dafür öffnen.
 ### 4. Agent-Seite einrichten (Skill + Hooks)
 
 ```bash
-<dein-pfad-zu>/roots-apps/nudge/agent/setup-agent.sh
+<dein-pfad-zu>/nudge-extension/agent/setup-agent.sh
 ```
 
 Das installiert in dein `~/.claude/`:

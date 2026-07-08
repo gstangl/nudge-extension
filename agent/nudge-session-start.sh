@@ -6,7 +6,7 @@
 # Injecting "[Nudge] …" into every session made foreign agents Nudge-aware and
 # had them relate to the owner's session (Gerald 2026-07-05) — removed.
 # The bridge keeps a roster; dead sessions age out via their stopped heartbeat.
-BRIDGE="/Users/gst/Developer/roots-apps/nudge/bridge/bridge.mjs"
+BRIDGE="/Users/gst/Developer/nudge-extension/bridge/bridge.mjs"
 [ -f "$BRIDGE" ] || exit 0
 
 if ! lsof -tnP -iTCP:4700 -sTCP:LISTEN >/dev/null 2>&1; then
