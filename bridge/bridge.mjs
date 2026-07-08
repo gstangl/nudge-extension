@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.11.6'
+const VERSION = '0.14.1'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -70,8 +70,23 @@ function handle(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`)
   res.cors = corsFor(req)
   if (req.method === 'OPTIONS') { res.writeHead(204, res.cors); return res.end() }
-  if (req.method === 'GET' && url.pathname === '/.identity')
-    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: agentLive(), agentLabel: agentLive() ? agent?.label || null : null, agents: agentsForClient(), tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+  if (req.method === 'GET' && url.pathname === '/.identity') {
+    // global view for tooling/hooks: the DEFAULT owner (per-host owners live in
+    // the WS snapshot each tab receives). `?host=` asks for a specific host.
+    const qHost = url.searchParams.get('host') || ''
+    const gOwner = ownerForHost(qHost)
+    // routes: for every open localhost tab, WHO owns it right now — the map that
+    // lets a watcher tell Gerald "I own localhost:5175" and match it to the
+    // toolbar. viaFallback = the returned owner came from newest-wins, NOT from a
+    // live explicit pick (per-host or '*'). Derived from the ACTUAL resolution:
+    // a pick whose agent just died still sits in chosenByHost until the 5 s sweep,
+    // while ownerForHost already falls back — has(h) would lie in that window.
+    const fresh = freshAgents()
+    const pickAlive = (h) => { const k = chosenByHost.get(h) || chosenByHost.get('*'); return !!k && fresh.some(a => agentKey(a) === k) }
+    const tabHosts = [...new Set([...wss.clients].map(c => hostOf(c.meta?.url || '')).filter(Boolean))]
+    const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session } : null, viaFallback: !pickAlive(h) } })
+    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+  }
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")
   // instead of just "bridge reachable".
@@ -81,8 +96,6 @@ function handle(req, res) {
       // numbers or roster keys and owner election degrade into NaN comparisons
       if (!Number.isFinite(who?.pid) || !Number.isFinite(who?.since))
         return json(res, 400, { error: 'heartbeat needs {label, pid:number, since:number}' })
-      const was = agentLive()
-      const prevPid = agent?.pid, prevLabel = agent?.label
       // ONE roster entry per session: keyed by session id (pid as fallback).
       // An OLDER watcher of a session that armed a newer one is told to die.
       const key = who.session ? `s:${String(who.session).slice(0, 32)}` : `p:${who.pid}`
@@ -98,34 +111,26 @@ function handle(req, res) {
         firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
         lastSeen: Date.now(),
       })
-      const own = currentOwner()
-      agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
-      const owner = agent?.pid === who.pid
-      if (owner) agentSeenAt = Date.now()
-      // Push on: liveness flip, ownership/label change, OR the visible session
-      // list changed — a NEW session joining (or a label change / re-appearance)
-      // must reach the Switch-session dropdown at once, even when a sticky owner
-      // means it doesn't become owner (else it only showed on the next unrelated
-      // broadcast — minutes later; Gerald 2026-07-06).
-      if ((!was && agentLive()) || agent?.pid !== prevPid || agent?.label !== prevLabel || rosterSig() !== lastBroadcastSig) pushSnapshot()
-      return json(res, 200, { ok: true, owner })
+      // Push whenever the visible session list OR the ownership map changed — a
+      // new session must reach the Switch-session dropdown at once (Gerald
+      // 2026-07-06); ownership is per-host now, no single global owner.
+      if (rosterSig() !== lastBroadcastSig) pushSnapshot()
+      return json(res, 200, { ok: true, owner: agentOwnsAnything(roster.get(key)) })
     })
-  // toolbar dropdown: Gerald picks which session owns the wake channel
+  // toolbar dropdown: Gerald picks which session owns a given LOCALHOST. The
+  // extension sends its own location.host, so a pick on localhost:5186 routes
+  // that origin's nudges to the chosen agent; no host = the machine-wide default.
   if (req.method === 'POST' && url.pathname === '/agent/owner')
-    return readBody(req, res, ({ pid, session }) => {
-      // pick by SESSION id (stable) when given, pid only as fallback — so a
-      // session that re-armed (new watcher pid) is still selectable, and the
-      // sticky choice survives its re-arms (Gerald 2026-07-06: 404 on a session
-      // whose pid had moved / that had just ended)
+    return readBody(req, res, ({ pid, session, host }) => {
+      // pick by SESSION id (stable) when given, pid only as fallback — a re-armed
+      // session (new watcher pid) stays selectable (Gerald 2026-07-06)
       const target = freshAgents().find(a => (session && a.session === session) || a.pid === pid)
       if (!target) return json(res, 404, { error: 'no such live agent' })
-      chosenKey = agentKey(target)
-      const own = currentOwner()
-      agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
-      agentSeenAt = Date.now() // chosen = live by decree until its next heartbeat confirms
-      log(`owner chosen: ${own?.label} (${chosenKey})`)
+      const h = host ? normHost(String(host).slice(0, 120)) : '*'
+      chosenByHost.set(h, agentKey(target))
+      log(`owner chosen: ${target.label} for ${h}`)
       pushSnapshot()
-      json(res, 200, { ok: true, owner: own?.label })
+      json(res, 200, { ok: true, owner: target.label, host: h })
     })
   if (req.method === 'GET' && url.pathname === '/comments')
     return json(res, 200, store.getPins().map(store.pinSummary))
@@ -147,15 +152,26 @@ function handle(req, res) {
     })
   if (req.method === 'POST' && url.pathname === '/comments')
     return readBody(req, res, (payload) => {
-      // owner is passed SEPARATELY and decided server-side — a client-sent
-      // payload.owner is never read, so provenance can't be spoofed
-      const pin = store.addPin(payload, ownerStamp())
+      // owner is decided server-side by the nudge's HOST (its localhost:port =
+      // which agent owns that dev server) — a client-sent payload.owner is never
+      // read, so provenance can't be spoofed
+      const pin = store.addPin(payload, ownerStamp(hostOf(payload.url)))
       log(`stored ${pin.id}: "${pin.text.slice(0, 60)}" @ ${pin.target?.selector || pin.url}${pin.owner ? ` [${pin.owner.label}]` : ''}`)
       json(res, 201, { id: pin.id })
     })
   const m = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/resolve$/)
   if (req.method === 'POST' && m)
-    return store.resolvePin(m[1], ownerStamp()) ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
+    // offline-created nudges are attributed on resolve to the owner of THEIR host
+    return store.resolvePin(m[1], ownerStamp(hostOf(store.getPin(m[1])?.url))) ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
+  // append a follow-up to an OPEN nudge (History "+ ergänzen") — re-wakes its agent
+  const mam = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/amend$/)
+  if (req.method === 'POST' && mam)
+    return readBody(req, res, ({ text, author }) => {
+      const r = store.amendPin(mam[1], { text, author })
+      if (r.pin) { log(`amended ${mam[1]}: "${String(text).slice(0, 60)}"`); return json(res, 200, { ok: true, amendments: r.pin.amendments.length }) }
+      const code = r.error === 'not_found' ? 404 : r.error === 'resolved' ? 409 : 400
+      json(res, code, { error: r.error })
+    })
   // discard from the queue popover (×) — remove entirely, not a work outcome
   const md = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)$/)
   if (req.method === 'DELETE' && md) {
@@ -195,39 +211,52 @@ httpServer.listen(PORT, '127.0.0.1', () => log(`http://localhost:${PORT} (demo: 
 const pruned = store.pruneResolved()
 if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
 
-// ---------- agent liveness + roster ----------
-let agentSeenAt = 0
-let agent = null // the session owning the wake channel (subset of the roster)
+// ---------- agent roster + ORIGIN-AWARE ownership ----------
+// A nudge belongs to the agent that owns ITS HOST (localhost:5186 = worktree B).
+// Ownership is per-host so parallel dev servers each route to their own agent
+// (Gerald 2026-07-07). `chosenByHost` holds the manual per-localhost picks; the
+// '*' key is the machine-wide default; with nothing assigned it degrades to the
+// old single-owner behaviour (newest fresh agent owns every host).
 const roster = new Map() // pid -> full identity + lastSeen (standby sessions incl.)
-let chosenKey = null // sticky manual choice from the dropdown — session-keyed (survives re-arms)
+const chosenByHost = new Map() // host -> agentKey ('*' = default for un-picked hosts)
 const agentKey = (a) => a.session ? `s:${a.session}` : `p:${a.pid}`
 const freshAgents = () => { const now = Date.now(); return [...roster.values()].filter(a => now - a.lastSeen < 12_000) }
-// stable signature of the VISIBLE session list (pid+label of every fresh agent) —
-// changes iff a session joins, leaves the fresh window, or renames itself; drives
-// prompt Switch-session-dropdown updates without spamming on plain heartbeats
-const rosterSig = () => freshAgents().map(a => `${a.pid}:${a.label}`).sort().join('|')
-function currentOwner() {
+// 127.0.0.1 and localhost are the SAME dev server — normalize so a pick made on
+// one spelling owns the other too (otherwise the same app splits into two hosts
+// with two different owners)
+const normHost = (h) => String(h || '').replace(/^127\.0\.0\.1(?=:|$)/, 'localhost')
+const hostOf = (u) => { try { return normHost(new URL(u).host) } catch { return '' } }
+// stable signature of the VISIBLE session list AND the ownership map — changes
+// iff a session joins/leaves/renames OR a per-host owner changes; drives prompt
+// dropdown updates without spamming on plain heartbeats
+const rosterSig = () => freshAgents().map(a => `${a.pid}:${a.label}`).sort().join('|') + '#' + [...chosenByHost].sort().join(',')
+// the agent that owns a given host: per-host pick → '*' default → newest fresh
+function ownerForHost(host) {
   const f = freshAgents()
   if (!f.length) return null
-  if (chosenKey) { const c = f.find(a => agentKey(a) === chosenKey); if (c) return c } // sticky until that session dies
-  return f.reduce((a, b) => (b.since >= a.since ? b : a)) // fallback: newest
+  const key = (host && chosenByHost.get(host)) || chosenByHost.get('*')
+  if (key) { const c = f.find(a => agentKey(a) === key); if (c) return c }
+  return f.reduce((a, b) => (b.since >= a.since ? b : a)) // fallback: newest (single-owner behaviour)
 }
-// provenance stamp for a nudge: WHO owns the channel right now (immutable once
-// written onto a pin) — so a later owner switch never relabels an existing nudge
-const ownerStamp = () => { const o = currentOwner(); return o ? { label: o.label, session: o.session } : null }
-const agentLive = () => Date.now() - agentSeenAt < 10_000
-const agentsForClient = () => freshAgents().map(a => ({ ...a, owner: a.pid === agent?.pid }))
-let lastBroadcastLive = false
+// provenance stamp for a nudge on a given host — immutable once written onto a pin
+const ownerStamp = (host) => { const o = ownerForHost(host); return o ? { label: o.label, session: o.session } : null }
+// does this agent own at least one host (explicit pick, '*' default, or the newest fallback)?
+function agentOwnsAnything(a) {
+  const k = agentKey(a)
+  if ([...chosenByHost.values()].includes(k)) return true
+  const fallback = ownerForHost('') // '*' default or newest
+  return !!fallback && agentKey(fallback) === k
+}
+const agentsForClient = (host) => { const o = ownerForHost(host); return freshAgents().map(a => ({ ...a, owner: o ? a.pid === o.pid : false })) }
 let lastBroadcastSig = '' // rosterSig() at the last snapshot push — compare against
 // THIS (not the tick start) so a session leaving the 12 s fresh window is caught
-// (its expiry is time-based; both reads inside one tick already see it gone)
-const pushSnapshot = () => { lastBroadcastLive = agentLive(); lastBroadcastSig = rosterSig(); broadcast(snapshot()) }
-setInterval(() => { // liveness flip, an owner dying, or a session leaving -> update
+const pushSnapshot = () => { lastBroadcastSig = rosterSig(); broadcastSnapshot() }
+setInterval(() => { // an owner dying / a session leaving / ownership change -> update
   for (const [pid, a] of roster) if (Date.now() - a.lastSeen > 60_000) roster.delete(pid)
-  const own = currentOwner()
-  const changed = own?.pid !== agent?.pid
-  if (changed) agent = own ? { label: own.label, pid: own.pid, since: own.since } : null
-  if (agentLive() !== lastBroadcastLive || changed || rosterSig() !== lastBroadcastSig) pushSnapshot()
+  // drop per-host picks whose agent is gone, so the host falls back cleanly
+  const liveKeys = new Set(freshAgents().map(agentKey))
+  for (const [h, k] of chosenByHost) if (!liveKeys.has(k)) chosenByHost.delete(h)
+  if (rosterSig() !== lastBroadcastSig) pushSnapshot()
 }, 5000)
 
 // ---------- WebSocket surface (live sync to the extension) ----------
@@ -236,15 +265,18 @@ const wss = new WebSocketServer({ server: httpServer })
 // it kills the MCP-only fallback process (found by the e2e colliding with a live bridge)
 wss.on('error', () => { /* logged by the http handler */ })
 const broadcast = (obj) => { const msg = JSON.stringify(obj); for (const c of wss.clients) if (c.readyState === 1) c.send(msg) }
-const snapshot = () => {
-  // diet: every open pin, but only the 40 freshest resolved — the popover
-  // history shows 8 per route; shipping months of history on every change
-  // would bloat each broadcast for nothing
+// PER-CLIENT snapshot: each tab sees the owner of ITS OWN host (the bridge knows
+// the tab's url from its hello). Pins are the full list — the extension filters
+// by route; owner/live reflect who owns this tab's localhost.
+const snapshotFor = (host) => {
+  const owner = ownerForHost(host)
+  // diet: every open pin, but only the 40 freshest resolved
   const all = store.getPins()
   const open = all.filter(p => p.status === 'open')
   const done = all.filter(p => p.status !== 'open').slice(-40)
-  return { type: 'pins', agentLive: agentLive(), agentLabel: agentLive() ? agent?.label || null : null, agents: agentsForClient(), pins: [...open, ...done].map(store.pinForClient) }
+  return { type: 'pins', agentLive: !!owner, agentLabel: owner?.label || null, agents: agentsForClient(host), pins: [...open, ...done].map(store.pinForClient) }
 }
+const broadcastSnapshot = () => { for (const c of wss.clients) if (c.readyState === 1) c.send(JSON.stringify(snapshotFor(hostOf(c.meta?.url || '')))) }
 const WS_PING = Number(process.env.NUDGE_WS_PING || 30_000)
 setInterval(() => {
   for (const c of wss.clients) {
@@ -256,12 +288,16 @@ setInterval(() => {
 wss.on('connection', (ws) => {
   ws.isAlive = true
   ws.on('pong', () => { ws.isAlive = true })
-  ws.send(JSON.stringify(snapshot()))
-  // the extension introduces its tab -> /.identity can answer "which pages hang here"
+  ws.send(JSON.stringify(snapshotFor(''))) // immediate default snapshot (any client, even pre-hello)
+  // once the tab says its url we send a snapshot scoped to THAT host's owner —
+  // the ~ms between connect and hello converges, the tab ends on the right owner
   ws.on('message', (m) => {
     try {
       const h = JSON.parse(m)
-      if (h.type === 'hello' && h.role !== 'agent') ws.meta = { url: String(h.url || '').slice(0, 120) }
+      if (h.type === 'hello') {
+        if (h.role !== 'agent') ws.meta = { url: String(h.url || '').slice(0, 120) }
+        ws.send(JSON.stringify(snapshotFor(hostOf(ws.meta?.url || '')))) // agents: default owner
+      }
     } catch { /* ignore */ }
   })
 })

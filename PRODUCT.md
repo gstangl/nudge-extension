@@ -30,7 +30,9 @@ is everything. Nudge names that job; "Pin" named the mechanism.
    (grey/red/amber/green = off / no bridge / no agent / agent live).
 3. **Rapid-fire work sessions.** Fire 10 changes faster than the agent works —
    the store IS the queue: strictly ordered, oldest-first, nothing lost,
-   in-page toast when each one is done.
+   in-page toast when each one is done. A sent nudge is not sealed: while it is
+   still open you can append a follow-up to it ("+ ergänzen") — the same nudge,
+   a later thought (append-only, re-wakes its agent; 0.19.0).
 4. **Best-in-class UI picking.** Gliding highlight, layer chips (pick the
    ancestor you meant), Shift+Klick multi-select ("tausche diese beiden"),
    freehand lasso, pick-without-send ("das hier").
@@ -67,6 +69,8 @@ always visible, in both directions:
 - [x] Evidence loop: resolve captures the after-state, invisibly.
 - [x] Works for every Claude agent in every project: global store (~/.claude/nudge),
       user-level skill + hooks, zero per-project config (2026-07-05).
+- [x] Parallel localhosts (multiple worktrees, each its own dev server + agent)
+      route to their own agents — per-host ownership, no cross-wake (2026-07-07).
 - [ ] Team-ready: one extension install + one setup script per person.
 
 ## Non-goals
@@ -92,11 +96,16 @@ always visible, in both directions:
 - **Pull-based agent delivery under the hood** (Zed has no push channel —
   maintainer-confirmed). The Monitor wake + hook context make it FEEL push;
   a mid-task prompt waits until the agent's current step yields.
-- **One live-watch session at a time.** The newest session owns the wake channel:
-  its SessionStart hook pkills every older watcher — the loser notices only via
-  its dead Monitor task (no handover signal). Parallel sessions read the same
-  store but don't get woken. Accepted trade-off: prompts are processed once,
-  and the browser status stays honest (whoever heartbeats, heartbeats).
+- **Parallel sessions coexist, routed per localhost** (origin-aware, 2026-07-07;
+  supersedes the old "one live-watch session at a time"). The bridge keeps a
+  roster of armed sessions; each localhost is owned by one agent — assigned in
+  the browser's Switch-session dropdown, else newest-armed as fallback. A nudge
+  on localhost:5175 wakes only that host's owner; a parallel worktree on
+  localhost:5176 wakes its own, no cross-wake (proven by Suite K's two real
+  watchers). Ownership is stamped per nudge at arrival and is immutable, so a
+  mid-stream owner change never re-attributes an existing nudge. Trade-off: a
+  nudge on an UNassigned host falls back to the newest armed session — with
+  parallel servers you pick the owner once per localhost.
 - **Source hints are generic, not resolved.** data-* attributes where frameworks
   provide them, selector/xpath/text otherwise; mapping to code stays the agent's
   job (it has the repo). No server-side sourcemap machinery.

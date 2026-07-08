@@ -48,7 +48,7 @@
   // path as the neighbour icons (a hand-rolled 10x16 viewBox rendered blurry)
   const GRIP = '<svg viewBox="0 0 24 24"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>'
   const pill = el('div', 'pill',
-    `<span class="grip" title="Move">${GRIP}</span><span class="status"></span><span class="count"></span><span class="sep"></span><button class="btn-pick">${ICON_PICK}<span>Pick</span></button><button class="btn-draw">${ICON_DRAW}<span>Freeform</span></button><span class="sep who-sep"></span><span class="who" title=""></span>`)
+    `<span class="grip" title="Move">${GRIP}</span><span class="status"></span><span class="count"></span><span class="sep"></span><button class="btn-pick" title="Pick element (P)">${ICON_PICK}<span>Pick</span></button><button class="btn-draw" title="Freeform region (F)">${ICON_DRAW}<span>Freeform</span></button><span class="sep who-sep"></span><span class="who" title=""><span class="who-kind"></span><span class="who-label"></span><span class="who-id"></span><span class="who-host"></span></span>`)
   const hl = el('div', 'hl', '<span class="chip"></span>')
   const draw = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   draw.setAttribute('class', 'draw')
@@ -492,10 +492,15 @@
     composer.style.setProperty('--tip-y', `${tipY}px`)
     Object.assign(composer.style, { display: 'block', left: left + 'px', top: top + 'px' })
     ta.value = ''
+    ta.style.height = 'auto' // reset any grown height from a previous compose
     ta.focus()
   }
   composer.querySelector('.cancel').addEventListener('click', () => setMode('idle'))
   composer.querySelector('.send').addEventListener('click', send)
+  // grow the textarea with its content up to the CSS max-height (then it scrolls),
+  // so a longer nudge is fully visible while typing instead of a fixed peephole
+  const autoGrow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
+  ta.addEventListener('input', autoGrow)
   ta.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send() }
     e.stopPropagation()
@@ -654,17 +659,19 @@
 
   // feedback feed: small chips top right, Lucide icons, fade out on their own.
   // Kinds: sent (send), done (check), queued (clock), warn (triangle-alert).
-  const FEED_ICONS = { // official Lucide path geometry, 24x24 viewBox
-    send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  const FEED_ICONS = { // official Lucide path geometry, 24x24 viewBox (current set, matching the toolbar glyphs)
+    send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
     clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
   }
-  function notify(kind, text) {
+  function notify(kind, text, host) {
     const item = document.createElement('div')
     item.className = `item ${kind === 'alert' || kind === 'clock' ? 'warn' : 'ok'}`
-    item.innerHTML = `<svg viewBox="0 0 24 24">${FEED_ICONS[kind] || FEED_ICONS.check}</svg><span></span>`
-    item.querySelector('span').textContent = text
+    item.innerHTML = `<svg viewBox="0 0 24 24">${FEED_ICONS[kind] || FEED_ICONS.check}</svg><span class="feed-text"></span><span class="feed-host"></span>`
+    item.querySelector('.feed-text').textContent = text
+    const fh = item.querySelector('.feed-host') // localhost as a clean pill, never inline text
+    if (host) fh.textContent = host; else fh.remove()
     placeFeed() // anchor under the toolbar at its CURRENT position before showing
     feed.appendChild(item)
     while (feed.children.length > 4) feed.firstChild.remove() // unobtrusive: short list
@@ -733,25 +740,41 @@
     const m = Math.max(0, Math.round((Date.now() - t) / 60000))
     return m < 60 ? `${m} min` : `${Math.round(m / 60)} h`
   }
+  // Gerald names each worktree's session with its localhost port ("Estimate
+  // Templates :5175"). Split that suffix off so the name renders clean and the
+  // port becomes its own right-aligned tag.
+  function splitLabel(label) {
+    const m = /^(.*?)\s*:(\d{2,5})\s*$/.exec(label || '')
+    return m ? { name: m[1], port: m[2] } : { name: label || '', port: '' }
+  }
   function renderWhoMenu() {
     const list = whoMenu.querySelector('.w-list')
     list.innerHTML = ''
     for (const a of agents) {
       const row = document.createElement('div')
       row.className = 'w-row' + (a.owner ? ' is-owner' : '')
-      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.host, `seit ${sinceAge(a.since)}`].filter(Boolean).join(' · ')
-      row.innerHTML = '<div class="w-line1"></div><div class="w-line2"></div><div class="w-line3"></div>'
-      row.querySelector('.w-line1').textContent = (a.owner ? '● ' : '') + a.label
+      // a.session (id8) is the un-collidable key: the /nudge arm-report in the
+      // chat prints the same id, so Gerald matches chat ↔ dropdown 1:1 even when
+      // two sessions share a label
+      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.host, `seit ${sinceAge(a.since)}`, a.session || null].filter(Boolean).join(' · ')
+      row.innerHTML = '<div class="w-line1"><span class="w-name"></span><span class="w-host"></span></div><div class="w-line2"></div><div class="w-line3"></div>'
+      const parts = splitLabel(a.label)
+      row.querySelector('.w-name').textContent = (a.owner ? '● ' : '') + parts.name
+      // localhost as a subtle right-aligned tag on each session row (Gerald 2026-07-07)
+      const wh = row.querySelector('.w-host')
+      if (parts.port) wh.textContent = `localhost:${parts.port}`; else wh.remove()
       row.querySelector('.w-line2').textContent = l2
       const l3 = row.querySelector('.w-line3')
       if (a.firstMsg) l3.textContent = `„${a.firstMsg}…“`
       else l3.remove()
       row.addEventListener('click', async () => {
         try {
-          // address the session by its id (stable across re-arms), pid as fallback
-          const r = await fetch(`${HTTP}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: a.pid, session: a.session }) })
-          if (r.ok) notify('check', `Owner: ${a.label}`)
-          else notify('alert', `${a.label} nicht mehr aktiv`) // gone since the list was drawn — never claim success
+          // route THIS localhost (location.host) to the chosen agent — parallel
+          // dev servers each get their own agent (session id is stable across re-arms)
+          const r = await fetch(`${HTTP}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: a.pid, session: a.session, host: location.host }) })
+          const s = splitLabel(a.label)
+          if (r.ok) notify('check', `→ ${s.name}`, s.port ? `localhost:${s.port}` : '')
+          else notify('alert', `${s.name} nicht mehr aktiv`) // gone since the list was drawn — never claim success
         } catch { notify('alert', 'Bridge offline') }
         whoMenu.classList.remove('on')
       })
@@ -761,8 +784,9 @@
   pill.querySelector('.who').addEventListener('click', (e) => {
     e.stopPropagation()
     if (whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
+    hideQueue() // only one popover open at a time
     renderWhoMenu()
-    anchorPopover(whoMenu, pill.querySelector('.who'), 340) // 340 = .who-menu width in styles.js
+    anchorPopover(whoMenu, pill.querySelector('.who'), 460) // 460 = .who-menu width in styles.js
     whoMenu.classList.add('on')
   })
 
@@ -786,6 +810,7 @@
   }
   const Q_CHECK = '<span class="q-dot q-done"><svg viewBox="0 0 24 24" class="q-ok"><path d="M20 6 9 17l-5-5"/></svg></span>'
   const qExpanded = new Set() // accordion: which rows show their full text
+  const qAmendDraft = new Map() // id -> in-progress follow-up text, survives WS re-renders
   const qAccordion = (row, id) => {
     row.classList.toggle('open', qExpanded.has(id))
     row.addEventListener('click', () => {
@@ -795,20 +820,78 @@
   }
   function renderQueue() {
     const open = pagePins
-    queue.querySelector('.q-head').textContent = open.length
-      ? `${open.length} open nudge${open.length === 1 ? '' : 's'} on this page${agentLive && agentLabel ? ` · ${agentLabel}` : ''}`
-      : `No open nudges on this page${agentLive && agentLabel ? ` · ${agentLabel}` : ''}`
+    const head = queue.querySelector('.q-head')
+    const sh = agentLive && agentLabel ? splitLabel(agentLabel) : null // the whole History is one host → its localhost as a single header pill
+    const base = open.length ? `${open.length} open nudge${open.length === 1 ? '' : 's'} on this page` : 'No open nudges on this page'
+    head.innerHTML = '<span class="q-head-text"></span><span class="q-head-host"></span>'
+    head.querySelector('.q-head-text').textContent = sh ? `${base} · ${sh.name}` : base
+    const hh = head.querySelector('.q-head-host')
+    if (sh?.port) hh.textContent = `localhost:${sh.port}`; else hh.remove()
     const list = queue.querySelector('.q-list')
     list.innerHTML = ''
     for (const p of open) {
       const row = document.createElement('div')
       row.className = 'q-row' + (wsOk && agentLive ? ' live' : '')
-      row.innerHTML = `${Q_CLOCK}<span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span><button class="q-x" title="Dismiss nudge">×</button>`
+      row.innerHTML = `${Q_CLOCK}<span class="q-id"></span><span class="q-text"></span><span class="q-amc"></span><span class="q-who"></span><span class="q-age"></span><button class="q-add" title="Nachtrag ergänzen">+</button><button class="q-x" title="Dismiss nudge">×</button>`
       row.querySelector('.q-id').textContent = p.id
       row.querySelector('.q-text').textContent = p.text || markLabel(p)
-      row.querySelector('.q-who').textContent = p.owner?.label || '' // which session owns this nudge (stamped at arrival, immutable)
+      const amc = row.querySelector('.q-amc') // "+N" badge when this nudge carries follow-ups
+      if (p.amendments?.length) amc.textContent = `+${p.amendments.length}`; else amc.remove()
+      row.querySelector('.q-who').textContent = p.owner ? splitLabel(p.owner.label).name : '' // which session owns this nudge (stamped at arrival, immutable); host is implied by the route
       row.querySelector('.q-age').textContent = ageOf(p.createdAt)
+      // existing follow-ups — a READABLE block under the row (shows when the row
+      // is expanded or being amended), so Gerald can re-read what he appended
+      if (p.amendments?.length) {
+        const amlist = document.createElement('div')
+        amlist.className = 'q-amend-list'
+        for (const a of p.amendments) { const d = document.createElement('div'); d.className = 'q-amend-item'; d.textContent = a.text; amlist.appendChild(d) }
+        row.appendChild(amlist)
+      }
+      // input (with a send button) to append one more (append-only) — only while amending
+      const panel = document.createElement('div')
+      panel.className = 'q-amend'
+      panel.innerHTML = `<div class="q-amend-row"><textarea class="q-amend-input" rows="1" placeholder="Nachtrag zu ${p.id} … (↩ senden, ⇧↩ Zeile)"></textarea><button class="q-amend-send" title="Nachtrag senden (↩)"><svg viewBox="0 0 24 24">${FEED_ICONS.send}</svg></button></div>`
+      row.appendChild(panel)
+      panel.addEventListener('click', (e) => e.stopPropagation()) // typing must not toggle the accordion
+      const input = panel.querySelector('.q-amend-input')
+      input.addEventListener('input', () => qAmendDraft.set(p.id, input.value))
+      const closeAmend = () => { qAmendDraft.delete(p.id); input.value = ''; row.classList.remove('amending') }
+      let amSending = false
+      const submitAmend = async () => {
+        const text = input.value.trim()
+        if (!text || amSending) return
+        amSending = true
+        // Clear the draft + close BEFORE the network round-trip. The bridge's WS
+        // 'amended' push can re-render this row while the fetch is still in flight;
+        // if the draft were still present the fresh row would restore the field
+        // WITH the just-sent text (bit Gerald 2026-07-07: "steht noch drin"). On
+        // failure we put the text back.
+        closeAmend()
+        let ok = false
+        try {
+          const r = await fetch(`${HTTP}/comments/${p.id}/amend`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, author }) })
+          if (r.ok) { notify('check', `${p.id} ergänzt`); ok = true }
+          else if (r.status === 409) { notify('alert', `${p.id} schon erledigt`); ok = true } // resolved: don't reopen, the amend is moot
+          else notify('alert', `${p.id} nicht ergänzt`)
+        } catch { notify('alert', 'Bridge offline — nicht ergänzt') }
+        if (!ok) { qAmendDraft.set(p.id, text); input.value = text; row.classList.add('amending', 'open'); input.focus() } // give the text back
+        amSending = false
+      }
+      panel.querySelector('.q-amend-send').addEventListener('click', (e) => { e.stopPropagation(); submitAmend() })
+      input.addEventListener('keydown', (e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') { closeAmend(); return }
+        // Enter (or ⌘/Ctrl+Enter) sends; Shift+Enter inserts a newline
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAmend() }
+      })
       qAccordion(row, p.id)
+      row.querySelector('.q-add').addEventListener('click', (e) => {
+        e.stopPropagation()
+        const on = row.classList.toggle('amending')
+        if (on) { qExpanded.add(p.id); row.classList.add('open'); input.focus() } else closeAmend()
+      })
+      // restore an in-progress draft across WS re-renders (don't lose a half-typed thought)
+      if (qAmendDraft.has(p.id)) { row.classList.add('amending', 'open'); input.value = qAmendDraft.get(p.id); requestAnimationFrame(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length) }) }
       row.querySelector('.q-x').addEventListener('click', async (e) => {
         e.stopPropagation()
         try {
@@ -832,7 +915,7 @@
         row.innerHTML = `${Q_CHECK}<span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span>`
         row.querySelector('.q-id').textContent = p.id
         row.querySelector('.q-text').textContent = p.text || markLabel(p)
-        row.querySelector('.q-who').textContent = p.owner?.label || ''
+        row.querySelector('.q-who').textContent = p.owner ? splitLabel(p.owner.label).name : ''
         row.querySelector('.q-age').textContent = ageOf(p.resolvedAt || p.createdAt)
         qAccordion(row, p.id)
         list.appendChild(row)
@@ -876,6 +959,7 @@
   addEventListener('resize', scheduleDots, { passive: true })
   setInterval(() => { if (dots.children.length) positionDots() }, 1500) // SPA re-renders move anchors without scroll
   function showQueue() {
+    whoMenu.classList.remove('on') // only one popover open at a time
     renderQueue()
     anchorPopover(queue, pill.querySelector('.count'), 420) // 420 = .queue width in styles.js
     queue.classList.add('on')
@@ -893,13 +977,23 @@
     const dot = pill.querySelector('.status')
     dot.classList.toggle('ok', wsOk && agentLive)
     dot.classList.toggle('half', wsOk && !agentLive)
-    dot.title = !wsOk ? 'Bridge unreachable' : (agentLive ? `Agent live — ${agentLabel || '?'}` : 'Bridge up — no agent (nudges are stored)')
-    // session label IN the toolbar (Gerald: always know which Zed agent reacts)
+    dot.title = !wsOk ? 'Bridge unreachable' : (agentLive ? `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'}` : 'Bridge up — no agent (nudges are stored)')
+    // session label + this tab's localhost IN the toolbar (Gerald: always know
+    // which agent reacts AND which localhost this is)
     const who = pill.querySelector('.who')
     const showWho = wsOk && (agentLive && !!agentLabel || agents.length > 0)
-    who.textContent = agentLive && agentLabel ? agentLabel : (agents.length ? `${agents.length} sessions` : '')
+    const owner = agentLive && agentLabel ? splitLabel(agentLabel) : null
+    // "Agent:" in the Pick/Freeform typeface names what the line behind it IS
+    who.querySelector('.who-kind').textContent = owner ? 'Agent:' : ''
+    who.querySelector('.who-label').textContent = owner ? owner.name : (agents.length ? `${agents.length} sessions` : '')
+    // the owner's session id8, visible WITHOUT any click — the un-collidable key
+    // the /nudge arm-report prints, so Gerald matches chat ↔ toolbar at a glance
+    const ownerAgent = agents.find(a => a.owner)
+    who.querySelector('.who-id').textContent = owner && ownerAgent?.session ? ownerAgent.session : ''
+    // the localhost as a clean pill (from the label's :PORT suffix), never inline in the name
+    who.querySelector('.who-host').textContent = owner?.port ? `localhost:${owner.port}` : ''
     who.title = showWho ? 'Switch session — pick which agent gets your nudges' : ''
-    who.style.display = showWho ? 'inline-block' : 'none'
+    who.style.display = showWho ? 'inline-flex' : 'none'
     pill.querySelector('.who-sep').style.display = showWho ? 'inline-block' : 'none'
     const openCount = pagePins.filter(p => p.status === 'open').length
     const count = pill.querySelector('.count')
@@ -928,7 +1022,7 @@
         const msg = JSON.parse(e.data)
         if (msg.type === 'pins') {
           agentLive = !!msg.agentLive
-          if (agentLive && msg.agentLabel && msg.agentLabel !== agentLabel) notify('check', `Agent: ${msg.agentLabel}`)
+          if (agentLive && msg.agentLabel && msg.agentLabel !== agentLabel) { const s = splitLabel(msg.agentLabel); notify('check', `Agent: ${s.name}`, s.port ? `localhost:${s.port}` : '') }
           agentLabel = agentLive ? msg.agentLabel || null : null
           agents = msg.agents || []
           if (whoMenu.classList.contains('on')) renderWhoMenu() // live refresh
@@ -963,15 +1057,84 @@
   document.addEventListener('visibilitychange', onVisibility)
 
   // ---------- global listeners ----------
+  const isEditable = (el) => !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
   const onDocKeyDown = (e) => {
     if (e.key === 'Escape' && whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
     if (e.key === 'Escape' && queue.classList.contains('on')) { hideQueue(); return }
-    if (e.key === 'Escape' && mode !== 'off') { setMode('idle') }
+    if (e.key === 'Escape' && mode !== 'off') { setMode('idle'); return }
+    // single-key tool switch (Figma/Cursor-design-mode convention), tightly
+    // gated so it never fights the page: only when the overlay is active but not
+    // composing, no modifier, focus not in any editable field, no popover open.
+    if (mode === 'off' || mode === 'composing') return
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+    if (isEditable(e.target) || isEditable(document.activeElement)) return
+    if (whoMenu.classList.contains('on') || queue.classList.contains('on')) return
+    const k = e.key.toLowerCase()
+    if (k === 'p') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'picking' ? 'idle' : 'picking') }
+    else if (k === 'f') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'drawing' ? 'idle' : 'drawing') }
   }
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
   document.addEventListener('click', onClickSuppress, true)
   document.addEventListener('keydown', onDocKeyDown, true)
+
+  // ---------- moat: reaching for the toolbar must not dismiss page state ----------
+  // A page modal often uses a full-screen backdrop that hides on any click
+  // outside it (roots' own RequestPopover: overlay-click → hide). The Nudge host
+  // is full-screen but pointer-events:none, so a click that just MISSES the
+  // toolbar falls THROUGH and dismisses the page's modal — reaching for the
+  // toolbar shouldn't touch the page (bit Gerald 2026-07-07). Absorb near-miss
+  // clicks in a thin moat around visible Nudge chrome. Only idle/composing —
+  // picking/drawing genuinely need page clicks — and only the immediate margin,
+  // so real page clicks farther away dismiss the modal as the page intends.
+  const MOAT = 12
+  const nearChrome = (x, y) => {
+    const widgets = [pill]
+    if (mode === 'composing') widgets.push(composer)
+    if (queue.classList.contains('on')) widgets.push(queue)
+    if (whoMenu.classList.contains('on')) widgets.push(whoMenu)
+    for (const w of widgets) {
+      const r = w.getBoundingClientRect()
+      if (r.width && x >= r.left - MOAT && x <= r.right + MOAT && y >= r.top - MOAT && y <= r.bottom + MOAT) return true
+    }
+    return false
+  }
+  const swallowMoat = (e) => {
+    if (mode === 'off' || mode === 'picking' || mode === 'drawing') return
+    if (inOverlay(e)) return // a real widget hit — its own handlers run
+    // caught at WINDOW capture, the first hop: stopping here blocks the page's
+    // backdrop-click AND any capture-phase outside-click dismisser downstream
+    if (nearChrome(e.clientX, e.clientY)) { e.preventDefault(); e.stopImmediatePropagation() }
+  }
+  const MOAT_EVENTS = ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']
+  for (const t of MOAT_EVENTS) window.addEventListener(t, swallowMoat, true)
+
+  // Page menus/dropdowns often detect outside-clicks with a document CAPTURE-phase
+  // pointerdown listener (roots' own @roots/ui actionMenu: addEventListener(
+  // 'pointerdown', onOutside, true)). A click on Nudge chrome retargets to our
+  // host — "outside" their menu — so the menu closes the instant Gerald reaches
+  // for the toolbar (bit Gerald 2026-07-07 on the estimate sort dropdown). The
+  // host bubble-stop is too late (capture fires first). Swallow the pointerdown/
+  // mousedown of a genuine Nudge-widget hit at WINDOW capture, the first hop, so
+  // no page outside-detector — capture or bubble — ever sees it. Our controls act
+  // on `click` (a separate event, still fires); the grip needs its own
+  // pointerdown for dragging, so leave it through.
+  const swallowChromePointer = (e) => {
+    if (!inOverlay(e)) return
+    // widgets that genuinely need their OWN pointerdown: the grip (drag), the
+    // draw layer (lasso), and any text field (caret placement / focus — the
+    // composer textarea, the History amend input). Everything else in the chrome
+    // acts on `click`, so swallowing its pointerdown blocks the page's
+    // outside-detector without any loss.
+    const path = e.composedPath()
+    if (path.includes(grip) || path.includes(draw)) return
+    const t = path[0]
+    if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return
+    e.stopImmediatePropagation()
+  }
+  const CHROME_POINTER_EVENTS = ['pointerdown', 'mousedown']
+  for (const t of CHROME_POINTER_EVENTS) window.addEventListener(t, swallowChromePointer, true)
+
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'nudge-toggle') setMode(mode === 'off' ? 'idle' : 'off')
   })
@@ -1003,9 +1166,28 @@
       document.removeEventListener('click', onClickSuppress, true)
       document.removeEventListener('keydown', onDocKeyDown, true)
       document.removeEventListener('pointerdown', onDocPointerDown, true)
+      for (const t of MOAT_EVENTS) window.removeEventListener(t, swallowMoat, true)
+      for (const t of CHROME_POINTER_EVENTS) window.removeEventListener(t, swallowChromePointer, true)
       host.remove()
+      showReloadHint() // don't vanish silently — tell Gerald the one keystroke that heals the tab
     }
   }, 5000)
+
+  // The overlay used to disappear WITHOUT A WORD when the extension reloaded
+  // (dev auto-reload, update): the tab looked like "Nudge kaputt" until a manual
+  // page reload (bit Gerald 2026-07-08). Plain-DOM banner — no chrome.* (the
+  // context is dead), no shadow styles (the host is gone): one pill in the brand
+  // midnight, dismiss on click, gone with the reload it asks for.
+  function showReloadHint() {
+    if (document.getElementById('__roots-nudge-reload-hint')) return
+    const n = document.createElement('div')
+    n.id = '__roots-nudge-reload-hint'
+    n.textContent = 'Nudge aktualisiert — ⌘R lädt die Toolbar neu'
+    n.title = 'Klicken zum Ausblenden'
+    n.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#1A1F26;color:#F2EFEA;font:500 12px/1.4 -apple-system,"Helvetica Neue",sans-serif;letter-spacing:.01em;padding:8px 14px;border-radius:999px;border:1px solid #3A4250;box-shadow:0 1px 2px rgba(0,0,0,.3),0 4px 12px rgba(14,19,24,.35);cursor:pointer;'
+    n.addEventListener('click', () => n.remove())
+    document.documentElement.appendChild(n)
+  }
 
   setMode('idle') // PoC: overlay visible by default on localhost; Alt+C / toolbar icon toggles
   // resolve the (test-only) port override, THEN open the connection

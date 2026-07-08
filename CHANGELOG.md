@@ -46,6 +46,284 @@ bump lands here in the same change — no silent releases.
 - Die Badge-Klick-Flaeche heisst jetzt **Nudge History** (offene Nudges + DONE-
   Historie, jede Zeile an ihre Agent-Session gebunden) — in Protokoll + Scenarios.
 
+## [0.19.8] - 2026-07-08 (Verwaister Tab sagt „⌘R" statt still zu verschwinden)
+
+### Fixed
+- **Nach einem Extension-Reload (Update/Dev-Auto-Reload) verschwand die Toolbar
+  wortlos aus offenen Tabs** — für Gerald sah das aus wie „Nudge kaputt"
+  (2026-07-08, drei verwaiste Estimate-Tabs). Der Orphan-Cleanup zeigt jetzt
+  einen kleinen Hinweis-Pill oben rechts: „Nudge aktualisiert — ⌘R lädt die
+  Toolbar neu" (reines DOM, keine chrome-APIs — die sind im verwaisten Kontext
+  tot; Klick blendet aus, der Reload erledigt den Rest). Suite L6 verwaist einen
+  echten Tab per `chrome.runtime.reload()` und asserted den Hinweis.
+
+## [0.19.7] - 2026-07-08 (Session-id sichtbar in der Toolbar — ohne Klick)
+
+### Added
+- **Die session-id8 des Owners steht jetzt direkt in der Toolbar** (dezent, mono,
+  rahmenlos, zwischen Name und Localhost-Pille): „Agent: Worktree-Isolation
+  bf9d5543 ⟨localhost:5175⟩". Damit matcht Gerald den /nudge-Chat-Report mit der
+  Toolbar auf einen Blick — ohne das Dropdown zu öffnen (Gerald). Suite L1
+  asserted die klicklose Sichtbarkeit.
+
+## [0.19.6] + Bridge 0.14.1 - 2026-07-08 (Match-Robustheit: vier Detail-Fehler gehärtet)
+
+Robustheits-Review des Agent↔Toolbar-Matchings (Gerald: „prüfe, ob das wirklich
+die robusteste Methode ist"). Vier echte Detail-Fehler gefunden und gefixt:
+
+### Fixed
+- **`viaFallback` log in einem ~12–17s-Fenster**: stirbt der gepickte Agent, fällt
+  `ownerForHost` sofort auf newest-wins zurück, aber der Pick lag bis zum 5s-Sweep
+  noch in der Map → Flag sagte „fest". Jetzt aus der TATSÄCHLICHEN Auflösung
+  abgeleitet (lebt der gepickte Agent?). Suite K6 beweist den Moment-Umschlag.
+- **Race beim Arm-Report**: sofortiges curl nach dem Armen kam dem ersten
+  Watcher-Heartbeat (~2s) zuvor → „?" für eine sauber armierte Session. Der
+  Report pollt jetzt bis zu 8s auf die eigene Session (Late-Heartbeat-Test grün).
+- **Label-Kollision**: der Chat↔Toolbar-Match lief nur übers Label — zwei
+  Sessions gleichen Namens wären ununterscheidbar. Die **session-id8 steht jetzt
+  auch in jeder Switch-session-Zeile** (Meta-Zeile) — Chat-Report und Dropdown
+  tragen denselben un-kollidierbaren Schlüssel. Suite L1 asserted das.
+- **`127.0.0.1` ≠ `localhost`**: Ownership war exakt-Host-gekeyt — dieselbe App
+  über die andere Schreibweise geöffnet wäre ein FREMDER Host mit eigenem Owner
+  gewesen. Bridge normalisiert jetzt beide Pfade (hello-URL + Owner-Pick);
+  K5 beweist: eine Route, kein Fork.
+
+## Bridge 0.14.0 - 2026-07-08 (Identity-Report beim Armen — Agent ↔ Toolbar matchen)
+
+### Added
+- **`/nudge` meldet beim Armen im Chat, welche Localhosts diese Session besitzt**
+  (Geralds Wunsch: schnell abklären, ob der Zed-Agent = der Toolbar-Eintrag ist).
+  Format: `Nudge aktiv · „<Label>" · session <id8>` + pro offenem localhost-Tab
+  `→ <Owner-Label>` mit „← DIESE Session" und „⚠ nur Fallback".
+  - Bridge (0.14.0): `/.identity` liefert jetzt `routes` — pro offenem localhost-
+    Tab der aktuelle Owner `{label, session}` + `viaFallback` (nur per newest-wins,
+    also evtl. der FALSCHE Agent, bis im Switch-session-Dropdown fixiert). Das
+    fängt genau die Falle, dass eine frisch armierte Session einen fremden
+    Localhost per Fallback „besitzt" (z.B. nudge-dev besitzt versehentlich das
+    Estimate-5175).
+  - Skill: Report-Einzeiler (matcht per Session-id, die un-kollidierbare Schlüssel-
+    größe) direkt nach dem Armen; Hinweis auf Dropdown-Fixierung bei Fallback.
+  - Suite K5 prüft `routes` (expliziter Owner vs. Fallback-Flag).
+
+## [0.19.5] - 2026-07-07 (Nachtrag-Feld leert nach dem Senden — Race gefixt)
+
+### Fixed
+- **Der gesendete Nachtrag blieb im Eingabefeld stehen** (Gerald). Race: der WS-
+  `amended`-Push rendert die Zeile neu, WÄHREND das `fetch` noch läuft — der
+  frische Input wurde aus dem noch vorhandenen Draft mit dem eben gesendeten Text
+  restauriert, und das nachträgliche `closeAmend` lief auf der bereits ersetzten
+  Zeile ins Leere. Fix: Draft + Feld werden VOR dem Netzwerk-Roundtrip geleert
+  (bei Fehler kommt der Text zurück). N6 prüft jetzt zusätzlich, dass nach dem
+  Senden kein Feld den Text mehr hält.
+
+## [0.19.4] - 2026-07-07 (Nachträge sind lesbar unter der Zeile)
+
+### Fixed
+- **Ein hinzugefügter Nachtrag war nicht lesbar** — es stand nur „+N", aber der
+  Text erschien erst, wenn man das Eingabe-Panel öffnete (Gerald: „ich will ja
+  lesen, was ich gepromptet habe"). Die Nachtrag-Liste ist jetzt aus dem
+  Eingabe-Panel herausgelöst: sie erscheint unter der Zeile, sobald diese
+  aufgeklappt ist (Klick auf die Zeile), Original oben, Nachträge darunter mit
+  Terracotta-Rand. Suite N5 prüft jetzt zusätzlich die Lesbarkeit des Textes;
+  N5/N6 pollen statt fester Sleeps (Flake entfernt).
+
+## [0.19.3] - 2026-07-07 (Senden-Icon aufs aktuelle Lucide-Set)
+
+### Changed
+- **Der Nachtrag-Senden-Button nutzt jetzt das aktuelle offizielle Lucide-`send`**
+  (Paper-Plane), passend zu den Toolbar-Glyphen (mouse-pointer/circle-dashed) statt
+  der alten Lucide-Geometrie. Derselbe Glyph auch im „agent working"-Feed-Chip —
+  ein Send-Icon in der ganzen App (Gerald).
+
+### Tests
+- **Suite N6** (submit contract): Enter sendet, Shift+Enter ist Zeilenumbruch (kein
+  Senden), Feld leert nach dem Senden — die Lücke, an der N5 grün war, während das
+  Feld unbenutzbar war. Neue Standing Rule im Protokoll: jede Affordance eines
+  Inputs testen (Button + jeder Tastenpfad + das Negative + den Post-Submit-State).
+
+## [0.19.2] - 2026-07-07 (Nachtrag: Senden-Button + Enter sendet)
+
+### Fixed
+- **Ein Nachtrag ließ sich nicht abschicken** (Gerald): es gab keinen Senden-
+  Button, und Shift+Enter war (bewusst) „neue Zeile", nicht Senden — ohne
+  sichtbare Affordance nicht auffindbar. Jetzt:
+  - **Subtiler Senden-Button** (Paper-Plane) rechts neben dem Feld, hellt auf
+    Terracotta auf.
+  - **Enter sendet**, Shift+Enter macht eine neue Zeile (Chat-Konvention); ⌘↩/
+    Ctrl+↩ senden weiterhin. Placeholder-Hinweis angepasst („↩ senden, ⇧↩ Zeile").
+  - Doppel-Senden-Guard. Bei Erfolg leert + schließt das Feld (der „+N"-Badge
+    zählt hoch). Suite N5 klickt jetzt den Button.
+
+## [0.19.1] - 2026-07-07 („Agent:"-Label in der Toolbar)
+
+### Changed
+- **Der Session-Name in der Toolbar bekommt ein „Agent:"-Präfix** im selben
+  Schriftschnitt wie „Pick"/„Freeform" (wght 500, heller) — so ist auf einen
+  Blick klar, dass die Zeile dahinter der Agent ist (Gerald). Name bleibt
+  dimmer, Localhost-Pille unverändert. Nur bei einem konkreten Owner; bei
+  „N sessions" kein Präfix. Suite L1 zieht das mit.
+
+## [0.19.0] + Bridge 0.13.0 - 2026-07-07 (Nudge ergänzen — Nachträge an einen offenen Nudge)
+
+### Added
+- **„+ ergänzen": einen Nachtrag an einen bereits gesendeten, noch offenen Nudge
+  anhängen** (Gerald: „manchmal fällt mir erst nach dem Absenden ein, dass ich
+  noch was zum selben Nudge schreiben will"). Append-only — der Original-Text
+  bleibt unverändert (Provenance), Nachträge sammeln sich in `amendments`.
+  - Bridge `POST /comments/:id/amend {text}` (0.13.0): hängt an, weckt den
+    besitzenden Agenten **erneut** (Watcher-Key ändert sich → Zeile
+    „Nudge X ergänzt: …"), spiegelt den Inbox-`.md` neu (Original +
+    „> **Nachtrag (HH:MM):** …"). Aufgelöste Nudges verweigern (409, kein
+    Zombie-Re-Open); unbekannte id 404; leer 400.
+  - UI: in der Nudge-History bekommt jede OFFENE Zeile ein „+", das ein
+    Nachtrag-Feld aufklappt (bestehende Nachträge darüber, ⌘↩/Enter sendet);
+    ein „+N"-Badge zeigt die Zahl der Nachträge. Ein halb getippter Nachtrag
+    übersteht WS-Re-Renders (Draft-Erhalt).
+  - Agent-Contract (Skill): ein Re-Wake „Nudge X ergänzt" = Inbox neu lesen,
+    Original + Nachträge sind EIN Arbeitsauftrag; erst nach allem auflösen.
+- **Suite N (Amend)** (`test/amend.mjs`, 5 Legs): Original immutable + Inbox,
+  Reihenfolge, resolved 409, **echter Watcher-Re-Wake**, History-„+ ergänzen"-
+  Round-Trip. Suite A/L/M weiter grün.
+
+### Changed
+- `swallowChromePointer` exemptiert jetzt jedes Textfeld (Textarea/Input/
+  contenteditable) statt nur den Composer — das neue Nachtrag-Feld fokussiert
+  sauber, und Buttons in Composer/History bleiben trotzdem inert zur Seite.
+
+## [0.18.3] - 2026-07-07 (Localhost-Pille zurück in der Toolbar)
+
+### Changed
+- **Der Localhost erscheint wieder als Pille im Toolbar-Titel** (`localhost:5175`,
+  rechts neben dem sauberen Session-Namen). Klarstellung zu 0.17.4: Gerald wollte
+  den Localhost nur nicht INLINE im Namentext — die Pille selbst soll da sein.
+  Jetzt konsistent als Pille an allen drei Stellen: Toolbar, Switch-session-Zeilen
+  und Feed-Chips. Gespeist aus dem `:PORT`-Suffix des Labels (nicht `location.host`).
+  Suite L1 entsprechend angezogen.
+
+## [0.18.2] - 2026-07-07 (Toolbar-Griff schließt auch keine Dropdowns mehr)
+
+### Fixed
+- **Ein Klick auf ein Nudge-Widget (z.B. „Pick") schloss offene Seiten-Dropdowns**
+  (Gerald, am Estimate-Sortiermenü „Zuletzt geändert"). Ursache: `@roots/ui`s
+  `actionMenu` erkennt Außen-Klicks mit einem `document`-Listener in der
+  **CAPTURE-Phase** (`addEventListener('pointerdown', onOutside, true)`). Ein
+  Klick auf Nudge-Chrome retargetet auf den Host — „außerhalb" des Menüs — und
+  Capture feuert VOR dem Host-Bubble-Stop. Fix: den pointerdown/mousedown eines
+  echten Widget-Hits am `window`-capture (erstem Hop) schlucken, sodass kein
+  Outside-Detector der Seite ihn sieht. Unsere Controls reagieren auf `click`
+  (bleibt); Grip (Drag), Draw (Lasso) und Composer (Textcursor) behalten ihren
+  eigenen pointerdown.
+- Verifiziert gegen das echte `actionMenu`-Muster (aus der Quelle gelesen); als
+  Suite-M-Legs M4/M5 verankert. Suite A 14/14, Suite L/F grün.
+
+## [0.18.1] - 2026-07-07 (Toolbar-Griff schließt keine Website-Popovers mehr)
+
+### Fixed
+- **Der Griff zur Nudge-Toolbar schloss offene Website-Popovers** (Gerald, am
+  Beispiel der roots-Website „Analyse anfragen"): der Nudge-Host ist
+  bildschirmfüllend, aber `pointer-events:none`, damit man die Seite zum Picken
+  anklicken kann. Ein Klick, der die kleine Pille knapp VERFEHLT, fiel dadurch
+  durch auf das Modal-Backdrop der Seite, das bei jedem Außen-Klick schließt.
+  Fix: eine schmale „Moat" — Klicks bis 12px um sichtbare Nudge-Chrome werden am
+  window-capture absorbiert (nur idle/composing; Pick/Freeform brauchen echte
+  Seiten-Klicks). Ein echter Außen-Klick weiter weg schließt das Modal weiterhin
+  wie gewohnt — die Moat bleibt eng, sie kapert die Seite nicht.
+- Am ECHTEN Popover reproduziert (Nebenbefund: die Default-Pill-Position oben
+  rechts überlappt die Nav-CTA) und verifiziert; als hermetische Dauer-Regression
+  **Suite M (Page inertness)** eingebaut. Suite A/L weiter grün.
+
+## [0.18.0] - 2026-07-07 (Experten-Politur: Hotkeys, reduced-motion, autogrow)
+
+Vier-Perspektiven-Review (UI-Designer, Power-User, PM, Testing-Engineer), die
+Findings gleich eingebaut.
+
+### Added
+- **P/F-Tastenkürzel** für den Werkzeugwechsel (Figma/Cursor-Design-Mode-
+  Konvention): `P` = Pick, `F` = Freeform. Streng gated — nur wenn das Overlay
+  aktiv, aber nicht im Composer ist, kein Modifier gedrückt, der Fokus in keinem
+  Seiten-Eingabefeld liegt und kein Popover offen ist. Die Buttons tragen den
+  Hinweis im `title` („Pick element (P)").
+- **`prefers-reduced-motion`-Respekt**: bei aktivierter Systemeinstellung kollabieren
+  alle Overlay-Transitions (gleitendes Highlight, rotierende Clock, Chip-Fades) —
+  shadow-scoped, die Host-Seite bleibt unberührt.
+- **Suite L (Toolbar & popover UX)** (`test/toolbar-ux.mjs`, 5 Legs): macht die
+  Politur dieser Session zu permanenter Regression — Localhost-immer-Pille,
+  nur-ein-Popover, Hotkey-Gating, reduced-motion. Ersetzt die Wegwerf-
+  Verifikationen. Suite A weiter 14/14 grün.
+
+### Changed
+- **Composer-Textarea wächst mit dem Text** bis zur Max-Höhe (dann scrollt sie) —
+  längere Nudges sind beim Tippen voll sichtbar statt im festen Guckloch.
+- **PRODUCT.md korrigiert**: der stale Trade-off „one live-watch session at a
+  time" ist ersetzt durch die Origin-aware-Realität (parallele Sessions
+  koexistieren, per Localhost geroutet) — die Doku hinkte dem Shipped-Code nach.
+
+## [0.17.4] - 2026-07-07 (Localhost überall als Pille, nie inline)
+
+### Changed
+- **Der Localhost erscheint jetzt überall als saubere Pille statt inline im
+  Text** — konsistent durchgezogen (Gerald). Der `:PORT`-Suffix, mit dem jede
+  Worktree-Session benannt ist, wird an allen Render-Stellen abgespalten:
+  - **Feed-Chips** (neue Verbindung „Agent: …", Session-Wechsel „→ …"): Name
+    clean + Localhost-Pille rechts.
+  - **Nudge-History-Header**: Name clean + Localhost-Pille (die History ist pro
+    Host, also die Pille einmal im Header statt pro Zeile).
+  - **History-Zeilen** (`q-who`): nur noch der saubere Session-Name — der Host
+    ist über die Route ohnehin impliziert.
+  - **Dot-Tooltip**: sauberer Name ohne Port.
+  Toolbar-Titel und Switch-session-Zeilen waren bereits sauber (0.17.1/0.17.2).
+
+## [0.17.3] - 2026-07-07 (Nur ein Popover gleichzeitig offen)
+
+### Fixed
+- **Nudge-History und Switch-session konnten gleichzeitig offen sein** und haben
+  sich überlagert (Gerald). Jetzt schließt das Öffnen des einen das andere —
+  ein Popover zur Zeit.
+
+## [0.17.2] - 2026-07-07 (Switch-session: breiter, l2 einzeilig, Pille mit Luft)
+
+### Changed
+- **Popover-Breite 340 → 460px**, damit die Meta-Zeile (Projekt · Branch · Editor
+  · Alter) elegant auf EINE Zeile passt statt umzubrechen; als Sicherheitsnetz
+  `nowrap` + Ellipsis, falls ein Branch-Name doch mal länger wird.
+- **Mehr Abstand zwischen Localhost-Pille und Meta-Zeile** (margin-top 2 → 6px),
+  die Pille klebte vorher zu sehr am Text darunter (Gerald).
+
+## [0.17.1] - 2026-07-07 (Localhost als eigener Tag, Namen bleiben sauber)
+
+### Changed
+- **Der Localhost sitzt jetzt als kleiner, rechts-ausgerichteter Tag auf jeder
+  Session-Zeile im Switch-session-Dropdown** (`localhost:5175`), nicht mehr im
+  Session-Namen. Gerald benennt jede Worktree-Session mit ihrem Port („Estimate
+  Templates :5175"); die `:PORT`-Endung wird jetzt abgespalten und als Tag
+  gerendert — der Name bleibt clean („Estimate Templates").
+- **Der Toolbar-Titel zeigt nur noch den sauberen Namen**, ohne Port und ohne
+  Localhost-Tag (der lebt jetzt in der Liste). Rein Extension-seitig — Bridge
+  unverändert auf 0.12.0.
+
+
+
+### Added
+- **Nudge routet jetzt pro Localhost.** Bisher gab es EINEN globalen Owner fuer
+  alle Nudges; bei parallelen Dev-Servern (mehrere Worktrees) landete ein Nudge
+  auf localhost:5186 beim falschen Agenten. Jetzt gehoert ein Nudge dem Agenten,
+  der SEINEN Host besitzt:
+  - Bridge: Ownership ist per-Host (`chosenByHost`); die Bridge stempelt jeden
+    Nudge mit dem Owner SEINES Hosts (`ownerForHost(host)`). Ohne Zuweisung
+    faellt es auf das alte Einzel-Owner-Verhalten zurueck (neuester Agent) —
+    voll rueckwaertskompatibel.
+  - Switch-session ist per-Localhost: der Klick sendet `location.host`, weist
+    also DIESEN Localhost dem gewaehlten Agenten zu.
+  - Per-Client-Snapshot: jeder Tab sieht den Owner SEINES Hosts (keine Falsch-
+    Owner-Anzeige).
+  - Watcher weckt nur fuer Nudges, deren `owner.session` seine ist; der Context-
+    Hook zeigt einer Session nur IHRE Nudges + eine Selektion auf einem Host,
+    den sie besitzt.
+- **Suite K "Origin routing"** (`test/origin-routing.mjs`, 4 Legs): per-Host-
+  Routing, per-Client-Snapshot, Reassign-Immutabilitaet, und — der Beweis —
+  ZWEI echte Watcher wecken nur fuer ihren eigenen Host (kein Cross-Wake).
+  Rueckwaerts-Regression gruen: A 14 - D 17 - H 11 - G 4 - I 5 - Haertung 7.
+
 ## [0.16.15] - 2026-07-06 (Popover wandert STARR mit, nicht nur das Caret)
 
 ### Fixed

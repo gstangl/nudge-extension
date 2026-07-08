@@ -232,6 +232,25 @@ export function resolvePin(id, ownerFallback) {
   return pin
 }
 
+// Append a follow-up to an OPEN nudge (Gerald: "ich hab den Prompt schon weg,
+// will noch was zum selben Nudge nachschieben"). Append-only: the original text
+// is immutable (provenance); nachträge accrue in `amendments`. Re-wakes the
+// owning agent (the watcher's key changes) and re-mirrors the inbox. A resolved
+// nudge is NOT reopened — that would resurrect a done item into the queue.
+export function amendPin(id, { text, author } = {}) {
+  const pin = getPin(id)
+  if (!pin) return { error: 'not_found' }
+  if (pin.status !== 'open') return { error: 'resolved' }
+  const t = cap(text, 4000).trim()
+  if (!t) return { error: 'empty' }
+  pin.amendments = pin.amendments || []
+  pin.amendments.push({ text: t, at: new Date().toISOString(), author: cap(author, 80) || null })
+  persist()
+  emit('amended', pin) // re-wake the owning agent + refresh the clients' History
+  writeInboxMirror(pin)
+  return { pin }
+}
+
 // Discard (queue-popover ×): the prompt was a slip / is obsolete — remove it
 // entirely, evidence files included. Unlike resolve this is NOT a work outcome;
 // nothing is kept. seq is untouched (ids are never reused).
@@ -280,7 +299,7 @@ export function pruneResolved(maxAgeMs = 7 * 24 * 3600e3) {
 // ---------- projections (one per consumer, together on purpose) ----------
 /** HTTP GET /comments — structured summary for scripts/tools. */
 export function pinSummary(p) {
-  return { id: p.id, status: p.status, author: p.author, owner: p.owner?.label, text: p.text, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
+  return { id: p.id, status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
 }
 // speaking label for text-less prompts — same wording as the extension queue
 // (label parity: browser and agent describe a mark identically)
@@ -303,6 +322,7 @@ export function pinLine(p) {
 export function pinForClient(p) {
   return {
     id: p.id, status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
+    amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // Gerald's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
@@ -325,6 +345,10 @@ function writeInboxMirror(pin) {
     : ''
   const after = pin.screenshotAfter ? `\n## Beweis (nachher)\n\n![after](../${pin.screenshotAfter})\n` : ''
   const quote = pin.text || `_(${markLabel(pin)} — reference for "das hier" in chat)_`
+  // follow-ups Gerald appended after sending — same nudge, later thoughts
+  const amends = pin.amendments?.length
+    ? '\n' + pin.amendments.map(a => `\n> **Nachtrag${a.at ? ` (${a.at.slice(11, 16)})` : ''}:** ${a.text}`).join('') + '\n'
+    : ''
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
-    `# ${pin.id} - ${pin.status}\n\n> ${quote}\n\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
+    `# ${pin.id} - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
 }
