@@ -20,6 +20,12 @@ import path from 'node:path'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const PIN_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'nudge')
 
+// Gerald's prompt (hook stdin JSON) — scanned for nudge references („Nudge 123",
+// „nudge_123", „#123"): a named nudge gets its FULL context injected right here,
+// so referencing marked numbers is instant — no wake, no skill ceremony.
+let promptText = ''
+try { promptText = String(JSON.parse(fs.readFileSync(0, 'utf8')).prompt || '') } catch { /* no stdin payload */ }
+
 let store = null
 try { store = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'store.json'), 'utf8')) } catch { /* no store yet */ }
 let selection = null
@@ -89,8 +95,49 @@ if (age <= 15 && (useSel ? selection : newestPin)) {
 } else {
   lines.push('Keine aktuelle Markierung (Fenster: 15 min).')
 }
-const openCount = pins.filter(p => p.status === 'open').length
-if (openCount > 0) lines.push(`Warteschlange: ${openCount} offene${openCount === 1 ? 'r' : ''} Prompt${openCount === 1 ? '' : 's'} — oldest-first abarbeiten (/pins).`)
+// ---------- referenced nudges: „Nudge 123 macht das" pulls 123's context into
+// THIS prompt. Lookup over ALL pins, not the origin-filtered list — Gerald typed
+// the id in THIS session, so the explicit naming beats the origin stamp.
+const referenced = []
+const addRef = (n) => { const v = String(Number(n)); if (v !== 'NaN' && !referenced.includes(v)) referenced.push(v) }
+for (const m of promptText.matchAll(/\b(?:nudges?|pins?)[\s_#-]*(\d{1,6})((?:\s*(?:,|und|and|&|\+)\s*#?\d{1,6})*)/gi)) {
+  addRef(m[1])
+  for (const n of (m[2] || '').matchAll(/\d{1,6}/g)) addRef(n[0]) // „Nudge 12, 14 und 15"
+}
+for (const m of promptText.matchAll(/(?:^|\s)#(\d{1,6})\b/g)) addRef(m[1])
+const allPins = store?.pins || []
+for (const n of referenced) {
+  const p = allPins.find(x => x.id === `nudge_${n}` || x.id === `pin_${n}`)
+  if (!p) { lines.push(`Nudge ${n}: nicht im Store (nie existiert oder verworfen).`); continue }
+  const text = p.text ? `„${p.text.slice(0, 200)}"` : '[Nur Markierung — der Prompt hier IST der Arbeitsauftrag]'
+  const els = p.targets?.length
+    ? `${p.targets.length} Elemente: ${p.targets.map(t => t.selector).join(' · ').slice(0, 160)}`
+    : (p.target?.selector || '?')
+  const extra = [
+    p.owner?.label ? `Agent: ${p.owner.label}` : null,
+    p.amendments?.length ? `${p.amendments.length} Nachtrag/Nachträge` : null,
+  ].filter(Boolean).join(' · ')
+  lines.push(
+    `REFERENZIERT ${p.id} (${p.status === 'open' ? 'offen' : 'bereits resolved'}): ${text}`,
+    `  Element: ${els} · ${routeOf(p.url)}${p.target?.innerText ? ` · Text: „${p.target.innerText.slice(0, 60)}"` : ''}${extra ? ` · ${extra}` : ''}`,
+    `  Details: ~/.claude/nudge/inbox/${p.id}.md${p.screenshot ? ` · Screenshot: ~/.claude/nudge/${p.screenshot}` : ''}`,
+  )
+}
+
+// ---------- open queue: a compact, REFERENCEABLE list (id + gist + route) so
+// „Nudge 123" works without Gerald memorizing numbers. [Mark]-Zeilen sind
+// Referenz-Anker (Nummern-Pille auf der Seite), keine Arbeitsaufträge.
+const open = pins.filter(p => p.status === 'open')
+if (open.length) {
+  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (/nudge); [Mark] = nur Anker:`)
+  for (const p of open.slice(0, 10)) {
+    const gist = p.text
+      ? `„${p.text.slice(0, 60)}${p.text.length > 60 ? '…' : ''}"`
+      : `[Mark: ${(p.target?.innerText || p.target?.selector || '?').trim().slice(0, 40)}]`
+    lines.push(`  ${p.id.replace(/^(?:pin|nudge)_/, '')} · ${gist} · ${routeOf(p.url)}`)
+  }
+  if (open.length > 10) lines.push(`  … +${open.length - 10} weitere`)
+}
 
 console.log(JSON.stringify({
   suppressOutput: true,

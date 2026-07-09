@@ -17,9 +17,9 @@ the rendered UI lives in Chrome. This project is the bridge between the two:
 
 The connection IS the product: self-healing (Chrome owns the bridge lifecycle
 via a native messaging host), honest (the status circle never lies), and fast
-(mark → agent context < 2 s, prompt → agent wake ~1 s measured). Full product
-definition and trade-offs: `PRODUCT.md` · end-user install: `INSTALL.md` ·
-test contract: `test/protocols.md`.
+(mark → agent context < 2 s, prompt → agent wake ~1 s measured). Timeless
+vision: `VISION.md` · full product definition and trade-offs: `PRODUCT.md` ·
+end-user install: `INSTALL.md` · test contract: `test/protocols.md`.
 
 **Nudge = pixel nudging with the agent — you pin a PROMPT onto the running UI**
 (Gerald, 2026-07-04): pick an element in Chrome → write what you want → send →
@@ -65,7 +65,8 @@ extension/  Chrome MV3, load unpacked (styles.js = shadow-DOM CSS, content.js =
             - freehand lasso (circle a region; stroke burned into the
               screenshot, polyline stored as annotation)
             - FIRE-AND-FORGET: a sent prompt leaves NOTHING on the page except
-              subtle amber dots for open prompts. Feedback = feed chips under
+              a readable NUMBER pill per open prompt (the number is the chat
+              referent: „Nudge 123 macht das"). Feedback = feed chips under
               the toolbar + badge + status dot (grey/red/amber/green)
             - RESOLVE WITH EVIDENCE (invisible): resolve triggers an
               after-screenshot of the same region in the open browser
@@ -127,7 +128,8 @@ self-healing, UserPromptSubmit = current mark as context, opt-in per session).
 1. Open any `http://localhost:*` page (demo: start bridge manually
    `node bridge/bridge.mjs` → http://localhost:4700/demo).
 2. Pill toolbar, draggable (toggle: toolbar icon or Alt+C) → "Pick" (P) → click
-   an element → prompt + ⌘↩ (or send empty = just mark, then prompt in Zed).
+   an element → prompt + ↩ (Shift+↩ = newline; empty ↩ = numbered mark —
+   reference it in Zed as „Nudge 123 macht das").
 3. Agent side: type `/nudge` in the Zed session that should own the channel —
    it arms the watcher, reports which localhost it owns, and processes prompts
    oldest-first; resolve via `POST /comments/<id>/resolve` after the verified

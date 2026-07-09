@@ -5,6 +5,43 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.20.0 — 2026-07-09 (Enter-Send, nummerierte Marken, Referenz-Pull)
+
+### Changed
+- **Enter sendet** im Composer (Shift+Enter = Zeilenumbruch, ⌘/Ctrl+Enter geht
+  weiter) — gleiche Konvention wie das Amend-Feld der History (Submit-Contract,
+  Suite N6).
+- **Leeres Senden erzeugt jetzt einen NUMMERIERTEN Nudge** — kehrt die 0.10.0-
+  Regel „leeres Senden = reine Markierung, KEIN Pin" bewusst um (Gerald,
+  2026-07-09): die Nummer ist der Referent im Chat. Schnell im Browser
+  markieren, dann in Zed „Nudge 123 macht das, Nudge 170 …". Die Watcher-
+  Wake-Zeile flaggt solche Pins als „[Nur Markierung …]"; der Skill arbeitet
+  sie NIE unaufgefordert ab (Referenz-Anker, keine Work Orders — damit altern
+  Marken weiterhin nicht als Prompts in der Queue).
+- **Nummern-Pille statt Amber-Punkt** am markierten Element: lesbare Nudge-
+  Nummer (DIN, wght 550, tabular-nums) in einer Midnight/Paper-Pille; das
+  Uhr-Icon mit Live-Sweep bleibt die Statussprache, Klick öffnet weiter die
+  Queue. Positionierung berücksichtigt die variable Pillenbreite.
+
+### Added
+- **Referenz-Pull im Hook** (`agent/nudge-context.mjs`): „Nudge 123",
+  „nudge_123", „#123" (auch Aufzählungen „Nudge 12, 14 und 15") im Prompt
+  injizieren den vollen Kontext der genannten Nudges — Text/Mark-Label,
+  Selektor(en), Route, Inbox-Pfad, Screenshot-Pfad, Nachträge, Status —
+  sofort beim Absenden, ohne Wake. Explizite Nennung schlägt den Origin-
+  Filter (Gerald tippt die id in DIESER Session, also meint er sie hier).
+- **Kompakte offene Liste im Hook** statt bloßem Zähler: `id · Kurztext ·
+  Route` pro offenem Nudge (max 10), damit Nummern referenzierbar sind, ohne
+  sie auswendig zu wissen.
+- **Skill-Regeln** (`agent/NUDGE-SKILL.md`): explizit genannte IDs schlagen
+  oldest-first; Mark-only-Nudges sind Anker und werden übersprungen, bis
+  Gerald sie referenziert; Pull-Sektion (Store-Dateien + `/.identity`
+  jederzeit mid-turn lesbar).
+
+Suite A angepasst: leeres Senden erzeugt jetzt `nudge_1` mit Nummern-Pille
+(Folge-IDs +1, Marke wird im Test verworfen), Enter/Shift+Enter-Submit-Contract
+im Composer.
+
 ## Bridge 0.11.5 - 2026-07-06 (Neue Sessions erscheinen sofort im Dropdown)
 
 ### Fixed

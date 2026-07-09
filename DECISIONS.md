@@ -1,8 +1,20 @@
 # Decisions
 
 Why nudge-extension is shaped the way it is — the meta/workflow choices a future
-developer (or agent) would otherwise re-litigate. Product goals, trade-offs and
-non-goals live in `PRODUCT.md`; this file does NOT duplicate them. Newest first.
+developer (or agent) would otherwise re-litigate. The timeless core lives in
+`VISION.md`; product goals, trade-offs and non-goals in `PRODUCT.md`; this file
+does NOT duplicate them. Newest first.
+
+## VISION.md extracted — the timeless core gets its own file (2026-07-09)
+The mission was buried in `PRODUCT.md` between `[x]`-goals and scoreboard —
+timeless mixed with snapshot. Agents (the main readers) need a stable
+north-star anchor they always consult. `VISION.md` now holds ONLY what almost
+never changes: mission (companion extension for ALL coding agents — Zed is the
+first surface, not the boundary), audience (UI designers who vibe-code or
+visually polish), priority order, timeless non-goals. `PRODUCT.md` keeps the
+changeable rest and points to it.
+Rejected — a fourth doc that paraphrases PRODUCT.md: pure drift-fodder; the
+content was MOVED, not copied.
 
 ## Standalone repo — not a monorepo folder, not a git worktree (2026-07-08)
 Nudge has zero code dependency on roots-apps (no `@roots` imports, only dep is

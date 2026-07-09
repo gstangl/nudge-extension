@@ -168,14 +168,20 @@ try {
   if (fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length) fail('cancel must not create a pin')
   console.log('PASS pick = mark (selection published, survives Abbrechen, no pin created)')
 
-  // --- empty send = pure mark, NO pin (P1, 0.10.0): marks must not age as prompts ---
+  // --- empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
+  //     plain Enter mints a referenceable pin, its number pill sits at the element ---
   await page.locator('.pill .btn-pick').click()
   await page.locator('#card-conversion').click({ position: { x: 10, y: 10 } })
   await ta.waitFor({ timeout: 3000 })
-  await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'no nudge' }).waitFor({ timeout: 5000 })
-  if (fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length) fail('empty send must not create a pin')
-  console.log('PASS empty send = pure mark (feed chip, no pin)')
+  await ta.press('Enter') // plain Enter sends (⌘↩ keeps working, Shift+Enter = newline)
+  await page.locator('.feed .item', { hasText: 'nudge_1 marked' }).waitFor({ timeout: 8000 })
+  await until(() => fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length === 1 && store().pins[0].text === '', 5000, 'mark-only pin in store')
+  // the pill at the element shows the readable NUMBER — the chat referent
+  await until(async () => (await page.locator('.dot:visible .d-num').first().textContent()) === '1', 5000, 'number pill shows 1')
+  // discard the mark so the suite's downstream arithmetic starts clean (ids stay monotonic)
+  await fetch(`http://localhost:${TESTPORT}/comments/nudge_1`, { method: 'DELETE' })
+  await until(() => !store().pins.length, 3000, 'mark discarded')
+  console.log('PASS empty send = numbered mark (Enter sends, pill shows the number)')
 
   // re-open for the actual send flow
   await page.locator('.pill .btn-pick').click()
@@ -183,8 +189,11 @@ try {
   await ta.waitFor({ timeout: 3000 })
   await page.locator('.composer .layers button', { hasText: 'card-conversion' }).click()
   await ta.fill('Die Heat-pump-Karte braucht mehr Abstand zum Titel.')
+  await ta.press('Shift+Enter') // newline convention: must NOT send
+  await page.waitForTimeout(250)
+  if (!(await page.locator('.composer').isVisible())) fail('Shift+Enter must not send')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_1' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_2' }).waitFor({ timeout: 8000 })
   // the feedback chips sit directly UNDER the toolbar, left-aligned to it (not
   // floating in the screen corner) — placeFeed tracks the movable pill
   {
@@ -216,10 +225,10 @@ try {
 
   // --- badge click -> read-only queue popover shows what the number means ---
   await page.locator('.pill .count').click()
-  await page.locator('.queue.on .q-row', { hasText: 'nudge_1' }).waitFor({ timeout: 3000 })
+  await page.locator('.queue.on .q-row', { hasText: 'nudge_2' }).waitFor({ timeout: 3000 })
   // provenance in the list: each row names the agent session that owns the nudge
   // (stamped at arrival, immutable) — so Gerald sees which agent it belongs to
-  const who1 = await page.locator('.queue.on .q-row', { hasText: 'nudge_1' }).locator('.q-who').textContent()
+  const who1 = await page.locator('.queue.on .q-row', { hasText: 'nudge_2' }).locator('.q-who').textContent()
   if (who1 !== 'suite-a') fail(`queue row must show the owning session, got "${who1}"`)
   // caret aligned to the badge (C-7) + a row must NOT jitter on accordion toggle (C-6):
   // collapsed and open share one first-line geometry, so dot/id hold their offset
@@ -240,15 +249,15 @@ try {
 
   // --- resolve: feed chip + badge clears; element pins get NO after-shot
   //     (no before-shot to compare — that stays a Kreis-pin feature) ---
-  await fetch(`http://localhost:${TESTPORT}/comments/nudge_1/resolve`, { method: 'POST' })
-  await page.locator('.feed .item', { hasText: 'nudge_1 done' }).waitFor({ timeout: 5000 }) // in-page loop closure
+  await fetch(`http://localhost:${TESTPORT}/comments/nudge_2/resolve`, { method: 'POST' })
+  await page.locator('.feed .item', { hasText: 'nudge_2 done' }).waitFor({ timeout: 5000 }) // in-page loop closure
   await until(async () => !(await page.locator('.pill .count.show').count()), 5000, 'badge cleared after resolve')
   await until(async () => !(await page.locator('.dot:visible').count()), 3000, 'dot gone after resolve')
   await page.waitForTimeout(500)
   if (store().pins[0].screenshotAfter) fail('element pin must NOT get an after-shot')
 
   console.log('PASS pick + chips + styles + net-errors (DOM-only, no screenshot) + badge')
-  console.log(`  nudge_1:      "${pin.text}" @ ${pin.target.selector} (xpath ${pin.target.xpath})`)
+  console.log(`  nudge_2:      "${pin.text}" @ ${pin.target.selector} (xpath ${pin.target.xpath})`)
 
   // --- lasso mode: circle the SCOP banner ---
   await page.locator('.pill .btn-draw').click()
@@ -265,12 +274,12 @@ try {
   await ta.waitFor({ timeout: 3000 })
   await ta.fill('Dieser Banner wirkt verloren - breiter und mit mehr Präsenz.')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_2' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_3' }).waitFor({ timeout: 8000 })
   // history: with the lasso nudge open, the badge exists — the popover lists
-  // the resolved nudge_1 under „Erledigt" with a check icon
+  // the resolved nudge_2 under „Erledigt" with a check icon
   await page.locator('.pill .count').click()
   await page.locator('.queue.on .q-div', { hasText: 'Done' }).waitFor({ timeout: 3000 })
-  await page.locator('.queue.on .q-row.done', { hasText: 'nudge_1' }).waitFor({ timeout: 3000 })
+  await page.locator('.queue.on .q-row.done', { hasText: 'nudge_2' }).waitFor({ timeout: 3000 })
   if (!(await page.locator('.queue.on .q-row.done svg.q-ok').count())) fail('history row needs the check icon')
   await page.keyboard.press('Escape')
   const lasso = store().pins[1]
@@ -280,7 +289,7 @@ try {
   if (!lasso.screenshot || fs.statSync(path.join(STORE, lasso.screenshot)).size < 2000) fail('lasso pin must carry a screenshot')
 
   console.log('PASS lasso (stroke + screenshot; screenshots exclusive to Kreis)')
-  console.log(`  nudge_2:      "${lasso.text}" (stroke ${lasso.annotations[0].points.length} points)`)
+  console.log(`  nudge_3:      "${lasso.text}" (stroke ${lasso.annotations[0].points.length} points)`)
 
   // --- SPA navigation: badge counts only THIS route's open prompts ---
   await until(async () => (await page.locator('.pill .count').textContent()) === '1', 5000, 'badge = 1 (open lasso prompt)')
@@ -290,8 +299,8 @@ try {
   await until(async () => (await page.locator('.pill .count').textContent()) === '1', 3000, 'badge back after returning')
   console.log('PASS SPA navigation badge refilter (hashchange/popstate)')
 
-  // --- evidence loop lives on for Kreis pins: resolve nudge_2 -> after-shot ---
-  await fetch(`http://localhost:${TESTPORT}/comments/nudge_2/resolve`, { method: 'POST' })
+  // --- evidence loop lives on for Kreis pins: resolve nudge_3 -> after-shot ---
+  await fetch(`http://localhost:${TESTPORT}/comments/nudge_3/resolve`, { method: 'POST' })
   await until(() => store().pins[1].screenshotAfter, 10000, 'lasso after-shot in store')
   // late re-check: the WS-snapshot backlog path must not capture for element
   // pins either (it once did — the +500ms check above only won by timing)
@@ -312,7 +321,7 @@ try {
   if (await page.locator('.hl-multi').count() !== 2) fail('expected one outline per collected element')
   await ta.fill('Tausche diese beiden Elemente.')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_3' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_4' }).waitFor({ timeout: 8000 })
   const multiPin = store().pins[2]
   if (multiPin.targets?.length !== 2) fail(`multi pin targets: ${JSON.stringify(multiPin.targets?.map(t => t.selector))}`)
   if (!multiPin.targets.every(t => t.selector && t.xpath)) fail('each target needs selector + xpath')
@@ -346,7 +355,7 @@ try {
   // open on this route now: multi pin (2 target dots) + the mark (1 dot)
   await until(async () => (await page.locator('.dot:visible').count()) === 3, 5000, '3 dots (2 multi targets + 1 mark)')
   await page.locator('.pill .count').click()
-  const markRow = page.locator('.queue.on .q-row', { hasText: 'nudge_4' })
+  const markRow = page.locator('.queue.on .q-row', { hasText: 'nudge_5' })
   await markRow.waitFor({ timeout: 3000 })
   const label = await markRow.locator('.q-text').textContent()
   if (!label.includes('Mark') || !label.includes('Energy sources')) fail(`speaking label: ${label}`)
@@ -356,9 +365,9 @@ try {
   await markRow.click()
   if ((await markRow.getAttribute('class')).includes('open')) fail('second click must collapse')
   await markRow.locator('.q-x').click()
-  await page.locator('.feed .item', { hasText: 'nudge_4 dismissed' }).waitFor({ timeout: 5000 })
-  await until(() => !store().pins.some(p => p.id === 'nudge_4'), 3000, 'nudge_4 removed from store')
-  if (fs.existsSync(path.join(STORE, 'inbox', 'nudge_4.md'))) fail('inbox mirror must be deleted on discard')
+  await page.locator('.feed .item', { hasText: 'nudge_5 dismissed' }).waitFor({ timeout: 5000 })
+  await until(() => !store().pins.some(p => p.id === 'nudge_5'), 3000, 'nudge_5 removed from store')
+  if (fs.existsSync(path.join(STORE, 'inbox', 'nudge_5.md'))) fail('inbox mirror must be deleted on discard')
   await until(async () => (await page.locator('.dot:visible').count()) === 2, 3000, 'dot gone after discard')
   console.log('PASS queue management (label „was ist markiert", discard ×, dots lifecycle)')
 
