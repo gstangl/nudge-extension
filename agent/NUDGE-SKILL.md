@@ -59,15 +59,35 @@ NUDGE_AGENT_LABEL, so arming outside this path is impossible; double-arming
 is harmless (the bridge replaces the older sibling of the same session).
 The BRIDGE keeps a ROSTER of armed sessions (losers idle in silent standby),
 Gerald picks the owner in the browser toolbar dropdown; newest wins only as
-fallback among armed ones:
+fallback among armed ones. Arm host-aware — the ONLY difference between Zed and
+the terminal CLI is HOW the watcher is kept alive; the watcher script, the label
+fence and the roster are identical.
+
+**Zed (the `Monitor` tool is available):** persistent Monitor whose stdout lines
+are surfaced back into the conversation — that IS the autonomous wake (a new
+nudge starts the agent by itself):
 `Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
-ALWAYS set the topic label — it is how Gerald recognizes the session in the
-dropdown (Zed thread titles summarize the same conversation, so they converge).
 The description is VISIBLE as the collapsed tool card in Zed's panel — it must
 carry the session identity so Gerald sees at a glance who owns the channel.
-If Gerald NAMES the session ("nenn dich Nudge-Dev"), arm with the env override —
-it becomes the label in the browser toolbar:
-`Monitor({ command: "NUDGE_AGENT_LABEL='Nudge-Dev' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — Nudge-Dev" })`
+
+**Claude CLI in the terminal / Ghostty (no `Monitor` tool):** arm the SAME
+watcher as a BACKGROUND Bash — `run_in_background: true`, NOT `nohup`. Background
+keeps the process a child of the session, so the watcher's orphan tripwire
+(`ppid === 1`) cleans up honestly when the session ends; a detached `nohup` would
+reparent to launchd, self-exit as "orphan", and the icon would never go green.
+`Bash({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", run_in_background: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+The CLI has NO autonomous wake: the background watcher only heartbeats (green
+icon + roster + opt-in). The prompt channel is PULL — Gerald sets nudges in the
+browser, sees the number pills, and references them here by number („Nudge 23
+macht das, Nudge 24 …"); the UserPromptSubmit hook injects each named nudge's
+full context on that prompt (no wake needed). A bare „weiter" also surfaces the
+open queue via the hook. Everything else — queue discipline, resolve-with-proof,
+origin scoping — is identical to Zed.
+
+ALWAYS set the topic label (both hosts) — it is how Gerald recognizes the session
+in the dropdown (Zed thread titles summarize the same conversation, so they
+converge). If Gerald NAMES the session ("nenn dich Nudge-Dev"), arm with that as
+the `NUDGE_AGENT_LABEL` override — it becomes the label in the browser toolbar.
 
 **Right after arming, print an IDENTITY line so Gerald can match this session to
 the browser toolbar** (his explicit need — the toolbar shows the label, this ties
@@ -85,9 +105,10 @@ live explicit owner and only reaches an agent via newest-wins — if that host i
 someone else's app (e.g. estimate on :5175), tell Gerald to pin the RIGHT session
 on it in the Switch-session dropdown, or its nudges land here by accident. Re-run
 this any time Gerald asks "which localhost am I / who owns what".
-**On wake, treat the nudge as if Gerald had typed it into the conversation**: fetch
-details, do the work, verify, resolve. The watcher also heartbeats the bridge —
-that is what turns the browser icon green.
+**On wake (Zed) — or when Gerald references a nudge by number (CLI) — treat the
+nudge as if he had typed it into the conversation**: fetch details, do the work,
+verify, resolve. The watcher also heartbeats the bridge — that is what turns the
+browser icon green (both hosts).
 A wake line `Nudge X ergänzt: …` means Gerald **appended a follow-up to an
 already-sent nudge** (append-only): re-read the inbox `X.md` — the original plus
 every `> **Nachtrag:**` is ONE work order, newest first is the latest thought.
