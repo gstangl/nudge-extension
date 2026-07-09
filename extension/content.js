@@ -54,7 +54,7 @@
   draw.setAttribute('class', 'draw')
   root.appendChild(draw)
   const composer = el('div', 'composer',
-    '<div class="tip"></div><div class="inner"><div class="layers"></div><div class="meta"></div><textarea placeholder="Nudge… (⌘↩ send · Esc cancel · ⇧click add element · empty = mark only)"></textarea><div class="row"><button class="cancel">Cancel</button><button class="send">Send</button></div></div>')
+    '<div class="tip"></div><div class="inner"><div class="layers"></div><div class="meta"></div><textarea placeholder="Nudge… (↩ send · ⇧↩ newline · Esc cancel · ⇧click add element · empty ↩ = numbered mark)"></textarea><div class="row"><button class="cancel">Cancel</button><button class="send">Send</button></div></div>')
   const feed = el('div', 'feed')
   // queue popover: click the pill badge -> read-only list of this route's open
   // prompts (what the count MEANS). No management UI on the page — resolving
@@ -502,7 +502,9 @@
   const autoGrow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
   ta.addEventListener('input', autoGrow)
   ta.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send() }
+    // Enter sends (empty = numbered mark), Shift+Enter inserts a newline —
+    // same convention as the History amend input
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
     e.stopPropagation()
   })
 
@@ -587,15 +589,10 @@
 
   async function send() {
     if (!picked) return
-    // Empty send = pure MARK, no pin (P1, 0.10.0): the selection channel already
-    // carries it (element picks publish instantly, the lasso publishes region +
-    // screenshot on pointerup). A text-less pin would sit in the queue forever —
-    // marks must not age as prompts.
-    if (!ta.value.trim()) {
-      notify('check', 'Marked — no nudge')
-      setMode('idle')
-      return
-    }
+    // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
+    // the pin's number is the referent for chat — Gerald marks fast in the
+    // browser, then prompts in Zed („Nudge 123 macht das"). The watcher wake
+    // line flags it as reference-only, the skill does not work it unprompted.
     const btn = composer.querySelector('.send')
     btn.disabled = true
     const target = picked
@@ -639,7 +636,8 @@
     try {
       const id = await postPin(payload)
       // the moment of truth: tell Gerald whether an agent is LIVE on this prompt
-      if (agentLive) notify('send', `${id} — agent working`)
+      if (!payload.text) notify('check', `${id} marked`)
+      else if (agentLive) notify('send', `${id} — agent working`)
       else notify('clock', `${id} saved — no agent`)
       // team rollout: anonymous pins are useless in a shared store — hint ONCE
       if (!author) {
@@ -923,7 +921,9 @@
     }
   }
 
-  // ---------- open-nudge dots (subtle DOM presence of the queue) ----------
+  // ---------- open-nudge pills (subtle DOM presence of the queue) ----------
+  // Each open nudge shows its NUMBER at the marked element — the number is the
+  // referent for chat („Nudge 123 macht das"), so it must be readable, not a dot.
   const dotTargets = (p) => (p.targets?.length ? p.targets.map(t => t.selector) : [p.target?.selector]).filter(Boolean)
   function renderDots() {
     dots.innerHTML = ''
@@ -934,7 +934,8 @@
         // same badge language as the queue rows: ring + Lucide clock, the hand
         // sweeps while an agent is live (a plain green dot read like a stuck
         // status LED — a running clock reads as work, Gerald 2026-07-05)
-        d.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="d-hand"><path d="M12 6v6l4 2"/></g></svg>'
+        d.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="d-hand"><path d="M12 6v6l4 2"/></g></svg><span class="d-num"></span>'
+        d.querySelector('.d-num').textContent = p.id.replace(/^(?:pin|nudge)_/, '')
         d.title = `${p.id} · ${p.text || markLabel(p)}`
         d.__sel = sel
         d.addEventListener('click', (e) => { e.stopPropagation(); showQueue() })
@@ -949,8 +950,9 @@
       try { const n = document.querySelector(d.__sel); if (n) r = n.getBoundingClientRect() } catch { /* bad selector */ }
       if (!r || (r.width < 2 && r.height < 2) || r.bottom < 0 || r.top > window.innerHeight) { d.style.display = 'none'; continue }
       d.style.display = 'flex' // inline display must not kill the badge's flex centring
-      d.style.left = Math.min(window.innerWidth - 20, r.right - 8) + 'px'
-      d.style.top = Math.max(2, r.top - 8) + 'px'
+      // pill width varies with the number — measure after display is set
+      d.style.left = Math.min(window.innerWidth - d.offsetWidth - 4, r.right - 10) + 'px'
+      d.style.top = Math.max(2, r.top - 9) + 'px'
     }
   }
   let dotRaf = 0

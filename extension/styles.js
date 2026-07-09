@@ -258,19 +258,26 @@
       outline: 2px solid rgba(242,239,234,.55); outline-offset: 2px;
     }
 
-    /* open-prompt dots: one amber status dot per marked element while its prompt
-       is open (status colour, deliberately tiny — click opens the queue popover) */
+    /* open-prompt pills: one readable NUMBER pill per marked element while its
+       prompt is open — the number is the chat referent („Nudge 123 macht das"),
+       clock keeps the status language (sweep = agent live). Click opens the queue. */
     .dots { position: fixed; left: 0; top: 0; width: 0; height: 0; }
     .dot {
-      position: fixed; width: 17px; height: 17px; border-radius: 50%;
-      background: ${MID_DEEP}; border: 2px solid ${PAPER};
+      position: fixed; height: 18px; border-radius: 999px;
+      background: ${MID_DEEP}; border: 1.5px solid ${PAPER};
       box-shadow: 0 1px 4px rgba(14,19,24,.4);
-      display: flex; align-items: center; justify-content: center;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      padding: 0 7px 0 5px;
       pointer-events: auto; cursor: pointer;
       animation: dot-in .2s ease-out;
     }
     @keyframes dot-in { from { transform: scale(.4); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-    .dot svg { display: block; width: 9px; height: 9px; stroke: ${AMBER}; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .dot svg { display: block; flex: none; width: 9px; height: 9px; stroke: ${AMBER}; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+    .dot .d-num {
+      font-size: 10.5px; line-height: 1; color: ${PAPER};
+      font-variation-settings: "wght" 550; letter-spacing: .02em;
+      font-variant-numeric: tabular-nums;
+    }
     .dot .d-hand { transform-box: view-box; transform-origin: 50% 50%; }
     .dot.live .d-hand { animation: q-sweep 4s linear infinite; }
 

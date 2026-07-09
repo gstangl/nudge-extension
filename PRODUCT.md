@@ -1,12 +1,14 @@
 # Nudge — Product Definition
 
-2026-07-05 · Owner: Gerald · Register: PM. One page; the technical frame lives in
-`README.md`, the test contract in `test/protocols.md`. Standalone repo since
-2026-07-08 (extracted from the roots-apps monorepo — zero code dependencies).
+2026-07-05 · Owner: Gerald · Register: PM. One page; the timeless core lives in
+`VISION.md` (read that first), the technical frame in `README.md`, the test
+contract in `test/protocols.md`. Standalone repo since 2026-07-08 (extracted
+from the roots-apps monorepo — zero code dependencies).
 
-**Mission: a strong, bidirectional, always-honest connection between the Zed
-IDE (where the agent owns the code) and Google Chrome (where the rendered UI
-lives).** Everything below serves that line.
+**Mission — see `VISION.md`.** This page is the current embodiment of it: a
+strong, bidirectional, always-honest connection between the Zed IDE (the first
+agent surface, not the last) and Google Chrome (where the rendered UI lives).
+Everything below serves that line.
 
 ## What Nudge is
 
@@ -14,7 +16,8 @@ lives).** Everything below serves that line.
 element (or circle a region) in the running UI, say what you want, and the
 agent in Zed acts on it with full context: selector, xpath, text, styles,
 console (and a screenshot for region marks). Open prompts stay subtly visible
-as amber dots; everything else is fire-and-forget.
+as number pills — the number is what you reference in Zed („Nudge 123 macht
+das"); everything else is fire-and-forget.
 
 ## Why "Nudge" (renamed from "Pin", 2026-07-05)
 
@@ -27,7 +30,8 @@ is everything. Nudge names that job; "Pin" named the mechanism.
 
 ## USP — what everything else is subordinated to
 
-1. **Zed-IDE integration is the core.** Prompts land in the agent that owns the
+1. **Agent integration is the core — today that is Zed** (first surface, not
+   the boundary; see `VISION.md`). Prompts land in the agent that owns the
    codebase — not in a chat next to it. The agent fixes, verifies, resolves
    with before/after evidence. No other tool in this class targets Zed.
 2. **Speed.** Mark → agent knows it in ~1 s (event-time push, tiny payload
@@ -51,8 +55,9 @@ always visible, in both directions:
 - [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
       red no bridge / amber no agent / **green = agent live**. Green never lies
       (heartbeat-backed).
-- [x] **Chrome, per nudge dot:** amber = accepted/stored, green = agent live,
-      gone = done (history with check marks lives in the queue popover only).
+- [x] **Chrome, per nudge pill:** shows the nudge NUMBER (the chat referent);
+      amber clock = accepted/stored, sweeping hand = agent live, gone = done
+      (history with check marks lives in the queue popover only).
 - [x] **Chrome, per prompt:** feedback the moment you send — „nudge_X — agent
       arbeitet" (send), „gespeichert — kein Agent" (clock), „Bridge offline —
       Warteschlange" (alert), „nudge_X erledigt" (check).

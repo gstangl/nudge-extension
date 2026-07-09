@@ -5,9 +5,11 @@ description: >
   element on any localhost page via the Roots Nudge Chrome extension and prompts the
   agent — with selector, xpath, text, styles, screenshots as context). Use whenever
   Gerald says "/nudge", "Nudge(s)", "Pins" (legacy), "Kommentare", "was ist markiert",
-  or asks whether new prompts arrived. Works in EVERY project — the store is global
-  (~/.claude/nudge). Lists open prompts compactly, processes them strictly oldest-first,
-  resolves ONLY after the fix is verified (after-screenshot as evidence).
+  or asks whether new prompts arrived — and whenever he references a nudge by
+  number („Nudge 123 macht das"). Works in EVERY project — the store is global
+  (~/.claude/nudge). Lists open prompts compactly, processes them strictly oldest-first
+  (explicitly named ids jump the queue), resolves ONLY after the fix is verified
+  (after-screenshot as evidence).
 ---
 
 # /nudge — UI prompting from the browser
@@ -128,12 +130,27 @@ Read the files — no MCP, no extra tools:
 - `~/.claude/nudge/store.json` — all prompts (id order = arrival order)
 - `~/.claude/nudge/inbox/<id>.md` + `shots/<id>*.png` — one file per prompt
 
+Pull works ANY TIME mid-turn: the store is plain files, the bridge answers
+`GET http://localhost:4700/.identity` — no wake needed to look something up.
+References in Gerald's prompt („Nudge 123", `#123`) arrive pre-injected by the
+UserPromptSubmit hook; for anything deeper read the inbox `.md` directly.
+
 ## 3. Queue discipline (rapid-fire work sessions)
 
 Gerald often fires prompts faster than the agent processes them. The store IS the
 session queue: ids are strictly monotonic = arrival order. Process open prompts
 **strictly oldest-first, one at a time, never skip** — new arrivals join the back.
 Finish (verify + resolve) the current one before pulling the next.
+
+Two overrides (0.20.0):
+- **Named beats oldest-first.** When Gerald references ids in chat („Nudge 123
+  macht das, Nudge 170 …"), work exactly those, in the order named, before the
+  rest of the queue — the hook has injected each named nudge's context already.
+- **Mark-only nudges are anchors, not work orders.** A text-less nudge (empty
+  send in the browser; wake line `[Nur Markierung …]`) exists so its number
+  pill on the page can be referenced later. SKIP it in oldest-first and never
+  resolve it unprompted — it becomes a work order only when Gerald references
+  it with an instruction; then fix, verify, resolve as usual.
 
 ## 4. Work one prompt at a time — MINIMAL PANEL FOOTPRINT
 

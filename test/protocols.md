@@ -112,7 +112,7 @@ the backlog for new legs lives there (section „Building new legs").
 | A1 | **Report completeness (element)**: DOM-only — text, url, title, ua, viewport, unique selector, xpath, innerText, source hint, outerHTML, categorized styles, console incl. `[net]` ≥400. NO screenshot (element pins are DOM-only) | ✅ 2026-07-05 |
 | A2 | **Capture accuracy** (dpr derived from bitmap÷viewport, not trusted) | ✅ 2026-07-05 |
 | A3 | **Pick = mark**: element selection published on pick DOM-ONLY (no screenshot, no flicker), chip retarget updates it, Abbrechen keeps selection, creates NO pin | ✅ 2026-07-05 |
-| A4 | **Prompt tracking**: badge counts this route's open prompts, clears on resolve; ONE amber dot per marked element while its prompt is open (0.9.0 product revision — no popovers/threads, dot click opens the queue), dots gone after resolve/discard, hidden in evidence shots. Badge CLICK → queue popover (id · text · age, midnight style), closes on Escape/outside/empty. **Caret aligned to the badge (C-7); a row does NOT jitter on accordion toggle (C-6, dot/id hold their offset)** | ✅ 2026-07-06 |
+| A4 | **Prompt tracking**: badge counts this route's open prompts, clears on resolve; ONE NUMBER PILL per marked element while its prompt is open (0.20.0: readable nudge number = chat referent; 0.9.0: no popovers/threads, pill click opens the queue), pills gone after resolve/discard, hidden in evidence shots. Badge CLICK → queue popover (id · text · age, midnight style), closes on Escape/outside/empty. **Caret aligned to the badge (C-7); a row does NOT jitter on accordion toggle (C-6, dot/id hold their offset)** | ✅ 2026-07-09 |
 | A5 | **Resolve (element)**: HTTP resolve → „pin_X erledigt"-chip, badge drops, NO after-shot (element = DOM-only). Freeform pins keep the before/after evidence loop (asserted in A6) | ✅ 2026-07-05 |
 | A6 | **Freeform (region)**: stroke stored, centroid selector, AND a screenshot (only the Freeform tool captures) + resolve → after-shot evidence loop | ✅ 2026-07-05 |
 | A7 | **SPA refilter**: hashchange/popstate refilter the badge (route = pathname+hash; query deliberately ignored) | ✅ 2026-07-05 |
@@ -120,7 +120,7 @@ the backlog for new legs lives there (section „Building new legs").
 | A9 | **Multi-selection (Shift+Klick)**: two shift-clicks → selection carries `targets[]` (2 Elemente, DOM-only), composer counts mit, one transient outline per element; send → pin carries both targets (selector+xpath each), NO screenshot, outlines gone after send (fire-and-forget). Late re-check: element pins never gain an after-shot | ✅ 2026-07-05 |
 | A10 | **Queue management (0.9.0)**: text-less prompt shows a speaking label („Markierung: ‚innerText'" / N Elemente / selector); row × discards via DELETE (store + inbox + shots weg, feed chip „verworfen"); dots lifecycle asserted (3 → 2 after discard) | ✅ 2026-07-05 |
 | A12 | **Zustands-Feedback 0.12.0**: Punkt GRÜN bei agentLive (Suite-Heartbeat), amber sonst; Badge zählt nur OFFENE, verschwindet bei 0; Erledigt-History im Queue-Popover (q-div „Erledigt", Zeile mit grünem Check, resolvedAt-Alter) | ✅ 2026-07-05 |
-| A11 | **Härtung 0.10.0**: CORS-Grenze (fremder Origin → keine CORS-Header, localhost reflektiert); leeres Senden = reine Markierung, KEIN Pin; Klick-Konvention (normaler Klick setzt Multi auf Einzel zurück, nur ⇧ sammelt); Agent-Wiring-Drift-Check (Repo = installiert) als Schlussbein | ✅ 2026-07-05 |
+| A11 | **Härtung 0.10.0 / Composer-Submit 0.20.0**: CORS-Grenze (fremder Origin → keine CORS-Header, localhost reflektiert); leeres Senden = NUMMERIERTE MARKE (Pin ohne Text, „nudge_X marked"-Chip, Nummern-Pille am Element — kehrt die 0.10.0-Regel um); Enter sendet / Shift+Enter = Zeilenumbruch (sendet NICHT); Klick-Konvention (normaler Klick setzt Multi auf Einzel zurück, nur ⇧ sammelt); Agent-Wiring-Drift-Check (Repo = installiert) als Schlussbein | ✅ 2026-07-09 |
 
 **Toolbar chrome geometry (2026-07-06):** Suite A also locks in the popover
 carets (queue → badge, Switch-session → its label, C-7), the accordion no-jitter
@@ -219,10 +219,11 @@ injects nothing at all any more (it only ensures the bridge is up).
 
 | # | Guards | Last |
 |---|--------|------|
-| G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, and a live owner in the store | ✅ 2026-07-05 |
-| G2 | **No session id → silence**: a session without CLAUDE_CODE_SESSION_ID cannot prove participation → nothing | ✅ 2026-07-05 |
-| G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and queue line | ✅ 2026-07-05 |
-| G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-05 |
+| G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, a live owner in the store — and even when its prompt REFERENCES a nudge („Nudge 1"), the 0.20.0 reference pull must not pierce the gate | ✅ 2026-07-09 |
+| G2 | **No session id → silence**: a session without CLAUDE_CODE_SESSION_ID cannot prove participation → nothing | ✅ 2026-07-09 |
+| G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and the referenceable open list („Offene Nudges" — id · gist · route) | ✅ 2026-07-09 |
+| G3b | **Reference pull (0.20.0)**: „Nudge 1" in the armed session's prompt injects that nudge's full context (`REFERENZIERT nudge_1` + text); an unknown id is named as missing („Nudge 7: nicht im Store"), never invented | ✅ 2026-07-09 |
+| G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-09 |
 
 ## Suite H — Provenance (provenance.mjs)
 

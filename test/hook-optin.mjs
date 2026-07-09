@@ -31,10 +31,11 @@ const bridge = spawn('node', [BRIDGE], {
 
 // run the hook exactly as the harness does: feed it env, capture stdout.
 // A UserPromptSubmit hook that stays silent prints NOTHING (exit 0).
-function runHook(sessionId) {
+function runHook(sessionId, prompt) {
   try {
     return execFileSync('node', [HOOK], {
       env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), CLAUDE_CODE_SESSION_ID: sessionId || '' },
+      input: prompt ? JSON.stringify({ prompt }) : '', // harness stdin: UserPromptSubmit JSON
       encoding: 'utf8', timeout: 5000,
     }).trim()
   } catch (e) { return `THREW: ${e.message}` }
@@ -67,11 +68,12 @@ try {
   })
   await sleep(300)
 
-  // --- G1: a FOREIGN session (never armed) gets TOTAL SILENCE ---
+  // --- G1: a FOREIGN session (never armed) gets TOTAL SILENCE — even when its
+  //     prompt REFERENCES a nudge (the reference pull must not pierce the gate) ---
   {
-    const out = runHook('ffff9999') // not in the roster
+    const out = runHook('ffff9999', 'Nudge 1 bitte fixen') // not in the roster
     if (out !== '') fail(`G1: foreign session got output: ${out.slice(0, 160)}`)
-    pass('G1 foreign session → total silence (full store + live owner ignored)')
+    pass('G1 foreign session → total silence (full store + live owner + reference ignored)')
   }
 
   // --- G2: NO session id at all → silence ---
@@ -88,8 +90,18 @@ try {
     if (!c) fail('G3: armed session got NO context')
     if (!c.includes('armed-owner')) fail(`G3: armed session missing owner label: ${c.slice(0, 120)}`)
     if (!c.includes('MARKIERUNG')) fail('G3: armed session missing current mark')
-    if (!c.includes('Warteschlange')) fail('G3: armed session missing queue line')
+    if (!c.includes('Offene Nudges')) fail('G3: armed session missing queue list')
     pass('G3 armed session → full context (status + mark + queue)')
+  }
+
+  // --- G3b: reference pull (0.20.0) — „Nudge 1" in the prompt injects that
+  //     nudge's full context; unknown ids are named as missing, not invented ---
+  {
+    const c = ctx(runHook(OWNER, 'Nudge 1 bitte fixen, und was war #7?'))
+    if (!c.includes('REFERENZIERT nudge_1')) fail(`G3b: reference injection missing: ${c.slice(0, 200)}`)
+    if (!c.includes('„existing mark"')) fail('G3b: referenced nudge text missing')
+    if (!c.includes('Nudge 7: nicht im Store')) fail('G3b: unknown id must be named as missing')
+    pass('G3b armed session + „Nudge 1" → referenced context injected (unknown id flagged)')
   }
 
   // --- G4: owner dies → its session leaves the roster → even the SAME id goes silent
