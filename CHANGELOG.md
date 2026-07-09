@@ -5,6 +5,35 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.21.0 — 2026-07-09 (Claude-CLI-Integration — Terminal/Ghostty)
+
+### Added
+- **Claude CLI wird als Host unterstützt** (`agent/NUDGE-SKILL.md`): Der `/nudge`-
+  Skill armt jetzt host-bewusst. In Zed weiterhin über den `Monitor`-Tool
+  (persistente stdout-Zeilen = autonomer Wake). In der Terminal-/Ghostty-CLI, wo
+  es keinen `Monitor` gibt, wird DERSELBE Watcher (`watch-nudges.mjs`) als
+  **Background-Bash** (`run_in_background: true`, bewusst NICHT `nohup`) gearmt —
+  so bleibt der Prozess Kind der Session und die Orphan-Tripwire
+  (`ppid === 1`) räumt beim Session-Ende ehrlich auf; ein detachtes `nohup` würde
+  zu launchd reparentet, sich als „orphan" beenden und das Icon nie grün werden
+  lassen.
+- **Pull-Prompt-Kanal in der CLI**: Kein autonomer Wake — der Background-Watcher
+  heartbeatet nur (grünes Icon + Roster + Opt-in). Gerald setzt im Browser
+  mehrere Nudges, sieht die Nummern-Pillen und ruft sie in der CLI per Nummer ab
+  („Nudge 23 macht das, Nudge 24 …"); der bestehende Referenz-Pull im
+  UserPromptSubmit-Hook (0.20.0) injiziert jeden genannten Nudge-Kontext auf
+  genau diesem Prompt, ohne Wake. Ein bloßes „weiter" flusht die offene Queue.
+  Queue-Disziplin, Resolve-with-proof und Origin-Scoping sind identisch zu Zed.
+
+### Notes
+- Rein Agent-seitige Änderung — keine Bridge- (bleibt 0.14.1) oder
+  Extension-Code-Änderung; die Produktversion (Extension-Manifest) zieht auf
+  0.21.0 mit, weil das Produkt eine neue Host-Fähigkeit gewonnen hat.
+- Der Watcher unterschied Zed/CLI bereits (`host`-Feld,
+  `ZED_ENVIRONMENT`); beide Hooks (SessionStart, UserPromptSubmit) sind
+  Claude-Code-Primitive und liefen in der CLI ohnehin — es fehlte nur der
+  Arm-Pfad ohne `Monitor`.
+
 ## 0.20.0 — 2026-07-09 (Enter-Send, nummerierte Marken, Referenz-Pull)
 
 ### Changed
