@@ -51,6 +51,10 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   proves the UserPromptSubmit hook stays SILENT in every session that did not arm
   via /nudge (its session id is not in the roster) — even with a full store and a
   live owner. Run after ANY hook change.
+- `node test/wake-mode.mjs` — **Suite W (Wake mode: push vs pull)**, side port 4788:
+  proves the wake mode travels watcher IDENTITY → roster → /.identity + WS snapshot +
+  routes, defaults from host when the flag is missing/invalid (no false auto-wake), and
+  the real watcher carries `NUDGE_WAKE` through. Run after any change to the wake plumbing.
 - `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
   Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
@@ -121,6 +125,7 @@ the backlog for new legs lives there (section „Building new legs").
 | A10 | **Queue management (0.9.0)**: text-less prompt shows a speaking label („Markierung: ‚innerText'" / N Elemente / selector); row × discards via DELETE (store + inbox + shots weg, feed chip „verworfen"); dots lifecycle asserted (3 → 2 after discard) | ✅ 2026-07-05 |
 | A12 | **Zustands-Feedback 0.12.0**: Punkt GRÜN bei agentLive (Suite-Heartbeat), amber sonst; Badge zählt nur OFFENE, verschwindet bei 0; Erledigt-History im Queue-Popover (q-div „Erledigt", Zeile mit grünem Check, resolvedAt-Alter) | ✅ 2026-07-05 |
 | A11 | **Härtung 0.10.0 / Composer-Submit 0.20.0**: CORS-Grenze (fremder Origin → keine CORS-Header, localhost reflektiert); leeres Senden = NUMMERIERTE MARKE (Pin ohne Text, „nudge_X marked"-Chip, Nummern-Pille am Element — kehrt die 0.10.0-Regel um); Enter sendet / Shift+Enter = Zeilenumbruch (sendet NICHT); Klick-Konvention (normaler Klick setzt Multi auf Einzel zurück, nur ⇧ sammelt); Agent-Wiring-Drift-Check (Repo = installiert) als Schlussbein | ✅ 2026-07-09 |
+| A13 | **Status-Hinweis 0.21.3**: Klick auf den Status-Punkt öffnet ein Zustands-Popover (grüner Push-Owner → „Agent aktiv"), Caret auf den Punkt ausgerichtet, schließt per Escape — der Punkt erklärt sich, armt/weckt aber NICHT aus dem Browser | ✅ 2026-07-21 |
 
 **Toolbar chrome geometry (2026-07-06):** Suite A also locks in the popover
 carets (queue → badge, Switch-session → its label, C-7), the accordion no-jitter
@@ -293,6 +298,20 @@ owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
 | K4 | **Two REAL watcher processes each wake ONLY for their own host** (A←5185, B←5186, no cross-wake) — the payoff | ✅ 2026-07-07 |
 | K5 | `/.identity.routes` maps every open localhost tab → its owner {label, session} and flags `viaFallback`; `127.0.0.1:X` folds into `localhost:X` (one host, one owner) | ✅ 2026-07-08 |
 | K6 | **`viaFallback` tells the truth when the picked agent dies**: the flag flips the moment the pick leaves the fresh window (derived from actual resolution) — a `has(host)` check lied for up to ~17 s until the sweep | ✅ 2026-07-08 |
+
+## Suite W — Wake mode: push vs pull (wake-mode.mjs)
+
+Zed pushes (Monitor-stdout wakes the agent), the Claude CLI pulls (a nudge waits
+for the next prompt). The green icon must not imply „kommt automatisch" for a pull
+owner — so the mode has to travel to the extension. Own bridge on 4788, no browser.
+
+| # | Guards | Last |
+|---|--------|------|
+| W1 | `/.identity.agents[]` carry each session's `wake` (push + pull side by side) | ✅ 2026-07-21 |
+| W2 | Global `agentWake` follows the queried host's owner (`?host=` → that owner's mode) | ✅ 2026-07-21 |
+| W3 | The tab learns its owner's mode: WS snapshot `agentWake` + `/.identity.routes[].owner.wake` scoped to the tab's host | ✅ 2026-07-21 |
+| W4 | **Missing/invalid `wake` derives from host** (Zed→push, else pull; garbage clamped) — never a false auto-wake for a session that can't push | ✅ 2026-07-21 |
+| W5 | The **real** `watch-nudges.mjs` carries `NUDGE_WAKE=pull` end-to-end into the roster | ✅ 2026-07-21 |
 
 ## Suite L — Toolbar & popover UX (toolbar-ux.mjs)
 

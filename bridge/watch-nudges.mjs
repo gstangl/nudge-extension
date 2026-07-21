@@ -93,12 +93,20 @@ function firstMessage() {
   } catch { /* no transcript (non-Claude host) */ }
   return null
 }
+// wake mode = can a new nudge START this agent by itself, or does it wait to be
+// PULLED? The /nudge skill knows (Monitor-tool present = Zed = push; else CLI =
+// pull) and passes NUDGE_WAKE. Default derives from the host so an old skill /
+// hand-start still declares honestly instead of defaulting to a push it can't do.
+const WAKE = (process.env.NUDGE_WAKE === 'push' || process.env.NUDGE_WAKE === 'pull')
+  ? process.env.NUDGE_WAKE
+  : (process.env.ZED_ENVIRONMENT ? 'push' : 'pull')
 const IDENTITY = {
   label: LABEL, pid: process.pid, since: SINCE,
   session: (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8) || null,
   project: path.basename(process.cwd()),
   branch: gitBranch(),
   host: process.env.ZED_ENVIRONMENT ? 'Zed' : 'CLI',
+  wake: WAKE, // 'push' = autonomous wake (Zed) · 'pull' = surfaces on next prompt (CLI)
   firstMsg: firstMessage(),
 }
 // STANDBY instead of exit (0.16.0): losers keep heartbeating silently — the

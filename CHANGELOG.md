@@ -5,6 +5,69 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.21.3 — 2026-07-21 (Status-Punkt erklärt sich per Klick)
+
+### Added
+- **Klick auf den Status-Punkt öffnet einen Zustands-Hinweis** (`extension/`):
+  der bislang stumme Punkt wird zum Ein-Zeilen-Guide für den AKTUELLEN Zustand —
+  grau „Bridge nicht erreichbar", amber „Kein Agent aktiv → tippe `/nudge` in der
+  Zed-Session", grün „Agent aktiv" bzw. bei Pull „kommt beim nächsten ‚weiter' im
+  Terminal". Schließt die „warum passiert nichts?"-Lücke, ohne je zu behaupten, der
+  Browser könne armen/wecken (der Opt-in-Zaun bleibt: armen geht NUR via `/nudge`
+  in der Session). Popover in der Midnight-Familie (Caret auf den Punkt), live
+  aktualisiert bei Arm/Disarm, schließt per Escape/Außenklick. Trefferfläche des
+  7px-Punkts auf 15px vergrößert (padding + `background-clip: content-box`) ohne
+  Layout-Shift. Assertion: Suite A („status hint").
+
+## 0.21.2 — 2026-07-21 (Wake-Modus sichtbar: push vs pull — CLI-Nudges „kommen an")
+
+### Fixed
+- **Grünes Icon suggerierte „kommt automatisch", auch in Claude-CLI-Sessions**
+  (Gerald: Nudges „kommen nicht an"). Ursache ist Architektur, kein Bug: Zed
+  hat einen echten PUSH (Monitor-stdout weckt den Agenten), das CLI nur einen
+  Heartbeat → PULL (der Nudge erscheint erst beim nächsten Prompt). Gespeichert
+  war er immer (die Nummern-Pille beweist es) — nur die Abholung ist im CLI
+  manuell. Der Wake-Modus reist jetzt mit und wird ehrlich angezeigt.
+
+### Added
+- **Watcher deklariert seinen Wake-Modus** (`bridge/watch-nudges.mjs`):
+  `NUDGE_WAKE=push|pull` in der IDENTITY; fehlt/ungültig → Default aus dem Host
+  (`ZED_ENVIRONMENT` → push, sonst pull), damit nie ein Auto-Wake behauptet wird,
+  den eine Session nicht kann.
+- **Bridge trägt `wake` durch** (`bridge/bridge.mjs`): im Roster (validiert,
+  Default aus host), in `/.identity` (`agents[].wake`, `routes[].owner.wake`,
+  globales `agentWake` je `?host`) und im WS-Snapshot (`agentWake`).
+- **Extension zeigt den Modus ehrlich** (`extension/`): grüner Push-Owner wie
+  bisher; grüner PULL-Owner (CLI) bekommt einen amberfarbenen **„Pull"-Tag** in
+  der Toolbar + Tooltip („im Terminal ‚weiter' tippen"), beim Senden den Toast
+  **„nudge_X erfasst · im Terminal ‚weiter'"** statt des irreführenden „agent
+  working", und im Switch-session-Dropdown pro Zeile „Auto"/„Pull".
+- **Skill armt host-bewusst** (`agent/NUDGE-SKILL.md`): Zed mit `NUDGE_WAKE=push`,
+  CLI mit `NUDGE_WAKE=pull`; der Arm-Report druckt den Modus je Route.
+- **Suite W** (`test/wake-mode.mjs`): Wake-Modus von der Watcher-IDENTITY über
+  Roster/`/.identity`/WS-Snapshot bis zu den Routes; Default-Ableitung + Clamping
+  bei fehlendem/ungültigem Flag; echter Watcher trägt `NUDGE_WAKE=pull` durch.
+
+### Nicht geändert
+- Capture: ein Nudge ist gespeichert, sobald die Pille erscheint — architektonisch
+  bekommt das CLI KEINEN echten Push; es wird nur der Pull-Charakter ehrlich
+  kommuniziert.
+
+## 0.21.1 — 2026-07-15 (Wake verdrängt keine laufende Arbeit)
+
+### Changed
+- **Ein Zed-Wake unterbricht keine laufende Operation mehr** (`agent/NUDGE-SKILL.md`,
+  Gerald): triggert Gerald einen Nudge, während der Agent gerade an etwas anderem
+  arbeitet (in-conversation-Task oder einem früheren Nudge), platzt der neue Nudge
+  nicht mehr rein. Der Store erfasst ihn im selben Moment dauerhaft (die Nummern-
+  Pille ist der Beweis) — verloren geht nichts. Der Agent macht die laufende Arbeit
+  sauber fertig und zieht den geweckten Nudge DANACH. „Sofort anfangen" gilt nur
+  noch, wenn die Session ohnehin im Leerlauf ist (der schnelle Live-Kanal bleibt
+  dort ~1 s). Reine Policy-Zeile — keine Mechanik, keine Zusatz-Latenz: die
+  Erfassung ist unverändert sofort, nur der ARBEITSBEGINN wartet, und exakt so
+  lange wie die laufende Arbeit braucht, nie länger. (CLI ist ohnehin Pull-only,
+  also nie betroffen.)
+
 ## 0.21.0 — 2026-07-09 (Claude-CLI-Integration — Terminal/Ghostty)
 
 ### Added

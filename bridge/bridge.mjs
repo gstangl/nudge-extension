@@ -84,8 +84,8 @@ function handle(req, res) {
     const fresh = freshAgents()
     const pickAlive = (h) => { const k = chosenByHost.get(h) || chosenByHost.get('*'); return !!k && fresh.some(a => agentKey(a) === k) }
     const tabHosts = [...new Set([...wss.clients].map(c => hostOf(c.meta?.url || '')).filter(Boolean))]
-    const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session } : null, viaFallback: !pickAlive(h) } })
-    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+    const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session, wake: o.wake } : null, viaFallback: !pickAlive(h) } })
+    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
   }
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")
@@ -108,6 +108,10 @@ function handle(req, res) {
         project: who.project ? String(who.project).slice(0, 60) : null,
         branch: who.branch ? String(who.branch).slice(0, 60) : null,
         host: who.host ? String(who.host).slice(0, 20) : null,
+        // wake mode: does a new nudge START this agent (push) or wait to be
+        // pulled on the next prompt (pull)? Missing/invalid → derive from host so
+        // the extension never claims an autonomous wake a CLI session can't do.
+        wake: who.wake === 'push' || who.wake === 'pull' ? who.wake : (who.host === 'Zed' ? 'push' : 'pull'),
         firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
         lastSeen: Date.now(),
       })
@@ -274,7 +278,7 @@ const snapshotFor = (host) => {
   const all = store.getPins()
   const open = all.filter(p => p.status === 'open')
   const done = all.filter(p => p.status !== 'open').slice(-40)
-  return { type: 'pins', agentLive: !!owner, agentLabel: owner?.label || null, agents: agentsForClient(host), pins: [...open, ...done].map(store.pinForClient) }
+  return { type: 'pins', agentLive: !!owner, agentLabel: owner?.label || null, agentWake: owner?.wake || null, agents: agentsForClient(host), pins: [...open, ...done].map(store.pinForClient) }
 }
 const broadcastSnapshot = () => { for (const c of wss.clients) if (c.readyState === 1) c.send(JSON.stringify(snapshotFor(hostOf(c.meta?.url || '')))) }
 const WS_PING = Number(process.env.NUDGE_WS_PING || 30_000)

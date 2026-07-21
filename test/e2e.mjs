@@ -40,7 +40,9 @@ const until = async (fn, ms, what) => {
 // Suite A simulates a LIVE agent: without this heartbeat the status dot stays
 // amber and every „Agent arbeitet" expectation depends on whether some real
 // session happens to run a watcher (bit us 2026-07-05 after the Nudge rename).
-const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', pid: process.pid, since: Date.now() }) }
+// host:'Zed'+wake:'push' → this simulated agent is a live AUTO-waker („kommt
+// automatisch"), the common case; the pull-owner status is asserted in Suite W
+const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', pid: process.pid, since: Date.now(), host: 'Zed', wake: 'push' }) }
 const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
 await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
 // identity: the owner label is visible to agents (hook) and the extension
@@ -90,6 +92,23 @@ try {
   if (whoCaretΔ > 1.5) fail(`Switch-session caret not aligned to its label (Δ ${whoCaretΔ})`)
   await page.keyboard.press('Escape')
   await until(async () => !(await page.locator('.who-menu.on').count()), 2000, 'dropdown closes on Escape')
+
+  // --- status hint: clicking the status dot opens a guide for the CURRENT state
+  //     (green push owner → „Agent aktiv"), closes on Escape ---
+  await page.locator('.pill .status').click()
+  await page.locator('.status-menu.on .q-head', { hasText: 'Agent aktiv' }).waitFor({ timeout: 3000 })
+  { // caret points at the dot it opened from (same popover contract as who/queue)
+    const dΔ = await page.evaluate(() => {
+      const r = document.getElementById('__roots-nudge-host').shadowRoot
+      const m = r.querySelector('.status-menu'), s = r.querySelector('.pill .status').getBoundingClientRect()
+      const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
+      return Math.abs(caretX - (s.left + s.width / 2))
+    })
+    if (dΔ > 1.5) fail(`status-hint caret not aligned to the dot (Δ ${dΔ})`)
+  }
+  await page.keyboard.press('Escape')
+  await until(async () => !(await page.locator('.status-menu.on').count()), 2000, 'status hint closes on Escape')
+  console.log('PASS status hint (click dot → state guide, caret aligned, Escape)')
 
   // --- movable toolbar: drag the grip, position changes and persists; an OPEN
   //     popover belongs to the toolbar and must MOVE WITH it (Gerald 2026-07-06) ---
