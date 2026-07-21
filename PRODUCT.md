@@ -54,7 +54,9 @@ always visible, in both directions:
 
 - [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
       red no bridge / amber no agent / **green = agent live**. Green never lies
-      (heartbeat-backed).
+      (heartbeat-backed). A green PULL owner (Claude CLI) additionally shows a
+      „Pull"-Tag + tooltip: the agent is live but a nudge comes on the next
+      terminal prompt, not by itself — green must not imply „kommt automatisch".
 - [x] **Chrome, per nudge pill:** shows the nudge NUMBER (the chat referent);
       amber clock = accepted/stored, sweeping hand = agent live, gone = done
       (history with check marks lives in the queue popover only).

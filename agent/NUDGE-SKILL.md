@@ -65,8 +65,9 @@ fence and the roster are identical.
 
 **Zed (the `Monitor` tool is available):** persistent Monitor whose stdout lines
 are surfaced back into the conversation — that IS the autonomous wake (a new
-nudge starts the agent by itself):
-`Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+nudge starts the agent by itself). Arm with `NUDGE_WAKE=push` so the toolbar
+shows this owner as auto-waking:
+`Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' NUDGE_WAKE=push node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
 The description is VISIBLE as the collapsed tool card in Zed's panel — it must
 carry the session identity so Gerald sees at a glance who owns the channel.
 
@@ -75,14 +76,18 @@ watcher as a BACKGROUND Bash — `run_in_background: true`, NOT `nohup`. Backgro
 keeps the process a child of the session, so the watcher's orphan tripwire
 (`ppid === 1`) cleans up honestly when the session ends; a detached `nohup` would
 reparent to launchd, self-exit as "orphan", and the icon would never go green.
-`Bash({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", run_in_background: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+Arm with `NUDGE_WAKE=pull` so the toolbar tells Gerald this owner is pull, not
+auto (the icon is green, but a nudge waits for the next prompt — without the flag
+the browser would imply „kommt automatisch" and the nudge looks lost):
+`Bash({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' NUDGE_WAKE=pull node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", run_in_background: true, description: "Nudge-Watch — <dasselbe Thema>" })`
 The CLI has NO autonomous wake: the background watcher only heartbeats (green
 icon + roster + opt-in). The prompt channel is PULL — Gerald sets nudges in the
-browser, sees the number pills, and references them here by number („Nudge 23
-macht das, Nudge 24 …"); the UserPromptSubmit hook injects each named nudge's
-full context on that prompt (no wake needed). A bare „weiter" also surfaces the
-open queue via the hook. Everything else — queue discipline, resolve-with-proof,
-origin scoping — is identical to Zed.
+browser, sees the number pills AND a „erfasst · pull"-Toast + „Pull"-Tag in the
+toolbar, and references them here by number („Nudge 23 macht das, Nudge 24 …");
+the UserPromptSubmit hook injects each named nudge's full context on that prompt
+(no wake needed). A bare „weiter" also surfaces the open queue via the hook.
+Everything else — queue discipline, resolve-with-proof, origin scoping — is
+identical to Zed.
 
 ALWAYS set the topic label (both hosts) — it is how Gerald recognizes the session
 in the dropdown (Zed thread titles summarize the same conversation, so they
@@ -95,7 +100,7 @@ it to a localhost). The script POLLS until this session's first heartbeat lands
 in the roster (up to ~8 s) — an immediate curl would race the watcher and print
 "?" for a session that is arming fine. Run and show the output verbatim:
 ```
-node -e 'const me=(process.env.CLAUDE_CODE_SESSION_ID||"").slice(0,8);(async()=>{let j=null,mine=null;for(let i=0;i<16;i++){try{j=await(await fetch("http://localhost:4700/.identity",{signal:AbortSignal.timeout(1500)})).json();mine=(j.agents||[]).find(a=>a.session===me);if(mine)break}catch{}await new Promise(r=>setTimeout(r,500))}if(!j){console.log("Bridge ✗ — kein Report");return}console.log(`Nudge aktiv · „${mine?.label||"?"}" · session ${me}`);for(const r of j.routes||[]){const own=r.owner?.session===me?" ← DIESE Session":"";const fb=r.viaFallback?" ⚠ nur Fallback (im Switch-session-Dropdown fixieren)":"";console.log(`  ${r.host} → ${r.owner?.label||"—"}${own}${fb}`)}if(!(j.routes||[]).length)console.log("  (keine localhost-Tabs offen)")})()'
+node -e 'const me=(process.env.CLAUDE_CODE_SESSION_ID||"").slice(0,8);(async()=>{let j=null,mine=null;for(let i=0;i<16;i++){try{j=await(await fetch("http://localhost:4700/.identity",{signal:AbortSignal.timeout(1500)})).json();mine=(j.agents||[]).find(a=>a.session===me);if(mine)break}catch{}await new Promise(r=>setTimeout(r,500))}if(!j){console.log("Bridge ✗ — kein Report");return}const wk=mine?.wake==="pull"?" · PULL (Nudges kommen beim nächsten Prompt, nicht automatisch)":mine?.wake==="push"?" · push (auto)":"";console.log(`Nudge aktiv · „${mine?.label||"?"}" · session ${me}${wk}`);for(const r of j.routes||[]){const own=r.owner?.session===me?" ← DIESE Session":"";const wm=r.owner?.wake?` [${r.owner.wake}]`:"";const fb=r.viaFallback?" ⚠ nur Fallback (im Switch-session-Dropdown fixieren)":"";console.log(`  ${r.host} → ${r.owner?.label||"—"}${wm}${own}${fb}`)}if(!(j.routes||[]).length)console.log("  (keine localhost-Tabs offen)")})()'
 ```
 The label is your `NUDGE_AGENT_LABEL` (== the toolbar `Agent:` text); `session` is
 the un-collidable key — the same id8 shows on each row of the browser's
@@ -109,6 +114,16 @@ this any time Gerald asks "which localhost am I / who owns what".
 nudge as if he had typed it into the conversation**: fetch details, do the work,
 verify, resolve. The watcher also heartbeats the bridge — that is what turns the
 browser icon green (both hosts).
+
+**A wake NEVER preempts work in flight.** The nudge is captured durably in the
+store the instant Gerald sets it (the number pill is the proof) — reacting this
+second buys nothing, losing it is impossible. So a wake that lands while you are
+mid-task on something Gerald asked for in THIS conversation — or mid-nudge on an
+earlier one — does NOT interrupt it: finish the current work cleanly, THEN pull
+the freshly-woken nudge. A wake means "start now" ONLY when the session is
+otherwise idle (that is the fast live channel — then don't sit on it). Capture is
+instant and never waits; the only thing that ever waits is when you START — and
+it waits exactly as long as the current work needs, never longer.
 A wake line `Nudge X ergänzt: …` means Gerald **appended a follow-up to an
 already-sent nudge** (append-only): re-read the inbox `X.md` — the original plus
 every `> **Nachtrag:**` is ONE work order, newest first is the latest thought.

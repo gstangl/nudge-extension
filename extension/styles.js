@@ -41,9 +41,18 @@
     .pill .grip:hover { color: rgba(242,239,234,.7); }
     .pill .grip.dragging { cursor: grabbing; }
     .pill .grip svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
-    .pill .status { width: 7px; height: 7px; border-radius: 50%; margin: 0 4px; background: rgba(242,239,234,.28); transition: background .3s ease; }
-    .pill .status.ok { background: ${GREEN}; }
-    .pill .status.half { background: ${AMBER}; }
+    /* the 7px dot keeps its look; 4px padding (content-box) makes it a 15px click
+       target — same horizontal footprint as before (7 + 8 margin), so no layout
+       shift. background-clip: content-box keeps the colour on the 7px core only. */
+    .pill .status {
+      box-sizing: content-box; width: 7px; height: 7px; padding: 4px; margin: 0;
+      border-radius: 50%; cursor: pointer;
+      background-color: rgba(242,239,234,.28); background-clip: content-box;
+      transition: background-color .3s ease;
+    }
+    .pill .status:hover { filter: brightness(1.3); }
+    .pill .status.ok { background-color: ${GREEN}; }
+    .pill .status.half { background-color: ${AMBER}; }
     .pill .sep { width: 1px; height: 16px; background: ${MID_2}; margin: 0 4px; }
     .pill .who {
       display: none; align-items: center; padding: 0 6px 0 4px;
@@ -80,6 +89,17 @@
       padding: 1px 5px; margin-left: 6px; white-space: nowrap;
     }
     .pill .who-host:empty { display: none; }
+    /* wake-mode tag: shown ONLY for a pull owner (CLI) — amber signals „needs your
+       action" (the nudge is stored but comes on the next terminal prompt, not by
+       itself). Auto/push owners show nothing: green already means „kommt von selbst". */
+    .pill .who-wake {
+      flex: none; font-family: ${SANS}; font-size: 10px; line-height: 14px;
+      font-variation-settings: "wght" 650; letter-spacing: .02em;
+      color: ${AMBER}; background: rgba(217,164,65,.12);
+      border: 1px solid rgba(217,164,65,.35); border-radius: 5px;
+      padding: 1px 5px; margin-left: 6px; white-space: nowrap;
+    }
+    .pill .who-wake:empty { display: none; }
     /* session dropdown: who owns the wake channel — midnight family like the queue */
     .who-menu {
       position: fixed; width: 460px; pointer-events: auto; z-index: 3;
@@ -142,13 +162,32 @@
        header fill offset down 1.5px so ~1px of border shows on the edges. No
        overflow:hidden (it would clip the caret) — the header rounds its own top
        corners, the transparent last row rounds via the parent. */
-    .queue::before, .queue::after, .who-menu::before, .who-menu::after {
+    .queue::before, .queue::after, .who-menu::before, .who-menu::after, .status-menu::before, .status-menu::after {
       content: ""; position: absolute; width: 0; height: 0;
       left: var(--caret-x, 32px); transform: translateX(-50%);
       border-left: 8px solid transparent; border-right: 8px solid transparent;
     }
-    .queue::before, .who-menu::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
-    .queue::after, .who-menu::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
+    .queue::before, .who-menu::before, .status-menu::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
+    .queue::after, .who-menu::after, .status-menu::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
+    /* status hint popover — same midnight family as the queue/switcher */
+    .status-menu {
+      position: fixed; width: 300px; pointer-events: auto; z-index: 3;
+      background: ${MID}; border: 1px solid ${MID_3}; border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(14,19,24,.45);
+      opacity: 0; transform: translateY(-4px); pointer-events: none;
+      transition: opacity .16s ease-out, transform .16s ease-out;
+    }
+    .status-menu.on { opacity: 1; transform: none; pointer-events: auto; }
+    .status-menu .q-head {
+      padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
+      border-radius: 11px 11px 0 0;
+      font-size: 12px; color: ${PAPER}; font-variation-settings: "wght" 600;
+    }
+    .status-menu .sm-body {
+      padding: 11px 14px; font-size: 12px; line-height: 1.5;
+      color: rgba(242,239,234,.72);
+    }
+    .status-menu .sm-body b { color: ${PAPER}; font-variation-settings: "wght" 650; }
     .queue.on { opacity: 1; transform: none; pointer-events: auto; }
     .queue .q-head {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;

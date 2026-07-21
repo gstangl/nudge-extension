@@ -48,7 +48,7 @@
   // path as the neighbour icons (a hand-rolled 10x16 viewBox rendered blurry)
   const GRIP = '<svg viewBox="0 0 24 24"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>'
   const pill = el('div', 'pill',
-    `<span class="grip" title="Move">${GRIP}</span><span class="status"></span><span class="count"></span><span class="sep"></span><button class="btn-pick" title="Pick element (P)">${ICON_PICK}<span>Pick</span></button><button class="btn-draw" title="Freeform region (F)">${ICON_DRAW}<span>Freeform</span></button><span class="sep who-sep"></span><span class="who" title=""><span class="who-kind"></span><span class="who-label"></span><span class="who-id"></span><span class="who-host"></span></span>`)
+    `<span class="grip" title="Move">${GRIP}</span><span class="status"></span><span class="count"></span><span class="sep"></span><button class="btn-pick" title="Pick element (P)">${ICON_PICK}<span>Pick</span></button><button class="btn-draw" title="Freeform region (F)">${ICON_DRAW}<span>Freeform</span></button><span class="sep who-sep"></span><span class="who" title=""><span class="who-kind"></span><span class="who-label"></span><span class="who-id"></span><span class="who-wake"></span><span class="who-host"></span></span>`)
   const hl = el('div', 'hl', '<span class="chip"></span>')
   const draw = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   draw.setAttribute('class', 'draw')
@@ -61,6 +61,9 @@
   // stays the agent's job; this is a peek, in the composer's midnight language.
   const queue = el('div', 'queue', '<div class="q-head"></div><div class="q-list"></div>')
   const whoMenu = el('div', 'who-menu', '<div class="q-head">Switch session</div><div class="w-list"></div>')
+  // status hint: a click on the (otherwise mute) status dot explains the CURRENT
+  // state and what to do — „kein Agent → tippe /nudge", „Bridge weg", „Pull: weiter"
+  const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
   // DIN Var, self-contained: @font-face cannot load from a shadow-root adopted
@@ -117,6 +120,7 @@
     placeFeed()
     if (queue.classList.contains('on')) trackPopover(queue)
     if (whoMenu.classList.contains('on')) trackPopover(whoMenu)
+    if (statusMenu.classList.contains('on')) trackPopover(statusMenu)
   }
   // the feedback chips live directly under the toolbar and track it (the pill
   // moves) — left-aligned to the pill, capped to its width so they sit tidily
@@ -635,8 +639,11 @@
     }
     try {
       const id = await postPin(payload)
-      // the moment of truth: tell Gerald whether an agent is LIVE on this prompt
+      // the moment of truth: tell Gerald what actually happens to this prompt.
+      // A pull owner (CLI) is live but won't START on its own — say so, or the
+      // green icon's „agent working" would be a lie (Gerald: Nudges „kommen nicht an").
       if (!payload.text) notify('check', `${id} marked`)
+      else if (agentLive && agentWake === 'pull') notify('clock', `${id} erfasst · im Terminal „weiter"`)
       else if (agentLive) notify('send', `${id} — agent working`)
       else notify('clock', `${id} saved — no agent`)
       // team rollout: anonymous pins are useless in a shared store — hint ONCE
@@ -754,7 +761,10 @@
       // a.session (id8) is the un-collidable key: the /nudge arm-report in the
       // chat prints the same id, so Gerald matches chat ↔ dropdown 1:1 even when
       // two sessions share a label
-      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.host, `seit ${sinceAge(a.since)}`, a.session || null].filter(Boolean).join(' · ')
+      // wake mode per row: „Auto" (push/Zed, starts on its own) vs „Pull" (CLI,
+      // comes on the next terminal prompt) — Gerald picks the owner knowing which
+      const wakeTag = a.wake === 'pull' ? 'Pull' : a.wake === 'push' ? 'Auto' : null
+      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.host, wakeTag, `seit ${sinceAge(a.since)}`, a.session || null].filter(Boolean).join(' · ')
       row.innerHTML = '<div class="w-line1"><span class="w-name"></span><span class="w-host"></span></div><div class="w-line2"></div><div class="w-line3"></div>'
       const parts = splitLabel(a.label)
       row.querySelector('.w-name').textContent = (a.owner ? '● ' : '') + parts.name
@@ -782,16 +792,48 @@
   pill.querySelector('.who').addEventListener('click', (e) => {
     e.stopPropagation()
     if (whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
-    hideQueue() // only one popover open at a time
+    hideQueue(); statusMenu.classList.remove('on') // only one popover open at a time
     renderWhoMenu()
     anchorPopover(whoMenu, pill.querySelector('.who'), 460) // 460 = .who-menu width in styles.js
     whoMenu.classList.add('on')
+  })
+
+  // ---------- status hint (click on the status dot) ----------
+  // The dot is honest but mute: a click turns it into a one-line guide for the
+  // CURRENT state. It NEVER arms/wakes from the browser (that's the opt-in fence);
+  // it only tells Gerald what the state means and what to do next.
+  function renderStatusMenu() {
+    const head = statusMenu.querySelector('.q-head')
+    const body = statusMenu.querySelector('.sm-body')
+    const name = agentLabel ? splitLabel(agentLabel).name : '?'
+    if (!wsOk) {
+      head.textContent = 'Bridge nicht erreichbar'
+      body.innerHTML = 'Keine Verbindung zur Bridge. Fokussiere Chrome oder tippe <b>/nudge</b> in einer Zed-Session — beides startet die Bridge.'
+    } else if (!agentLive) {
+      head.textContent = 'Kein Agent aktiv'
+      body.innerHTML = 'Nudges werden gespeichert (die Nummern-Pille ist der Beweis), aber niemand reagiert automatisch. Tippe <b>/nudge</b> in der Zed-Session, die reagieren soll.'
+    } else if (agentWake === 'pull') {
+      head.textContent = `Agent aktiv: ${name} · Pull`
+      body.innerHTML = 'Gespeichert — der Nudge kommt beim nächsten <b>„weiter"</b> im Terminal, nicht von selbst (CLI-Session).'
+    } else {
+      head.textContent = `Agent aktiv: ${name}`
+      body.innerHTML = 'Läuft: neue Nudges starten den Agenten automatisch.'
+    }
+  }
+  pill.querySelector('.status').addEventListener('click', (e) => {
+    e.stopPropagation()
+    if (statusMenu.classList.contains('on')) { statusMenu.classList.remove('on'); return }
+    hideQueue(); whoMenu.classList.remove('on') // only one popover open at a time
+    renderStatusMenu()
+    anchorPopover(statusMenu, pill.querySelector('.status'), 300) // 300 = .status-menu width in styles.js
+    statusMenu.classList.add('on')
   })
 
   // ---------- bridge connection (status dot + live pins) ----------
   let wsOk = false
   let agentLive = false
   let agentLabel = null // which session owns the wake channel (bridge arbiter)
+  let agentWake = null // 'push' = owner auto-wakes (Zed) · 'pull' = surfaces on next prompt (CLI)
   let agents = [] // full roster incl. standby sessions (toolbar dropdown) // a watcher heartbeats the bridge -> prompts get acted on NOW
   // ---------- queue popover (badge click) ----------
   const Q_CLOCK = '<span class="q-dot q-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="q-hand"><path d="M12 6v6l4 2"/></g></svg></span>'
@@ -961,15 +1003,17 @@
   addEventListener('resize', scheduleDots, { passive: true })
   setInterval(() => { if (dots.children.length) positionDots() }, 1500) // SPA re-renders move anchors without scroll
   function showQueue() {
-    whoMenu.classList.remove('on') // only one popover open at a time
+    whoMenu.classList.remove('on'); statusMenu.classList.remove('on') // only one popover open at a time
     renderQueue()
     anchorPopover(queue, pill.querySelector('.count'), 420) // 420 = .queue width in styles.js
     queue.classList.add('on')
   }
   function hideQueue() { queue.classList.remove('on') }
   const onDocPointerDown = (e) => {
-    if (!queue.classList.contains('on')) return
     const path = e.composedPath()
+    // status hint closes on any outside click (independent of the other popovers)
+    if (statusMenu.classList.contains('on') && !path.includes(statusMenu) && !path.includes(pill.querySelector('.status'))) statusMenu.classList.remove('on')
+    if (!queue.classList.contains('on')) return
     if (!path.includes(queue) && !path.includes(pill.querySelector('.count'))) hideQueue()
     if (whoMenu.classList.contains('on') && !path.includes(whoMenu) && !path.includes(pill.querySelector('.who'))) whoMenu.classList.remove('on')
   }
@@ -977,9 +1021,16 @@
 
   function updatePill() {
     const dot = pill.querySelector('.status')
+    // A pull owner (CLI) IS live (heartbeating) but does NOT auto-start on a new
+    // nudge — the icon stays green (honest: an agent owns this host), the TEXT
+    // tells the truth about whether it comes automatically.
+    const pull = agentLive && agentWake === 'pull'
     dot.classList.toggle('ok', wsOk && agentLive)
     dot.classList.toggle('half', wsOk && !agentLive)
-    dot.title = !wsOk ? 'Bridge unreachable' : (agentLive ? `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'}` : 'Bridge up — no agent (nudges are stored)')
+    dot.title = !wsOk ? 'Bridge unreachable'
+      : !agentLive ? 'Bridge up — no agent (nudges are stored)'
+      : pull ? `Erfasst — ${agentLabel ? splitLabel(agentLabel).name : '?'} (CLI): im Terminal „weiter" tippen, dann kommt der Nudge`
+      : `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'} (kommt automatisch)`
     // session label + this tab's localhost IN the toolbar (Gerald: always know
     // which agent reacts AND which localhost this is)
     const who = pill.querySelector('.who')
@@ -992,6 +1043,13 @@
     // the /nudge arm-report prints, so Gerald matches chat ↔ toolbar at a glance
     const ownerAgent = agents.find(a => a.owner)
     who.querySelector('.who-id').textContent = owner && ownerAgent?.session ? ownerAgent.session : ''
+    // honest wake mode right in the toolbar: „Pull" (amber, needs your action)
+    // for a CLI owner, nothing for an auto-waking Zed owner — green must not imply
+    // „kommt automatisch" when it doesn't (Gerald: Nudges „kommen nicht an" im CLI)
+    const wakeTag = who.querySelector('.who-wake')
+    wakeTag.textContent = pull ? 'Pull' : ''
+    wakeTag.title = pull ? 'CLI-Session: Nudge ist gespeichert, kommt beim nächsten „weiter" im Terminal' : ''
+    wakeTag.style.display = pull ? 'inline-block' : 'none'
     // the localhost as a clean pill (from the label's :PORT suffix), never inline in the name
     who.querySelector('.who-host').textContent = owner?.port ? `localhost:${owner.port}` : ''
     who.title = showWho ? 'Switch session — pick which agent gets your nudges' : ''
@@ -1026,8 +1084,10 @@
           agentLive = !!msg.agentLive
           if (agentLive && msg.agentLabel && msg.agentLabel !== agentLabel) { const s = splitLabel(msg.agentLabel); notify('check', `Agent: ${s.name}`, s.port ? `localhost:${s.port}` : '') }
           agentLabel = agentLive ? msg.agentLabel || null : null
+          agentWake = agentLive ? (msg.agentWake || null) : null
           agents = msg.agents || []
           if (whoMenu.classList.contains('on')) renderWhoMenu() // live refresh
+          if (statusMenu.classList.contains('on')) renderStatusMenu() // live refresh: arm/disarm reflects at once
           acceptPins(msg.pins)
         }
         if (msg.type === 'capture-after') captureAfter(msg.pin)
@@ -1061,6 +1121,7 @@
   // ---------- global listeners ----------
   const isEditable = (el) => !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
   const onDocKeyDown = (e) => {
+    if (e.key === 'Escape' && statusMenu.classList.contains('on')) { statusMenu.classList.remove('on'); return }
     if (e.key === 'Escape' && whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
     if (e.key === 'Escape' && queue.classList.contains('on')) { hideQueue(); return }
     if (e.key === 'Escape' && mode !== 'off') { setMode('idle'); return }
@@ -1070,7 +1131,7 @@
     if (mode === 'off' || mode === 'composing') return
     if (e.metaKey || e.ctrlKey || e.altKey) return
     if (isEditable(e.target) || isEditable(document.activeElement)) return
-    if (whoMenu.classList.contains('on') || queue.classList.contains('on')) return
+    if (whoMenu.classList.contains('on') || queue.classList.contains('on') || statusMenu.classList.contains('on')) return
     const k = e.key.toLowerCase()
     if (k === 'p') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'picking' ? 'idle' : 'picking') }
     else if (k === 'f') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'drawing' ? 'idle' : 'drawing') }
@@ -1095,6 +1156,7 @@
     if (mode === 'composing') widgets.push(composer)
     if (queue.classList.contains('on')) widgets.push(queue)
     if (whoMenu.classList.contains('on')) widgets.push(whoMenu)
+    if (statusMenu.classList.contains('on')) widgets.push(statusMenu)
     for (const w of widgets) {
       const r = w.getBoundingClientRect()
       if (r.width && x >= r.left - MOAT && x <= r.right + MOAT && y >= r.top - MOAT && y <= r.bottom + MOAT) return true
