@@ -134,8 +134,10 @@ self-healing, UserPromptSubmit = current mark as context, opt-in per session).
    an element → prompt + ↩ (Shift+↩ = newline; empty ↩ = numbered mark —
    reference it in Zed as „Nudge 123 macht das").
 3. Agent side: type `/nudge` in the Zed session that should own the channel —
-   it arms the watcher, reports which localhost it owns, and processes prompts
-   oldest-first; resolve via `POST /comments/<id>/resolve` after the verified
+   optionally with a name (`/nudge Login-Redesign`), which becomes the `Agent:`
+   label in the toolbar; without one the agent derives it from the session's
+   topic. It arms the watcher, reports which localhost it owns, and processes
+   prompts oldest-first; resolve via `POST /comments/<id>/resolve` after the verified
    fix. With parallel dev servers, pick the owner per localhost in the
    toolbar's Switch-session dropdown.
 

@@ -121,6 +121,18 @@ always visible, in both directions:
   mid-stream owner change never re-attributes an existing nudge. Trade-off: a
   nudge on an UNassigned host falls back to the newest armed session — with
   parallel servers you pick the owner once per localhost.
+- **A page reload keeps the work, not necessarily the anchor** (0.23.0). The
+  agent edits code while Gerald types; the dev server reloads the tab and no
+  content script can survive a navigation. The working state (draft text,
+  markings, toolbar position and mode, History popover, half-typed follow-ups)
+  is therefore snapshotted into `sessionStorage` — per tab, per origin, dies with
+  the tab — and rebuilt on the next load; every mark carries its context frozen
+  at pick time. What cannot be guaranteed is the live DOM node: the restore looks
+  for it for 6s (selector, then an identity-checked xpath, so a re-render never
+  hands the mark a stranger), and if the app does not render it again the nudge
+  keeps the frozen context and says „Element weg". Gerald's own framing of the
+  acceptable worst case: „im Worst Case einfach nur die Nudges verloren, die
+  gerade an irgendeinem DOM-Element gehangen wären".
 - **Source hints are generic, not resolved.** data-* attributes where frameworks
   provide them, selector/xpath/text otherwise; mapping to code stays the agent's
   job (it has the repo). No server-side sourcemap machinery.

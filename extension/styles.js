@@ -391,6 +391,9 @@
       letter-spacing: .02em;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    /* the marked element did not come back after a page reload — the nudge keeps
+       its frozen context, the meta line says so. Status colour, nothing else. */
+    .composer .meta.lost { color: ${AMBER}; }
     .composer textarea {
       width: 100%; border: 0; outline: 0; resize: none; padding: 13px 14px;
       font-size: 13px; line-height: 1.5; min-height: 78px; max-height: 210px; overflow-y: auto;

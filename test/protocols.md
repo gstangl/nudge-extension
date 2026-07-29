@@ -37,6 +37,12 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   Shift+Klick collects elements into ONE mark from BOTH entry paths (Shift on the
   first click, or a plain pick extended afterwards), toggles off, keeps the typed
   text, and isn't eaten by the moat. Run after any pick/mode/moat change.
+- `node test/reload-resilience.mjs` — **Suite Q (Reload resilience)**, page server
+  5196, extension re-pointed to the DEAD port 4799: the dev server reloads the tab
+  under Gerald's hands — toolbar, composer draft and Shift-collected set come back,
+  a late-hydrating element is found again, and a mark whose element is gone keeps
+  its frozen context instead of silently re-anchoring. Run after any change to the
+  session snapshot, the pick context or the composer lifecycle.
 - `node test/amend.mjs` — **Suite N (Amend)**, side port 4788: append-only
   follow-ups to an open nudge — original immutable + inbox mirror, order,
   resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
@@ -433,6 +439,33 @@ The lesson for new interaction legs: cover both ENTRY PATHS, not just the state.
 Suite A tested multi-selection and passed for months — it only ever entered via
 Shift-on-first-click, the path that happened to work.
 
+## Suite Q — Reload resilience (reload-resilience.mjs)
+
+The agent edits code while Gerald is mid-thought; the dev server reloads the tab
+and the content script dies with the half-written nudge inside it (Gerald
+2026-07-29: „ich verliere gerade, was ich machen wollte"). A content script
+cannot survive a navigation, so the working state is snapshotted into
+sessionStorage (per tab, per origin) and rebuilt on the next load. The contract
+under test is asymmetric on purpose: the TEXT always comes back, the DOM anchor
+only if the app renders that element again. Hermetic: own page server on 5196,
+extension re-pointed to the dead port 4799 (no fetch can reach the live bridge).
+
+| # | Guards | Last |
+|---|--------|------|
+| Q1 | Composer draft + target survive a page reload | ✅ 2026-07-29 |
+| Q2 | The restored mark snaps back onto its live element (highlight within 3px) | ✅ 2026-07-29 |
+| Q3 | An element rendered ~1s after load is found inside the retry window | ✅ 2026-07-29 |
+| Q4 | Element gone for good: text kept, anchor honestly reported („Element weg") | ✅ 2026-07-29 |
+| Q5 | Such a mark still SENDS (frozen context, queued offline, no crash) | ✅ 2026-07-29 |
+| Q6 | Escape before the reload leaves nothing to restore (no zombie draft) | ✅ 2026-07-29 |
+| Q7 | A Shift-collected set of elements survives the reload | ✅ 2026-07-29 |
+
+Q4 earned its place on the first run: the mark on `#alpha` did not report a lost
+anchor — it had silently re-anchored onto `#beta`, because the structural xpath
+is POSITIONAL and `/div[1]` simply resolves to whoever moved up. A stranger under
+the composer's tip is worse than an honest „Element weg", so the xpath fallback
+now has to prove identity (tag, id, and — idless — the visible text).
+
 ## Suite N — Amend (amend.mjs)
 
 Append-only follow-ups (0.19.0). Gerald sends a nudge, then wants to add one more
@@ -474,6 +507,16 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
   native host owns the lifecycle. Re-add a drill only if multi-bridge returns.
 
 ## Run log
+
+- **2026-07-29 — Reload resilience (0.22.0): Suite Q 7/7 NEW, plus A · L · M · N
+  · O · P all green** (they cover everything the change touched: pick context,
+  composer lifecycle, moat, amend field, selection publishing). Finding on the
+  first Q run, fixed before landing: the xpath re-locator re-anchored a mark onto
+  the neighbouring element instead of reporting the loss (see Suite Q). Second
+  finding, from reading the capture path while wiring the snapshot: `captureRegion`
+  hid the composer and never restored it — the bridge-triggered after-shot could
+  therefore make Gerald's OPEN input field vanish mid-sentence whenever some other
+  nudge on the page got resolved.
 
 - **2026-07-05 — Multi-selection (0.8.0): Suite A 9/9 + Suite B 5/5.** Two
   findings fixed on the way: (1) the WS-snapshot "evidence backlog" path still
