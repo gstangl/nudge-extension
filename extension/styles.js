@@ -227,6 +227,14 @@
     .queue .q-hand { transform-box: view-box; transform-origin: 50% 50%; }
     .queue .q-row.live .q-hand { animation: q-sweep 4s linear infinite; }
     @keyframes q-sweep { to { transform: rotate(360deg) } }
+    /* the two numbers of a nudge, side by side and weighted by what they are FOR:
+       #47 is what Gerald reads off the pill and says out loud, so it leads and is
+       legible; nudge_1046 is the identity behind it (files, commits) and stays a
+       muted footnote. Same order and same pair as the inbox heading. */
+    .queue .q-num {
+      font-family: ${MONO}; font-size: 10px; line-height: 18px; flex: none;
+      color: rgba(242,239,234,.78); font-variant-numeric: tabular-nums;
+    }
     .queue .q-id { font-family: ${MONO}; font-size: 10px; line-height: 18px; color: rgba(242,239,234,.45); flex: none; }
     .queue .q-text { flex: 1; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* owning agent session (immutable per nudge) — a muted tag so provenance
@@ -299,7 +307,9 @@
 
     /* open-prompt pills: one readable NUMBER pill per marked element while its
        prompt is open — the number is the chat referent („Nudge 123 macht das"),
-       clock keeps the status language (sweep = agent live). Click opens the queue. */
+       clock keeps the status language (sweep = agent live). Click opens the queue.
+       The number is the bounded LABEL (max 3 digits, see store.mjs), never the
+       raw id — the pill must stay this narrow after ten thousand nudges. */
     .dots { position: fixed; left: 0; top: 0; width: 0; height: 0; }
     .dot {
       position: fixed; height: 18px; border-radius: 999px;

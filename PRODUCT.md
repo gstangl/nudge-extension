@@ -17,7 +17,10 @@ element (or circle a region) in the running UI, say what you want, and the
 agent in Zed acts on it with full context: selector, xpath, text, styles,
 console (and a screenshot for region marks). Open prompts stay subtly visible
 as number pills — the number is what you reference in Zed („Nudge 123 macht
-das"); everything else is fire-and-forget.
+das"); everything else is fire-and-forget. The pill number is deliberately
+BOUNDED (wraps at 999, so it never grows into an unreadable id) and only has to
+be unique among the handful of open prompts; the id behind it counts up forever
+and is what files, commits and the CHANGELOG cite.
 
 ## Why "Nudge" (renamed from "Pin", 2026-07-05)
 

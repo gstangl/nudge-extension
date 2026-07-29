@@ -83,6 +83,23 @@ const emit = (kind, pin) => { for (const fn of listeners) fn(kind, pin) }
 export const getPins = () => load().pins
 export const getPin = (id) => load().pins.find(p => p.id === id)
 
+// ---------- display label vs id (two jobs, deliberately split) ----------
+// The ID is storage identity: filenames (inbox/nudge_N.md, shots/nudge_N.png),
+// watcher dedup, provenance in CHANGELOG and commits. It must NEVER be reused —
+// a manual seq reset did exactly that on 2026-07-04 and every recycled id was
+// silently swallowed (see addPin). So it counts up forever and gets long.
+// The LABEL is the other job: the number Gerald reads off the pill and types in
+// chat („Nudge 47 macht das"). That one only has to be unique among what is
+// OPEN — one to five items — so it may wrap: nudge_1000 shows as 1. 999 slots
+// is ~11 weeks at Gerald's rate, far longer than a number stays on screen, so a
+// label he read minutes ago can never have moved to a different nudge.
+// Derived, never stored: no second counter that could drift out of sync.
+const LABEL_POOL = 999
+export function labelOf(id) {
+  const n = Number(String(id).replace(/^(?:pin|nudge)_/, ''))
+  return Number.isFinite(n) && n > 0 ? ((n - 1) % LABEL_POOL) + 1 : 0
+}
+
 // EVERY client field is untrusted input. The extension sends bounded data, but
 // the bridge must stay healthy no matter what posts on the port: an uncapped
 // url/target/outerHTML would bloat store.json, and every load/persist/broadcast
@@ -299,7 +316,7 @@ export function pruneResolved(maxAgeMs = 7 * 24 * 3600e3) {
 // ---------- projections (one per consumer, together on purpose) ----------
 /** HTTP GET /comments — structured summary for scripts/tools. */
 export function pinSummary(p) {
-  return { id: p.id, status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
+  return { id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
 }
 // speaking label for text-less prompts — same wording as the extension queue
 // (label parity: browser and agent describe a mark identically)
@@ -316,12 +333,15 @@ export function pinLine(p) {
   })()
   const text = !p.text ? `[${markLabel(p)} — "das hier"]` : (p.text.length > 80 ? `${p.text.slice(0, 80)}…` : p.text)
   const n = p.targets?.length ? ` · ${p.targets.length} Elemente` : ''
-  return `${p.id} · ${p.status} · ${text}${n} · ${route}`
+  // id first (that is what commits and the inbox use), label in brackets — the
+  // agent needs both to map „Nudge 47" onto the file it has to open
+  return `${p.id} (#${labelOf(p.id)}) · ${p.status} · ${text}${n} · ${route}`
 }
 /** WS push — what the extension needs for badge, queue popover + open-prompt dots. */
 export function pinForClient(p) {
   return {
-    id: p.id, status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
+    // label = the short number on the pill; id stays the identity behind it
+    id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
     amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // Gerald's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     target: {
@@ -350,5 +370,7 @@ function writeInboxMirror(pin) {
     ? '\n' + pin.amendments.map(a => `\n> **Nachtrag${a.at ? ` (${a.at.slice(11, 16)})` : ''}:** ${a.text}`).join('') + '\n'
     : ''
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
-    `# ${pin.id} - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
+    // heading carries BOTH: the id (this file's name, what commits cite) and the
+    // label Gerald saw on the pill — so „Nudge 47" is greppable back to nudge_1047
+    `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
 }

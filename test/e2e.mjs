@@ -10,7 +10,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension') // override = bisect against a copy
 const STORE = '/tmp/pin-e2e-store'
 fs.rmSync(STORE, { recursive: true, force: true })
 

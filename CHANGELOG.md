@@ -5,6 +5,102 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.21.6 — 2026-07-29 (Shift+Klick sammelt wieder — egal wie die Auswahl begann)
+
+### Fixed
+- **Mehrfachauswahl per Shift+Klick ging „nicht zuverlässig"** (Gerald) — sie hing
+  daran, WIE die Auswahl begonnen hatte. Mit gehaltenem Shift schon beim ERSTEN
+  Klick lief alles (dieser Pfad setzt `mode` selbst auf `picking` zurück); ein
+  normaler Klick zuerst öffnete den Composer, ließ `mode` auf `composing` — und
+  jeder weitere Klick fiel oben in `onClick` heraus. Der Platzhalter im Composer
+  verspricht „⇧click add element", der Code hielt es nur auf einem von zwei Wegen.
+  Shift erweitert jetzt auch eine Auswahl, die als einzelner Pick begann: das
+  bereits Markierte wird als erstes Element in die Sammlung übernommen, der
+  getippte Text bleibt stehen. Regionen (Lasso) bleiben außen vor — dort gibt es
+  kein Element zum Sammeln.
+- **Der Moat schluckte genau den Shift-Klick, den Gerald brauchte.** Der Composer
+  öffnet BESIDE der Marke, das nächste gewünschte Element liegt damit oft im
+  12px-Schutzsaum, der Fehlklicks beim Griff zur Toolbar absorbiert (0.18.2). Für
+  ein Shift+Klick gilt die Prämisse des Moats nicht — niemand greift mit
+  gehaltenem Shift zur Toolbar —, also lässt er diese Geste beim Erweitern durch.
+  Suite M (Moat gegen echte Fehlklicks) bleibt unangetastet grün.
+
+### Added
+- **Suite P (Multi-selection)** (`test/multi-select.mjs`, 8 Legs): beide
+  Einstiegswege, Toggle-off, getippter Text überlebt das Erweitern, Moat frisst
+  die Geste nicht, Region bleibt Region. Der Fund war vorher auf einer nackten
+  Testseite unsichtbar, weil die bestehenden Suiten nur den Shift-zuerst-Pfad
+  abdeckten — genau die Lücke, durch die der Fehler monatelang lief.
+
+## 0.21.6 — 2026-07-29 (Die Nummer bleibt kurz — Pillennummer getrennt von der id)
+
+### Changed
+- **Die Nummer auf der Pille wächst nicht mehr ins Unlesbare.** Gerald: „momentan
+  zählt alles unendlich nach oben". Die Nummer machte bisher zwei Jobs auf einmal:
+  Identität (Dateinamen, Watcher-Dedup, Provenance in Commits) und Referenz (was
+  Gerald von der Seite abliest und in den Chat tippt). Nur der zweite Job hat ein
+  Größenproblem — also getrennt statt zurückgesetzt:
+  - **id** (`nudge_1046`) bleibt exakt wie sie war: ewig monoton, nie
+    wiederverwendet. Ein Reset beim Neustart wäre genau der Bug vom 2026-07-04
+    gewesen (recycelte ids werden vom Watcher still verschluckt, siehe `addPin`),
+    dazu überschriebene `inbox/`- und `shots/`-Dateien. Der Store ist global über
+    alle Projekte, es können mehrere Bridges laufen — „Neustart" ist gar keine
+    saubere Grenze.
+  - **Label** (`#47`) ist neu und wird angezeigt: `((n - 1) % 999) + 1`, also
+    1…999, `nudge_1000` → `#1`. Abgeleitet, nie gespeichert — kein zweiter Zähler,
+    der aus dem Tritt geraten kann. 999 Plätze sind ~11 Wochen; eine Nummer, die
+    Gerald vor Minuten gelesen hat, kann unmöglich schon weitergewandert sein.
+  Beide Nummern stehen überall dort zusammen, wo Platz ist: Inbox-Überschrift
+  (`# nudge_1046 (#47) - open`), Queue-Zeile im Hook (`#47 (nudge_1046) · …`),
+  `pinLine`, und im Queue-Popover die id als Tooltip auf der Zeilennummer.
+  Commits und CHANGELOG zitieren weiterhin die **id** — nur die ist dauerhaft
+  greppbar (Regel steht jetzt in der Skill, §4b).
+- **Referenz-Auflösung im Hook priorisiert das, was Gerald sieht.** Eine getippte
+  Zahl ist zuerst ein Label unter den OFFENEN Nudges, erst danach eine rohe id.
+  Nach dem Umbruch bei 999 können beide gleich aussehen — dann gewinnt der offene
+  Nudge auf dem Bildschirm gegen ein längst resolvedes `nudge_47` von vor elf
+  Wochen. Unterhalb 999 sind beide Regeln identisch, für heutige ids ändert sich
+  also nichts.
+
+### Added
+- **Referenz über den Elementtext** („mach den Abbrechen-Button grün" trifft den
+  offenen Nudge auf genau diesem Button). Gerald schaut auf die Seite, nicht auf
+  Nummern. `innerText` liegt ohnehin im Store. Bewusst eng gefasst — der Hook
+  läuft in JEDEM Prompt in JEDEM Projekt, ein Fehlgriff würde fremden Kontext
+  einspielen: nur offene Nudges, nur button-/label-große Texte (5…40 Zeichen,
+  nicht rein numerisch), wortgrenzen-genau, nur bei GENAU EINEM Treffer, und nur
+  wenn keine Nummer genannt wurde (eine genannte Nummer ist immer die bessere
+  Antwort).
+- **Unit-Tests für den Split** (`test/unit/store.test.mjs`, 5 neue Fälle): Umbruch
+  auf 1…999 inklusive `nudge_1000` → 1, `pin_`-Altpräfix und Müll-id, ein voller
+  Zyklus ist kollisionsfrei (Bijektion), Label in allen Projektionen, beide
+  Nummern in der Inbox-Überschrift.
+
+## 0.21.4 — 2026-07-29 (Escape räumt wieder auf — Tastatur erreicht Nudge zuerst)
+
+### Fixed
+- **Escape ließ die Markierung stehen** (Gerald: „wenn ich Escape drücke, sollten
+  die Markierungen wieder verschwinden") — und dieselbe Ursache legte still auch
+  die **P/F-Tastenkürzel** lahm. Der Keydown-Listener hing auf `document`-Capture;
+  Dialog-/Dropdown-Bibliotheken (Radix, Headless UI, `@roots/ui`) behandeln Escape
+  auf **window**-Capture und stoppen die Propagation, solange ihre Ebene offen ist
+  — einen Hop weiter unten kam die Taste nie an. Auf einer nackten Testseite war
+  alles grün, auf den echten Apps blieben Highlight, Shift-Outlines, Lasso und
+  Composer stehen. Gleiche Lektion wie beim Moat (0.18.2): auf `window`-Capture
+  verschoben, den ersten Hop. Escape wird dabei NICHT geschluckt — die Seite
+  schließt ihren eigenen Dialog weiterhin mit demselben Tastendruck.
+  Assertion: Suite O.
+
+### Added
+- **Suite O (Escape clears marks)** (`test/escape-clear.mjs`, 7 Legs): macht den
+  Fund zur Dauer-Regression — saubere Seite (Pick / Shift-Multi / Lasso), feindliche
+  Seite (window- und document-Capture-Schlucker), P/F unter einer tastatur-
+  greifenden Seite, und die Propagations-Neutralität von Escape. Hält nebenbei die
+  zwei Asymmetrien fest, die man leicht verwechselt: über **Knoten** hinweg gewinnt
+  der frühere Listener (nur Hochziehen hilft), auf dem **gleichen** Knoten kommt
+  eine Seite nicht an uns heran (`stopImmediatePropagation` überquert die isolierte
+  Welt des Content-Scripts nicht).
+
 ## 0.21.3 — 2026-07-21 (Status-Punkt erklärt sich per Klick)
 
 ### Added

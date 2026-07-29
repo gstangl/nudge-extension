@@ -66,8 +66,11 @@ extension/  Chrome MV3, load unpacked (styles.js = shadow-DOM CSS, content.js =
               screenshot, polyline stored as annotation)
             - FIRE-AND-FORGET: a sent prompt leaves NOTHING on the page except
               a readable NUMBER pill per open prompt (the number is the chat
-              referent: „Nudge 123 macht das"). Feedback = feed chips under
-              the toolbar + badge + status dot (grey/red/amber/green)
+              referent: „Nudge 123 macht das"). The pill number is BOUNDED —
+              it wraps at 999, so it stays short forever, while the id behind
+              it (nudge_1046, used for files and commits) counts up and is
+              never reused. Feedback = feed chips under the toolbar + badge +
+              status dot (grey/red/amber/green)
             - RESOLVE WITH EVIDENCE (invisible): resolve triggers an
               after-screenshot of the same region in the open browser
             - offline queue: bridge down → the prompt parks in chrome.storage
