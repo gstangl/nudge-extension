@@ -105,6 +105,7 @@
     if (next !== 'composing') { composer.style.display = 'none'; picked = null; clearStroke(); clearMulti() }
     document.documentElement.style.cursor = next === 'picking' ? 'crosshair' : ''
     updatePill() // toolbar icon reflects on/off
+    saveSnap() // leaving the composer also CLEARS the restore point (see below)
   }
   btnPick.addEventListener('click', () => setMode(mode === 'picking' ? 'idle' : 'picking'))
   btnDraw.addEventListener('click', () => setMode(mode === 'drawing' ? 'idle' : 'drawing'))
@@ -172,6 +173,7 @@
     grip.classList.remove('dragging')
     const r = pill.getBoundingClientRect()
     chrome.storage.local.set({ nudgePillPos: { x: r.left, y: r.top } })
+    saveSnap() // same position on the next load, WITHOUT waiting for storage
   })
   addEventListener('resize', () => { // keep the pill inside the viewport
     const r = pill.getBoundingClientRect()
@@ -279,7 +281,9 @@
   // Shift collects elements into ONE mark/prompt ("tausche diese beiden");
   // a plain click resets to single mode. Outlines are transient — they exist
   // only while composing (fire-and-forget: nothing survives the send/Esc).
-  let multi = [] // [{ el, selector, source, outline }]
+  // `el`/`outline` are null for an entry restored after a page reload until its
+  // element is found again (see relocate) — `frozen` always holds the context.
+  let multi = [] // [{ el, selector, source, frozen, outline }]
   function multiOutlineFor(el) {
     const o = document.createElement('div')
     o.className = 'hl-multi'
@@ -288,22 +292,25 @@
   }
   function repositionMulti() {
     for (const m of multi) {
+      if (!m.el || !m.outline) continue // restored but not relocated yet
       const r = m.el.getBoundingClientRect()
       Object.assign(m.outline.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' })
     }
   }
   function clearMulti() {
-    for (const m of multi) m.outline.remove()
+    for (const m of multi) m.outline?.remove()
     multi = []
     removeEventListener('scroll', repositionMulti, true)
     removeEventListener('resize', repositionMulti)
   }
+  function trackMulti() { addEventListener('scroll', repositionMulti, true); addEventListener('resize', repositionMulti) }
   function addToMulti(el) {
     const i = multi.findIndex(m => m.el === el)
-    if (i >= 0) { multi[i].outline.remove(); multi.splice(i, 1) } // shift on selected = toggle off
+    if (i >= 0) { multi[i].outline?.remove(); multi.splice(i, 1) } // shift on selected = toggle off
     else {
-      if (multi.length === 0) { addEventListener('scroll', repositionMulti, true); addEventListener('resize', repositionMulti) }
-      multi.push({ el, selector: cssPath(el), source: sourceHint(el), outline: multiOutlineFor(el) })
+      if (multi.length === 0) trackMulti()
+      const selector = cssPath(el), source = sourceHint(el)
+      multi.push({ el, selector, source, frozen: elementContext(el, selector, source), outline: multiOutlineFor(el) })
     }
     repositionMulti()
   }
@@ -360,11 +367,16 @@
       if (!multi.length && picked?.el && !picked.stroke) addToMulti(picked.el)
       addToMulti(t)
       if (!multi.length) { setMode('idle'); return } // toggled the last one away
-      picked = { el: multi[0].el, rect: multi[0].el.getBoundingClientRect(), selector: multi[0].selector, source: multi[0].source }
+      // lead = the first entry with a LIVE element; after a reload-restore the
+      // head of the set can be an element the app never rendered again — keep the
+      // restored mark as the anchor then instead of dereferencing a null.
+      const lead = multi.find(m => m.el)
+      if (lead) picked = { el: lead.el, rect: lead.el.getBoundingClientRect(), selector: lead.selector, source: lead.source, frozen: lead.frozen }
       postSelection(null, { keepShot: false })
       if (composer.style.display !== 'block') openComposer(picked.rect)
       multiMeta()
       mode = 'picking' // keep collecting despite the open composer
+      saveSnap()
       return
     }
     clearMulti() // plain click resets any active multi-selection to a single pick
@@ -378,16 +390,21 @@
   }
   function retarget(node, chain) {
     const fromChip = !!picked && !chain
+    const selector = cssPath(node), source = sourceHint(node)
     picked = {
       el: node, chain: chain || picked?.chain,
-      rect: node.getBoundingClientRect(), selector: cssPath(node), source: sourceHint(node),
+      rect: node.getBoundingClientRect(), selector, source,
+      // context FROZEN at pick time: the mark survives a page reload even when
+      // the element behind it does not (see the reload-resilience section)
+      frozen: elementContext(node, selector, source),
     }
     highlight(picked.rect)
-    composer.querySelector('.meta').textContent = picked.source || picked.selector
+    renderMeta()
     renderLayerChips()
     // chip switch = the mark changed; update the selection (no new screenshot —
     // the pick-time crop with padding covers the ancestor region well enough)
     if (fromChip) postSelection(null)
+    saveSnap()
   }
   // publish "what is marked right now" to the bridge (latest-wins, fire-and-forget).
   // keepShot: false marks prior screenshots stale (fresh pick, new shot incoming);
@@ -402,7 +419,11 @@
       styles: pickStyles(el),
     }
   }
-  const multiTargets = () => multi.length > 1 ? multi.map(m => elementContext(m.el, m.selector, m.source)) : undefined
+  // context of a mark: LIVE when the element is on the page, otherwise the copy
+  // frozen at pick time (a reload can take the element with it — the nudge keeps
+  // everything the agent needs either way)
+  const contextOf = (t) => (t.el ? elementContext(t.el, t.selector, t.source) : (t.frozen || { selector: t.selector, source: t.source }))
+  const multiTargets = () => multi.length > 1 ? multi.map(contextOf) : undefined
 
   function postSelection(shot, { keepShot = true } = {}) {
     const t = picked
@@ -412,11 +433,7 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: location.href, title: document.title,
-        selector: t.selector, source: t.source,
-        xpath: t.el ? xpathOf(t.el) : null,
-        innerText: textOf(t.el),
-        outerHTML: t.el?.outerHTML?.slice(0, 1200) || '',
-        styles: t.el ? pickStyles(t.el) : null,
+        ...contextOf(t),
         targets: multiTargets(),
         rect: { x: r.left, y: r.top, w: r.width || (r.right - r.left), h: r.height || (r.bottom - r.top) },
         viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
@@ -473,8 +490,10 @@
     // context: topmost real element at the lasso centroid
     const cx = bbox.left + bbox.width / 2, cy = bbox.top + bbox.height / 2
     const centerEl = elAt(cx, cy) || document.body
+    const selector = cssPath(centerEl), source = sourceHint(centerEl)
     picked = {
-      el: centerEl, rect: bbox, selector: cssPath(centerEl), source: sourceHint(centerEl),
+      el: centerEl, rect: bbox, selector, source,
+      frozen: elementContext(centerEl, selector, source),
       stroke: strokePts.map(([x, y]) => [Math.round(x), Math.round(y)]),
     }
     // the circled region is the mark, send stays optional (same as element picks)
@@ -487,15 +506,20 @@
   })
 
   // ---------- composer ----------
-  function openComposer(anchorRect) {
-    mode = 'composing'
-    document.documentElement.style.cursor = ''
-    btnPick.classList.remove('active'); btnDraw.classList.remove('active')
-    draw.classList.remove('on')
-    composer.querySelector('.meta').textContent = (picked.stroke ? 'Region · ' : '') + (picked.source || picked.selector)
-    if (picked.stroke) layersRow.style.display = 'none'
-    else renderLayerChips()
-    // place BESIDE the mark, tip pointing back at it (right side preferred)
+  // WHAT is marked — and, after a reload, whether the live element behind the
+  // mark was found again. „suche Element" while the app is still re-rendering,
+  // „Element weg" once the search gave up (the nudge then ships the frozen
+  // context — losing the anchor must not cost Gerald the typed thought).
+  function renderMeta() {
+    if (multi.length > 1) return multiMeta()
+    const m = composer.querySelector('.meta')
+    const lost = !!picked && !picked.el && !picked.stroke
+    const tag = picked?.stroke ? 'Region · ' : lost ? (relocating ? 'suche Element · ' : 'Element weg · ') : ''
+    m.textContent = tag + (picked?.source || picked?.selector || '')
+    m.classList.toggle('lost', lost && !relocating)
+  }
+  // place BESIDE the mark, tip pointing back at it (right side preferred)
+  function placeComposer(anchorRect) {
     const W = 340, GAP = 14
     const fitsRight = anchorRect.right + GAP + W <= window.innerWidth - 8
     const left = fitsRight ? anchorRect.right + GAP : Math.max(8, anchorRect.left - W - GAP)
@@ -506,16 +530,27 @@
     const tipY = Math.min(Math.max(16, anchorRect.top + h / 2 - top - 6), 150)
     composer.style.setProperty('--tip-y', `${tipY}px`)
     Object.assign(composer.style, { display: 'block', left: left + 'px', top: top + 'px' })
+  }
+  function openComposer(anchorRect) {
+    mode = 'composing'
+    document.documentElement.style.cursor = ''
+    btnPick.classList.remove('active'); btnDraw.classList.remove('active')
+    draw.classList.remove('on')
+    renderMeta()
+    if (picked.stroke || multi.length > 1) layersRow.style.display = 'none' // layer chips are a single-pick affordance
+    else renderLayerChips()
+    placeComposer(anchorRect)
     ta.value = ''
     ta.style.height = 'auto' // reset any grown height from a previous compose
     ta.focus()
+    saveSnap()
   }
   composer.querySelector('.cancel').addEventListener('click', () => setMode('idle'))
   composer.querySelector('.send').addEventListener('click', send)
   // grow the textarea with its content up to the CSS max-height (then it scrolls),
   // so a longer nudge is fully visible while typing instead of a fixed peephole
   const autoGrow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
-  ta.addEventListener('input', autoGrow)
+  ta.addEventListener('input', () => { autoGrow(); saveSnap() }) // every keystroke is a candidate last word before a reload
   ta.addEventListener('keydown', (e) => {
     // Enter sends (empty = numbered mark), Shift+Enter inserts a newline —
     // same convention as the History amend input
@@ -543,6 +578,7 @@
       w: Math.min(window.innerWidth, rect.width + 2 * PAD),
       h: Math.min(window.innerHeight, rect.height + 2 * PAD),
     }
+    const composerWas = composer.style.display
     composer.style.display = 'none'
     const pillWas = pill.style.display
     pill.style.display = 'none'
@@ -562,6 +598,12 @@
     hl.classList.remove('instant')
     pill.style.display = pillWas
     dots.style.display = dotsWas
+    // The after-shot (evidence loop) is triggered by the BRIDGE — it can fire
+    // while Gerald is typing into the composer. It used to hide the composer and
+    // never put it back: the agent resolving some other nudge on this page made
+    // the open input field disappear mid-sentence. Restore exactly what was there.
+    composer.style.display = composerWas
+    if (mode === 'composing' && picked && !picked.stroke) highlight(picked.el?.getBoundingClientRect() || picked.rect)
     return out
   }
 
@@ -616,9 +658,10 @@
       r = target.rect // lasso bbox is viewport-stable
     } else {
       // Re-read the rect (page may have scrolled) - but editors like ProseMirror
-      // re-render nodes, leaving the picked element detached (rect = 0/0/0/0).
+      // re-render nodes, leaving the picked element detached (rect = 0/0/0/0);
+      // a mark restored after a page reload may have no element at all.
       // Fallback chain: live element -> re-resolved selector -> pick-time rect.
-      r = target.el.getBoundingClientRect()
+      r = target.el ? target.el.getBoundingClientRect() : target.rect
       if (r.width < 2 && r.height < 2) {
         try {
           const fresh = document.querySelector(target.selector)
@@ -639,7 +682,7 @@
       viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
       ua: navigator.userAgent, // browser/OS for the report (industry-standard context)
       target: {
-        ...elementContext(target.el, target.selector, target.source),
+        ...contextOf(target),
         rect: { x: rect.left, y: rect.top, w: rect.width, h: rect.height },
       },
       targets: multiTargets() || null, // Shift-collected co-targets of ONE prompt
@@ -731,12 +774,20 @@
   // in the page — Gerald must not have to switch to Zed to know it's done
   const knownStatus = new Map()
   let statusSeeded = false
+  // screenshots are data-URLs of megabyte size — the session snapshot keeps the
+  // list WITHOUT them (it only feeds badge, dots and History until the WS answers)
+  const stripShots = ({ screenshot, screenshotAfter, ...p }) => p
   function acceptPins(all) {
     allPins = all
+    pinCache = all.slice(-150).map(stripShots)
     pagePins = all.filter(p => samePage(p.url) && p.status === 'open')
     pageDone = all.filter(p => samePage(p.url) && p.status === 'resolved').slice(-8).reverse()
     updatePill()
     renderDots()
+    // the History popover was open when the reload hit — reopen it, but only on
+    // the first list (never pop it up minutes later out of nowhere)
+    if (queueWanted) { queueWanted = false; if (pagePins.length) showQueue() }
+    saveSnap()
     for (const p of all) {
       if (statusSeeded && knownStatus.get(p.id) === 'open' && p.status === 'resolved' && samePage(p.url))
         notify('check', `${p.id} done`)
@@ -872,6 +923,7 @@
     row.addEventListener('click', () => {
       qExpanded.has(id) ? qExpanded.delete(id) : qExpanded.add(id)
       row.classList.toggle('open', qExpanded.has(id))
+      saveSnap()
     })
   }
   function renderQueue() {
@@ -915,8 +967,8 @@
       row.appendChild(panel)
       panel.addEventListener('click', (e) => e.stopPropagation()) // typing must not toggle the accordion
       const input = panel.querySelector('.q-amend-input')
-      input.addEventListener('input', () => qAmendDraft.set(p.id, input.value))
-      const closeAmend = () => { qAmendDraft.delete(p.id); input.value = ''; row.classList.remove('amending') }
+      input.addEventListener('input', () => { qAmendDraft.set(p.id, input.value); saveSnap() })
+      const closeAmend = () => { qAmendDraft.delete(p.id); input.value = ''; row.classList.remove('amending'); saveSnap() }
       let amSending = false
       const submitAmend = async () => {
         const text = input.value.trim()
@@ -1029,8 +1081,9 @@
     renderQueue()
     anchorPopover(queue, pill.querySelector('.count'), 420) // 420 = .queue width in styles.js
     queue.classList.add('on')
+    saveSnap()
   }
-  function hideQueue() { queue.classList.remove('on') }
+  function hideQueue() { queue.classList.remove('on'); saveSnap() }
   const onDocPointerDown = (e) => {
     const path = e.composedPath()
     // status hint closes on any outside click (independent of the other popovers)
@@ -1290,7 +1343,209 @@
     document.documentElement.appendChild(n)
   }
 
-  setMode('idle') // PoC: overlay visible by default on localhost; Alt+C / toolbar icon toggles
+  // ---------- reload resilience: the working state survives the page reload ----------
+  // The agent edits code WHILE Gerald is mid-thought — the dev server reloads the
+  // tab and the content script dies with the half-written nudge inside it (Gerald
+  // 2026-07-29: „ich verliere gerade, was ich machen wollte"). Nothing in the DOM
+  // survives a navigation, so the WORKING state is snapshotted into sessionStorage
+  // (per TAB and per origin: it dies with the tab, and two tabs on the same route
+  // never restore each other's draft) and rebuilt on the next load.
+  // What CANNOT be rebuilt is the live DOM node behind a mark — the app may
+  // simply not render it again. So every mark carries its context FROZEN at pick
+  // time (selector, xpath, innerText, outerHTML, styles) and the send path uses
+  // that copy when the element is gone. Worst case the ANCHOR is lost and the
+  // composer says so; the typed text never is.
+  const SNAP_KEY = '__rootsNudgeSession'
+  const SNAP_TTL = 6 * 3600e3 // sessionStorage also survives „reopen closed tab" — never restore an ancient draft
+  const RELOCATE_MS = 6000 // how long to keep looking for the element after a reload
+  let queueWanted = false // the History popover was open when the reload hit
+  let relocating = false // searching for the marked element right now
+  let pinCache = [] // last pin list WITHOUT screenshots (those are megabytes)
+  let snapTimer = 0
+
+  function saveSnap() { clearTimeout(snapTimer); snapTimer = setTimeout(saveSnapNow, 200) }
+  function saveSnapNow() {
+    clearTimeout(snapTimer)
+    if (dead) return // orphaned script — the fresh one owns the snapshot
+    // the frozen context is the pick-time copy: cheap to write on every keystroke,
+    // and the right thing to restore (it is what the mark was made of)
+    const c = picked && composer.style.display === 'block' ? {
+      text: ta.value,
+      sel: [ta.selectionStart, ta.selectionEnd],
+      focused: root.activeElement === ta,
+      rect: picked.rect,
+      ctx: picked.frozen || contextOf(picked),
+      stroke: picked.stroke || null,
+      multi: multi.map(m => ({ ctx: m.frozen || contextOf(m) })),
+    } : null
+    const r = pill.style.left ? pill.getBoundingClientRect() : null
+    try {
+      sessionStorage.setItem(SNAP_KEY, JSON.stringify({
+        at: Date.now(), url: location.href, mode, composer: c,
+        pill: r && { x: r.left, y: r.top },
+        queue: { open: queue.classList.contains('on'), expanded: [...qExpanded], amend: [...qAmendDraft] },
+        pins: pinCache, agent: { live: agentLive, label: agentLabel, wake: agentWake, list: agents },
+      }))
+    } catch { /* storage blocked or full — then the draft simply does not survive */ }
+  }
+  addEventListener('pagehide', saveSnapNow) // the last word before the tab goes
+
+  function snapRead() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(SNAP_KEY) || 'null')
+      return s && typeof s === 'object' && Date.now() - s.at < SNAP_TTL ? s : null
+    } catch { return null } // storage blocked, or a payload from an older version
+  }
+
+  // finding the element again: selector first — it is what the pick committed to
+  // and what every other locator path in this script trusts (dots, after-shot,
+  // send) — then the structural xpath, which survives class churn.
+  // The xpath is POSITIONAL, though: with the marked element gone, /div[1] simply
+  // resolves to whatever moved up into its place. Suite Q4 caught exactly that
+  // (a mark on #alpha silently re-anchored onto #beta). A stranger under the
+  // composer's tip is worse than an honest „Element weg" — the frozen context is
+  // still correct and still sends — so the xpath hit must prove its identity:
+  // same tag, same id, and (idless) the same visible text.
+  const tagOfCtx = (ctx) => (/^<([a-z0-9-]+)/i.exec(ctx?.outerHTML || '') || [])[1]?.toLowerCase()
+  const idOfCtx = (ctx) => (/\bid="([^"]*)"/.exec(ctx?.outerHTML || '') || [])[1] || ''
+  function sameish(n, ctx) {
+    const tag = tagOfCtx(ctx)
+    if (tag && n.tagName.toLowerCase() !== tag) return false
+    const id = idOfCtx(ctx)
+    if (id || n.id) return id === n.id // an id is an identity claim on both sides
+    const was = (ctx.innerText || '').trim()
+    return !was || was.slice(0, 60) === textOf(n).slice(0, 60)
+  }
+  function findNode(ctx) {
+    if (!ctx) return null
+    const ok = (n) => n?.nodeType === 1 && n !== host && !host.contains(n)
+    try { const n = document.querySelector(ctx.selector); if (ok(n)) return n } catch { /* selector no longer parses */ }
+    if (!ctx.xpath) return null
+    try {
+      const n = document.evaluate(ctx.xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+      if (ok(n) && sameish(n, ctx)) return n
+    } catch { /* malformed xpath */ }
+    return null
+  }
+  function attachPicked(n) {
+    picked.el = n
+    // the node may have come back via the xpath — then the stored selector is
+    // stale and the nudge must ship one that is true for THIS render
+    let stillTrue = false
+    try { stillTrue = document.querySelector(picked.selector) === n } catch { /* invalid selector */ }
+    if (!stillTrue) picked.selector = cssPath(n)
+    picked.source = sourceHint(n) || picked.source
+    picked.rect = n.getBoundingClientRect()
+    picked.frozen = elementContext(n, picked.selector, picked.source) // refreeze for the NEXT reload
+    if (!picked.stroke) {
+      const chain = [n]
+      let cur = n.parentElement
+      while (cur && cur !== document.body && chain.length < 5) { chain.push(cur); cur = cur.parentElement }
+      picked.chain = chain
+      highlight(picked.rect)
+      if (multi.length < 2) renderLayerChips()
+      placeComposer(picked.rect) // the mark may sit elsewhere now — the tip must point at it again
+    }
+    renderMeta()
+    saveSnap()
+  }
+  function attachMulti(m, n) {
+    m.el = n
+    try { if (document.querySelector(m.selector) !== n) m.selector = cssPath(n) } catch { m.selector = cssPath(n) }
+    m.frozen = elementContext(n, m.selector, m.source)
+    if (!m.outline) m.outline = multiOutlineFor(n)
+    repositionMulti()
+    if (multi.length > 1) multiMeta()
+  }
+  // The app re-renders LATER than this script runs (frameworks hydrate after
+  // document_end), so one lookup would almost always miss. Keep looking and snap
+  // onto the element the moment it is back.
+  function relocate() {
+    const pending = () => (picked && !picked.el ? 1 : 0) + multi.filter(m => !m.el).length
+    if (!pending()) { relocating = false; return }
+    relocating = true
+    const t0 = Date.now()
+    const tick = () => {
+      if (dead || mode === 'off' || !picked) { relocating = false; return }
+      if (!picked.el) { const n = findNode(picked.frozen); if (n) attachPicked(n) }
+      for (const m of multi) if (!m.el) { const n = findNode(m.frozen); if (n) attachMulti(m, n) }
+      const left = pending()
+      if (!left || Date.now() - t0 > RELOCATE_MS) {
+        relocating = false
+        renderMeta()
+        // honest, once: the mark keeps its context, it just lost its anchor
+        if (left) notify('alert', picked.el ? 'Ein Element ist nach dem Reload weg' : 'Element nach dem Reload weg — Kontext bleibt')
+        return
+      }
+      setTimeout(tick, 150)
+    }
+    tick()
+  }
+  function redrawStroke(pts) {
+    strokePts = pts.map(([x, y]) => [x, y])
+    strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    strokePath.setAttribute('d', 'M' + strokePts.map(p => p.join(' ')).join(' L ') + ' Z')
+    draw.innerHTML = ''
+    draw.appendChild(strokePath)
+  }
+  function restoreComposer(c) {
+    picked = { el: null, rect: c.rect, selector: c.ctx?.selector, source: c.ctx?.source, frozen: c.ctx, stroke: c.stroke || null }
+    multi = (c.multi || []).map(m => ({ el: null, selector: m.ctx?.selector, source: m.ctx?.source, frozen: m.ctx, outline: null }))
+    if (multi.length) trackMulti()
+    mode = 'composing'
+    document.documentElement.style.cursor = ''
+    layersRow.style.display = 'none' // no live element yet -> no ancestor chain to offer
+    relocating = true // the search starts below; the meta line says so meanwhile
+    renderMeta()
+    placeComposer(picked.rect)
+    if (c.stroke) redrawStroke(c.stroke)
+    ta.value = c.text || ''
+    autoGrow()
+    // only steal the focus back if the composer HAD it — otherwise the page's own
+    // autofocus (search fields, editors) wins, exactly as without Nudge
+    if (c.focused) {
+      ta.focus()
+      try { ta.setSelectionRange(c.sel?.[0] ?? ta.value.length, c.sel?.[1] ?? ta.value.length) } catch { /* text got shorter */ }
+    }
+    relocate()
+    notify('check', c.text ? 'Entwurf wiederhergestellt' : 'Markierung wiederhergestellt')
+  }
+  function restoreSession() {
+    const snap = snapRead()
+    if (!snap) { setMode('idle'); return } // PoC default: overlay visible on localhost
+    // 1. the toolbar at its remembered spot in the FIRST paint — the async
+    //    chrome.storage read lands on the same coordinates a tick later
+    if (snap.pill) placePill(snap.pill.x, snap.pill.y)
+    // A mark belongs to the ROUTE it was made on: sessionStorage is per origin,
+    // so a plain link click would otherwise carry the draft to a page whose DOM
+    // never had that element. Same route test as everywhere else in this script.
+    const sameRoute = samePage(snap.url || '')
+    // 2. what the History popover was showing, including half-typed follow-ups
+    //    (keyed by nudge id — they only surface where that nudge is listed)
+    for (const id of snap.queue?.expanded || []) qExpanded.add(id)
+    for (const [id, text] of snap.queue?.amend || []) qAmendDraft.set(id, text)
+    queueWanted = sameRoute && !!snap.queue?.open
+    // 3. the mode Gerald left the tab in — an overlay he switched off stays off
+    setMode(snap.mode === 'composing' ? 'idle' : (snap.mode || 'idle'))
+    // 4. badge, dots and session label from the last known list. The WS frame
+    //    overwrites all of it within a moment; this only kills the flicker.
+    if (snap.agent) { agentLive = !!snap.agent.live; agentLabel = snap.agent.label || null; agentWake = snap.agent.wake || null; agents = snap.agent.list || [] }
+    if (snap.pins?.length) acceptPins(snap.pins)
+    else updatePill()
+    // 5. the half-written nudge — the whole point of the exercise
+    //    (never against a switched-off overlay: that state carries no composer)
+    if (snap.composer && sameRoute && mode !== 'off') {
+      restoreComposer(snap.composer)
+      if (snap.mode === 'picking') mode = 'picking' // Shift-collecting stayed armed
+    }
+  }
+  // A snapshot from an older version must never cost Gerald the overlay itself
+  try { restoreSession() } catch (e) {
+    console.warn('[roots-nudge] session restore failed:', e)
+    try { sessionStorage.removeItem(SNAP_KEY) } catch { /* storage blocked */ }
+    setMode('idle')
+  }
+
   // resolve the (test-only) port override, THEN open the connection
   try {
     chrome.storage.local.get('nudgePort')

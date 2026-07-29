@@ -5,6 +5,95 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.23.0 — 2026-07-29 (Der Reload nimmt nichts mehr mit — Toolbar und Eingabe überleben)
+
+### Added
+- **Die Arbeitsfläche übersteht den Reload.** Gerald: „jedes Mal wenn der Browser
+  neu lädt, weil im Hintergrund der Agent irgendwas macht, geht kurz meine
+  Nudge-Bar verloren, mein Eingabefeld, und ich verliere gerade, was ich machen
+  wollte." Genau der Normalfall: der Agent ändert Code, der Dev-Server lädt den
+  Tab neu, das Content-Script stirbt mit dem halb getippten Nudge darin. Ein
+  Content-Script KANN eine Navigation nicht überleben — also wird der
+  Arbeitszustand in `sessionStorage` gesichert (pro TAB und pro Origin: er stirbt
+  mit dem Tab, und zwei Tabs auf derselben Route stellen sich nie gegenseitig
+  ihren Entwurf zu) und beim nächsten Load wieder aufgebaut:
+  - der **getippte Text** inklusive Cursorposition — und der Fokus nur dann
+    zurück, wenn er vorher im Composer lag (sonst gewinnt das Autofocus der Seite,
+    genau wie ohne Nudge),
+  - die **Markierung** samt Shift-Sammlung (mehrere Elemente), Lasso-Stroke und
+    Layer-Chips,
+  - die **Toolbar an ihrer Position** schon im ERSTEN Paint (bisher sprang sie
+    vom Default an ihren Platz, sobald `chrome.storage` antwortete) und in dem
+    Modus, in dem Gerald den Tab verlassen hat — ein per Alt+C ausgeschaltetes
+    Overlay bleibt aus,
+  - **History-Popover**, aufgeklappte Zeilen und halb getippte **Nachträge**,
+  - **Nummernpille, Punkte und Session-Label** aus der zuletzt bekannten Liste,
+    damit die Bar nicht leer aufblitzt, bis die erste WS-Nachricht da ist.
+- **Jede Markierung trägt ihren Kontext eingefroren.** Selector, xpath,
+  innerText, outerHTML und Styles werden beim Picken kopiert. Damit gilt der
+  Worst Case, den Gerald selbst benannt hat: verloren geht höchstens der ANKER am
+  DOM-Element — der Nudge behält, was der Agent braucht, und lässt sich normal
+  abschicken. Der Composer sagt es dabei ehrlich („suche Element…", dann
+  „Element weg" in Status-Amber), statt so zu tun, als hinge er noch irgendwo.
+- **Wiederfinden statt Aufgeben.** Frameworks hydrieren NACH dem Content-Script,
+  ein einzelner Lookup würde fast immer danebengreifen. Der Restore sucht das
+  Element 6 s lang weiter (Selector zuerst, dann der strukturelle xpath) und
+  schnappt in dem Moment darauf, in dem die App es wieder rendert — Highlight,
+  Tip und Layer-Chips inklusive.
+- **Suite Q (Reload resilience)** (`test/reload-resilience.mjs`, 7 Legs, Seite
+  5196, Extension auf den toten Port 4799 umgebogen): Entwurf + Ziel überleben,
+  Mark rastet wieder aufs Element ein, spät gerendertes Element wird gefunden,
+  verschwundenes Element meldet sich ehrlich, so ein Nudge lässt sich trotzdem
+  senden, Escape hinterlässt keinen Zombie-Entwurf, Shift-Sammlung übersteht es.
+
+### Fixed
+- **Der Evidence-Shot ließ das offene Eingabefeld verschwinden.** `captureRegion`
+  blendet Composer, Pille und Punkte für den Screenshot aus — Pille und Punkte
+  kamen zurück, der Composer nicht. Im Sende-Pfad fiel das nie auf (danach räumt
+  `setMode('idle')` ohnehin auf), aber den After-Shot löst die BRIDGE aus: sobald
+  der Agent irgendeinen anderen Nudge auf derselben Seite resolvte, war Geralds
+  offenes Eingabefeld mitten im Satz weg. Zustand wird jetzt exakt
+  wiederhergestellt, Highlight eingeschlossen. Zweite Hälfte desselben Berichts,
+  nur ohne Reload.
+- **Der xpath-Fallback hätte eine Marke stillschweigend umgehängt.** Beim
+  Wiederfinden ist der Selector die erste Wahl, der strukturelle xpath die
+  zweite — nur ist der POSITIONELL: fehlt das markierte Element, löst `/div[1]`
+  einfach auf den Nachrücker auf. Suite Q4 hat das beim ersten Lauf gefangen
+  (Marke auf `#alpha` landete auf `#beta`). Ein Fremdkörper unter der
+  Composer-Spitze ist schlimmer als ein ehrliches „Element weg", also muss ein
+  xpath-Treffer jetzt seine Identität belegen: gleicher Tag, gleiche id, und ohne
+  id derselbe sichtbare Text.
+
+### Changed
+- **Content-Script läuft bei `document_end` statt `document_idle`.** Die
+  Toolbar — und mit ihr der wiederhergestellte Composer — ist damit schon da,
+  bevor die App fertig gebootet hat, statt erst danach. Genau das Fenster, in dem
+  „die Bar kurz weg ist", schrumpft.
+
+## 0.22.0 — 2026-07-29 (Die Session benennt sich beim Aufruf — `/nudge <Name>`)
+
+### Added
+- **`/nudge <Name>` setzt das Toolbar-Label direkt beim Lostreten** (Gerald: „ich
+  würde die Session gern benennen, sobald ich den Nudge lostrete — und wenn ich
+  nichts eingebe, macht das der Agent"). Der Skill nimmt jetzt Argumente: was
+  hinter `/nudge` steht, wird VERBATIM zu `NUDGE_AGENT_LABEL` — also zum
+  „Agent:"-Text in der Toolbar und zur Zeile im Switch-session-Dropdown. Leerer
+  Aufruf = wie bisher, der Agent leitet 2-4 Wörter Thema ab. Kein Code hat sich
+  geändert: der Namensweg existierte schon (env → Watcher → Bridge-Roster →
+  Toolbar), es fehlte nur der kürzeste Weg, ihn zu setzen — der Aufruf selbst.
+- **`argument-hint` im Skill-Frontmatter**: die CLI zeigt nach getipptem
+  `/nudge ` an, dass hier ein Session-Name hingehört („leer = automatisch").
+  Ohne den Hint bliebe die Option unsichtbar — sie stünde nur im Skill-Text, den
+  Gerald nie zu Gesicht bekommt.
+
+### Changed
+- **Ein Ort für den Namen** statt verstreuter Platzhalter: der Skill entscheidet
+  das Label in §„Der Name kommt aus dem Aufruf" (getippter Name → verbatim ·
+  leer → abgeleitet · Nudge-Referenz oder Auftrag → kein Name, sondern Arbeit),
+  die Arm-Kommandos für Zed und CLI verweisen nur noch dorthin. Umbenennen ist
+  ausdrücklich Neu-Armen — die Bridge ersetzt das ältere Geschwister derselben
+  Session, ein zweiter konkurrierender Watcher entsteht nie.
+
 ## 0.21.6 — 2026-07-29 (Shift+Klick sammelt wieder — egal wie die Auswahl begann)
 
 ### Fixed

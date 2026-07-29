@@ -9,7 +9,10 @@ description: >
   number („Nudge 123 macht das"). Works in EVERY project — the store is global
   (~/.claude/nudge). Lists open prompts compactly, processes them strictly oldest-first
   (explicitly named ids jump the queue), resolves ONLY after the fix is verified
-  (after-screenshot as evidence).
+  (after-screenshot as evidence). The invocation itself can NAME the session —
+  „/nudge Login-Redesign" wird zum „Agent:"-Label in der Browser-Toolbar; ohne
+  Argument vergibt der Agent das Label selbst.
+argument-hint: "[Session-Name für die Browser-Toolbar — leer = automatisch]"
 ---
 
 # /nudge — UI prompting from the browser
@@ -52,8 +55,8 @@ Say NOTHING about the connection unless something is wrong; then one line:
 
 **Invoking /nudge IS the registration.** A session becomes available to the
 extension ONLY through Gerald: he types /nudge (or „übernimm die Nudges" /
-„nenn dich X") in the session he wants — then FIRST arm the watcher (topic
-label!), then list/process the queue. NEVER arm without that explicit gesture.
+„nenn dich X") in the session he wants — then FIRST arm the watcher (Label:
+§„Der Name kommt aus dem Aufruf"), then list/process the queue. NEVER arm without that explicit gesture.
 The fence is also technical: the watcher REFUSES to start without
 NUDGE_AGENT_LABEL, so arming outside this path is impossible; double-arming
 is harmless (the bridge replaces the older sibling of the same session).
@@ -63,11 +66,41 @@ fallback among armed ones. Arm host-aware — the ONLY difference between Zed an
 the terminal CLI is HOW the watcher is kept alive; the watcher script, the label
 fence and the roster are identical.
 
+### The name comes from the invocation — `/nudge <Name>`
+
+Getippt bei DIESEM Aufruf: **`$ARGUMENTS`** — leer (oder unersetzt als literales
+`$ARGUMENTS`, wenn der Skill ohne getippten Aufruf ansprang) heißt: nichts
+getippt. Dieser Text entscheidet `NUDGE_AGENT_LABEL` — und das IST der
+`Agent:`-Text in der Browser-Toolbar. Settle it BEFORE arming: the label is fixed
+at arm time, re-arming is the only way to change it.
+
+- **A name** (short noun phrase, ≤ ~5 Wörter: „Login-Redesign", „Estimate
+  Pricing") → take it VERBATIM. Do not rephrase, shorten, translate or
+  title-case it: what Gerald types is what he wants to read in the toolbar —
+  that is the entire point of typing it.
+- **Empty** → derive it yourself, as before: 2-4 Wörter über das THEMA dieser
+  Session (what the conversation is about — the project name alone doesn't
+  separate two sessions in the same repo).
+- **Not a name** — a nudge reference (`23`, `#23`, `nudge_1046`) or an
+  instruction („arbeite alle ab", „was ist markiert?") → that is WORK, not a
+  name: arm with the derived label and treat the rest as the request.
+- **Port scope** (§Port scope): append `:<port>` to whichever label won —
+  `NUDGE_AGENT_LABEL='Login-Redesign :5175'`. The toolbar splits the port off
+  into its own pill, so the name stays clean.
+- **Renaming is just re-arming.** `/nudge <anderer Name>` (or „nenn dich X") in
+  an already-armed session: arm again with the new label — the bridge replaces
+  the older sibling of the same session, the toolbar switches within ~2 s. Never
+  start a second, competing watcher.
+
+ALWAYS set a label (both hosts) — it is how Gerald recognizes the session in the
+toolbar dropdown (Zed thread titles summarize the same conversation, so they
+converge).
+
 **Zed (the `Monitor` tool is available):** persistent Monitor whose stdout lines
 are surfaced back into the conversation — that IS the autonomous wake (a new
 nudge starts the agent by itself). Arm with `NUDGE_WAKE=push` so the toolbar
 shows this owner as auto-waking:
-`Monitor({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' NUDGE_WAKE=push node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+`Monitor({ command: "NUDGE_AGENT_LABEL='<Label — s. „Der Name kommt aus dem Aufruf">' NUDGE_WAKE=push node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", persistent: true, description: "Nudge-Watch — <dasselbe Label>" })`
 The description is VISIBLE as the collapsed tool card in Zed's panel — it must
 carry the session identity so Gerald sees at a glance who owns the channel.
 
@@ -79,7 +112,7 @@ reparent to launchd, self-exit as "orphan", and the icon would never go green.
 Arm with `NUDGE_WAKE=pull` so the toolbar tells Gerald this owner is pull, not
 auto (the icon is green, but a nudge waits for the next prompt — without the flag
 the browser would imply „kommt automatisch" and the nudge looks lost):
-`Bash({ command: "NUDGE_AGENT_LABEL='<2-4 Worte: Thema DIESER Session>' NUDGE_WAKE=pull node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", run_in_background: true, description: "Nudge-Watch — <dasselbe Thema>" })`
+`Bash({ command: "NUDGE_AGENT_LABEL='<Label — s. „Der Name kommt aus dem Aufruf">' NUDGE_WAKE=pull node /Users/gst/Developer/nudge-extension/bridge/watch-nudges.mjs", run_in_background: true, description: "Nudge-Watch — <dasselbe Label>" })`
 The CLI has NO autonomous wake: the background watcher only heartbeats (green
 icon + roster + opt-in). The prompt channel is PULL — Gerald sets nudges in the
 browser, sees the number pills AND a „erfasst · pull"-Toast + „Pull"-Tag in the
@@ -88,11 +121,6 @@ the UserPromptSubmit hook injects each named nudge's full context on that prompt
 (no wake needed). A bare „weiter" also surfaces the open queue via the hook.
 Everything else — queue discipline, resolve-with-proof, origin scoping — is
 identical to Zed.
-
-ALWAYS set the topic label (both hosts) — it is how Gerald recognizes the session
-in the dropdown (Zed thread titles summarize the same conversation, so they
-converge). If Gerald NAMES the session ("nenn dich Nudge-Dev"), arm with that as
-the `NUDGE_AGENT_LABEL` override — it becomes the label in the browser toolbar.
 
 **Right after arming, print an IDENTITY line so Gerald can match this session to
 the browser toolbar** (his explicit need — the toolbar shows the label, this ties
@@ -142,7 +170,8 @@ bound to ONE localhost, scope to it:
   (`Nudge-Scope: :<port>`); else it is the listening vite whose cwd is under
   `$PWD`.
 - **Arm with the port in the label** so Gerald tells the windows apart in the
-  toolbar dropdown: `NUDGE_AGENT_LABEL='<app> :<port>'`.
+  toolbar dropdown: `NUDGE_AGENT_LABEL='<Label> :<port>'` (Label = was Gerald
+  hinter `/nudge` getippt hat, sonst der App-Name).
 - **Filter the queue**: in `store.json` process ONLY pins whose `url` contains
   `:<port>`. A pin on another port belongs to another window — skip it, never
   resolve it. The full `url` (with port) lives in `store.json` and
