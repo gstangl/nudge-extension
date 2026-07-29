@@ -271,6 +271,15 @@ export function amendPin(id, { text, author } = {}) {
 // Discard (queue-popover ×): the prompt was a slip / is obsolete — remove it
 // entirely, evidence files included. Unlike resolve this is NOT a work outcome;
 // nothing is kept. seq is untouched (ids are never reused).
+//
+// WITHDRAWAL (2026-07-29): a nudge reaches its agent within MILLISECONDS, so by
+// the time Gerald hits × the work is usually already running. Deleting the pin
+// used to be the whole story — the agent was never told and kept going, finding
+// out only via a 404 on resolve, after the work was done. So a discard now
+// leaves ONE marker behind: the pin content still goes (a slip must not linger),
+// but `inbox/<id>.withdrawn.md` records THAT it was pulled, when, and whose. The
+// live channel is the bridge's WS frame; this file is the durable trace an agent
+// can still check on its next prompt (UserPromptSubmit hook reads it).
 export function deletePin(id) {
   const s = load()
   const i = s.pins.findIndex(p => p.id === id)
@@ -281,8 +290,28 @@ export function deletePin(id) {
     try { fs.unlinkSync(path.join(SHOTS_DIR, f)) } catch { /* not there */ }
   }
   try { fs.unlinkSync(path.join(INBOX_DIR, `${id}.md`)) } catch { /* not there */ }
+  pin.withdrawnAt = new Date().toISOString()
+  // only an OPEN nudge is work-in-flight; discarding a resolved one is pure
+  // housekeeping and needs no marker (nobody is working on it)
+  if (pin.status === 'open') writeWithdrawnMarker(pin)
   emit('deleted', pin)
   return pin
+}
+
+// The marker deliberately carries NO prompt text — the point of a discard is
+// that the content goes. Id, label, route and time are enough for an agent to
+// match it against what it is holding in context and stop.
+function writeWithdrawnMarker(pin) {
+  try {
+    fs.mkdirSync(INBOX_DIR, { recursive: true })
+    fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.withdrawn.md`),
+      `# ${pin.id} (#${labelOf(pin.id)}) - zurückgezogen\n\n`
+      + `Gerald hat diesen Nudge zurückgezogen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven.\n\n`
+      + `- withdrawn: ${pin.withdrawnAt}\n- created: ${pin.createdAt}\n- url: ${pin.url}\n`
+      + `- selector: \`${pin.target?.selector || '-'}\`\n`
+      + (pin.owner?.label ? `- agent: ${pin.owner.label}\n` : '')
+      + (pin.owner?.session ? `- session: ${pin.owner.session}\n` : ''))
+  } catch { /* readonly fs — the WS frame still carries the withdrawal */ }
 }
 
 export function attachAfterShot(id, screenshot) {
@@ -311,6 +340,23 @@ export function pruneResolved(maxAgeMs = 7 * 24 * 3600e3) {
     try { fs.unlinkSync(path.join(INBOX_DIR, `${p.id}.md`)) } catch { /* not there */ }
   }
   return drop.length
+}
+
+// Withdrawal markers are orphan files (their pin is gone), so pruneResolved can
+// never reach them. They exist to be read once, on the agent's next prompt —
+// past a day they are noise, and the hook that reads them runs on EVERY prompt
+// in EVERY project, so the directory must not grow without bound.
+export function pruneWithdrawn(maxAgeMs = 24 * 3600e3) {
+  const cutoff = Date.now() - maxAgeMs
+  let n = 0
+  try {
+    for (const f of fs.readdirSync(INBOX_DIR)) {
+      if (!f.endsWith('.withdrawn.md')) continue
+      const p = path.join(INBOX_DIR, f)
+      try { if (fs.statSync(p).mtimeMs < cutoff) { fs.unlinkSync(p); n++ } } catch { /* raced */ }
+    }
+  } catch { /* no inbox yet */ }
+  return n
 }
 
 // ---------- projections (one per consumer, together on purpose) ----------

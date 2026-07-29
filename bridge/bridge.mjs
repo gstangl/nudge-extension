@@ -176,12 +176,20 @@ function handle(req, res) {
       const code = r.error === 'not_found' ? 404 : r.error === 'resolved' ? 409 : 400
       json(res, code, { error: r.error })
     })
-  // discard from the queue popover (×) — remove entirely, not a work outcome
+  // discard from the queue popover (×) — remove entirely, not a work outcome.
+  // A nudge reaches its agent in milliseconds, so this is almost always a
+  // WITHDRAWAL of running work, not a tidy-up: answer with WHO was told, so the
+  // toolbar can say „Agent informiert" instead of a hopeful „dismissed".
   const md = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)$/)
   if (req.method === 'DELETE' && md) {
+    const target = store.getPin(md[1])
+    const owner = target ? ownerForHost(hostOf(target.url)) : null
     const pin = store.deletePin(md[1])
-    if (pin) log(`discarded ${pin.id}`)
-    return pin ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
+    if (!pin) return json(res, 404, { error: 'not found' })
+    // only an open nudge can be in flight; a resolved one is nobody's work
+    const notified = !!owner && pin.status === 'open'
+    log(`discarded ${pin.id}${notified ? ` — withdrawal sent to ${owner.label}` : ' — no agent on channel'}`)
+    return json(res, 200, { ok: true, notified, agent: notified ? owner.label : null, wake: notified ? owner.wake : null })
   }
   const ma = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/after$/)
   if (req.method === 'POST' && ma)
@@ -214,6 +222,8 @@ httpServer.listen(PORT, '127.0.0.1', () => log(`http://localhost:${PORT} (demo: 
 // unbounded growth would bloat every write and every WS broadcast
 const pruned = store.pruneResolved()
 if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
+const prunedW = store.pruneWithdrawn()
+if (prunedW) log(`pruned ${prunedW} withdrawal markers (>24h) from the inbox`)
 
 // ---------- agent roster + ORIGIN-AWARE ownership ----------
 // A nudge belongs to the agent that owns ITS HOST (localhost:5186 = worktree B).
@@ -315,6 +325,13 @@ store.onChange((kind, pin) => {
   // element pins are DOM-only by design, nothing to compare against
   if (kind === 'resolved' && pin.screenshot && !pin.screenshotAfter)
     broadcast({ type: 'capture-after', pin: store.pinForClient(pin) })
+  // WITHDRAWAL — the only push that says „stop working". A deleted pin is simply
+  // ABSENT from the snapshot, and absence is not an event: the watcher's scanPins
+  // emits for new OPEN pins only, so before this frame existed a discarded nudge
+  // reached the agent never (verified 2026-07-29, test/cancel.mjs). Owner rides
+  // along so a parallel dev server's agent ignores a withdrawal that isn't its own.
+  if (kind === 'deleted' && pin.status === 'open')
+    broadcast({ type: 'withdrawn', id: pin.id, label: store.labelOf(pin.id), url: pin.url, owner: pin.owner || null, at: pin.withdrawnAt })
 })
 
 // ---------- dev auto-reload: extension files changed -> extension reloads itself ----------

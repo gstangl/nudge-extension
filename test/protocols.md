@@ -47,6 +47,13 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   follow-ups to an open nudge — original immutable + inbox mirror, order,
   resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
   History "+ ergänzen" UI round-trips. Run after any store/amend/watcher/queue change.
+- `node test/cancel.mjs` — **Suite X (Withdrawal)**, side port 4791: Gerald pulls
+  a nudge back with the queue ×. Proves delivery is real (so a × cancels RUNNING
+  work), that the stop reaches the OWNING agent and only it, that the caller
+  learns who was told, the marker trace (no prompt text), the list clearing, the
+  WS-less file fallback, silence for an undelivered nudge, the pull path via the
+  hook, and the real extension row + toast. Run after any change to
+  delete/withdraw, the watcher channel, ownership routing, or the queue ×.
 - `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
   4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
   four simultaneous tabs with four armed sessions and churning ownership — per-app

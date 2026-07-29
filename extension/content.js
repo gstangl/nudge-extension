@@ -1009,8 +1009,15 @@
         e.stopPropagation()
         try {
           const r = await fetch(`${HTTP}/comments/${p.id}`, { method: 'DELETE' })
-          if (r.ok) notify('check', `${p.id} dismissed`) // list refresh comes via WS
-          else notify('alert', `${p.id} not found`)
+          if (!r.ok) return notify('alert', `${p.id} not found`)
+          // The row vanishes either way (WS refresh) — but WHO was told is the
+          // part Gerald actually needs: a nudge is at its agent in milliseconds,
+          // so this is normally a withdrawal of running work, not a tidy-up. Say
+          // what really happened instead of a hopeful „dismissed" (2026-07-29).
+          const { notified, agent, wake } = await r.json().catch(() => ({}))
+          if (!notified) notify('check', `#${numOf(p)} verworfen — kein Agent auf Kanal`)
+          else if (wake === 'pull') notify('check', `#${numOf(p)} zurückgezogen — ${agent} erfährt es beim nächsten Prompt`)
+          else notify('check', `#${numOf(p)} zurückgezogen — ${agent} informiert`)
         } catch { notify('alert', 'Bridge offline — not dismissed') }
       })
       list.appendChild(row)

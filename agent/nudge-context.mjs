@@ -128,10 +128,43 @@ const resolveRef = (n) => {
     || allPins.findLast(p => labelOf(p.id) === num)
     || null
 }
+// ---------- withdrawals: „Gerald hat × gedrückt" ----------------------------
+// A discarded nudge leaves inbox/<id>.withdrawn.md behind (store.deletePin).
+// The live channel is the watcher's WS frame — but a CLI session (wake: 'pull')
+// has no autonomous wake, so THIS is where it learns. Read once, here, before
+// anything else claims work is outstanding.
+const withdrawn = []
+try {
+  for (const f of fs.readdirSync(path.join(PIN_DIR, 'inbox'))) {
+    const id = f.match(/^((?:pin|nudge)_\d+)\.withdrawn\.md$/)?.[1]
+    if (!id) continue
+    const md = fs.readFileSync(path.join(PIN_DIR, 'inbox', f), 'utf8')
+    const at = md.match(/^- withdrawn: (.+)$/m)?.[1] || null
+    const session = md.match(/^- session: (.+)$/m)?.[1] || null
+    // mine, or ownerless-but-on-a-host-I-own — same gate as the pin list above
+    if (!(session ? session === mySession : ownsHost(hostOf(md.match(/^- url: (.+)$/m)?.[1] || '')))) continue
+    withdrawn.push({ id, at, label: md.match(/^# \S+ \(#(\d+)\)/m)?.[1] || labelOf(id), url: md.match(/^- url: (.+)$/m)?.[1] || '' })
+  }
+} catch { /* no inbox yet */ }
+// only FRESH ones (30 min): past that the work is long done either way, and a
+// stale „stop" line on every prompt would be noise
+const freshWithdrawn = withdrawn.filter(w => !w.at || Date.now() - Date.parse(w.at) < 30 * 60_000)
+if (freshWithdrawn.length) {
+  lines.push(`ZURÜCKGEZOGEN (${freshWithdrawn.length}) — Gerald hat diese Nudges verworfen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven:`)
+  for (const w of freshWithdrawn) lines.push(`  #${w.label} (${w.id})${w.at ? ` · ${w.at.slice(11, 16)}` : ''} · ${routeOf(w.url)}`)
+}
 const refPins = []
 for (const n of referenced) {
   const p = resolveRef(n)
-  if (!p) { lines.push(`Nudge ${n}: nicht im Store (nie existiert oder verworfen).`); continue }
+  if (!p) {
+    // „nie existiert" and „verworfen" are different answers — the marker file
+    // makes the second one provable instead of a guess
+    const w = withdrawn.find(x => x.id === `nudge_${n}` || x.id === `pin_${n}` || String(x.label) === String(Number(n)))
+    lines.push(w
+      ? `Nudge ${n} (${w.id}): ZURÜCKGEZOGEN${w.at ? ` um ${w.at.slice(11, 16)}` : ''} — Gerald hat ihn verworfen, nicht bearbeiten.`
+      : `Nudge ${n}: nicht im Store (nie existiert oder verworfen).`)
+    continue
+  }
   if (!refPins.includes(p)) refPins.push(p)
 }
 // ---------- referenced by ELEMENT TEXT: „der Nudge am Speichern-Button" ------

@@ -238,6 +238,22 @@ Two overrides (0.20.0):
   resolve it unprompted — it becomes a work order only when Gerald references
   it with an instruction; then fix, verify, resolve as usual.
 
+## 3a. Withdrawal — Gerald pulls a nudge back (×)
+
+A nudge is at its agent within milliseconds, so the queue-popover `×` almost
+always cancels work that is ALREADY RUNNING. It arrives as a wake line
+`Nudge nudge_X (#N) ZURÜCKGEZOGEN …` (Zed/push) or as a `ZURÜCKGEZOGEN` block
+in the prompt context (CLI/pull — i.e. on your next turn).
+
+**Stop immediately.** Do not finish "just this one edit", do not commit, do not
+resolve (the id is gone — `/resolve` answers 404). Revert what you already
+changed for that nudge unless it stands on its own, then report ONE line:
+`nudge_X ↩ zurückgezogen, gestoppt` (plus what you reverted, if anything).
+
+A withdrawal is not a work outcome and gets no evidence shot. The durable trace
+is `~/.claude/nudge/inbox/<id>.withdrawn.md` — the prompt text is deliberately
+gone (a discarded prompt must not linger), only the fact remains.
+
 ## 4. Work one prompt at a time — MINIMAL PANEL FOOTPRINT
 
 Zed renders every plain-text line in full; tool calls collapse. Therefore:

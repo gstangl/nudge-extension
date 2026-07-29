@@ -21,6 +21,46 @@ function scan() {
   let pins
   try { pins = JSON.parse(fs.readFileSync(STORE, 'utf8')).pins } catch { return } // mid-write — next event retries
   scanPins(pins)
+  scanWithdrawn()
+}
+
+// ---------- withdrawals ("Gerald hat × gedrückt") ----------
+// A discarded nudge is ABSENT from the store, and absence never fires scanPins —
+// which is exactly why a cancel used to reach the agent never (2026-07-29). Two
+// carriers now: the bridge's `withdrawn` WS frame (fast path, below) and the
+// marker file the store leaves behind (this pass — covers NUDGE_NO_WS, a bridge
+// restart, and a watcher that was down for the moment of the click).
+const seenGone = new Set()
+function announceWithdrawn({ id, label, url, owner, at }) {
+  if (!id || seenGone.has(id)) return
+  seenGone.add(id)
+  // same ownership gate as the wake path: only the agent this nudge belonged to
+  // is told to stop. Ownerless (offline arrival) falls back to the global gate.
+  const mine = !!(owner?.session && MY_SESSION && owner.session === MY_SESSION)
+  const ownerless = !owner?.session
+  if (first || !(mine || (ownerless && isOwner !== false))) return
+  // only meaningful for a nudge THIS watcher actually woke for — otherwise the
+  // agent never had it and a "stop" line would be noise about unknown work
+  if (!seenId.has(id)) return
+  const when = at ? ` (${String(at).slice(11, 16)})` : ''
+  console.log(`Nudge ${id}${label ? ` (#${label})` : ''} ZURÜCKGEZOGEN${when} — Gerald hat ihn verworfen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven. ${url || ''}`.trim())
+}
+function scanWithdrawn() {
+  let files
+  try { files = fs.readdirSync(path.join(STORE_DIR, 'inbox')) } catch { return } // no inbox yet
+  for (const f of files) {
+    const id = f.match(/^((?:pin|nudge)_\d+)\.withdrawn\.md$/)?.[1]
+    if (!id || seenGone.has(id) || !seenId.has(id)) continue
+    let md = ''
+    try { md = fs.readFileSync(path.join(STORE_DIR, 'inbox', f), 'utf8') } catch { continue }
+    announceWithdrawn({
+      id,
+      label: md.match(/^# \S+ \(#(\d+)\)/m)?.[1] || null,
+      url: md.match(/^- url: (.+)$/m)?.[1] || '',
+      owner: { session: md.match(/^- session: (.+)$/m)?.[1] || null },
+      at: md.match(/^- withdrawn: (.+)$/m)?.[1] || null,
+    })
+  }
 }
 // ORIGIN-AWARE wake: a nudge is stamped by the bridge with the agent that owns
 // its host (localhost:port). Wake for a pin if it belongs to ME — a parallel
@@ -160,7 +200,11 @@ function connectPush() {
   try { sock = new WebSocket(`ws://127.0.0.1:${PORT}`) } catch { return setTimeout(connectPush, 1500) }
   sock.on('open', () => sock.send(JSON.stringify({ type: 'hello', role: 'agent' })))
   sock.on('message', (m) => {
-    try { const j = JSON.parse(m); if (j.type === 'pins') scanPins(j.pins) } catch { /* ignore */ }
+    try {
+      const j = JSON.parse(m)
+      if (j.type === 'pins') scanPins(j.pins)
+      if (j.type === 'withdrawn') announceWithdrawn(j) // Gerald pulled it — say so NOW, not on the next poll
+    } catch { /* ignore */ }
   })
   sock.on('close', () => setTimeout(connectPush, 1500))
   sock.on('error', () => { try { sock.close() } catch { /* dying */ } })
