@@ -73,6 +73,9 @@ always visible, in both directions:
       + the current mark + queue count (UserPromptSubmit hook).
 - [x] **Zed, live:** new prompts wake the agent (~1 s) and completions are
       reported in the conversation.
+- [x] **Both ways:** taking a nudge BACK (queue ×) is a message, not a deletion.
+      A nudge is at its agent in milliseconds, so the × cancels running work: the
+      owning agent is told to stop, and the toast names who was told (2026-07-29).
 
 ## Goals
 
@@ -86,6 +89,8 @@ always visible, in both directions:
       user-level skill + hooks, zero per-project config (2026-07-05).
 - [x] Parallel localhosts (multiple worktrees, each its own dev server + agent)
       route to their own agents — per-host ownership, no cross-wake (2026-07-07).
+- [x] Every instruction travels BOTH ways: send, amend — and withdraw. A nudge
+      pulled back stops the agent that has it, on the same routing (2026-07-29).
 - [ ] Team-ready: one extension install + one setup script per person.
 
 ## Non-goals

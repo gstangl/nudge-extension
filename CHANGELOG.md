@@ -5,6 +5,68 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.24.0 — 2026-07-29 (Das × nimmt den Nudge wirklich zurück — der Agent hört auf)
+
+### Fixed
+- **Ein zurückgezogener Nudge erreichte den Agenten nie.** Gerald: „Ich habe
+  versucht, einen Nudge abzubrechen, der wahrscheinlich schon am Laufen war. Er
+  hat aber den Befehl nicht durchgereicht." Genau so war es. Das × war ein reines
+  `DELETE /comments/<id>`: Zeile weg, Store weg, Inbox weg — und der Agent
+  arbeitete weiter. Es gab keinen Abbruch-Kanal. `watch-nudges.mjs` meldet
+  konstruktionsbedingt nur NEUE offene Pins (`scanPins`: `if (p.status !== 'open'
+  || seen.has(key)) continue`); ein gelöschter Pin ist schlicht abwesend, und
+  Abwesenheit ist kein Ereignis. Der Agent merkte es erst am Ende: 404 auf
+  `/resolve`, nachdem die Arbeit schon getan war. Gemessen, nicht vermutet — der
+  Nudge ist binnen Millisekunden beim Agenten (Suite X1), das × trifft also fast
+  immer laufende Arbeit, nicht einen Versehens-Prompt.
+
+### Added
+- **Rückzug als eigene Nachricht.** `DELETE` sendet jetzt ein `withdrawn`-Frame
+  über die WS-Verbindung, die der Watcher ohnehin hält. Der Agent bekommt eine
+  handlungsfähige Zeile: „Nudge nudge_X (#N) ZURÜCKGEZOGEN — Arbeit daran SOFORT
+  einstellen, nichts committen, nicht resolven."
+- **Auf derselben Routing-Logik wie der Wake.** Der Rückzug trägt den
+  Owner-Stempel des Nudges: Agent B erfährt nichts über A's Nudge (Suite X3) —
+  parallele Dev-Server bleiben getrennt, wie beim Wecken.
+- **Kein Lärm für Arbeit, die nie ankam.** Nur ein Nudge, für den DIESER Watcher
+  tatsächlich geweckt hat, erzeugt eine Stopp-Zeile. Damit gilt Geralds eigene
+  Bedingung automatisch: war der Nudge nachweislich nie beim Agenten, wird er
+  einfach gelöscht, ohne Meldung (X8). Ein bereits erledigter Nudge, den man
+  wegräumt, ist Hausputz und meldet nichts (X11).
+- **Haltbare Spur ohne den verworfenen Prompt.** `inbox/<id>.withdrawn.md` hält
+  fest, DASS zurückgezogen wurde, wann und für wen — der Prompt-Text bleibt
+  bewusst gelöscht (ein verworfener Prompt darf nicht nachhängen). Nach 24 h
+  räumt die Bridge die Marker weg.
+- **Der Pull-Pfad erfährt es auch.** Eine CLI-Session hat keinen autonomen Wake,
+  also liefert der `UserPromptSubmit`-Hook den Rückzug beim nächsten Prompt
+  („ZURÜCKGEZOGEN (n) — Arbeit daran SOFORT einstellen"). Und die Frage „was ist
+  mit nudge_X passiert?" wird jetzt beantwortet mit „zurückgezogen um HH:MM"
+  statt mit dem alten, mehrdeutigen „nicht im Store (nie existiert oder
+  verworfen)".
+- **Datei-Fallback.** Ohne WS (oder nach einem Bridge-/Watcher-Neustart) findet
+  der Watcher den Rückzug im Marker-File beim nächsten Scan (X7).
+
+### Changed
+- **Der Toast sagt die Wahrheit statt zu hoffen.** Bisher „nudge_X dismissed" —
+  eine Aussage über die Liste, nicht über die Arbeit. Jetzt antwortet `DELETE`
+  mit `{notified, agent, wake}`, und die Toolbar sagt, was wirklich passiert ist:
+  „#312 zurückgezogen — Maps App Modal informiert", bei einer CLI-Session ehrlich
+  „… erfährt es beim nächsten Prompt", und ohne Agent am Kanal „#312 verworfen —
+  kein Agent auf Kanal".
+- **Skill §3a „Withdrawal".** Was der Agent beim Rückzug zu tun hat: sofort
+  stoppen, nicht committen, nicht resolven, angefangene Änderungen zurücknehmen,
+  eine Zeile melden.
+
+### Tests
+- **Suite X (`test/cancel.mjs`)** — 14 Checks über die ganze Kette: Zustellung
+  ist real (X1), das × erreicht den arbeitenden Agenten (X2), nur den richtigen
+  (X3), der Aufrufer erfährt wen (X4), die Spur ist haltbar aber textfrei (X5),
+  die Liste räumt sich (X6), Datei-Fallback ohne WS (X7), kein Lärm für
+  Unzugestelltes (X8), Pull-Pfad im Prompt-Kontext (X9/X9b), kein Phantom-Resolve
+  (X10), Hausputz meldet nichts (X11), und im echten Browser mit echter Extension:
+  Zeile verlässt die Liste, Nachbarn bleiben, Toast nennt den Agenten (X12/X12b).
+- Suite A zieht den geänderten Toast-Vertrag nach und prüft den Marker mit.
+
 ## 0.23.0 — 2026-07-29 (Der Reload nimmt nichts mehr mit — Toolbar und Eingabe überleben)
 
 ### Added

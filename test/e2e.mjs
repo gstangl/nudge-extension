@@ -384,9 +384,13 @@ try {
   await markRow.click()
   if ((await markRow.getAttribute('class')).includes('open')) fail('second click must collapse')
   await markRow.locator('.q-x').click()
-  await page.locator('.feed .item', { hasText: 'nudge_5 dismissed' }).waitFor({ timeout: 5000 })
+  // the × is a WITHDRAWAL since 0.22: a nudge is at its agent in milliseconds, so
+  // the toast names WHO was told to stop instead of the old hopeful „dismissed".
+  // Full withdrawal chain (agent channel, routing, marker, pull path) → Suite X.
+  await page.locator('.feed .item', { hasText: '#5 zurückgezogen — suite-a informiert' }).waitFor({ timeout: 5000 })
   await until(() => !store().pins.some(p => p.id === 'nudge_5'), 3000, 'nudge_5 removed from store')
   if (fs.existsSync(path.join(STORE, 'inbox', 'nudge_5.md'))) fail('inbox mirror must be deleted on discard')
+  if (!fs.existsSync(path.join(STORE, 'inbox', 'nudge_5.withdrawn.md'))) fail('discard must leave a withdrawal marker behind')
   await until(async () => (await page.locator('.dot:visible').count()) === 2, 3000, 'dot gone after discard')
   console.log('PASS queue management (label „was ist markiert", discard ×, dots lifecycle)')
 
