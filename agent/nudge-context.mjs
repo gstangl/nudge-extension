@@ -72,6 +72,14 @@ const when = useSel ? selAt : pinAt
 const age = when ? Math.max(0, Math.round((Date.now() - when) / 60000)) : Infinity
 
 const routeOf = (u) => { try { const x = new URL(u); return (x.host + x.pathname + x.search + x.hash).slice(0, 70) } catch { return String(u).slice(0, 70) } }
+// The number on the pill — bounded, wraps at 999 (mirror of store.mjs labelOf;
+// the hook reads store.json directly and imports nothing from the bridge). The
+// id keeps counting forever and stays the identity in files and commits.
+const LABEL_POOL = 999
+const labelOf = (id) => {
+  const n = Number(String(id).replace(/^(?:pin|nudge)_/, ''))
+  return Number.isFinite(n) && n > 0 ? ((n - 1) % LABEL_POOL) + 1 : 0
+}
 const lines = [`[Nudge] ${status}`]
 if (age <= 15 && (useSel ? selection : newestPin)) {
   // multi-selection (Shift+Klick): several elements are ONE mark
@@ -87,7 +95,7 @@ if (age <= 15 && (useSel ? selection : newestPin)) {
   } else {
     const text = newestPin.text ? `„${newestPin.text.slice(0, 120)}"` : '[Nur Markierung]'
     lines.push(
-      `AKTUELLE MARKIERUNG (${newestPin.id}, vor ${age} min): ${text}`,
+      `AKTUELLE MARKIERUNG (${newestPin.id}, Pille #${labelOf(newestPin.id)}, vor ${age} min): ${text}`,
       `  Element: ${newestPin.targets?.length ? `${newestPin.targets.length} Elemente (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?'} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · bereits beantwortet' : ''}`,
       `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Screenshot: ~/.claude/nudge/shots/${newestPin.id}.png`,
     )
@@ -106,9 +114,45 @@ for (const m of promptText.matchAll(/\b(?:nudges?|pins?)[\s_#-]*(\d{1,6})((?:\s*
 }
 for (const m of promptText.matchAll(/(?:^|\s)#(\d{1,6})\b/g)) addRef(m[1])
 const allPins = store?.pins || []
+// A typed number is the LABEL first — the number on the pill, which is what
+// Gerald reads off the page — and the raw id second. Order matters once ids pass
+// 999 and the two can collide: an OPEN nudge he is looking at beats a
+// long-resolved nudge_47 from eleven weeks ago. Below 999 both rules agree, so
+// nothing changes for today's ids.
+const resolveRef = (n) => {
+  const num = Number(n)
+  // findLast on the open pass: if two open nudges ever share a label (999 apart,
+  // practically impossible) the NEWER one is the one on screen
+  return allPins.findLast(p => p.status === 'open' && labelOf(p.id) === num)
+    || allPins.find(p => p.id === `nudge_${n}` || p.id === `pin_${n}`)
+    || allPins.findLast(p => labelOf(p.id) === num)
+    || null
+}
+const refPins = []
 for (const n of referenced) {
-  const p = allPins.find(x => x.id === `nudge_${n}` || x.id === `pin_${n}`)
+  const p = resolveRef(n)
   if (!p) { lines.push(`Nudge ${n}: nicht im Store (nie existiert oder verworfen).`); continue }
+  if (!refPins.includes(p)) refPins.push(p)
+}
+// ---------- referenced by ELEMENT TEXT: „der Nudge am Speichern-Button" ------
+// Gerald looks at the page, not at numbers. The marked element's own words are
+// already in the store, so naming them resolves too. Deliberately tight — this
+// hook runs on EVERY prompt in EVERY project, and a wrong hit injects the wrong
+// nudge into unrelated work: open nudges only, button-/label-sized text (5..40
+// chars, not purely numeric), word-bounded, exactly ONE match, and only when no
+// number was named (an explicit number is always the better answer).
+if (!refPins.length) {
+  const norm = (s) => String(s || '').replace(/\s+/g, ' ').trim()
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const hits = allPins.filter(p => {
+    if (p.status !== 'open') return false
+    const t = norm(p.target?.innerText)
+    if (t.length < 5 || t.length > 40 || /^\d+$/.test(t)) return false
+    try { return new RegExp(`(^|[^\\p{L}\\p{N}])${esc(t)}([^\\p{L}\\p{N}]|$)`, 'iu').test(promptText) } catch { return false }
+  })
+  if (hits.length === 1) refPins.push(hits[0])
+}
+for (const p of refPins) {
   const text = p.text ? `„${p.text.slice(0, 200)}"` : '[Nur Markierung — der Prompt hier IST der Arbeitsauftrag]'
   const els = p.targets?.length
     ? `${p.targets.length} Elemente: ${p.targets.map(t => t.selector).join(' · ').slice(0, 160)}`
@@ -118,7 +162,7 @@ for (const n of referenced) {
     p.amendments?.length ? `${p.amendments.length} Nachtrag/Nachträge` : null,
   ].filter(Boolean).join(' · ')
   lines.push(
-    `REFERENZIERT ${p.id} (${p.status === 'open' ? 'offen' : 'bereits resolved'}): ${text}`,
+    `REFERENZIERT ${p.id} (#${labelOf(p.id)}, ${p.status === 'open' ? 'offen' : 'bereits resolved'}): ${text}`,
     `  Element: ${els} · ${routeOf(p.url)}${p.target?.innerText ? ` · Text: „${p.target.innerText.slice(0, 60)}"` : ''}${extra ? ` · ${extra}` : ''}`,
     `  Details: ~/.claude/nudge/inbox/${p.id}.md${p.screenshot ? ` · Screenshot: ~/.claude/nudge/${p.screenshot}` : ''}`,
   )
@@ -129,12 +173,16 @@ for (const n of referenced) {
 // Referenz-Anker (Nummern-Pille auf der Seite), keine Arbeitsaufträge.
 const open = pins.filter(p => p.status === 'open')
 if (open.length) {
-  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (/nudge); [Mark] = nur Anker:`)
+  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (/nudge); [Mark] = nur Anker.`)
+  // #N ist die Pillen-Nummer auf der Seite (das, was Gerald sagt), nudge_N die
+  // Identität dahinter (Dateien, Commits, CHANGELOG) — beide in einer Zeile,
+  // damit der Agent von der gesagten Nummer direkt auf die inbox-Datei kommt.
+  lines.push('  Format: #Pillennummer (id) · Gist · Route')
   for (const p of open.slice(0, 10)) {
     const gist = p.text
       ? `„${p.text.slice(0, 60)}${p.text.length > 60 ? '…' : ''}"`
       : `[Mark: ${(p.target?.innerText || p.target?.selector || '?').trim().slice(0, 40)}]`
-    lines.push(`  ${p.id.replace(/^(?:pin|nudge)_/, '')} · ${gist} · ${routeOf(p.url)}`)
+    lines.push(`  #${labelOf(p.id)} (${p.id}) · ${gist} · ${routeOf(p.url)}`)
   }
   if (open.length > 10) lines.push(`  … +${open.length - 10} weitere`)
 }

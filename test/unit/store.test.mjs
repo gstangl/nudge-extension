@@ -127,3 +127,43 @@ describe('store.mjs — sanitizing + projections', () => {
     expect(view.target.selector).toBe('.btn')
   })
 })
+
+// The id counts up forever (identity: filenames, dedup, commits); the LABEL is
+// the number on the pill and may wrap, because it only has to be unique among
+// the handful of OPEN nudges. These two must never be conflated again.
+describe('store.mjs — display label vs id', () => {
+  it('wraps the label into 1..999 while the id keeps counting', () => {
+    expect(store.labelOf('nudge_1')).toBe(1)
+    expect(store.labelOf('nudge_999')).toBe(999)
+    expect(store.labelOf('nudge_1000')).toBe(1) // wrap point — never 0
+    expect(store.labelOf('nudge_1998')).toBe(999)
+    expect(store.labelOf('nudge_1999')).toBe(1)
+  })
+
+  it('reads the legacy pin_ prefix and refuses to guess at a junk id', () => {
+    expect(store.labelOf('pin_5')).toBe(5)
+    expect(store.labelOf('bogus')).toBe(0)
+    expect(store.labelOf('nudge_0')).toBe(0)
+  })
+
+  it('never lets two nudges within one pool share a label', () => {
+    const seen = new Set()
+    for (let n = 1; n <= 999; n++) seen.add(store.labelOf(`nudge_${n}`))
+    expect(seen.size).toBe(999) // a full cycle is a bijection: no collision before the wrap
+  })
+
+  it('ships the label alongside the id in every consumer projection', () => {
+    const pin = store.addPin({ text: 'hi', url: 'https://x/y' }, null)
+    expect(store.pinForClient(pin).label).toBe(store.labelOf(pin.id))
+    expect(store.pinSummary(pin).label).toBe(store.labelOf(pin.id))
+    // the agent-facing line carries BOTH — the id is what it must open on disk
+    expect(store.pinLine(pin)).toContain(pin.id)
+    expect(store.pinLine(pin)).toContain(`#${store.labelOf(pin.id)}`)
+  })
+
+  it('writes both numbers into the inbox mirror heading', () => {
+    const pin = store.addPin({ text: 'mirror', url: 'https://x/y' }, null)
+    const md = fs.readFileSync(path.join(STORE, 'inbox', `${pin.id}.md`), 'utf8')
+    expect(md.split('\n')[0]).toBe(`# ${pin.id} (#${store.labelOf(pin.id)}) - open`)
+  })
+})

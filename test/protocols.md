@@ -29,6 +29,14 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   around the toolbar is absorbed (the "moat"), a genuine outside click still
   dismisses, and clicking a Nudge widget never leaks. Run after any host/overlay/
   pointer-events/moat change.
+- `node test/escape-clear.mjs` — **Suite O (Escape clears marks)**, page server
+  5194: Escape always wipes the current mark (highlight, Shift-outlines, lasso,
+  composer) — including on pages that own the keyboard, and without stealing the
+  key from the page's own dialog. Run after any keyboard/listener/mode change.
+- `node test/multi-select.mjs` — **Suite P (Multi-selection)**, page server 5195:
+  Shift+Klick collects elements into ONE mark from BOTH entry paths (Shift on the
+  first click, or a plain pick extended afterwards), toggles off, keeps the typed
+  text, and isn't eaten by the moat. Run after any pick/mode/moat change.
 - `node test/amend.mjs` — **Suite N (Amend)**, side port 4788: append-only
   follow-ups to an open nudge — original immutable + inbox mirror, order,
   resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
@@ -369,6 +377,61 @@ Note the two orthogonal axes: **event** (pointerdown vs mousedown vs click) ×
 window-capture swallow is the only hop that beats a page's capture-phase listener
 (registration order can't be won on `document`). Any change to the swallow MUST
 keep grip/draw/composer exempt (M5) — they need their own pointerdown.
+
+## Suite O — Escape clears marks (escape-clear.mjs)
+
+The keyboard half of Suite M's lesson (Gerald 2026-07-29: "wenn ich Escape drücke,
+sollten die Markierungen wieder verschwinden"). Escape was handled on `document`
+capture; dialog/dropdown libraries (Radix, Headless UI, `@roots/ui`) handle it on
+**window** capture and stop propagation while their layer is open, so the key
+never reached Nudge — Esc silently stopped clearing the pick and P/F stopped
+switching tools, on exactly the real apps Nudge is for. Moved to window capture,
+the first hop. Hermetic: own page server on 5194, no bridge (the pill renders
+offline).
+
+| # | Guards | Last |
+|---|--------|------|
+| O1 | Single pick: Escape clears the highlight and closes the composer | ✅ 2026-07-29 |
+| O2 | Shift multi-selection: Escape removes every outline | ✅ 2026-07-29 |
+| O3 | Lasso: Escape clears the stroke | ✅ 2026-07-29 |
+| O4 | A page that eats Escape at **window capture** can't blind Nudge — marks still clear | ✅ 2026-07-29 |
+| O5 | Same at document capture (a page listener on the SAME node can't suppress us — `stopImmediatePropagation` does not cross into the isolated world) | ✅ 2026-07-29 |
+| O6 | P/F ride the same listener and still switch tools when the page owns the keyboard | ✅ 2026-07-29 |
+| O7 | Propagation-neutral: Escape disarms the tool AND still reaches the page's own dialog | ✅ 2026-07-29 |
+
+Two asymmetries worth keeping straight, both proven here: across **nodes** a page
+listener one hop earlier wins (O4 — the only fix is to move up, exactly like the
+moat), while on the **same node** it cannot touch us (O5 — isolated worlds).
+And Escape is deliberately NOT swallowed (O7), except while the composer textarea
+has focus — there the keystroke was aimed at Nudge, so `ta`'s target-phase
+`stopPropagation` keeps it.
+
+## Suite P — Multi-selection (multi-select.mjs)
+
+Shift+Klick collects several elements into ONE mark/prompt ("tausche diese
+beiden"). It worked or didn't depending on how the selection STARTED (Gerald
+2026-07-29, "nicht zuverlässig"): Shift on the very first click restored
+`mode = 'picking'` and kept collecting; a plain click first left `mode` at
+`'composing'`, and `onClick` dropped every later click at its first line. Second
+half of the same report: the composer opens BESIDE the mark, so the next element
+often sits inside the moat's 12px near-miss margin and the click was absorbed —
+the moat now lets a Shift+click through while extending (nobody reaches for the
+toolbar with Shift held). Hermetic: own page server on 5195, no bridge.
+
+| # | Guards | Last |
+|---|--------|------|
+| P1 | Shift held from the very first click collects 2 elements | ✅ 2026-07-29 |
+| P2 | A plain pick extended by Shift+click collects 2 — meta names the count, layer chips hide | ✅ 2026-07-29 |
+| P3 | A third Shift+click extends the same set | ✅ 2026-07-29 |
+| P4 | Shift+click on a collected element toggles it back off | ✅ 2026-07-29 |
+| P5 | Already-typed composer text survives extending (no composer reset) | ✅ 2026-07-29 |
+| P6 | A plain click resets the multi set back to one element | ✅ 2026-07-29 |
+| P7 | A deliberate Shift+click right beside the composer isn't eaten by the moat | ✅ 2026-07-29 |
+| P8 | A lasso region stays a region — Shift+click doesn't fold elements into it | ✅ 2026-07-29 |
+
+The lesson for new interaction legs: cover both ENTRY PATHS, not just the state.
+Suite A tested multi-selection and passed for months — it only ever entered via
+Shift-on-first-click, the path that happened to work.
 
 ## Suite N — Amend (amend.mjs)
 

@@ -171,6 +171,27 @@ Pull works ANY TIME mid-turn: the store is plain files, the bridge answers
 References in Gerald's prompt („Nudge 123", `#123`) arrive pre-injected by the
 UserPromptSubmit hook; for anything deeper read the inbox `.md` directly.
 
+## 2a. Two numbers, one nudge: pill `#47` vs id `nudge_1046`
+
+Since 0.21.5 the number Gerald SAYS and the number on DISK are not always the
+same, and conflating them sends work to the wrong nudge.
+
+- **id** (`nudge_1046`) — identity. Counts up forever, never reused. It names the
+  files (`inbox/nudge_1046.md`, `shots/nudge_1046*.png`) and it is what goes into
+  commits and the CHANGELOG. Everything you write down uses this.
+- **pill number / label** (`#47`) — the number rendered on the element and in the
+  queue popover, so it is what Gerald reads and types. Bounded: it wraps at 999
+  (`nudge_1000` → `#1`), so it stays short forever. It is unique among OPEN
+  nudges, not across history.
+
+You do not have to compute this. The hook prints both on every open row
+(`#47 (nudge_1046) · …`) and on every injected reference
+(`REFERENZIERT nudge_1046 (#47, offen)`), and the inbox heading carries both.
+When Gerald says a bare number, it is the **pill number of something currently
+open** — resolve it against the open queue first, never against an old id that
+happens to match. Say the id back to him only when it disambiguates; otherwise
+mirror his number.
+
 ## 3. Queue discipline (rapid-fire work sessions)
 
 Gerald often fires prompts faster than the agent processes them. The store IS the
@@ -217,6 +238,10 @@ NEVER write nudge provenance into code comments („Gerald via Nudge", pin ids,
 dates) — comments state constraints, not origin (house rule). Provenance
 belongs in the COMMIT MESSAGE (e.g. „fix(estimate): icon-only toggle
 [nudge_74]"). The store/inbox is the durable nudge ledger already.
+
+Always the **id** there (`[nudge_1046]`), never the pill number — the pill
+number wraps (§2a), so `[#47]` in a commit points at a different nudge a few
+thousand nudges later. The id is the only thing that stays greppable.
 
 ## 5. Resolve gate
 

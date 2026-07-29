@@ -335,7 +335,15 @@
     if (eatNextClick && Date.now() < eatNextClick) { eatNextClick = 0; e.preventDefault(); e.stopPropagation() }
   }
   function onClick(e) {
-    if (mode !== 'picking' || inOverlay(e) || !e.isPrimary) return
+    // Shift extends a selection that started as a PLAIN pick, too. The composer
+    // is open and mode is 'composing' by then, which used to bail out one line
+    // below — so "⇧click add element" (the composer's own placeholder) only ever
+    // held when Shift was already down on the very FIRST click (bit Gerald
+    // 2026-07-29: "geht nicht zuverlässig" — it worked or not depending on how
+    // the selection happened to start). Element picks only: a lasso region has
+    // no element to collect with.
+    const extending = mode === 'composing' && e.shiftKey && !!picked && !picked.stroke
+    if ((mode !== 'picking' && !extending) || inOverlay(e) || !e.isPrimary) return
     e.preventDefault(); e.stopPropagation()
     eatNextClick = Date.now() + 700 // consume the trailing click, or lapse
     const t = e.target
@@ -347,6 +355,9 @@
       // Shift starts/extends a multi-selection (Finder/Figma convention:
       // plain click = ONE fresh element, only Shift collects — 0.10.0 aligned
       // code with the documented behaviour)
+      // Seed the set with what is ALREADY marked, so the first Shift+click ADDS
+      // to the single pick instead of starting over from nothing.
+      if (!multi.length && picked?.el && !picked.stroke) addToMulti(picked.el)
       addToMulti(t)
       if (!multi.length) { setMode('idle'); return } // toggled the last one away
       picked = { el: multi[0].el, rect: multi[0].el.getBoundingClientRect(), selector: multi[0].selector, source: multi[0].source }
@@ -841,6 +852,11 @@
     const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000))
     return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`
   }
+  // The number Gerald reads and says: the bridge's bounded LABEL (wraps at 999,
+  // see store.mjs), not the ever-growing id. Both are shown wherever there is
+  // room — the id is what commits and inbox files cite. Fallback keeps an older
+  // bridge's payload (no `label`) rendering something sane instead of blank.
+  const numOf = (p) => (p.label ?? p.id.replace(/^(?:pin|nudge)_/, ''))
   // speaking label for text-less prompts: WHAT is marked, not just "a mark"
   function markLabel(p) {
     if (p.targets?.length) return `Mark: ${p.targets.length} elements`
@@ -872,7 +888,12 @@
     for (const p of open) {
       const row = document.createElement('div')
       row.className = 'q-row' + (wsOk && agentLive ? ' live' : '')
-      row.innerHTML = `${Q_CLOCK}<span class="q-id"></span><span class="q-text"></span><span class="q-amc"></span><span class="q-who"></span><span class="q-age"></span><button class="q-add" title="Nachtrag ergänzen">+</button><button class="q-x" title="Dismiss nudge">×</button>`
+      row.innerHTML = `${Q_CLOCK}<span class="q-num"></span><span class="q-id"></span><span class="q-text"></span><span class="q-amc"></span><span class="q-who"></span><span class="q-age"></span><button class="q-add" title="Nachtrag ergänzen">+</button><button class="q-x" title="Dismiss nudge">×</button>`
+      // BOTH numbers, and this is the only surface that shows them side by side:
+      // #47 is the pill on the element (how Gerald finds this row and what he
+      // says), nudge_1046 the identity behind it (files, commits). Seeing them
+      // together here is what keeps the two from ever reading as a contradiction.
+      row.querySelector('.q-num').textContent = `#${numOf(p)}`
       row.querySelector('.q-id').textContent = p.id
       row.querySelector('.q-text').textContent = p.text || markLabel(p)
       const amc = row.querySelector('.q-amc') // "+N" badge when this nudge carries follow-ups
@@ -952,7 +973,8 @@
       for (const p of pageDone) {
         const row = document.createElement('div')
         row.className = 'q-row done'
-        row.innerHTML = `${Q_CHECK}<span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span>`
+        row.innerHTML = `${Q_CHECK}<span class="q-num"></span><span class="q-id"></span><span class="q-text"></span><span class="q-who"></span><span class="q-age"></span>`
+        row.querySelector('.q-num').textContent = `#${numOf(p)}`
         row.querySelector('.q-id').textContent = p.id
         row.querySelector('.q-text').textContent = p.text || markLabel(p)
         row.querySelector('.q-who').textContent = p.owner ? splitLabel(p.owner.label).name : ''
@@ -977,8 +999,8 @@
         // sweeps while an agent is live (a plain green dot read like a stuck
         // status LED — a running clock reads as work, Gerald 2026-07-05)
         d.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="d-hand"><path d="M12 6v6l4 2"/></g></svg><span class="d-num"></span>'
-        d.querySelector('.d-num').textContent = p.id.replace(/^(?:pin|nudge)_/, '')
-        d.title = `${p.id} · ${p.text || markLabel(p)}`
+        d.querySelector('.d-num').textContent = numOf(p)
+        d.title = `#${numOf(p)} · ${p.id} · ${p.text || markLabel(p)}`
         d.__sel = sel
         d.addEventListener('click', (e) => { e.stopPropagation(); showQueue() })
         dots.appendChild(d)
@@ -1120,7 +1142,7 @@
 
   // ---------- global listeners ----------
   const isEditable = (el) => !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
-  const onDocKeyDown = (e) => {
+  const onWinKeyDown = (e) => {
     if (e.key === 'Escape' && statusMenu.classList.contains('on')) { statusMenu.classList.remove('on'); return }
     if (e.key === 'Escape' && whoMenu.classList.contains('on')) { whoMenu.classList.remove('on'); return }
     if (e.key === 'Escape' && queue.classList.contains('on')) { hideQueue(); return }
@@ -1139,7 +1161,16 @@
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
   document.addEventListener('click', onClickSuppress, true)
-  document.addEventListener('keydown', onDocKeyDown, true)
+  // WINDOW capture, the first hop — not document (bit Gerald 2026-07-29: "die
+  // Markierungen verschwinden nicht"). Dialog/dropdown libraries (Radix, Headless
+  // UI, @roots/ui) handle Escape on window capture and stopPropagation() it while
+  // their layer is open; a document-capture listener downstream then never runs,
+  // so Esc silently stopped clearing the pick — and P/F stopped switching tools —
+  // on exactly the real apps Nudge is for. Same lesson as the moat below. (A page
+  // listener on the SAME node can't suppress us: stopImmediatePropagation does not
+  // cross into the content script's isolated world — only halting propagation one
+  // node earlier does. Suite O pins both directions.)
+  window.addEventListener('keydown', onWinKeyDown, true)
 
   // ---------- moat: reaching for the toolbar must not dismiss page state ----------
   // A page modal often uses a full-screen backdrop that hides on any click
@@ -1165,6 +1196,12 @@
   }
   const swallowMoat = (e) => {
     if (mode === 'off' || mode === 'picking' || mode === 'drawing') return
+    // ...and never a Shift+click that extends the selection: the composer opens
+    // BESIDE the mark, so the next element Gerald wants is often exactly in the
+    // moat — the second half of "Shift geht nicht zuverlässig" (2026-07-29).
+    // Nobody reaches for the toolbar with Shift held, so the moat's premise
+    // (an ACCIDENTAL near-miss) simply doesn't apply to this gesture.
+    if (e.shiftKey && mode === 'composing' && picked && !picked.stroke) return
     if (inOverlay(e)) return // a real widget hit — its own handlers run
     // caught at WINDOW capture, the first hop: stopping here blocks the page's
     // backdrop-click AND any capture-phase outside-click dismisser downstream
@@ -1228,7 +1265,7 @@
       document.removeEventListener('mousemove', onMove, true)
       document.removeEventListener('pointerdown', onClick, true)
       document.removeEventListener('click', onClickSuppress, true)
-      document.removeEventListener('keydown', onDocKeyDown, true)
+      window.removeEventListener('keydown', onWinKeyDown, true)
       document.removeEventListener('pointerdown', onDocPointerDown, true)
       for (const t of MOAT_EVENTS) window.removeEventListener(t, swallowMoat, true)
       for (const t of CHROME_POINTER_EVENTS) window.removeEventListener(t, swallowChromePointer, true)
