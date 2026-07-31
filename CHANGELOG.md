@@ -5,6 +5,62 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.24.1 — 2026-07-29 (Ein hängender Screenshot nimmt die Bar nicht mehr mit)
+
+### Fixed
+- **Freeform riss die ganze Nudge-Bar weg.** Gerald: „Jetzt habe ich mit Freeform
+  etwas eingekreist und es erscheint das Kommentarfeld nicht und die Toolbar ist
+  weg." Der Stroke stand auf der Seite, sonst nichts — und die Konsole war LEER.
+  Genau das war der Beweis: es wurde nichts geworfen, also hat auch nichts
+  geloggt. `captureRegion` versteckte Pille, Punkte und Composer für den
+  Screenshot, wartete auf den Capture-Roundtrip und stellte alles ERST DANACH
+  wieder her. `chrome.tabs.captureVisibleTab` löst aber nicht immer auf: hängt ein
+  Debugger am Tab (BrowserTools MCP), kommt es weder zurück noch wirft es, `sw.js`
+  ruft nie `sendResponse`, und das `await` im Content-Script wartete unbegrenzt.
+  Damit war der Zustand endgültig statt vorübergehend. Zusätzlich hing
+  `openComposer()` hinter demselben `await` — dieselbe Ursache kostete auch das
+  Eingabefeld.
+
+### Changed
+- **Die Bar ist nicht mehr Geisel des Screenshots.** Das Overlay wird nur noch
+  für den PIXEL-GRIFF versteckt, nicht für den ganzen Roundtrip. `sw.js` meldet
+  `nudge-grabbed`, sobald `captureVisibleTab` die Pixel geliefert hat — Croppen,
+  Skalieren und Encodieren laufen mit sichtbarer Toolbar weiter. Drei Wege zurück,
+  in dieser Reihenfolge: das Grab-Signal (~100 ms), eine Gnadenfrist von 350 ms,
+  und ein `finally`. Dazu ein Timeout von 3 s auf den Roundtrip: ein Capture, der
+  länger braucht, ist nicht langsam, sondern steckt fest.
+- **Das Kommentarfeld wartet nicht mehr auf das Bild.** Shot und Feld laufen um
+  die Wette; der normale Capture (~150 ms) gewinnt weiterhin, das Feld erscheint
+  also einmal und hat sein Bild schon dabei. Ein steckengebliebener Capture kostet
+  ein Blinzeln statt den Nudge.
+- **Ehrlich statt heimlich.** Bleibt das Bild aus, sagt es der Feed („Kein
+  Screenshot — Nudge geht mit Markierung raus") und der Nudge geht mit Stroke und
+  Element-Kontext raus. Ein Grab, der NACH dem Wiedereinblenden landet, hat die
+  Toolbar im Bild und wird verworfen — ein Screenshot mit der eigenen UI darin ist
+  schlechter als keiner.
+- **Der Cursor bleibt, wo er war.** Das Verstecken des Composers blurrt die
+  Textarea; Fokus und Caret werden jetzt mit dem Feld zurückgestellt. Der
+  Evidence-Shot der Bridge kann mitten im Satz feuern — bisher kostete das den
+  nächsten Tastendruck.
+- Überlappende Captures (der Evidence-Shot der Bridge kann in einen laufenden
+  Lasso-Capture fallen) korrelieren jetzt über ein Token, damit ein Grab nicht die
+  Buchführung des anderen quittiert.
+
+### Tests
+- **Suite Y (`test/capture-stall.mjs`)** — der Stall wird an seiner Quelle
+  nachgestellt: `captureVisibleTab` wird im ECHTEN Service Worker durch ein
+  Promise ersetzt, das nie auflöst. Prüft den gesunden Pfad (Y1), dass ein
+  hängender Capture weder Toolbar noch Composer kostet (Y2), dass der Nudge ohne
+  Bild trotzdem rausgeht (Y3), dass es gesagt statt verschwiegen wird (Y4) und
+  dass nach Rückkehr des Captures wieder Screenshots entstehen — kein
+  hängengebliebener Zustand (Y5).
+
+### Known limitation
+- Mit angehängtem Debugger (BrowserTools MCP aktiv) gibt es für Freeform-Nudges
+  weiterhin KEIN Bild — die Ursache liegt in Chrome, nicht in Nudge. Der Nudge
+  funktioniert vollständig, nur ohne Pixel: Stroke, Element-Kontext und Route
+  fahren mit, und der Feed sagt es an.
+
 ## 0.24.0 — 2026-07-29 (Das × nimmt den Nudge wirklich zurück — der Agent hört auf)
 
 ### Fixed

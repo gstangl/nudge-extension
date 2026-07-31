@@ -13,6 +13,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   ;(async () => {
     try {
       const dataUrl = await chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'png' })
+      // The pixels are in hand — the page may show its chrome again RIGHT NOW.
+      // Everything below (decode, crop, scale, encode) is the slow part and does
+      // not need the toolbar hidden. Without this signal the overlay stayed
+      // hidden for the whole round-trip, and for a capture that never settles
+      // (debugger attached) it stayed hidden forever (2026-07-29).
+      // echo the caller's token: captures can overlap (the bridge-triggered
+      // after-shot can land inside a lasso capture), and one grab must not clear
+      // the other's overlay bookkeeping
+      chrome.tabs.sendMessage(sender.tab.id, { type: 'nudge-grabbed', token: msg.token }).catch(() => { /* tab navigated away */ })
       const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob())
       // Don't trust the page's devicePixelRatio: emulation/zoom can make the captured
       // bitmap scale differ. Derive the real scale from bitmap vs viewport size.

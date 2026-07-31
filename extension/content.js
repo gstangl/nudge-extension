@@ -498,10 +498,21 @@
     }
     // the circled region is the mark, send stays optional (same as element picks)
     postSelection(null, { keepShot: false })
+    // The composer used to open only AFTER the screenshot came back — so a capture
+    // that never settles (debugger attached, 2026-07-29) cost Gerald the input
+    // field entirely, with the toolbar hidden on top. Now the shot and the field
+    // race: whichever is first opens it. Normal capture (~150 ms) still wins, so
+    // the field appears once, with its picture already attached; a stuck capture
+    // costs a blink, not the nudge.
+    let opened = false
+    const open = () => { if (!opened) { opened = true; openComposer(bbox) } }
+    const grace = setTimeout(open, COMPOSER_GRACE)
     void (async () => {
       const shot = await captureRegion(bbox)
-      openComposer(bbox)
+      clearTimeout(grace)
+      open()
       if (shot) postSelection(shot)
+      else notify('alert', 'Kein Screenshot — Nudge geht mit Markierung raus')
     })()
   })
 
@@ -570,6 +581,10 @@
 
   // ---------- capture helpers ----------
   const nextFrames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+  const CAPTURE_TIMEOUT = 3000 // a real capture is ~150 ms; past this it is stuck, not slow
+  const CAPTURE_GRACE = 350 // longest the overlay may stay hidden waiting for pixels
+  let captureSeq = 0 // correlates each grab signal with the capture that asked for it
+  const COMPOSER_GRACE = 350 // typing must not wait on a screenshot beyond one blink
   async function captureRegion(rect, { withHighlight = false } = {}) {
     const PAD = 24
     const crop = {
@@ -584,26 +599,78 @@
     pill.style.display = 'none'
     const dotsWas = dots.style.display
     dots.style.display = 'none' // status dots don't belong in evidence shots
+    // hiding the composer BLURS the textarea; the evidence loop can fire
+    // mid-sentence, so remember the caret and put it back with the field
+    const focusWas = root.activeElement
+    const caretWas = focusWas?.tagName === 'TEXTAREA' ? [focusWas.selectionStart, focusWas.selectionEnd] : null
     hl.classList.add('instant') // transitions off: the box must be fully painted in the shot
     if (withHighlight) { highlight(rect); hl.querySelector('.chip').textContent = '' }
     else hl.classList.remove('on')
-    await nextFrames()
+
+    // The overlay is hidden ONLY for the pixel grab — not for the whole round
+    // trip, and never indefinitely. Three ways back, in order of preference:
+    //   1. sw.js signals `nudge-grabbed` the moment captureVisibleTab resolves
+    //      (~100 ms) — the crop/encode that follows needs no hiding,
+    //   2. the grace timer, if that signal is late,
+    //   3. the finally, if everything failed.
+    // Whichever runs first wins; `restore` is idempotent.
+    let restored = false
+    let grabbedClean = false // did the grab land BEFORE we put the chrome back?
+    const restore = () => {
+      if (restored) return
+      restored = true
+      hl.classList.remove('on')
+      hl.classList.remove('instant')
+      pill.style.display = pillWas
+      dots.style.display = dotsWas
+      // The after-shot (evidence loop) is triggered by the BRIDGE — it can fire
+      // while Gerald is typing into the composer. It used to hide the composer and
+      // never put it back: the agent resolving some other nudge on this page made
+      // the open input field disappear mid-sentence. Restore exactly what was there —
+      // but ONLY our own hide: the lasso opens the composer on a grace timer while
+      // this capture is still in flight, and that opening must win.
+      if (composer.style.display === 'none') composer.style.display = composerWas
+      if (focusWas?.isConnected && root.activeElement !== focusWas) {
+        try {
+          focusWas.focus({ preventScroll: true })
+          if (caretWas) focusWas.setSelectionRange(caretWas[0], caretWas[1])
+        } catch { /* element went away mid-capture */ }
+      }
+      if (mode === 'composing' && picked && !picked.stroke) highlight(picked.el?.getBoundingClientRect() || picked.rect)
+    }
+    const token = `cap_${++captureSeq}`
+    const onGrabbed = (msg) => { if (msg?.type === 'nudge-grabbed' && msg.token === token) { grabbedClean = !restored; restore() } }
+    chrome.runtime.onMessage.addListener(onGrabbed)
+    const graceTimer = setTimeout(restore, CAPTURE_GRACE)
+
     let out = null
     try {
-      const res = await chrome.runtime.sendMessage({ type: 'nudge-capture', rect: crop, vw: window.innerWidth, vh: window.innerHeight, dpr: window.devicePixelRatio })
+      await nextFrames()
+      // TIMEOUT + the restore paths above make the overlay independent of the
+      // screenshot. captureVisibleTab does not always settle: with a debugger
+      // attached to the tab (BrowserTools MCP, 2026-07-29) it neither resolves nor
+      // throws, so sw.js never answers and this await hung FOREVER — toolbar
+      // hidden, composer never opened, and an EMPTY console to debug it with.
+      // A shot is a nice-to-have; the chrome Gerald works with is not.
+      const res = await Promise.race([
+        chrome.runtime.sendMessage({ type: 'nudge-capture', token, rect: crop, vw: window.innerWidth, vh: window.innerHeight, dpr: window.devicePixelRatio }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('capture timed out (debugger attached?)')), CAPTURE_TIMEOUT)),
+      ])
       if (res?.ok) out = res
       else console.warn('[roots-nudge] capture failed:', res?.error)
     } catch (err) { console.warn('[roots-nudge] capture failed:', err) }
-    hl.classList.remove('on')
-    hl.classList.remove('instant')
-    pill.style.display = pillWas
-    dots.style.display = dotsWas
-    // The after-shot (evidence loop) is triggered by the BRIDGE — it can fire
-    // while Gerald is typing into the composer. It used to hide the composer and
-    // never put it back: the agent resolving some other nudge on this page made
-    // the open input field disappear mid-sentence. Restore exactly what was there.
-    composer.style.display = composerWas
-    if (mode === 'composing' && picked && !picked.stroke) highlight(picked.el?.getBoundingClientRect() || picked.rect)
+    finally {
+      clearTimeout(graceTimer)
+      chrome.runtime.onMessage.removeListener(onGrabbed)
+      restore()
+    }
+    // A grab that landed after the chrome was already back has the toolbar in
+    // frame. Evidence with our own UI baked into it is worse than no evidence —
+    // drop it rather than ship a picture that misleads the agent.
+    if (out && !grabbedClean) {
+      console.warn('[roots-nudge] capture discarded: grabbed after the overlay was restored')
+      out = null
+    }
     return out
   }
 
