@@ -149,6 +149,54 @@ try {
     pass('L5 reduced-motion collapses overlay transitions (no gliding highlight / spinning clock)')
   }
 
+  // ---------- L7: the toolbar stays COMPLETELY visible ----------
+  // Gerald 2026-07-31: „wenn sich ein Browser automatisch öffnet oder ich rechts
+  // die Inspection Bar aufmache, ist die Toolbar oft verdeckt und verschwunden."
+  // A docked DevTools panel shrinks the page viewport exactly like a smaller
+  // window does — and the bar ALSO grows on its own when a longer session label
+  // arrives. Both must keep it inside; neither may cost the remembered spot.
+  {
+    const box = () => rd(() => {
+      const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect()
+      return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, vw: document.documentElement.clientWidth, vh: document.documentElement.clientHeight }
+    })
+    const inside = b => b.left >= 0 && b.top >= 0 && b.right <= b.vw && b.bottom <= b.vh
+    // 1. the viewport shrinks under the bar (DevTools docked right / small window)
+    await p.setViewportSize({ width: 700, height: 620 })
+    await p.waitForTimeout(250)
+    let b = await box()
+    if (!inside(b)) fail(`L7: a shrunken viewport left the toolbar hanging over the edge: ${JSON.stringify(b)}`)
+    // 2. parked at the right edge, the bar then GROWS on its own — a longer
+    //    session label lands on the next WS frame and NO resize event fires
+    A.label = 'Est :5175' // short first, so the growth in a moment is unmistakable
+    await hb(A)
+    await p.waitForTimeout(1600)
+    const g2 = await p.locator('.pill .grip').boundingBox()
+    await p.mouse.move(g2.x + 6, g2.y + 6); await p.mouse.down(); await p.mouse.move(690, 200, { steps: 4 }); await p.mouse.up()
+    await p.waitForTimeout(200)
+    const dropped = await box()
+    if (!inside(dropped)) fail(`L7: dropping the bar at the right edge already put it outside: ${JSON.stringify(dropped)}`)
+    A.label = 'Estimate Templates mit einem wirklich sehr langen Sessionnamen :5175'
+    await hb(A)
+    await p.waitForTimeout(1600) // heartbeat -> bridge -> WS frame -> toolbar
+    const grown = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
+    if (!grown.includes('sehr langen')) fail(`L7: the long label never reached the toolbar, got "${grown}"`)
+    b = await box()
+    // guard against a vacuous test: if the label doesn't widen the bar, step 2 proves nothing
+    if (b.right - b.left <= dropped.right - dropped.left) fail('L7: the long label did not widen the toolbar — the growth case is not being exercised')
+    if (!inside(b)) fail(`L7: the toolbar grew out of the viewport with no resize to correct it: ${JSON.stringify(b)}`)
+    // 3. room comes back (DevTools closed) -> back to where Gerald dropped it
+    await p.setViewportSize({ width: 1400, height: 900 })
+    await p.waitForTimeout(250)
+    b = await box()
+    if (!inside(b)) fail(`L7: toolbar outside the restored viewport: ${JSON.stringify(b)}`)
+    if (Math.abs(b.left - dropped.left) > 2 || Math.abs(b.top - dropped.top) > 2)
+      fail(`L7: the remembered spot was lost — dropped at ${dropped.left}/${dropped.top}, back at ${b.left}/${b.top}`)
+    A.label = 'Estimate Templates :5175'
+    await hb(A)
+    pass('L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot')
+  }
+
   // ---------- L6: an orphaned tab tells Gerald to ⌘R instead of dying silently ----------
   // (runs LAST: chrome.runtime.reload() kills the SW handle for good)
   {

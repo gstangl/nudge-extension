@@ -112,11 +112,43 @@
 
   // ---------- movable toolbar: drag via the grip handle, position persists ----------
   const grip = pill.querySelector('.grip')
-  function placePill(x, y) {
-    const w = pill.offsetWidth || 200, h = pill.offsetHeight || 36
-    const cx = Math.min(Math.max(4, x), window.innerWidth - w - 4)
-    const cy = Math.min(Math.max(4, y), window.innerHeight - h - 4)
-    Object.assign(pill.style, { left: cx + 'px', top: cy + 'px', right: 'auto', bottom: 'auto' })
+  const EDGE = 4 // breathing room between the toolbar and the viewport edge
+  const CORNER = 20 // the default spot, mirrors `.pill { top: 20px; right: 20px }` in styles.js
+  // The viewport as the toolbar may use it: `clientWidth` excludes the classic
+  // scrollbar, `innerWidth` does not — the bar must not hide under it either.
+  // Quirks-mode documents report something else entirely on the documentElement,
+  // so only a plausible scrollbar (≤ 40px) is believed.
+  const inView = (client, inner) => (client > 0 && inner - client <= 40 ? client : inner)
+  const viewW = () => inView(document.documentElement.clientWidth, window.innerWidth)
+  const viewH = () => inView(document.documentElement.clientHeight, window.innerHeight)
+  // Two different things, deliberately kept apart: where Gerald PUT the toolbar
+  // (the intent, unclamped) and where it is DRAWN (that intent pushed inside the
+  // current viewport). So a viewport that shrinks under the bar only BORROWS the
+  // position — the bar returns to its spot the moment the room is back.
+  let pillWant = null // null = the default corner, top right
+  let pillBox = { w: 200, h: 36 } // last measured size — the pill is display:none while the overlay is off
+
+  function placePill(x, y) { pillWant = { x, y }; fitPill() }
+
+  // The toolbar has to be COMPLETELY visible at all times — Gerald 2026-07-31:
+  // „wenn sich ein Browser automatisch öffnet oder ich rechts die Inspection Bar
+  // aufmache, dann ist die Toolbar oft verdeckt und verschwunden". Two things
+  // move under it and only one of them was ever watched: the VIEWPORT shrinks
+  // (DevTools docked right, a small automation window, browser zoom) — and the
+  // PILL GROWS, when the session label, the id, the localhost pill, the „Pull"
+  // tag or the badge land on a WS frame long after it was placed. A bar that
+  // fitted a second ago then hangs over the edge with nothing to correct it.
+  // So: measure now, clamp now, on every signal that either of the two changed.
+  function fitPill() {
+    if (pill.offsetWidth && pill.offsetHeight) pillBox = { w: pill.offsetWidth, h: pill.offsetHeight }
+    const { w, h } = pillBox // measurable only while visible — otherwise the last known box
+    const vw = viewW(), vh = viewH()
+    const want = pillWant || { x: vw - w - CORNER, y: CORNER } // never dragged: the default corner
+    // Math.max on the upper bound: a viewport too narrow for the whole bar keeps
+    // its LEFT edge (grip, status, Pick) reachable instead of cutting off both.
+    const x = Math.min(Math.max(EDGE, want.x), Math.max(EDGE, vw - w - EDGE))
+    const y = Math.min(Math.max(EDGE, want.y), Math.max(EDGE, vh - h - EDGE))
+    Object.assign(pill.style, { left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' })
     // everything that hangs off the toolbar follows it while it moves
     placeFeed()
     if (queue.classList.contains('on')) trackPopover(queue)
@@ -129,6 +161,13 @@
   function placeFeed() {
     const r = pill.getBoundingClientRect()
     Object.assign(feed.style, { top: (r.bottom + 8) + 'px', left: r.left + 'px', right: 'auto', maxWidth: Math.max(220, r.width) + 'px' })
+    // a chip row is wider than a narrow bar — pull it back in, or the same
+    // right-hand DevTools panel that used to cut off the toolbar cuts off the
+    // feedback instead. Only with chips up: the measurement forces a layout and
+    // this runs on every frame of a drag.
+    if (!feed.children.length) return
+    const f = feed.getBoundingClientRect()
+    if (f.width && f.right > viewW() - EDGE) feed.style.left = Math.max(EDGE, viewW() - f.width - EDGE) + 'px'
   }
   // OPEN: position the popover under the pill, caret pointing at its anchor
   // (badge / session label), clamped to the viewport — and REMEMBER the offset
@@ -137,7 +176,7 @@
     const pillR = pill.getBoundingClientRect()
     const a = anchorEl.getBoundingClientRect()
     const caretX = a.left + a.width / 2
-    const left = Math.max(8, Math.min(caretX - 32, window.innerWidth - W - 8))
+    const left = Math.max(8, Math.min(caretX - 32, viewW() - W - 8))
     const caret = Math.max(16, Math.min(caretX - left, W - 16))
     Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
     popover.style.setProperty('--caret-x', caret + 'px')
@@ -149,7 +188,7 @@
   // recompute → it never slides while the window stays put (Gerald 2026-07-06).
   function trackPopover(popover) {
     const pillR = pill.getBoundingClientRect()
-    const left = Math.max(8, Math.min(pillR.left + (popover._dx || 0), window.innerWidth - (popover._w || 340) - 8))
+    const left = Math.max(8, Math.min(pillR.left + (popover._dx || 0), viewW() - (popover._w || 340) - 8))
     Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px' })
   }
   chrome.storage.local.get('nudgePillPos', ({ nudgePillPos }) => {
@@ -171,15 +210,20 @@
     if (!dragOff) return
     dragOff = null
     grip.classList.remove('dragging')
+    // the drop point as SEEN, not the raw pointer (which may have left the window
+    // mid-drag) — that is what „back to where I put it" has to mean
     const r = pill.getBoundingClientRect()
-    chrome.storage.local.set({ nudgePillPos: { x: r.left, y: r.top } })
+    pillWant = { x: r.left, y: r.top }
+    chrome.storage.local.set({ nudgePillPos: pillWant })
     saveSnap() // same position on the next load, WITHOUT waiting for storage
   })
-  addEventListener('resize', () => { // keep the pill inside the viewport
-    const r = pill.getBoundingClientRect()
-    if (pill.style.left) placePill(r.left, r.top)
-    else placeFeed() // pill at its default (right-anchored) spot — feed still tracks it
-  }, { passive: true })
+  // every signal that the viewport changed shape: a docked DevTools panel and a
+  // resized window both land here, browser zoom does too
+  addEventListener('resize', fitPill, { passive: true })
+  window.visualViewport?.addEventListener('resize', fitPill, { passive: true })
+  // …and the bar's OWN box: the session label, the badge and the font arrive
+  // asynchronously, and no resize event fires for that
+  try { new ResizeObserver(() => fitPill()).observe(pill) } catch { /* no ResizeObserver — resize handling still applies */ }
 
   // ---------- shared: selector, source hint, styles ----------
   const inOverlay = (e) => e.composedPath().includes(host)
@@ -1452,11 +1496,12 @@
       stroke: picked.stroke || null,
       multi: multi.map(m => ({ ctx: m.frozen || contextOf(m) })),
     } : null
-    const r = pill.style.left ? pill.getBoundingClientRect() : null
     try {
       sessionStorage.setItem(SNAP_KEY, JSON.stringify({
         at: Date.now(), url: location.href, mode, composer: c,
-        pill: r && { x: r.left, y: r.top },
+        // the INTENT, never the clamped spot: a narrow viewport (DevTools open
+        // while the tab reloads) must not turn into the remembered position
+        pill: pillWant,
         queue: { open: queue.classList.contains('on'), expanded: [...qExpanded], amend: [...qAmendDraft] },
         pins: pinCache, agent: { live: agentLive, label: agentLabel, wake: agentWake, list: agents },
       }))

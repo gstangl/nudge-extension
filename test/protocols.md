@@ -22,8 +22,10 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   their own host. Run after any ownership/watcher/hook change.
 - `node test/toolbar-ux.mjs` — **Suite L (Toolbar & popover UX)**, side port 4785:
   the localhost is always a clean pill (never inline `:port`), only one popover
-  open at a time, P/F tool hotkeys are tightly gated, reduced-motion is honoured.
-  Run after any toolbar/popover/label/hotkey change.
+  open at a time, P/F tool hotkeys are tightly gated, reduced-motion is honoured,
+  and the toolbar stays COMPLETELY inside the viewport — a shrinking viewport
+  (docked DevTools) and the bar's own growth both. Run after any
+  toolbar/popover/label/hotkey/placement change.
 - `node test/page-inertness.mjs` — **Suite M (Page inertness)**, page server 5192:
   reaching for the toolbar must not dismiss the page's own UI — a near-miss click
   around the toolbar is absorbed (the "moat"), a genuine outside click still
@@ -354,7 +356,8 @@ with Gerald-style port-suffixed labels ("Estimate Templates :5175").
 | L3 | Only one popover open at a time — Nudge History ↔ Switch-session are mutually exclusive | ✅ 2026-07-07 |
 | L4 | P/F hotkeys switch tools when the overlay is active, and are suppressed while typing in a page field | ✅ 2026-07-07 |
 | L5 | `prefers-reduced-motion: reduce` collapses the overlay's transitions (no gliding highlight / spinning clock) | ✅ 2026-07-07 |
-| L6 | An orphaned tab (extension reload) shows the „⌘R" hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-08 |
+| L6 | An orphaned tab (extension reload) shows the „⌘R" hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-31 |
+| L7 | The toolbar stays completely inside the viewport — when the viewport shrinks under it (docked DevTools) AND when the bar grows on its own with no resize event (longer session label) — and returns to the dropped spot once the room is back | ✅ 2026-07-31 |
 
 ## Suite M — Page inertness (page-inertness.mjs)
 
@@ -521,6 +524,16 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
   native host owns the lifecycle. Re-add a drill only if multi-bridge returns.
 
 ## Run log
+
+- **2026-07-31 — Toolbar always fully visible (0.24.2): Suite L 7/7 (L7 NEW),
+  plus M · Q · Y · A all green.** The bug came in as a screenshot: DevTools
+  docked right, the toolbar cut off at the panel edge. Two causes, one of them
+  invisible to any resize handler — the bar GROWS when the session label / id /
+  host pill / badge land on a WS frame long after it was placed. L7 reproduces
+  both and fails against the old placement code at `right 726` in a `700` wide
+  viewport. Second finding while writing it: clamping used to overwrite the
+  remembered position, so a narrow viewport cost the drop spot permanently
+  (old code, step 3: dropped at 409, back at 139).
 
 - **2026-07-29 — Reload resilience (0.22.0): Suite Q 7/7 NEW, plus A · L · M · N
   · O · P all green** (they cover everything the change touched: pick context,

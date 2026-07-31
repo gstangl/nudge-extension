@@ -5,6 +5,55 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.24.2 — 2026-07-31 (Die Toolbar bleibt vollständig sichtbar)
+
+### Fixed
+- **Die Toolbar verschwand unter der DevTools-Leiste.** Gerald: „Wenn sich ein
+  Browser automatisch öffnet oder ich rechts die Inspection Bar aufmache, dann ist
+  die Toolbar oft verdeckt und verschwunden. Und das ist irrsinnig mühsam." Die
+  Bar wurde EINMAL platziert und danach nur bei `resize` nachgeprüft. Unter ihr
+  bewegen sich aber zwei Dinge: das Viewport schrumpft (angedockte DevTools, ein
+  klein geöffnetes Automations-Fenster, Browser-Zoom) — und die Bar WÄCHST von
+  selbst, sobald Sessionname, Session-id, localhost-Pille, „Pull"-Tag oder das
+  Badge Sekunden nach dem Platzieren per WS-Frame eintreffen. Fürs Wachsen feuert
+  kein Resize-Event: eine Bar, die eben noch passte, hing danach über der Kante,
+  und nichts holte sie zurück.
+
+### Changed
+- **Platz und Absicht sind jetzt zwei verschiedene Dinge.** Gemerkt wird, wohin
+  Gerald die Bar GEZOGEN hat (ungeklemmt); gezeichnet wird diese Absicht in das
+  aktuelle Viewport geschoben. Ein schrumpfendes Viewport LEIHT sich die Position
+  damit nur — DevTools zu, und die Bar sitzt wieder an ihrem Platz. Bisher
+  überschrieb jedes Einklemmen die gemerkte Position endgültig, und der Weg
+  zurück war Handarbeit.
+- **Nachgemessen wird bei jedem Signal**, nicht nur bei `resize`: dazu
+  `visualViewport` (Zoom) und ein `ResizeObserver` auf der Bar selbst — letzterer
+  deckt genau den Fall ab, der Gerald traf, weil für ihn nie ein Event kam.
+- **Die Scrollbar zählt als verdeckt.** Geklemmt wird gegen
+  `clientWidth`/`clientHeight` (ohne klassische Scrollbar) statt gegen
+  `innerWidth`/`innerHeight` — unter einer Scrollbar ist ein Knopf so wenig
+  erreichbar wie unter der DevTools-Leiste.
+- **Zu schmal heißt: links bleibt lesbar.** Passt die Bar gar nicht mehr ins
+  Viewport, behält sie ihre LINKE Kante (Griff, Status-Punkt, Pick), statt an
+  beiden Enden gleichzeitig zu verlieren.
+- **Feed-Chips und Popovers ziehen mit.** Die Chips unter der Bar werden
+  zurückgeholt, wenn sie breiter sind als eine schmal geklemmte Bar; History und
+  Switch-Session klemmen gegen denselben sichtbaren Bereich.
+- Der Snapshot (Reload-Resilienz) merkt sich jetzt die ABSICHT statt der
+  geklemmten Position: ein Reload mit offenen DevTools macht die Notlage sonst
+  dauerhaft.
+
+### Tests
+- **Suite L7 (`test/toolbar-ux.mjs`)** — drei Schritte in Folge: das Viewport
+  schrumpft unter der Bar (700 × 620, wie eine angedockte DevTools-Leiste), die
+  am rechten Rand geparkte Bar wächst danach OHNE Resize-Event durch einen
+  längeren Sessionnamen, und zum Schluss kommt der Platz zurück. Geprüft wird
+  jedes Mal die ganze Bar (alle vier Kanten im Viewport) — plus die Absicherung,
+  dass der lange Name die Bar überhaupt verbreitert, damit der Test nicht leer
+  läuft. Gegen den alten Stand fällt L7 an genau der Stelle aus dem Screenshot:
+  `right 726` bei `vw 700`. Gegengelaufen: L, M (Moat/Overlay-Geometrie), Q
+  (Snapshot), Y (Capture), A (e2e) — alle grün.
+
 ## 0.24.1 — 2026-07-29 (Ein hängender Screenshot nimmt die Bar nicht mehr mit)
 
 ### Fixed

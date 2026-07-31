@@ -25,7 +25,10 @@
     :host { all: initial }
     * { box-sizing: border-box; font-family: ${SANS}; }
 
-    /* ---------- pill toolbar: monochrome midnight ---------- */
+    /* ---------- pill toolbar: monochrome midnight ----------
+       The 20px corner is mirrored as CORNER in content.js: the bar is always
+       drawn at an INLINE left/top so it can be kept fully inside the viewport
+       (fitPill) — this rule is the default spot it starts from. */
     .pill {
       position: fixed; top: 20px; right: 20px;
       display: none; align-items: center; gap: 2px; pointer-events: auto;
