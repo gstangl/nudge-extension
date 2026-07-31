@@ -54,6 +54,13 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   WS-less file fallback, silence for an undelivered nudge, the pull path via the
   hook, and the real extension row + toast. Run after any change to
   delete/withdraw, the watcher channel, ownership routing, or the queue ×.
+- `node test/capture-stall.mjs` — **Suite Y (Capture stall)**, side port 4795:
+  replaces `captureVisibleTab` in the REAL service worker with a promise that
+  never settles — what an attached debugger (BrowserTools MCP) does to it. Proves
+  the overlay never depends on a screenshot: toolbar and composer survive a stuck
+  capture, the nudge ships without the picture, the feed says so, and screenshots
+  return once capture is healthy. Run after any change to captureRegion, sw.js
+  capture handling, or the Freeform commit path.
 - `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
   4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
   four simultaneous tabs with four armed sessions and churning ownership — per-app
