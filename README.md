@@ -130,7 +130,8 @@ self-healing, UserPromptSubmit = current mark as context, opt-in per session).
 
 1. Open any `http://localhost:*` page (demo: start bridge manually
    `node bridge/bridge.mjs` → http://localhost:4700/demo).
-2. Pill toolbar, draggable (toggle: toolbar icon or Alt+C) → "Pick" (P) → click
+2. Pill toolbar, draggable (toggle: toolbar icon or Alt+C — off is browser-wide
+   and stays off until you toggle back on) → "Pick" (P) → click
    an element → prompt + ↩ (Shift+↩ = newline; empty ↩ = numbered mark —
    reference it in Zed as „Nudge 123 macht das").
 3. Agent side: type `/nudge` in the Zed session that should own the channel —
