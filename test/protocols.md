@@ -63,6 +63,15 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   capture, the nudge ships without the picture, the feed says so, and screenshots
   return once capture is healthy. Run after any change to captureRegion, sw.js
   capture handling, or the Freeform commit path.
+- `node test/off-means-off.mjs` — **Suite Z (Off means off)**, side port 4786,
+  Seitenserver 5201: das Toolbar-Icon und die Pill-Leiste behaupten dasselbe und
+  müssen sich einig sein. Beweist, dass der Icon-Klick die Leiste ausblendet UND
+  „inaktiv" meldet, dass „aus" Reload, neuen Tab und einen zweiten
+  localhost-Origin überlebt, dass ein Toggle alle offenen Tabs live mitschaltet,
+  und dass eine SPA-Navigation per `history.pushState` den Zustand neu meldet
+  (Chrome setzt Icon und Badge dabei auf Grau zurück). Run after any change to
+  the toggle, `restoreSession`, the `nudgeOff`-Persistenz or the icon wiring in
+  sw.js.
 - `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
   4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
   four simultaneous tabs with four armed sessions and churning ownership — per-app

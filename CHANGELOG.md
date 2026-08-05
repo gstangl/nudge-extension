@@ -5,6 +5,49 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.25.0 — 2026-08-05 (Aus ist aus — die Toolbar geht mit)
+
+### Fixed
+- **Abgeschaltet, und die Toolbar war trotzdem da.** Gerald: „Wenn die Nudge App
+  nicht aktiv ist oder wenn ich draufgeklickt habe, damit sie inaktiv ist, dann
+  hätte ich gern, dass sich auch die Toolbar ausblendet. Momentan ist sie immer
+  sichtbar." Der Toggle blendete die Leiste im aktuellen Tab zwar aus, merkte
+  sich das aber nur im sessionStorage-Snapshot — also pro Tab. Jeder neue Tab
+  fing bei „an" wieder an, und weil Gerald ständig neue localhost-Tabs aufmacht,
+  war die Bar praktisch immer da. Aus war eine Geste, kein Zustand.
+- **Das Icon behauptete „inaktiv", während die Toolbar lief.** Chrome wirft Icon
+  UND Badge eines Tabs bei JEDER Navigation auf den Default zurück — und der
+  Default ist Grau. Das trifft auch die reine History-Navigation eines
+  SPA-Routers: `history.pushState` ohne Reload und ohne `hashchange` (genau der
+  Schritt-Wechsel in der Ersteinschätzung, `#/ersteinschaetzung` →
+  `#/varianten`). Der Content-Script bekam davon nichts mit und meldete nichts
+  nach. Nur `hashchange` und `popstate` waren verdrahtet, den häufigsten Fall
+  deckte keiner ab. Ergebnis: zwei Anzeigen für denselben Zustand, die sich
+  widersprachen — graues Icon oben, laufende Bar in der Seite.
+
+### Changed
+- **„Aus" ist jetzt eine Entscheidung, kein Tab-Detail.** Der Zustand liegt in
+  `chrome.storage.local` (`nudgeOff`): er überlebt Tab, Reload und
+  Browserneustart, gilt über localhost-Ports und 127.0.0.1 hinweg, und
+  `storage.onChanged` schaltet alle offenen Tabs sofort mit — ohne Reload.
+  Einmal klicken heißt aus, bis Gerald wieder klickt.
+- **Ein synchroner Spiegel verhindert das Aufblitzen.** `chrome.storage` ist nur
+  asynchron lesbar, der erste Frame wäre also immer „an" gewesen: die Leiste
+  hätte auf jedem Seitenaufbau kurz aufgeblitzt und sich dann weggenommen. Ein
+  localStorage-Spiegel (`__rootsNudgeOff`, pro Origin) beantwortet die Frage
+  synchron; `chrome.storage.local` bleibt die Wahrheit und korrigiert einen
+  Origin, der den Zustand noch nicht kennt, einen Tick später.
+- **Der Service Worker holt den Zustand nach jeder Navigation neu ab**
+  (`tabs.onUpdated` → `nudge-state-req`). Damit stimmt das Icon auch nach
+  SPA-Routenwechseln, bei denen Chrome es stillschweigend zurückgesetzt hat.
+
+### Tests
+- **Suite Z (`test/off-means-off.mjs`)**, Seitenport 4786, Seite 5201: Icon-Klick
+  blendet aus und meldet „inaktiv" (Z1); aus überlebt Reload, neuen Tab und
+  einen zweiten Origin (Z2); ein Toggle erreicht alle offenen Tabs live (Z3);
+  eine `pushState`-Navigation meldet den Zustand neu (Z4). Z2 und Z4 fallen
+  gegen den Stand vor diesem Fix.
+
 ## 0.24.2 — 2026-07-31 (Die Toolbar bleibt vollständig sichtbar)
 
 ### Fixed

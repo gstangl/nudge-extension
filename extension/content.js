@@ -87,6 +87,24 @@
   let author = ''
   chrome.storage.sync.get('nudgeAuthor', (v) => { author = v.nudgeAuthor || '' })
 
+  // ---------- „aus" ist eine Entscheidung, kein Tab-Detail ----------
+  // Der Toggle (Icon / Alt+C) lebte NUR im sessionStorage-Snapshot, also pro Tab:
+  // abschalten, neuen Tab öffnen — und die Toolbar war zurück (Gerald 2026-08-05:
+  // „wenn ich draufgeklickt habe, damit sie inaktiv ist, dann hätte ich gern,
+  // dass sich auch die Toolbar ausblendet. Momentan ist sie immer sichtbar").
+  // Aus bleibt jetzt aus: chrome.storage.local ist die Wahrheit — origin-über-
+  // greifend, überlebt Tab, Reload und Browserneustart, und onChanged schaltet
+  // alle offenen Tabs sofort mit. localStorage spiegelt sie nur, weil es SYNCHRON
+  // lesbar ist: ein frischer Tab zeigt die Leiste so gar nicht erst, statt sie
+  // einen Frame später wieder wegzunehmen.
+  const OFF_KEY = '__rootsNudgeOff'
+  const offSync = () => { try { return localStorage.getItem(OFF_KEY) === '1' } catch { return false } }
+  function mirrorOff(off) { try { off ? localStorage.setItem(OFF_KEY, '1') : localStorage.removeItem(OFF_KEY) } catch { /* storage blocked */ } }
+  function persistOff(off) {
+    mirrorOff(off)
+    try { chrome.storage.local.set({ nudgeOff: off }) } catch { /* extension reloading */ }
+  }
+
   // ---------- state: off | idle | picking | drawing | composing ----------
   let mode = 'off'
   let picked = null // { el, rect, selector, source, stroke?, chain? }
@@ -1408,7 +1426,22 @@
   for (const t of CHROME_POINTER_EVENTS) window.addEventListener(t, swallowChromePointer, true)
 
   chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.type === 'nudge-toggle') setMode(mode === 'off' ? 'idle' : 'off')
+    if (msg.type === 'nudge-toggle') {
+      const off = mode !== 'off'
+      persistOff(off) // erst merken, dann schalten — der Rest der Tabs zieht über onChanged nach
+      setMode(off ? 'off' : 'idle')
+    }
+    // Chrome wirft Icon UND Badge eines Tabs bei jeder Navigation weg, auch bei
+    // der reinen History-Navigation eines SPA-Routers. Der SW fragt danach nach.
+    if (msg.type === 'nudge-state-req') updatePill()
+  })
+  // Ein Toggle gilt sofort überall: der Tab, in dem geklickt wurde, hat schon
+  // geschaltet — alle anderen (und andere localhost-Ports) hören hier zu.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (dead || area !== 'local' || !changes.nudgeOff) return
+    const off = !!changes.nudgeOff.newValue
+    mirrorOff(off)
+    if (off !== (mode === 'off')) setMode(off ? 'off' : 'idle')
   })
 
   // Orphan self-cleanup: after chrome.runtime.reload() (dev auto-reload), content
@@ -1631,6 +1664,10 @@
   }
   function restoreSession() {
     const snap = snapRead()
+    // Aus schlägt alles: ein abgeschalteter Nudge stellt nichts her, was man
+    // sieht — keine Toolbar, kein Entwurf. Nur die gemerkte Position, damit die
+    // Leiste beim Einschalten dort steht, wo Gerald sie hingezogen hat.
+    if (offSync()) { if (snap?.pill) placePill(snap.pill.x, snap.pill.y); setMode('off'); return }
     if (!snap) { setMode('idle'); return } // PoC default: overlay visible on localhost
     // 1. the toolbar at its remembered spot in the FIRST paint — the async
     //    chrome.storage read lands on the same coordinates a tick later
@@ -1662,8 +1699,17 @@
   try { restoreSession() } catch (e) {
     console.warn('[roots-nudge] session restore failed:', e)
     try { sessionStorage.removeItem(SNAP_KEY) } catch { /* storage blocked */ }
-    setMode('idle')
+    setMode(offSync() ? 'off' : 'idle')
   }
+  // Die synchrone Spiegelung kennt nur DIESEN Origin — ein Tab, der localhost:5276
+  // zum ersten Mal sieht, erfährt die Wahrheit erst hier, einen Tick später.
+  try {
+    chrome.storage.local.get('nudgeOff', ({ nudgeOff }) => {
+      if (nudgeOff === undefined || dead) return
+      mirrorOff(!!nudgeOff)
+      if (!!nudgeOff !== (mode === 'off')) setMode(nudgeOff ? 'off' : 'idle')
+    })
+  } catch { /* extension reloading */ }
 
   // resolve the (test-only) port override, THEN open the connection
   try {

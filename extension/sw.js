@@ -96,6 +96,19 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   chrome.action.setBadgeBackgroundColor({ tabId, color })
   chrome.action.setBadgeText({ tabId, text: msg.active && msg.open > 0 ? String(msg.open) : '' })
 })
+// Chrome setzt Icon UND Badge eines Tabs bei JEDER Navigation auf den Default
+// zurück — und der Default ist Grau, also „nicht aktiv". Das trifft auch die
+// reine History-Navigation eines SPA-Routers (history.pushState: kein Reload,
+// kein hashchange, der Content-Script merkt nichts und meldet nichts nach). Das
+// Icon stand danach auf Grau, während die Toolbar oben rechts weiterlief — zwei
+// Anzeigen, die sich widersprechen (Gerald 2026-08-05, estimate/#/ersteinschaetzung).
+// Also nach jeder Navigation den Zustand neu abholen; der Tab kennt ihn.
+const LOCAL_TAB = /^http:\/\/(localhost|127\.0\.0\.1)([:/]|$)/
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (!info.url && info.status !== 'complete') return // Titel-, Favicon-, Audio-Updates gehen uns nichts an
+  if (!LOCAL_TAB.test(tab?.url || '')) return
+  chrome.tabs.sendMessage(tabId, { type: 'nudge-state-req' }).catch(() => { /* noch/kein Content-Script */ })
+})
 
 // ---------- bridge lifecycle via native messaging ----------
 // Chrome spawns the registered native host (a thin launcher) which starts the
