@@ -5,6 +5,47 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.27.0 — 2026-08-14 (IBM Plex Sans wird der Standard)
+
+### Changed
+- **Die Toolbar läuft in IBM Plex Sans, ausgeliefert als „Roots Nudge Sans".**
+  Gerald: „Plex ist mit Abstand die stärkste Schrift." Nach DINish (0.26.0) noch
+  einmal gewechselt, weil zwei meiner Einwände gegen Plex bei genauer Prüfung
+  nicht hielten:
+  - **Plex braucht kein `tnum`.** Alle Ziffern sind 600 Einheiten breit, also
+    tabellarisch ab Werk — genau wie DIN Var. DINishs Vorgabe ist dagegen stark
+    proportional („111" 41 px gegen „000" 62 px bei 40 px Schriftgröße).
+  - **Plex hat als einziges eine ECHTE Kursive.** Ein gezeichneter Schnitt, das
+    `a` wird einstöckig. DIN Var hatte weder Kursivdatei noch Achse — das
+    `font-style: italic` auf `.w-line3` war dort immer eine vom Browser
+    gefälschte Schräglage. DINish hatte nur eine Neigungsachse.
+- **Der Name ist eine Lizenzauflage, keine Marotte.** IBM Plex führt den Reserved
+  Font Name **„Plex"**; die OFL untersagt modifizierten Fassungen, ihn als
+  primären Schriftnamen zu tragen. Wir subsetten und fixieren die Breitenachse,
+  sind also eine Modified Version — die Schrift heißt daher im CSS *und* in der
+  `name`-Tabelle „Roots Nudge Sans". Herkunft und Änderungen stehen in
+  `fonts/HERKUNFT.md`, der Lizenztext in `fonts/OFL-IBMPlexSans.txt`.
+- **Gewichte erneut über die gemessene Stammbreite zugeordnet**, ausgehend von
+  DIN Var: 400/500/550/600/650 → 365/470/500/540/590.
+- **Laufweiten zurück auf DIN Vars Originalwerte.** Bei `wdth 100` trifft Plex
+  dessen Satzbreite auf den Pixel genau (227,3 px für eine 12-px-Testzeile), die
+  +.01em-Korrektur aus der DINish-Fassung ist damit hinfällig.
+- **`→` ist wieder da.** Die Lücke aus 0.26.0 ist geschlossen; die
+  Session-Wechsel-Meldung braucht keinen Fallback mehr.
+
+### Fixed
+- **Vier Elemente hatten keine feste `line-height`** und bezogen ihren
+  Zeilenkasten aus den Schriftmetriken — sie wuchsen oder rutschten bei jedem
+  Schriftwechsel um einen Pixel: `.q-div`, `.composer .meta`,
+  `.composer .layers button`, `.who-menu .w-line2`. Jetzt in px festgezurrt
+  (13/12/11/11), damit die Geometrie schriftunabhängig ist. Ein
+  Alignment-Audit über 32 Elemente belegt: alle Kastenhöhen und Grundlinien
+  liegen gegenüber DIN Var unverändert.
+
+### Known
+- **Die Nummern-Pille wird gut 1 px breiter.** Plex' Ziffern sind 600 Einheiten
+  breit gegen DIN Vars 514. Layoutfolgen keine, die Pille wächst mit.
+
 ## 0.26.0 — 2026-08-14 (DINish statt DIN Var — nach Maß, nicht nach Gefühl)
 
 ### Changed
