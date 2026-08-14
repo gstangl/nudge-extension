@@ -76,7 +76,11 @@
     const f = document.createElement('style')
     f.id = '__roots-nudge-font'
     const face = (file, style) => `@font-face { font-family: "Roots Nudge Sans"; src: url("${chrome.runtime.getURL(file)}") format("woff2-variations"); font-weight: 100 700; font-style: ${style}; font-display: swap; }`
-    f.textContent = face('fonts/rn-sans.woff2', 'normal') + face('fonts/rn-sans-italic.woff2', 'italic')
+    // Plex Mono for the machine strings — selectors, ids, hosts. Shipped rather
+    // than left to ui-monospace, which is three different faces on macOS, Windows
+    // and Linux; an open-source install should look the same everywhere.
+    const mono = `@font-face { font-family: "Roots Nudge Mono"; src: url("${chrome.runtime.getURL('fonts/rn-mono.woff2')}") format("woff2"); font-weight: 400; font-display: swap; }`
+    f.textContent = face('fonts/rn-sans.woff2', 'normal') + face('fonts/rn-sans-italic.woff2', 'italic') + mono
     document.head.appendChild(f)
   }
   const ta = composer.querySelector('textarea')

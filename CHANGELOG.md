@@ -5,6 +5,27 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.28.0 — 2026-08-14 (Plex Mono für die Maschinen-Strings)
+
+### Changed
+- **Selektoren, IDs und Host-Chips laufen jetzt in Plex Mono**, ausgeliefert als
+  „Roots Nudge Mono". Bisher stand dort `ui-monospace, 'SF Mono', Menlo` — also
+  SF Mono auf macOS, Consolas oder Cascadia auf Windows, DejaVu oder Liberation
+  auf Linux. Für ein Projekt, das öffentlich installiert werden soll, hieß das:
+  drei verschiedene Schriften für dieselben Zeichen. Jetzt eine, und aus
+  derselben Familie wie die Sans.
+- **15,6 KB**, und die Dickte ist identisch mit SF Mono (600/1000 em) — die
+  Host-Chips behalten ihre Breite, ein Alignment-Audit über 32 Elemente zeigt
+  Abweichungen nur im Subpixelbereich (−0,3 %).
+- Der Systemstack bleibt als Fallback dahinter stehen.
+
+### Fixed
+- **`.q-amc` trug ein Gewicht, das nie etwas tat.** Die „+N"-Anzeige für
+  Nachträge hatte `font-variation-settings: "wght" …` auf einem Mono-Element —
+  der Systemstack ist nicht variabel, die Angabe lief also seit jeher ins Leere,
+  und die statische Plex Mono ändert daran nichts. Raus damit, statt sie stumm
+  mitzuschleppen; die Akzentfarbe trägt die Hervorhebung ohnehin allein.
+
 ## 0.27.0 — 2026-08-14 (IBM Plex Sans wird der Standard)
 
 ### Changed
