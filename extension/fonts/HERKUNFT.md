@@ -1,14 +1,17 @@
 # Schriften in diesem Verzeichnis
 
-`rn-sans.woff2` und `rn-sans-italic.woff2` sind abgeleitet von **IBM Plex Sans**
-(© 2017 IBM Corp.), lizenziert unter der SIL Open Font License 1.1 — der
-vollständige Text liegt in `OFL-IBMPlexSans.txt`.
+Alle drei Dateien sind abgeleitet von **IBM Plex** (© 2017 IBM Corp.),
+lizenziert unter der SIL Open Font License 1.1 — der vollständige Text liegt in
+`OFL-IBMPlexSans.txt`.
 
-Änderungen gegenüber dem Original:
+| Datei | Original | Änderungen |
+|---|---|---|
+| `rn-sans.woff2` | IBM Plex Sans | Breitenachse auf `wdth 100` fixiert (nur `wght 100–700` variabel), subgesettet, umbenannt |
+| `rn-sans-italic.woff2` | IBM Plex Sans Italic | dito |
+| `rn-mono.woff2` | IBM Plex Mono Regular | subgesettet, umbenannt in „Roots Nudge Mono" |
 
-- Breitenachse auf `wdth 100` fixiert (nur `wght 100–700` bleibt variabel)
-- Subgesettet auf Latein + deutsche Typografie
-- **Umbenannt in „Roots Nudge Sans"**
+Subgesettet wurde jeweils auf Latein + deutsche Typografie.
+**Umbenannt in „Roots Nudge Sans" bzw. „Roots Nudge Mono".**
 
 Die Umbenennung ist keine Kosmetik, sondern eine Auflage: IBM Plex führt den
 Reserved Font Name **„Plex"**. Die OFL untersagt es modifizierten Fassungen,

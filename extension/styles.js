@@ -33,7 +33,7 @@
   const GREEN = '#3fa34d'      // status: agent live
   const AMBER = '#d9a441'      // status: degraded
   const SANS = `"Roots Nudge Sans", -apple-system, 'Helvetica Neue', sans-serif`
-  const MONO = `ui-monospace, 'SF Mono', Menlo, monospace`
+  const MONO = `"Roots Nudge Mono", ui-monospace, 'SF Mono', Menlo, monospace`
 
   globalThis.__nudgeCss = `
     :host { all: initial }
@@ -274,8 +274,10 @@
     }
     .queue .q-x:hover { background: rgba(242,239,234,.14); color: ${PAPER}; }
     .queue .q-x:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
-    /* "+N" follow-up count on a nudge that carries amendments */
-    .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; font-variation-settings: "wght" 540; }
+    /* "+N" follow-up count on a nudge that carries amendments. No weight here:
+       the mono is a static face, so a font-variation-settings would be inert —
+       it was, silently, for as long as this line existed. Colour does the work. */
+    .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; }
     /* "+ ergänzen" button — same ghost language as × */
     .queue .q-add {
       flex: none; width: 18px; height: 18px; border: 0; border-radius: 6px; cursor: pointer;
