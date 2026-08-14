@@ -6,8 +6,19 @@
 // (self-contained by design — Pin must work without the repo; keep in sync by
 // hand). Language: monochrome midnight — paper-on-midnight contrast everywhere;
 // COLOUR ONLY FOR STATUS (green live / amber degraded / red dead) and for the
-// on-page marking accent (highlight/lasso, brand terracotta). Type: DIN Var
-// (shipped with the extension as "Roots Nudge DIN"), mono only for selectors.
+// on-page marking accent (highlight/lasso, brand terracotta). Type: DINish
+// (shipped with the extension as "Roots Nudge DINish"), mono only for selectors.
+//
+// TYPE TUNING — DINish replaced the licensed DIN Var (2026-08-14) and is matched
+// to it by measurement, not by eye. Three calibrations, don't "simplify" them:
+//   1. WIDTH is baked into the woff2 at wdth 110. DINish runs ~8% narrower than
+//      DIN Var at its default 100, which made the toolbar read cramped.
+//   2. WEIGHTS are remapped by measured STEM WIDTH, because DINish's axis is
+//      lighter per nominal step: DIN Var 400/500/550/600/650 → 360/535/610/630/700.
+//      An untagged element must therefore say "wght" 360, not inherit 400 —
+//      hence the value on the * rule below.
+//   3. LETTER-SPACING carries +.01em over DIN Var's values everywhere, which
+//      closes the remaining set-width gap and opens the 10px labels on midnight.
 ;(() => {
   // — mirrored Roots tokens —
   const MID = '#1A1F26'        // --midnight        structural set
@@ -18,12 +29,15 @@
   const ACCENT = '#b45a38'     // brand terracotta — ON-PAGE marking only
   const GREEN = '#3fa34d'      // status: agent live
   const AMBER = '#d9a441'      // status: degraded
-  const SANS = `"Roots Nudge DIN", "DIN Var", -apple-system, 'Helvetica Neue', sans-serif`
+  const SANS = `"Roots Nudge DINish", -apple-system, 'Helvetica Neue', sans-serif`
   const MONO = `ui-monospace, 'SF Mono', Menlo, monospace`
 
   globalThis.__nudgeCss = `
     :host { all: initial }
-    * { box-sizing: border-box; font-family: ${SANS}; }
+    /* wght 360 = DIN Var's old 400 by stem width (see TYPE TUNING at the top).
+       Without it every element that sets no weight — the composer textarea, the
+       amend input — would render at DINish's default 400 and sit too heavy. */
+    * { box-sizing: border-box; font-family: ${SANS}; font-variation-settings: "wght" 360; letter-spacing: .01em; }
 
     /* ---------- pill toolbar: monochrome midnight ----------
        The 20px corner is mirrored as CORNER in content.js: the bar is always
@@ -65,13 +79,13 @@
        so it reads as a label and the session name behind it as its value */
     .pill .who-kind {
       flex: none; margin-right: 5px; font-size: 12px; line-height: 18px;
-      color: rgba(242,239,234,.68); font-variation-settings: "wght" 500; letter-spacing: .01em;
+      color: rgba(242,239,234,.68); font-variation-settings: "wght" 535; letter-spacing: .02em;
     }
     .pill .who-kind:empty { display: none; }
     .pill .who:hover .who-kind { color: ${PAPER}; }
     .pill .who-label {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px;
-      font-size: 12px; line-height: 18px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 400; letter-spacing: .01em;
+      font-size: 12px; line-height: 18px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 360; letter-spacing: .02em;
     }
     .pill .who:hover .who-label { color: ${PAPER}; }
     /* owner session id8 — quiet mono, no frame (vs the framed host pill), visible
@@ -97,7 +111,7 @@
        itself). Auto/push owners show nothing: green already means „kommt von selbst". */
     .pill .who-wake {
       flex: none; font-family: ${SANS}; font-size: 10px; line-height: 14px;
-      font-variation-settings: "wght" 650; letter-spacing: .02em;
+      font-variation-settings: "wght" 700; letter-spacing: .03em;
       color: ${AMBER}; background: rgba(217,164,65,.12);
       border: 1px solid rgba(217,164,65,.35); border-radius: 5px;
       padding: 1px 5px; margin-left: 6px; white-space: nowrap;
@@ -115,13 +129,13 @@
     .who-menu .q-head {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       border-radius: 11px 11px 0 0;
-      font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 550;
+      font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 610;
     }
     .who-menu .w-row { padding: 10px 14px; border-bottom: 1px solid ${MID_2}; cursor: pointer; }
     .who-menu .w-row:last-child { border-bottom: 0; }
     .who-menu .w-row:hover { background: rgba(242,239,234,.06); }
     .who-menu .w-row.is-owner .w-name { color: ${GREEN}; }
-    .who-menu .w-line1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 18px; color: ${PAPER}; font-variation-settings: "wght" 600; }
+    .who-menu .w-line1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 18px; color: ${PAPER}; font-variation-settings: "wght" 630; }
     .who-menu .w-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 18px; }
     /* subtle localhost tag, right-aligned per session row — box = 14 lh + 2 pad + 2 border = 18px = the name's line box */
     .who-menu .w-host {
@@ -135,7 +149,7 @@
     .pill button {
       display: flex; align-items: center; gap: 6px; border: 0; cursor: pointer;
       background: transparent; color: rgba(242,239,234,.68); font-size: 12px;
-      font-family: ${SANS}; font-variation-settings: "wght" 500; letter-spacing: .01em;
+      font-family: ${SANS}; font-variation-settings: "wght" 535; letter-spacing: .02em;
       padding: 6px 12px; border-radius: 999px; transition: background .15s ease, color .15s ease;
     }
     .pill button:hover { background: rgba(242,239,234,.08); color: ${PAPER}; }
@@ -144,7 +158,7 @@
     .pill .count {
       min-width: 18px; height: 18px; border-radius: 9px; padding: 0 5px; margin: 0 2px;
       background: rgba(242,239,234,.14); color: ${PAPER}; font-size: 10px;
-      font-variation-settings: "wght" 650;
+      font-variation-settings: "wght" 700;
       display: none; align-items: center; justify-content: center;
       cursor: pointer; transition: background .12s;
     }
@@ -184,20 +198,20 @@
     .status-menu .q-head {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       border-radius: 11px 11px 0 0;
-      font-size: 12px; color: ${PAPER}; font-variation-settings: "wght" 600;
+      font-size: 12px; color: ${PAPER}; font-variation-settings: "wght" 630;
     }
     .status-menu .sm-body {
       padding: 11px 14px; font-size: 12px; line-height: 1.5;
       color: rgba(242,239,234,.72);
     }
-    .status-menu .sm-body b { color: ${PAPER}; font-variation-settings: "wght" 650; }
+    .status-menu .sm-body b { color: ${PAPER}; font-variation-settings: "wght" 700; }
     .queue.on { opacity: 1; transform: none; pointer-events: auto; }
     .queue .q-head {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       border-radius: 11px 11px 0 0;
-      font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 550;
-      letter-spacing: .01em;
+      font-size: 11px; color: rgba(242,239,234,.55); font-variation-settings: "wght" 610;
+      letter-spacing: .02em;
     }
     .queue .q-head-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .queue .q-head-host {
@@ -245,7 +259,7 @@
     .queue .q-who {
       flex: none; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       font-size: 10px; line-height: 18px; color: rgba(242,239,234,.42);
-      font-variation-settings: "wght" 550;
+      font-variation-settings: "wght" 610;
     }
     .queue .q-who:not(:empty)::before { content: "· "; color: rgba(242,239,234,.28); }
     .queue .q-age { flex: none; font-size: 10px; line-height: 18px; color: rgba(242,239,234,.4); }
@@ -258,7 +272,7 @@
     .queue .q-x:hover { background: rgba(242,239,234,.14); color: ${PAPER}; }
     .queue .q-x:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
     /* "+N" follow-up count on a nudge that carries amendments */
-    .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; font-variation-settings: "wght" 600; }
+    .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; font-variation-settings: "wght" 630; }
     /* "+ ergänzen" button — same ghost language as × */
     .queue .q-add {
       flex: none; width: 18px; height: 18px; border: 0; border-radius: 6px; cursor: pointer;
@@ -298,8 +312,8 @@
     .queue .q-amend-send:focus-visible { outline: 2px solid rgba(242,239,234,.55); outline-offset: 1px; }
     .queue .q-div {
       padding: 7px 14px 5px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
-      font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
-      color: rgba(242,239,234,.4); font-variation-settings: "wght" 600;
+      font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(242,239,234,.4); font-variation-settings: "wght" 630;
     }
     .queue .q-row.done { color: rgba(242,239,234,.55); }
 
@@ -327,7 +341,7 @@
     .dot svg { display: block; flex: none; width: 9px; height: 9px; stroke: ${AMBER}; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
     .dot .d-num {
       font-size: 10.5px; line-height: 1; color: ${PAPER};
-      font-variation-settings: "wght" 550; letter-spacing: .02em;
+      font-variation-settings: "wght" 610; letter-spacing: .03em;
       font-variant-numeric: tabular-nums;
     }
     .dot .d-hand { transform-box: view-box; transform-origin: 50% 50%; }
@@ -347,7 +361,7 @@
       position: absolute; top: -26px; left: -2px; white-space: nowrap;
       max-width: 60ch; overflow: hidden; text-overflow: ellipsis;
       background: ${MID_DEEP}; color: ${PAPER}; font-size: 11px; font-family: ${MONO};
-      letter-spacing: .01em; padding: 3px 8px; border-radius: 4px 4px 4px 0;
+      letter-spacing: .02em; padding: 3px 8px; border-radius: 4px 4px 4px 0;
       border: 1px solid ${MID_3};
       box-shadow: 0 1px 3px rgba(0,0,0,.25);
     }
@@ -391,7 +405,7 @@
     .composer .meta {
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       font-size: 10px; font-family: ${MONO}; color: rgba(242,239,234,.45);
-      letter-spacing: .02em;
+      letter-spacing: .03em;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     /* the marked element did not come back after a page reload — the nudge keeps
@@ -411,7 +425,7 @@
     }
     .composer .row button {
       border: 0; border-radius: 8px; padding: 7px 16px; font-size: 12px; cursor: pointer;
-      font-family: ${SANS}; font-variation-settings: "wght" 600; letter-spacing: .01em;
+      font-family: ${SANS}; font-variation-settings: "wght" 630; letter-spacing: .02em;
       transition: background .12s, color .12s;
     }
     .composer .cancel { background: transparent; color: rgba(242,239,234,.5); }
@@ -430,7 +444,7 @@
     .feed .item {
       display: flex; align-items: center; gap: 8px;
       background: ${MID}; color: rgba(242,239,234,.85); font-size: 12px; padding: 7px 12px;
-      font-family: ${SANS}; font-variation-settings: "wght" 500; letter-spacing: .01em;
+      font-family: ${SANS}; font-variation-settings: "wght" 535; letter-spacing: .02em;
       border: 1px solid ${MID_3}; border-radius: 999px;
       box-shadow: 0 1px 2px rgba(0,0,0,.25), 0 4px 12px rgba(14,19,24,.3);
       opacity: 0; transform: translateY(-4px);
