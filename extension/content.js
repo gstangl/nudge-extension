@@ -66,13 +66,18 @@
   const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
-  // DIN Var, self-contained: @font-face cannot load from a shadow-root adopted
-  // sheet, so declare it once at DOCUMENT level; the woff2 ships WITH the
-  // extension (web_accessible_resources) — no dependency on the host page.
+  // DINish (OFL), self-contained: @font-face cannot load from a shadow-root
+  // adopted sheet, so declare it once at DOCUMENT level; the woff2 ships WITH
+  // the extension (web_accessible_resources) — no dependency on the host page.
+  // TWO faces, ONE file: the second maps font-style:italic onto the slnt axis,
+  // so the session hint line slants without a second download. The width axis
+  // is baked in at 110 (see styles.js) — only wght and slnt remain variable.
   if (!document.getElementById('__roots-nudge-font')) {
     const f = document.createElement('style')
     f.id = '__roots-nudge-font'
-    f.textContent = `@font-face { font-family: "Roots Nudge DIN"; src: url("${chrome.runtime.getURL('fonts/din-var.woff2')}") format("woff2-variations"); font-weight: 100 900; font-display: swap; }`
+    const url = chrome.runtime.getURL('fonts/dinish-var.woff2')
+    const face = (style) => `@font-face { font-family: "Roots Nudge DINish"; src: url("${url}") format("woff2-variations"); font-weight: 300 900; font-style: ${style}; font-display: swap; }`
+    f.textContent = face('normal') + face('oblique 0deg 12deg')
     document.head.appendChild(f)
   }
   const ta = composer.querySelector('textarea')

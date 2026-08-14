@@ -5,6 +5,49 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.26.0 — 2026-08-14 (DINish statt DIN Var — nach Maß, nicht nach Gefühl)
+
+### Changed
+- **Die Toolbar läuft jetzt in DINish (OFL) statt in DIN Var.** Gerald: „Ich bin
+  mir bewusst, dass qualitativ die DINish minderwertiger ist als die DIN Var und
+  auch von der Lesbarkeit nicht so ästhetisch und schön, aber ich entscheide
+  mich jetzt für die DINish." Grund ist das mögliche Open-Sourcing: DIN Var ist
+  lizenzpflichtig und lag als `din-var.woff2` IM Repo — öffentlich gemacht wäre
+  das unerlaubte Weitergabe gewesen. Geprüft und verworfen wurden vorher
+  Archivo, Geist, Inter, Google Sans Flex + Code, Barlow, Martian Grotesk und
+  IBM Plex; DINish gewinnt, weil es als einziges echt DIN-abgeleitet ist
+  (Autobahn-Beschilderung) statt nur DIN-ähnlich.
+- **Angeglichen wurde gemessen, nicht geschätzt.** Drei Kalibrierungen, die in
+  `styles.js` oben dokumentiert sind und nicht „vereinfacht" werden dürfen:
+  1. **Breite** ist mit `wdth 110` in die woff2 eingebacken. In der Voreinstellung
+     läuft DINish ~8 % schmaler als DIN Var, die Leiste wirkte gedrängt.
+  2. **Gewichte** sind über die gemessene STAMMBREITE neu zugeordnet, weil
+     DINishs Achse pro Nennschritt leichter ist: 400/500/550/600/650 →
+     360/535/610/630/700. Deshalb steht `"wght" 360` auf der `*`-Regel — ein
+     Element ohne eigenes Gewicht würde sonst auf DINishs Default 400 landen und
+     zu fett sitzen (betrifft Composer-Textarea und Nachtrag-Feld).
+  3. **Laufweite** trägt überall +.01em gegenüber DIN Vars Werten. Das schließt
+     den Rest der Satzbreite und öffnet die 10px-Labels auf Mitternacht.
+- **Die Kursive kommt aus derselben Datei.** Zwei `@font-face`-Regeln auf EINE
+  woff2: die zweite bildet `font-style: italic` auf die Neigungsachse (`slnt`)
+  ab. Die Hinweiszeile im Session-Switcher neigt sich also ohne zweiten Download.
+- **41 KB statt 296 KB.** Subgesettet auf Latein + deutsche Typografie; die
+  Breitenachse ist eingebacken, Gewicht und Neigung bleiben variabel.
+
+### Removed
+- **`fonts/din-var.woff2` ist raus.** Nicht mehr referenziert, und der Grund für
+  den ganzen Wechsel. Wer DIN Var lokal weiterbenutzen will, tauscht die
+  `@font-face`-URL in `content.js` — der Rest der Abstimmung gilt dann nicht mehr.
+
+### Known
+- **`→` (U+2192) fehlt DINish** und fällt in der Session-Wechsel-Meldung
+  (`notify('check', \`→ ${name}\`)`) auf die Systemschrift zurück. Optisch
+  unauffällig geprüft — eine neutrale geometrische Form neben DINish-Text.
+  `↩ ⇧ ✓` fielen schon unter DIN Var zurück, das ist unverändert.
+- **DINish bleibt gedrungener als DIN Var.** x-Höhe zu Versalhöhe 0,734 gegen
+  0,677, Oberlängen-Überstand 189 gegen 236 Einheiten. Das ist der Rest, den man
+  nicht wegdrehen kann — bewusst in Kauf genommen.
+
 ## 0.25.0 — 2026-08-05 (Aus ist aus — die Toolbar geht mit)
 
 ### Fixed
