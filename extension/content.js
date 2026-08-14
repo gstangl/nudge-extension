@@ -66,18 +66,17 @@
   const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
-  // DINish (OFL), self-contained: @font-face cannot load from a shadow-root
-  // adopted sheet, so declare it once at DOCUMENT level; the woff2 ships WITH
-  // the extension (web_accessible_resources) — no dependency on the host page.
-  // TWO faces, ONE file: the second maps font-style:italic onto the slnt axis,
-  // so the session hint line slants without a second download. The width axis
-  // is baked in at 110 (see styles.js) — only wght and slnt remain variable.
+  // "Roots Nudge Sans" (IBM Plex Sans, OFL — see fonts/HERKUNFT.md for why it
+  // carries our name and not IBM's). Self-contained: @font-face cannot load from
+  // a shadow-root adopted sheet, so declare it once at DOCUMENT level; the woff2
+  // ships WITH the extension (web_accessible_resources) — no dependency on the
+  // host page. TWO files, because this family has a REAL drawn italic (the „a"
+  // turns single-storey) — not a synthesised slant like the faces before it.
   if (!document.getElementById('__roots-nudge-font')) {
     const f = document.createElement('style')
     f.id = '__roots-nudge-font'
-    const url = chrome.runtime.getURL('fonts/dinish-var.woff2')
-    const face = (style) => `@font-face { font-family: "Roots Nudge DINish"; src: url("${url}") format("woff2-variations"); font-weight: 300 900; font-style: ${style}; font-display: swap; }`
-    f.textContent = face('normal') + face('oblique 0deg 12deg')
+    const face = (file, style) => `@font-face { font-family: "Roots Nudge Sans"; src: url("${chrome.runtime.getURL(file)}") format("woff2-variations"); font-weight: 100 700; font-style: ${style}; font-display: swap; }`
+    f.textContent = face('fonts/rn-sans.woff2', 'normal') + face('fonts/rn-sans-italic.woff2', 'italic')
     document.head.appendChild(f)
   }
   const ta = composer.querySelector('textarea')
