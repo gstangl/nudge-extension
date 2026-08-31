@@ -88,12 +88,14 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   owner stamping, the roster, or resolve.
 - `node test/hook-optin.mjs` — **Suite G (Hook Opt-in Gate)**, side port 4797:
   proves the UserPromptSubmit hook stays SILENT in every session that did not arm
-  via /nudge (its session id is not in the roster) — even with a full store and a
+  through groundworks-nudge (its Agent id is not in the roster) — even with a full store and a
   live owner. Run after ANY hook change.
 - `node test/wake-mode.mjs` — **Suite W (Wake mode: push vs pull)**, side port 4788:
   proves the wake mode travels watcher IDENTITY → roster → /.identity + WS snapshot +
-  routes, defaults from host when the flag is missing/invalid (no false auto-wake), and
+  routes, defaults to pull when the flag is missing/invalid (no false auto-wake), and
   the real watcher carries `NUDGE_WAKE` through. Run after any change to the wake plumbing.
+- `npm run test:ci` — fast units, the runtime-neutral Bridge/Watcher/CLI/Hook
+  round trip and the idempotent Claude Code + Codex installer. Required in CI.
 - `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
   Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
 - `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
@@ -123,8 +125,9 @@ the backlog for new legs lives there (section „Building new legs").
   workspace dirname — two `/tmp` test stores look identical by dirname.
 - Never reset the store seq; test pins carry a `[TEST-…]` prefix and are removed
   by id, evidence files included.
-- The store is GLOBAL (`~/.claude/nudge/`); agent wiring is user-level
-  (`~/.claude/settings.json` hooks, `~/.claude/skills/nudge/`). No project config.
+- The store is global and runtime-neutral. `/.identity.store` is authoritative;
+  no Skill chooses a vendor home. Agent wiring is user-level, with native Claude
+  Code and Codex Skill adapters plus the shared CLI.
 - **Process hygiene.** Suites (and ad-hoc Playwright repros) that spawn a bridge
   or REAL watchers can leak them if a run is interrupted — a leaked watcher on a
   side port silently pollutes later runs (a ghost agent appears in the switcher).
@@ -211,7 +214,7 @@ machine by design; no auth inside it.
 | D1 | **Store shape fuzz**: 6 valid-JSON-wrong-shape stores (`null`, `[]`, string, number, pins-not-array, seq-not-finite) → bridge serves, backup written, seq floor holds. Pre-0.11.0 these CRASHED the bridge at startup (native host would crash-loop it) | ✅ 2026-07-05 |
 | D2 | **Path traversal + method abuse**: 11 traversal attempts on /shots, /comments, /demo (`..`, `%2F`, `%00`, `//etc/passwd`) leak nothing; PUT/PATCH/HEAD/TRACE create nothing; legit shot still served | ✅ 2026-07-05 |
 | D3 | **Payload fuzz** on /comments: `__proto__`/constructor pollution, 60k-deep nesting, wrong-typed fields, 5000 targets, 2 MB outerHTML, 1 MB url, console flood, annotation bomb, garbage screenshot → all capped (store ≤ 10 kB after 12 hostile bodies), never a crash | ✅ 2026-07-05 |
-| D4 | **Heartbeat fuzz**: 7 malformed identities → 400 (typed: pid/since must be finite numbers); huge identity fields → capped in roster (label 60, session 32, project/branch 60, host 20, firstMsg 90); 6 MB heartbeat → 413 | ✅ 2026-07-05 |
+| D4 | **Heartbeat fuzz**: 7 malformed identities → 400 (typed: pid/since must be finite numbers); huge identity fields → capped in roster (label 60, session 128, project/branch 60, host 20, firstMsg 90); 6 MB heartbeat → 413 | ✅ 2026-07-05 |
 | D5 | **IDENTITY TRUTH** (the core contract, see above): takeover pushed, manual choice sticky + pushed, dead owner → fallback pushed in 12 s, dead entry gone from roster, silence → dark in 12.5 s, ≤ 1 owner in every frame ever pushed | ✅ 2026-07-05 |
 | D6 | **WS abuse**: 30 clients, garbage/binary frames, 200 kB hello, fake agent hello → hello url capped, agent not counted as tab, broadcast still reaches everyone | ✅ 2026-07-05 |
 | D7 | **Concurrency storm**: 100 parallel POSTs → 100 unique monotonic ids, store parses; resolve×delete races answer 200/404 (never 5xx/crash); 50 parallel selection posts | ✅ 2026-07-05 |
@@ -256,7 +259,7 @@ bugs surfaced here (see run log 2026-07-05).
 ## Suite G — Hook Opt-in Gate (hook-optin.mjs)
 
 The immanent guarantee Gerald asked for: a session becomes Nudge-aware ONLY by
-his hand (typing /nudge, which arms a watcher → its session id enters the
+his hand (invoking groundworks-nudge, which arms a watcher → its Agent id enters the
 roster). The UserPromptSubmit hook runs in EVERY session but reveals Nudge
 context only to roster members; everyone else is silent. The SessionStart hook
 injects nothing at all any more (it only ensures the bridge is up).
@@ -264,7 +267,7 @@ injects nothing at all any more (it only ensures the bridge is up).
 | # | Guards | Last |
 |---|--------|------|
 | G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, a live owner in the store — and even when its prompt REFERENCES a nudge („Nudge 1"), the 0.20.0 reference pull must not pierce the gate | ✅ 2026-07-09 |
-| G2 | **No session id → silence**: a session without CLAUDE_CODE_SESSION_ID cannot prove participation → nothing | ✅ 2026-07-09 |
+| G2 | **No Agent id → silence**: a session without a normalized identity cannot prove participation → nothing | ✅ 2026-08-28 |
 | G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and the referenceable open list („Offene Nudges" — id · gist · route) | ✅ 2026-07-09 |
 | G3b | **Reference pull (0.20.0)**: „Nudge 1" in the armed session's prompt injects that nudge's full context (`REFERENZIERT nudge_1` + text); an unknown id is named as missing („Nudge 7: nicht im Store"), never invented | ✅ 2026-07-09 |
 | G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-09 |
@@ -340,8 +343,8 @@ owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
 
 ## Suite W — Wake mode: push vs pull (wake-mode.mjs)
 
-Zed pushes (Monitor-stdout wakes the agent), the Claude CLI pulls (a nudge waits
-for the next prompt). The green icon must not imply „kommt automatisch" for a pull
+Push-capable runtimes can start the Agent, while pull runtimes wait for the next
+prompt. The editor does not decide that capability. The green icon must not imply „kommt automatisch" for a pull
 owner — so the mode has to travel to the extension. Own bridge on 4788, no browser.
 
 | # | Guards | Last |
@@ -349,7 +352,7 @@ owner — so the mode has to travel to the extension. Own bridge on 4788, no bro
 | W1 | `/.identity.agents[]` carry each session's `wake` (push + pull side by side) | ✅ 2026-07-21 |
 | W2 | Global `agentWake` follows the queried host's owner (`?host=` → that owner's mode) | ✅ 2026-07-21 |
 | W3 | The tab learns its owner's mode: WS snapshot `agentWake` + `/.identity.routes[].owner.wake` scoped to the tab's host | ✅ 2026-07-21 |
-| W4 | **Missing/invalid `wake` derives from host** (Zed→push, else pull; garbage clamped) — never a false auto-wake for a session that can't push | ✅ 2026-07-21 |
+| W4 | **Missing/invalid `wake` defaults to pull** regardless of Runtime or editor — never a false auto-wake | ✅ 2026-08-28 |
 | W5 | The **real** `watch-nudges.mjs` carries `NUDGE_WAKE=pull` end-to-end into the roster | ✅ 2026-07-21 |
 
 ## Suite L — Toolbar & popover UX (toolbar-ux.mjs)
@@ -517,7 +520,7 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
 | C4 | **Security boundary**: 127.0.0.1-only bind (LAN curl refused); no secrets in store; overlay never captures itself | quarterly / before team rollout | ⬜ |
 | C5 | **Status truth (agentLive)**: no watcher → amber; armed → green ≤5 s; watcher killed → amber ≤15 s; bridge killed → red. Green must never lie | after heartbeat/status changes | teilweise ✅ (Flips live beobachtet 2026-07-04/05) |
 | C6 | **Overlay perf** on a heavy TipTap doc: no hover lag (fastPath), glide stays smooth | after picker changes | ⬜ |
-| C7 | **Foreign-project agent**: open an agent in a non-roots workspace → SessionStart arms, `/nudge` reports, prompt round-trip works | after wiring changes | ⬜ (hook from foreign cwd ✅ 2026-07-05) |
+| C7 | **Foreign-project Agent**: install the global adapter, invoke `groundworks-nudge`, then prove a prompt round trip outside Roots Apps | after wiring changes | ⬜ (neutral CLI + installer automated ✅ 2026-08-28) |
 | C8 | **Real-Chrome self-heal**: kill bridge with only Gerald's Chrome running → circle red → green again without any agent/terminal | after native-host changes | ⬜ (Chromium-automated ✅ = B5) |
 
 ## Removed (2026-07-05 architecture pass)

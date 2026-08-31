@@ -75,10 +75,10 @@ describe('store.mjs — owner provenance (bulletproof binding)', () => {
     expect(pin.owner).toEqual({ label: 'Gerald S.', session: 'sess-1' })
   })
 
-  it('caps owner label to 60 and session to 32', () => {
-    const pin = store.addPin({ text: 't', url: 'https://x/' }, { label: 'L'.repeat(100), session: 'S'.repeat(50) })
+  it('caps owner label to 60 and session to 128', () => {
+    const pin = store.addPin({ text: 't', url: 'https://x/' }, { label: 'L'.repeat(100), session: 'S'.repeat(200) })
     expect(pin.owner.label).toHaveLength(60)
-    expect(pin.owner.session).toHaveLength(32)
+    expect(pin.owner.session).toHaveLength(128)
   })
 
   it('keeps an owned pin immutable on resolve, but attributes the resolver when the pin was unowned', () => {

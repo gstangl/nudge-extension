@@ -92,7 +92,7 @@
     }
     .pill .who:hover .who-label { color: ${PAPER}; }
     /* owner session id8 — quiet mono, no frame (vs the framed host pill), visible
-       without any click so the /nudge chat report matches the toolbar at a glance */
+       without any click so the groundworks-nudge report matches the toolbar at a glance */
     .pill .who-id {
       flex: none; margin-left: 6px; font-family: ${MONO}; font-size: 10px; line-height: 18px;
       letter-spacing: 0; font-variation-settings: normal; color: rgba(242,239,234,.35);

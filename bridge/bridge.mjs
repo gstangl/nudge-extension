@@ -6,8 +6,8 @@
  *    bridge is serving (native host + hooks keep exactly one alive).
  *  - WebSocket (same port): pushes the pin list + agentLive to connected
  *    extensions on every change (badge, feed, status circle).
- * The AGENT side needs no server surface: it reads ~/.claude/nudge files and
- * resolves via HTTP (see ~/.claude/skills/nudge). Lifecycle: Chrome starts this
+ * The agent side uses the runtime-neutral CLI to read the shared store and
+ * resolves via HTTP. Lifecycle: Chrome starts this
  * detached via native-host.mjs; session hooks are the fallback. Logs -> stderr.
  */
 import http from 'node:http'
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.14.1'
+const VERSION = '0.15.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -98,20 +98,22 @@ function handle(req, res) {
         return json(res, 400, { error: 'heartbeat needs {label, pid:number, since:number}' })
       // ONE roster entry per session: keyed by session id (pid as fallback).
       // An OLDER watcher of a session that armed a newer one is told to die.
-      const key = who.session ? `s:${String(who.session).slice(0, 32)}` : `p:${who.pid}`
+      const key = who.session ? `s:${String(who.session).slice(0, 128)}` : `p:${who.pid}`
       const existing = roster.get(key)
       if (existing && existing.pid !== who.pid && existing.since > who.since)
         return json(res, 200, { ok: true, owner: false, replaced: true })
       roster.set(key, {
         label: String(who.label || '?').slice(0, 60), pid: who.pid, since: who.since,
-        session: who.session ? String(who.session).slice(0, 32) : null,
+        session: who.session ? String(who.session).slice(0, 128) : null,
         project: who.project ? String(who.project).slice(0, 60) : null,
         branch: who.branch ? String(who.branch).slice(0, 60) : null,
         host: who.host ? String(who.host).slice(0, 20) : null,
+        runtime: who.runtime ? String(who.runtime).slice(0, 20) : null,
+        surface: who.surface ? String(who.surface).slice(0, 20) : null,
         // wake mode: does a new nudge START this agent (push) or wait to be
-        // pulled on the next prompt (pull)? Missing/invalid → derive from host so
-        // the extension never claims an autonomous wake a CLI session can't do.
-        wake: who.wake === 'push' || who.wake === 'pull' ? who.wake : (who.host === 'Zed' ? 'push' : 'pull'),
+        // pulled on the next prompt (pull)? Missing/invalid is always pull, so
+        // the extension never claims an autonomous wake a session cannot do.
+        wake: who.wake === 'push' ? 'push' : 'pull',
         firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
         lastSeen: Date.now(),
       })
@@ -352,4 +354,3 @@ try {
     }, 400)
   })
 } catch { /* fs.watch unsupported - manual reload then */ }
-

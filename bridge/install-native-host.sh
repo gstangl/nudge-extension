@@ -25,7 +25,7 @@ for DIR in "$MANIFEST_DIR" "$HOME/Library/Application Support/Chromium/NativeMes
   cat > "$DIR/energy.roots.nudge.json" <<EOF
 {
   "name": "energy.roots.nudge",
-  "description": "Roots Nudge bridge launcher (UI prompting for the Zed agent)",
+  "description": "Roots Nudge bridge launcher (UI prompting for local coding agents)",
   "path": "$WRAPPER",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://$EXT_ID/"]

@@ -3,22 +3,22 @@
 // RIGHT NOW. No backlog listing — older prompts live behind /pins on demand.
 // The current mark is the NEWEST pin regardless of status (a just-answered mark
 // stays the referent for follow-ups) within a 15-minute freshness window.
-// Store is GLOBAL (~/.claude/nudge) — one truth for every agent in every project.
+// Store is GLOBAL and runtime-neutral — one truth for every agent and project.
 //
 // OPT-IN GATE (immanent, 2026-07-05): this hook runs in EVERY session, but only
 // a session that PARTICIPATES in Nudge may see Nudge context — one that invoked
-// /nudge and thereby armed a watcher, so its CLAUDE_CODE_SESSION_ID is in the
+// groundworks-nudge and thereby armed a watcher, so its normalized Agent id is in the
 // bridge roster. Every other session (a CI agent, an unrelated task) gets TOTAL
 // SILENCE. Before, any existing global store leaked status + mark + queue into
 // every agent, and a foreign agent adopted the owner's session as its own
 // (Gerald's screenshot: „Die neuen Nudges gehören der suite-e-Session"). No
 // roster membership, no output — full stop.
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
+import { resolveAgentId, resolveStoreDir } from './runtime.mjs'
 
 const PORT = Number(process.env.NUDGE_PORT || 4700)
-const PIN_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'nudge')
+let PIN_DIR = resolveStoreDir()
 
 // Gerald's prompt (hook stdin JSON) — scanned for nudge references („Nudge 123",
 // „nudge_123", „#123"): a named nudge gets its FULL context injected right here,
@@ -26,17 +26,11 @@ const PIN_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'n
 let promptText = ''
 try { promptText = String(JSON.parse(fs.readFileSync(0, 'utf8')).prompt || '') } catch { /* no stdin payload */ }
 
-let store = null
-try { store = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'store.json'), 'utf8')) } catch { /* no store yet */ }
-let selection = null
-try { selection = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'selection.json'), 'utf8')) } catch { /* none yet */ }
-if (!store && !selection) process.exit(0)
-
 // The gate: is THIS session armed? Ask the bridge for the roster and match our
-// own session id. Bridge down / no session id / not in roster → silent exit.
-// (A just-typed /nudge is not armed YET — the skill arms it; context appears on
+// own normalized agent id. Bridge down / no id / not in roster → silent exit.
+// (A just-invoked groundworks-nudge is not armed YET — context appears on
 // the NEXT prompt. The skill itself surfaces everything on that first run.)
-const mySession = (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8)
+const mySession = resolveAgentId()
 const hostOf = (u) => { try { return new URL(u).host } catch { return '' } }
 let status, identity
 try {
@@ -44,10 +38,17 @@ try {
   identity = await res.json()
   const armed = mySession && (identity.agents || []).some(a => a.session === mySession)
   if (!armed) process.exit(0) // this session does not participate in Nudge — say nothing
+  if (identity.store) PIN_DIR = identity.store
   status = identity.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${identity.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert.'
 } catch {
   process.exit(0) // bridge unreachable → can't prove participation → stay silent
 }
+
+let store = null
+try { store = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'store.json'), 'utf8')) } catch { /* no store yet */ }
+let selection = null
+try { selection = JSON.parse(fs.readFileSync(path.join(PIN_DIR, 'selection.json'), 'utf8')) } catch { /* none yet */ }
+if (!store && !selection) process.exit(0)
 
 // ORIGIN-AWARE (2026-07-07): this session sees only ITS OWN nudges (a nudge is
 // stamped by the bridge with the agent that owns its host) and only a selection
@@ -89,15 +90,15 @@ if (age <= 15 && (useSel ? selection : newestPin)) {
     lines.push(
       `AKTUELLE MARKIERUNG (Selektion, vor ${age} min): ${selection.targets?.length ? `${selection.targets.length} Elemente` : selection.selector || '?'}${selection.source ? ` (${selection.source})` : ''}`,
       ...(multiLine(selection.targets) ? [multiLine(selection.targets)] : []),
-      `  Seite: ${routeOf(selection.url)}${selection.innerText ? ` · Text: „${selection.innerText.slice(0, 80)}"` : ''}${selection.screenshot ? ' · Screenshot: ~/.claude/nudge/shots/selection.png' : ''}`,
-      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Details: ~/.claude/nudge/selection.json`,
+      `  Seite: ${routeOf(selection.url)}${selection.innerText ? ` · Text: „${selection.innerText.slice(0, 80)}"` : ''}${selection.screenshot ? ` · Screenshot: ${path.join(PIN_DIR, 'shots', 'selection.png')}` : ''}`,
+      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Details: ${path.join(PIN_DIR, 'selection.json')}`,
     )
   } else {
     const text = newestPin.text ? `„${newestPin.text.slice(0, 120)}"` : '[Nur Markierung]'
     lines.push(
       `AKTUELLE MARKIERUNG (${newestPin.id}, Pille #${labelOf(newestPin.id)}, vor ${age} min): ${text}`,
       `  Element: ${newestPin.targets?.length ? `${newestPin.targets.length} Elemente (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?'} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · bereits beantwortet' : ''}`,
-      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Screenshot: ~/.claude/nudge/shots/${newestPin.id}.png`,
+      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Screenshot: ${path.join(PIN_DIR, 'shots', `${newestPin.id}.png`)}`,
     )
   }
 } else {
@@ -197,7 +198,7 @@ for (const p of refPins) {
   lines.push(
     `REFERENZIERT ${p.id} (#${labelOf(p.id)}, ${p.status === 'open' ? 'offen' : 'bereits resolved'}): ${text}`,
     `  Element: ${els} · ${routeOf(p.url)}${p.target?.innerText ? ` · Text: „${p.target.innerText.slice(0, 60)}"` : ''}${extra ? ` · ${extra}` : ''}`,
-    `  Details: ~/.claude/nudge/inbox/${p.id}.md${p.screenshot ? ` · Screenshot: ~/.claude/nudge/${p.screenshot}` : ''}`,
+    `  Details: ${path.join(PIN_DIR, 'inbox', `${p.id}.md`)}${p.screenshot ? ` · Screenshot: ${path.join(PIN_DIR, p.screenshot)}` : ''}`,
   )
 }
 
@@ -206,7 +207,7 @@ for (const p of refPins) {
 // Referenz-Anker (Nummern-Pille auf der Seite), keine Arbeitsaufträge.
 const open = pins.filter(p => p.status === 'open')
 if (open.length) {
-  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (/nudge); [Mark] = nur Anker.`)
+  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (groundworks-nudge); [Mark] = nur Anker.`)
   // #N ist die Pillen-Nummer auf der Seite (das, was Gerald sagt), nudge_N die
   // Identität dahinter (Dateien, Commits, CHANGELOG) — beide in einer Zeile,
   // damit der Agent von der gesagten Nummer direkt auf die inbox-Datei kommt.

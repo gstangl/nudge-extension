@@ -1,17 +1,16 @@
 # Nudge installieren & benutzen
 
-**Nudge = Pixel schupfen mit dem Agenten.** Du promptest direkt auf der laufenden Web-App: Element im
-Browser anklicken, sagen was du willst — der Claude-Agent in Zed bekommt alles,
-was er braucht (Screenshot, Element, Styles, Konsole), erledigt es und meldet
-sich mit „✓ erledigt" zurück in deinen Browser. Funktioniert auf jeder
-`localhost`-Seite, egal welches Projekt.
+**Nudge = Pixel schupfen mit dem Agenten.** Du promptest direkt auf der laufenden
+Web-App. Der aktive Coding Agent erhält Screenshot, Element, Styles und Konsole.
+Danach meldet er das Ergebnis im Browser. Nudge funktioniert auf jeder
+`localhost`-Seite und mit jedem lokalen Agenten, der Befehle ausführen kann.
 
 ---
 
 ## Voraussetzungen
 
 - macOS mit **Google Chrome** und **Node.js** (`node -v` sollte etwas ausgeben)
-- **Claude Code** (in Zed oder als CLI)
+- ein lokaler Coding Agent. Claude Code und Codex werden nativ erkannt
 - Dieses Repository (`nudge-extension`) lokal geklont
 
 ## Installation — einmalig, ~5 Minuten
@@ -42,27 +41,32 @@ cd <dein-pfad-zu>/nudge-extension/bridge
 Ab jetzt startet Chrome den lokalen Brücken-Prozess selbst und hält ihn am
 Leben — du musst nie ein Terminal dafür öffnen.
 
-### 4. Agent-Seite einrichten (Skill + Hooks)
+### 4. Agent-Seite einrichten
 
 ```bash
 <dein-pfad-zu>/nudge-extension/agent/setup-agent.sh
 ```
 
-Das installiert in dein `~/.claude/`:
-- den **Skill `/nudge`** (das Playbook des Agenten),
-- zwei **Hooks** (jede neue Agent-Session verbindet sich automatisch; jede
-  deiner Nachrichten trägt die aktuelle Markierung als Kontext),
-- den globalen **Store** `~/.claude/nudge/` (dort landen deine Prompts).
+Das Script installiert:
 
-Das Script ist ungefährlich: Es ergänzt deine bestehenden Einstellungen, ohne
-etwas zu überschreiben, und kann beliebig oft laufen.
+- den Befehl `groundworks-nudge` für alle Agenten,
+- den Skill `/groundworks-nudge` für Claude Code und Codex,
+- optionale Claude-Code- und Codex-Hooks für Markierungen im Prompt.
+
+Der frühere Alias `/nudge` wird beim Setup entfernt.
+
+Alle Agenten lesen denselben Store. Bestehende Installationen behalten ihren
+bisherigen Pfad. Bei neuen Installationen liegt er unter `~/.nudge/`.
+
+Das Script erhält bestehende Agent-Einstellungen und ersetzt nur seine eigenen
+Nudge-Dateien. Es kann beliebig oft laufen.
 
 ### 5. Funktionstest
 
 1. Beliebige `localhost`-Seite öffnen (z. B. deine Dev-App).
 2. Oben rechts erscheint die dunkle **Nudge-Leiste**. Der kleine Punkt links:
    erst grau/amber, und sobald ein Agent lauscht **grün**.
-3. Claude-Code-Session starten (in Zed), irgendetwas tippen — z. B. `/nudge`.
+3. Agent-Session starten und `/groundworks-nudge` eingeben.
    Der Agent verbindet sich selbst; der Punkt wird grün.
 4. **„Pick"** klicken → ein Element anklicken → kurzen Prompt tippen → **Senden**.
    Rechts oben muss erscheinen: **„nudge_X — Agent arbeitet"**. Das war's.
@@ -78,7 +82,7 @@ etwas zu überschreiben, und kann beliebig oft laufen.
 | **Ebene korrigieren** | Nach dem Klick zeigen Chips die Eltern-Elemente (`td → tr → table`) — klicke die Ebene, die du wirklich meinst |
 | **Mehrere Elemente** | `Shift+Klick` sammelt Elemente in EINEN Prompt („tausche diese beiden") — nochmal Shift+Klick nimmt eines wieder raus, normaler Klick startet neu mit einem Element |
 | **Region prompten** | „Freeform" → mit gedrückter Maustaste einkreisen → Prompt |
-| **Nur markieren** | Element anklicken → **leer senden** (oder Esc) — dann in Zed einfach „mach *das hier* größer" schreiben; der Agent weiß, was gemeint ist |
+| **Nur markieren** | Element anklicken → **leer senden** (oder Esc) — dann in der Agent-Session „mach *das hier* größer" schreiben |
 | **Viele Änderungen schnell** | Einfach hintereinander senden — der Agent arbeitet sie strikt der Reihe nach ab; der Zähler in der Leiste zeigt, wie viele offen sind |
 
 **Feedback rechts oben (kleine Chips):**
@@ -91,7 +95,7 @@ etwas zu überschreiben, und kann beliebig oft laufen.
 
 | Farbe | Bedeutung |
 |---|---|
-| **Grün** | Agent lauscht live — Prompts werden sofort bearbeitet |
+| **Grün** | Eine Agent-Session ist aktiv. „Auto" startet selbst, „Pull" übernimmt mit der nächsten Nachricht |
 | **Amber** | Verbindung steht, aber kein Agent — Prompts werden gespeichert |
 | **Rot** | Brücke nicht erreichbar — Prompts landen in der Warteschlange |
 | **Grau** | Leiste ausgeschaltet (`Alt+C`) |
@@ -100,9 +104,9 @@ etwas zu überschreiben, und kann beliebig oft laufen.
 
 1. **Punkt bleibt rot:** ~10 Sekunden warten (Chrome repariert die Brücke
    selbst). Bleibt er rot → Tab neu laden (`⌘R`).
-2. **Punkt bleibt amber:** Es lauscht kein Agent. In Zed eine Claude-Session
-   starten und eine Nachricht schicken (z. B. `/nudge`).
-3. **Alles andere:** Im Agenten `/nudge` tippen — die erste Zeile der Antwort
+2. **Punkt bleibt amber:** Es lauscht kein Agent. Eine Session starten und
+   `/groundworks-nudge` eingeben.
+3. **Alles andere:** Im Agenten `/groundworks-nudge` eingeben. Die erste Zeile
    ist immer der Verbindungs-Report, und der Agent repariert sich von dort.
 4. Nach Nudge-Updates aus dem Repo: einmal `chrome://extensions` → ↻ bei
    „Roots Nudge", dann den Tab neu laden.

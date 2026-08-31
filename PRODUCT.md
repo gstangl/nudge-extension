@@ -6,17 +6,17 @@ contract in `test/protocols.md`. Standalone repo since 2026-07-08 (extracted
 from the roots-apps monorepo — zero code dependencies).
 
 **Mission — see `VISION.md`.** This page is the current embodiment of it: a
-strong, bidirectional, always-honest connection between the Zed IDE (the first
-agent surface, not the last) and Google Chrome (where the rendered UI lives).
+strong, bidirectional, always-honest connection between the active coding Agent
+and Google Chrome, where the rendered UI lives.
 Everything below serves that line.
 
 ## What Nudge is
 
-**UI prompting for the Zed agent — built for pixel nudging.** You pick an
+**UI prompting for the active coding Agent — built for pixel nudging.** You pick an
 element (or circle a region) in the running UI, say what you want, and the
-agent in Zed acts on it with full context: selector, xpath, text, styles,
+Agent acts on it with full context: selector, xpath, text, styles,
 console (and a screenshot for region marks). Open prompts stay subtly visible
-as number pills — the number is what you reference in Zed („Nudge 123 macht
+as number pills — the number is what you reference in the Agent chat („Nudge 123 macht
 das"); everything else is fire-and-forget. The pill number is deliberately
 BOUNDED (wraps at 999, so it never grows into an unreadable id) and only has to
 be unique among the handful of open prompts; the id behind it counts up forever
@@ -33,10 +33,10 @@ is everything. Nudge names that job; "Pin" named the mechanism.
 
 ## USP — what everything else is subordinated to
 
-1. **Agent integration is the core — today that is Zed** (first surface, not
-   the boundary; see `VISION.md`). Prompts land in the agent that owns the
+1. **Agent integration is the core.** Prompts land in the Agent that owns the
    codebase — not in a chat next to it. The agent fixes, verifies, resolves
-   with before/after evidence. No other tool in this class targets Zed.
+   with before/after evidence. Claude Code and Codex have native Skill adapters;
+   other local Agents use the same CLI and protocol.
 2. **Speed.** Mark → agent knows it in ~1 s (event-time push, tiny payload
    first, live wake). The connection state is always visible and never lies
    (grey/red/amber/green = off / no bridge / no agent / agent live).
@@ -51,15 +51,15 @@ is everything. Nudge names that job; "Pin" named the mechanism.
 
 ## Core: the connection must be reliable — and visibly so
 
-The bridge between the Chrome extension and the Zed agent is the product's
+The bridge between the Chrome extension and the active Agent is the product's
 backbone. It is self-healing (native host + session hooks) AND its state is
 always visible, in both directions:
 
 - [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
       red no bridge / amber no agent / **green = agent live**. Green never lies
-      (heartbeat-backed). A green PULL owner (Claude CLI) additionally shows a
-      „Pull"-Tag + tooltip: the agent is live but a nudge comes on the next
-      terminal prompt, not by itself — green must not imply „kommt automatisch".
+      (heartbeat-backed). A green pull owner additionally shows a „Pull" tag:
+      the Agent is live, but a Nudge arrives with the next prompt rather than by
+      itself. Green must not imply autonomous wake.
 - [x] **Chrome, per nudge pill:** shows the nudge NUMBER (the chat referent);
       amber clock = accepted/stored, sweeping hand = agent live, gone = done
       (history with check marks lives in the queue popover only).
@@ -69,10 +69,10 @@ always visible, in both directions:
 - [x] **Chrome, feedback feed:** all events listed unobtrusively top right —
       small chips with Lucide icons, max 4, self-fading. Connection losses and
       recoveries land there too.
-- [x] **Zed, standing:** every message carries `[Nudge] Bridge ✓ · Agent-Watch ✓`
-      + the current mark + queue count (UserPromptSubmit hook).
-- [x] **Zed, live:** new prompts wake the agent (~1 s) and completions are
-      reported in the conversation.
+- [x] **Agent, standing:** the CLI reports bridge, roster, current mark and queue;
+      native hooks may inject the same context where the runtime supports them.
+- [x] **Agent, live:** push-capable runtimes wake on a new prompt. Pull runtimes
+      receive it with the next message. Completions return to the browser.
 - [x] **Both ways:** taking a nudge BACK (queue ×) is a message, not a deletion.
       A nudge is at its agent in milliseconds, so the × cancels running work: the
       owning agent is told to stop, and the toast names who was told (2026-07-29).
@@ -85,8 +85,8 @@ always visible, in both directions:
 - [x] The current mark is ambient agent context ("das hier" just works).
 - [x] Connection truth at every step: icon, send-toast, per-message status line.
 - [x] Evidence loop: resolve captures the after-state, invisibly.
-- [x] Works for every Claude agent in every project: global store (~/.claude/nudge),
-      user-level skill + hooks, zero per-project config (2026-07-05).
+- [x] One runtime-neutral CLI and store serve every local Agent. Claude Code and
+      Codex have native Skill discovery; other Agents follow the same protocol.
 - [x] Parallel localhosts (multiple worktrees, each its own dev server + agent)
       route to their own agents — per-host ownership, no cross-wake (2026-07-07).
 - [x] Every instruction travels BOTH ways: send, amend — and withdraw. A nudge
@@ -102,7 +102,7 @@ always visible, in both directions:
 - **No browser automation or audits.** Agent→browser (navigate, click, Lighthouse)
   is Playwright/browser-tools territory.
 - **No own agent, no cloud, no accounts** (anti-Stagewise-app): localhost is the
-  trust boundary, Zed is the brain.
+  trust boundary, the active coding Agent is the brain.
 - **No framework adapters** (anti-Frontman): nothing that only works in Vite/Next/Astro.
 
 ## Accepted trade-offs — the price of the USP
@@ -113,9 +113,9 @@ always visible, in both directions:
 - **Bridge lifecycle is owned by Chrome** (native messaging host starts it
   detached; SessionStart hook remains as fallback). Residual: if Chrome AND all
   sessions are gone, nothing runs — by design (no daemon).
-- **Pull-based agent delivery under the hood** (Zed has no push channel —
-  maintainer-confirmed). The Monitor wake + hook context make it FEEL push;
-  a mid-task prompt waits until the agent's current step yields.
+- **Wake capability is declared, never inferred from the editor.** A runtime that
+  can start a turn from watcher output declares `push`; every other runtime is
+  `pull`. A mid-task prompt waits until the Agent's current step yields.
 - **Parallel sessions coexist, routed per localhost** (origin-aware, 2026-07-07;
   supersedes the old "one live-watch session at a time"). The bridge keeps a
   roster of armed sessions; each localhost is owned by one agent — assigned in

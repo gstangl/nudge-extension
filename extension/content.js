@@ -62,7 +62,7 @@
   const queue = el('div', 'queue', '<div class="q-head"></div><div class="q-list"></div>')
   const whoMenu = el('div', 'who-menu', '<div class="q-head">Switch session</div><div class="w-list"></div>')
   // status hint: a click on the (otherwise mute) status dot explains the CURRENT
-  // state and what to do — „kein Agent → tippe /nudge", „Bridge weg", „Pull: weiter"
+  // state and what to do — no agent, bridge unavailable, or pull delivery
   const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
@@ -785,7 +785,7 @@
     if (!picked) return
     // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
     // the pin's number is the referent for chat — Gerald marks fast in the
-    // browser, then prompts in Zed („Nudge 123 macht das"). The watcher wake
+    // browser, then prompts in the owning Agent session. The watcher wake
     // line flags it as reference-only, the skill does not work it unprompted.
     const btn = composer.querySelector('.send')
     btn.disabled = true
@@ -834,7 +834,7 @@
       // A pull owner (CLI) is live but won't START on its own — say so, or the
       // green icon's „agent working" would be a lie (Gerald: Nudges „kommen nicht an").
       if (!payload.text) notify('check', `${id} marked`)
-      else if (agentLive && agentWake === 'pull') notify('clock', `${id} erfasst · im Terminal „weiter"`)
+      else if (agentLive && agentWake === 'pull') notify('clock', `${id} erfasst · kommt mit der nächsten Nachricht`)
       else if (agentLive) notify('send', `${id} — agent working`)
       else notify('clock', `${id} saved — no agent`)
       // team rollout: anonymous pins are useless in a shared store — hint ONCE
@@ -908,7 +908,7 @@
     try { const a = new URL(u), b = new URL(location.href); return a.origin === b.origin && a.pathname === b.pathname && a.hash === b.hash } catch { return false }
   }
   // resolve feedback: when the agent finishes a prompt, close the loop right here
-  // in the page — Gerald must not have to switch to Zed to know it's done
+  // in the page — Gerald must not have to switch to the Agent to know it's done
   const knownStatus = new Map()
   let statusSeeded = false
   // screenshots are data-URLs of megabyte size — the session snapshot keeps the
@@ -957,13 +957,13 @@
     for (const a of agents) {
       const row = document.createElement('div')
       row.className = 'w-row' + (a.owner ? ' is-owner' : '')
-      // a.session (id8) is the un-collidable key: the /nudge arm-report in the
+      // a.session (shown as id8) is the un-collidable key: the arm report in the
       // chat prints the same id, so Gerald matches chat ↔ dropdown 1:1 even when
       // two sessions share a label
-      // wake mode per row: „Auto" (push/Zed, starts on its own) vs „Pull" (CLI,
-      // comes on the next terminal prompt) — Gerald picks the owner knowing which
+      // wake mode per row: „Auto" starts on its own; „Pull" arrives with the next
+      // Agent prompt. Gerald picks the owner knowing which capability it has.
       const wakeTag = a.wake === 'pull' ? 'Pull' : a.wake === 'push' ? 'Auto' : null
-      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.host, wakeTag, `seit ${sinceAge(a.since)}`, a.session || null].filter(Boolean).join(' · ')
+      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.runtime, a.surface || a.host, wakeTag, `seit ${sinceAge(a.since)}`, a.session?.slice(0, 8) || null].filter(Boolean).join(' · ')
       row.innerHTML = '<div class="w-line1"><span class="w-name"></span><span class="w-host"></span></div><div class="w-line2"></div><div class="w-line3"></div>'
       const parts = splitLabel(a.label)
       row.querySelector('.w-name').textContent = (a.owner ? '● ' : '') + parts.name
@@ -1007,13 +1007,13 @@
     const name = agentLabel ? splitLabel(agentLabel).name : '?'
     if (!wsOk) {
       head.textContent = 'Bridge nicht erreichbar'
-      body.innerHTML = 'Keine Verbindung zur Bridge. Fokussiere Chrome oder tippe <b>/nudge</b> in einer Zed-Session — beides startet die Bridge.'
+      body.innerHTML = 'Keine Verbindung zur Bridge. Fokussiere Chrome oder starte <b>/groundworks-nudge</b> in der Agent-Session.'
     } else if (!agentLive) {
       head.textContent = 'Kein Agent aktiv'
-      body.innerHTML = 'Nudges werden gespeichert (die Nummern-Pille ist der Beweis), aber niemand reagiert automatisch. Tippe <b>/nudge</b> in der Zed-Session, die reagieren soll.'
+      body.innerHTML = 'Nudges werden gespeichert, aber keine Agent-Session reagiert. Starte <b>/groundworks-nudge</b> in der Session, die sie übernehmen soll.'
     } else if (agentWake === 'pull') {
       head.textContent = `Agent aktiv: ${name} · Pull`
-      body.innerHTML = 'Gespeichert — der Nudge kommt beim nächsten <b>„weiter"</b> im Terminal, nicht von selbst (CLI-Session).'
+      body.innerHTML = 'Gespeichert — der Nudge kommt mit der nächsten Nachricht an die Agent-Session, nicht von selbst.'
     } else {
       head.textContent = `Agent aktiv: ${name}`
       body.innerHTML = 'Läuft: neue Nudges starten den Agenten automatisch.'
@@ -1032,7 +1032,7 @@
   let wsOk = false
   let agentLive = false
   let agentLabel = null // which session owns the wake channel (bridge arbiter)
-  let agentWake = null // 'push' = owner auto-wakes (Zed) · 'pull' = surfaces on next prompt (CLI)
+  let agentWake = null // 'push' = owner auto-wakes · 'pull' = surfaces on next prompt
   let agents = [] // full roster incl. standby sessions (toolbar dropdown) // a watcher heartbeats the bridge -> prompts get acted on NOW
   // ---------- queue popover (badge click) ----------
   const Q_CLOCK = '<span class="q-dot q-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="q-hand"><path d="M12 6v6l4 2"/></g></svg></span>'
@@ -1240,7 +1240,7 @@
 
   function updatePill() {
     const dot = pill.querySelector('.status')
-    // A pull owner (CLI) IS live (heartbeating) but does NOT auto-start on a new
+    // A pull owner IS live (heartbeating) but does NOT auto-start on a new
     // nudge — the icon stays green (honest: an agent owns this host), the TEXT
     // tells the truth about whether it comes automatically.
     const pull = agentLive && agentWake === 'pull'
@@ -1248,7 +1248,7 @@
     dot.classList.toggle('half', wsOk && !agentLive)
     dot.title = !wsOk ? 'Bridge unreachable'
       : !agentLive ? 'Bridge up — no agent (nudges are stored)'
-      : pull ? `Erfasst — ${agentLabel ? splitLabel(agentLabel).name : '?'} (CLI): im Terminal „weiter" tippen, dann kommt der Nudge`
+      : pull ? `Erfasst — ${agentLabel ? splitLabel(agentLabel).name : '?'} (Pull): kommt mit der nächsten Nachricht`
       : `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'} (kommt automatisch)`
     // session label + this tab's localhost IN the toolbar (Gerald: always know
     // which agent reacts AND which localhost this is)
@@ -1259,15 +1259,15 @@
     who.querySelector('.who-kind').textContent = owner ? 'Agent:' : ''
     who.querySelector('.who-label').textContent = owner ? owner.name : (agents.length ? `${agents.length} sessions` : '')
     // the owner's session id8, visible WITHOUT any click — the un-collidable key
-    // the /nudge arm-report prints, so Gerald matches chat ↔ toolbar at a glance
+    // the arm report prints, so Gerald matches chat ↔ toolbar at a glance
     const ownerAgent = agents.find(a => a.owner)
-    who.querySelector('.who-id').textContent = owner && ownerAgent?.session ? ownerAgent.session : ''
+    who.querySelector('.who-id').textContent = owner && ownerAgent?.session ? ownerAgent.session.slice(0, 8) : ''
     // honest wake mode right in the toolbar: „Pull" (amber, needs your action)
-    // for a CLI owner, nothing for an auto-waking Zed owner — green must not imply
-    // „kommt automatisch" when it doesn't (Gerald: Nudges „kommen nicht an" im CLI)
+    // for a pull owner, nothing for an auto-waking owner — green must not imply
+    // „kommt automatisch" when it does not
     const wakeTag = who.querySelector('.who-wake')
     wakeTag.textContent = pull ? 'Pull' : ''
-    wakeTag.title = pull ? 'CLI-Session: Nudge ist gespeichert, kommt beim nächsten „weiter" im Terminal' : ''
+    wakeTag.title = pull ? 'Nudge ist gespeichert und kommt mit der nächsten Nachricht an die Agent-Session' : ''
     wakeTag.style.display = pull ? 'inline-block' : 'none'
     // the localhost as a clean pill (from the label's :PORT suffix), never inline in the name
     who.querySelector('.who-host').textContent = owner?.port ? `localhost:${owner.port}` : ''

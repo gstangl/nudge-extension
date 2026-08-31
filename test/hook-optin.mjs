@@ -1,6 +1,6 @@
 // Suite G — Hook Opt-in Gate. The UserPromptSubmit hook (nudge-context.mjs)
 // runs in EVERY session on the machine. This proves the immanent guarantee:
-// ONLY a session that armed via /nudge (its session id is in the bridge roster)
+// ONLY a session that armed via /groundworks-nudge (its id is in the bridge roster)
 // ever sees Nudge context; every foreign session gets TOTAL SILENCE — even with
 // a full global store and a live owner. Side port 4797, /tmp store. No browser.
 import { spawn, execFileSync } from 'node:child_process'
@@ -34,7 +34,7 @@ const bridge = spawn('node', [BRIDGE], {
 function runHook(sessionId, prompt) {
   try {
     return execFileSync('node', [HOOK], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), CLAUDE_CODE_SESSION_ID: sessionId || '' },
+      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_ID: sessionId || '', CODEX_THREAD_ID: '', CODEX_SESSION_ID: '', CLAUDE_CODE_SESSION_ID: '' },
       input: prompt ? JSON.stringify({ prompt }) : '', // harness stdin: UserPromptSubmit JSON
       encoding: 'utf8', timeout: 5000,
     }).trim()

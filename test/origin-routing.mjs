@@ -119,8 +119,8 @@ try {
     if (!await up()) fail('K4: bridge restart failed')
     // two REAL watcher processes, distinct sessions; capture their stdout
     const outA = [], outB = []
-    const wA = spawn('node', [WATCHER], { env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Agent-A', CLAUDE_CODE_SESSION_ID: 'sessAxxx' }, stdio: ['ignore', 'pipe', 'ignore'] })
-    const wB = spawn('node', [WATCHER], { env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Agent-B', CLAUDE_CODE_SESSION_ID: 'sessBxxx' }, stdio: ['ignore', 'pipe', 'ignore'] })
+    const wA = spawn('node', [WATCHER], { env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Agent-A', NUDGE_AGENT_ID: 'sessAxxx' }, stdio: ['ignore', 'pipe', 'ignore'] })
+    const wB = spawn('node', [WATCHER], { env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Agent-B', NUDGE_AGENT_ID: 'sessBxxx' }, stdio: ['ignore', 'pipe', 'ignore'] })
     kids.push(wA, wB)
     wA.stdout.on('data', c => outA.push(c.toString()))
     wB.stdout.on('data', c => outB.push(c.toString()))

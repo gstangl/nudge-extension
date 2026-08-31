@@ -397,13 +397,22 @@ try {
   // --- agent wiring drift: installed copies must equal the repo sources
   //     (hook + skill exist twice by design; drift was only noticeable manually) ---
   for (const [repo, installed] of [
-    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.claude/skills/nudge/SKILL.md')],
+    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.claude/skills/groundworks-nudge/SKILL.md')],
+    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.agents/skills/groundworks-nudge/SKILL.md')],
     [path.join(HERE, '../agent/nudge-context.mjs'), path.join(os.homedir(), '.claude/hooks/nudge-context.mjs')],
+    [path.join(HERE, '../agent/runtime.mjs'), path.join(os.homedir(), '.claude/hooks/runtime.mjs')],
     [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.claude/hooks/nudge-session-start.sh')],
+    [path.join(HERE, '../agent/nudge-context.mjs'), path.join(os.homedir(), '.codex/hooks/nudge-context.mjs')],
+    [path.join(HERE, '../agent/runtime.mjs'), path.join(os.homedir(), '.codex/hooks/runtime.mjs')],
+    [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.codex/hooks/nudge-session-start.sh')],
   ]) {
     if (fs.existsSync(installed) && !fs.readFileSync(repo).equals(fs.readFileSync(installed)))
       fail(`agent wiring drift: ${path.basename(repo)} (repo != installiert - nudge/agent/setup-agent.sh ausführen)`)
   }
+  for (const alias of [
+    path.join(os.homedir(), '.claude/skills/nudge/SKILL.md'),
+    path.join(os.homedir(), '.agents/skills/nudge/SKILL.md'),
+  ]) if (fs.existsSync(alias)) fail(`legacy alias still installed: ${alias}`)
   console.log('PASS agent wiring in sync (repo = installed)')
 } catch (e) {
   fail(e.message || String(e))

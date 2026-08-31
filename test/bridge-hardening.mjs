@@ -100,9 +100,9 @@ try {
   let errOut = ''
   noLabel.stderr.on('data', c => { errOut += c })
   const code = await new Promise(r => { noLabel.on('exit', r); setTimeout(() => { noLabel.kill(); r(-1) }, 3000) })
-  if (code !== 1 || !errOut.includes('Opt-in')) fail(`fence: watcher without label must refuse (exit ${code}, err: ${errOut.slice(0, 80)})`)
+  if (code !== 1 || !errOut.includes('NUDGE_AGENT_LABEL')) fail(`fence: watcher without label must refuse (exit ${code}, err: ${errOut.slice(0, 80)})`)
   const withLabel = sp('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
-    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'fence-ok' }, stdio: 'ignore',
+    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'fence-ok', NUDGE_AGENT_ID: 'fence-session' }, stdio: 'ignore',
   })
   await new Promise(r => setTimeout(r, 2500))
   const idn3 = await (await fetch(`http://localhost:${PORT}/.identity`)).json()
