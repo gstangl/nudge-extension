@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Roots Nudge",
-  "version": "0.29.0",
+  "version": "0.29.1",
   "web_accessible_resources": [
     {
       "resources": [

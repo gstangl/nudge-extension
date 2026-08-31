@@ -38,9 +38,21 @@ groundworks-nudge watch --label "<label>" --wake <push|pull>
 ```
 
 Use `push` only when this runtime can surface watcher output as a new agent turn.
-Use `pull` otherwise. Missing or invalid capability is always `pull`. Keep the
-`agentId` printed by the command for later scoped reads. The command normalizes
-Claude Code, Codex, and generic agent identities before joining the same roster.
+Use `pull` otherwise. Missing or invalid capability is always `pull`.
+
+What decides this is the tool that starts the watcher, never the editor around it:
+
+- **Claude Code** — start it with the persistent `Monitor` tool and pass
+  `--wake push`. Monitor's stdout re-enters the conversation, and that is the
+  autonomous wake. A background shell is not a push channel: its output goes to a
+  file no turn reads, so a watcher armed that way is `--wake pull`.
+- **Codex and other local agents** — start it as a long-running child process and
+  pass `--wake pull`, unless that runtime has its own channel that turns watcher
+  output into a new turn.
+
+Keep the `agentId` printed by the command for later scoped reads. The command
+normalizes Claude Code, Codex, and generic agent identities before joining the
+same roster.
 
 After arming, run `groundworks-nudge status`. Report connection state only when
 the bridge or watcher is unhealthy. If the bridge is down, first let Chrome's
