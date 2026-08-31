@@ -71,7 +71,7 @@ try {
     await click('.pill .who')
     await p.locator('.who-menu.on').waitFor({ timeout: 3000 })
     const rows = await rd(() => [...document.getElementById('__roots-nudge-host').shadowRoot.querySelectorAll('.who-menu .w-row')].map(x => ({ name: x.querySelector('.w-name').textContent, host: x.querySelector('.w-host')?.textContent || null, l2: x.querySelector('.w-line2')?.textContent || '' })))
-    // each row carries its session id — the un-collidable key the /nudge arm-report
+    // each row carries its session id — the key the /groundworks-nudge arm-report
     // prints, so chat ↔ dropdown match 1:1 even with duplicate labels
     for (const want of [{ n: 'Estimate Templates', id: 'estT' }, { n: 'Maps-Refactor', id: 'mapR' }]) {
       const r = rows.find(x => x.name.replace('● ', '') === want.n)

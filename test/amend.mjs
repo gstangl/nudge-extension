@@ -79,7 +79,7 @@ try {
   {
     let out = ''
     const w = spawn('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Amend-Agent', CLAUDE_CODE_SESSION_ID: 'sessAmnd' },
+      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Amend-Agent', NUDGE_AGENT_ID: 'sessAmnd' },
       stdio: ['ignore', 'pipe', 'ignore'],
     })
     watchers.push(w)

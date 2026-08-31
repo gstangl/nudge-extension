@@ -9,8 +9,15 @@ import os from 'node:os'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 import WebSocket from 'ws' // resolves via bridge/node_modules (this file lives in bridge/)
+import {
+  resolveAgentId,
+  resolveAgentRuntime,
+  resolveAgentSurface,
+  resolveStoreDir,
+  resolveWake,
+} from '../agent/runtime.mjs'
 
-const STORE_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'nudge')
+const STORE_DIR = resolveStoreDir()
 const PORT = Number(process.env.NUDGE_PORT || 4700) // the bridge is port-configurable — its clients must be too
 const STORE = path.join(STORE_DIR, 'store.json')
 const seen = new Set()
@@ -67,7 +74,7 @@ function scanWithdrawn() {
 // dev server's nudges thus reach only its own agent. A nudge without a
 // session-level owner (offline arrival, pid-keyed agent) falls back to the old
 // global gate (the owner watcher wakes). Gerald 2026-07-07.
-const MY_SESSION = (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8)
+const MY_SESSION = resolveAgentId()
 function scanPins(pins) {
   for (const p of pins) {
     // a fresh nudge AND every amendment must wake: fold the latest amendment's
@@ -96,14 +103,18 @@ function scanPins(pins) {
 // Identity pack: everything a human needs to RECOGNIZE this session in the
 // toolbar dropdown — self-chosen/auto label, project + git branch, host
 // (Zed/CLI), start time, session id, and the thread's FIRST USER MESSAGE
-// (read from the session transcript via the inherited CLAUDE_CODE_SESSION_ID).
+// (optionally read from a native transcript when an adapter exposes one).
 const SINCE = Date.now()
 // OPT-IN FENCE (G-5): a session appears in the extension ONLY after Gerald
-// invoked /nudge there — that path sets the topic label. Without a deliberate
+// invoked groundworks-nudge there — that path sets the topic label. Without a deliberate
 // NUDGE_AGENT_LABEL this watcher refuses to run, so accidental arming by
 // eager agents is physically impossible (no default dir+pid label any more).
 if (!process.env.NUDGE_AGENT_LABEL) {
-  console.error('[nudge-watch] verweigert: NUDGE_AGENT_LABEL fehlt — Armen ist Opt-in, ausschließlich via /nudge (Skill setzt das Themen-Label).')
+  console.error('[nudge-watch] refused: NUDGE_AGENT_LABEL is required; arm only through groundworks-nudge.')
+  process.exit(1)
+}
+if (!MY_SESSION) {
+  console.error('[nudge-watch] refused: no agent identity; set NUDGE_AGENT_ID or use a supported runtime adapter.')
   process.exit(1)
 }
 const LABEL = process.env.NUDGE_AGENT_LABEL
@@ -134,18 +145,19 @@ function firstMessage() {
   return null
 }
 // wake mode = can a new nudge START this agent by itself, or does it wait to be
-// PULLED? The /nudge skill knows (Monitor-tool present = Zed = push; else CLI =
-// pull) and passes NUDGE_WAKE. Default derives from the host so an old skill /
-// hand-start still declares honestly instead of defaulting to a push it can't do.
-const WAKE = (process.env.NUDGE_WAKE === 'push' || process.env.NUDGE_WAKE === 'pull')
-  ? process.env.NUDGE_WAKE
-  : (process.env.ZED_ENVIRONMENT ? 'push' : 'pull')
+// PULLED? The runtime adapter passes NUDGE_WAKE from an actual capability.
+// Missing or invalid values stay pull; an editor name never implies push.
+const WAKE = resolveWake()
+const RUNTIME = resolveAgentRuntime()
+const SURFACE = resolveAgentSurface()
 const IDENTITY = {
   label: LABEL, pid: process.pid, since: SINCE,
-  session: (process.env.CLAUDE_CODE_SESSION_ID || '').slice(0, 8) || null,
+  session: MY_SESSION,
   project: path.basename(process.cwd()),
   branch: gitBranch(),
-  host: process.env.ZED_ENVIRONMENT ? 'Zed' : 'CLI',
+  host: SURFACE,
+  runtime: RUNTIME,
+  surface: SURFACE,
   wake: WAKE, // 'push' = autonomous wake (Zed) · 'pull' = surfaces on next prompt (CLI)
   firstMsg: firstMessage(),
 }
@@ -162,7 +174,7 @@ let isOwner = null // unknown until the first reply
 // 3) abandoned — standby AND the session transcript idle > 60 min: exit
 //    (the OWNER never idle-exits: it is the chosen wake channel)
 const TRANSCRIPT = process.env.CLAUDE_CODE_SESSION_ID
-  ? path.join(os.homedir(), '.claude', 'projects', process.cwd().replace(/\//g, '-'), `${process.env.CLAUDE_CODE_SESSION_ID}.jsonl`)
+  ? path.join(process.env.HOME || '', '.claude', 'projects', process.cwd().replace(/\//g, '-'), `${process.env.CLAUDE_CODE_SESSION_ID}.jsonl`)
   : null
 setInterval(() => {
   if (process.ppid === 1) process.exit(0) // orphan

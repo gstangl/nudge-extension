@@ -1,16 +1,16 @@
-# nudge-extension — a strong bidirectional bridge between Zed and Chrome
+# nudge-extension — a bidirectional bridge between coding agents and Chrome
 
 ## Goal
 
-**Make the Zed IDE and Google Chrome talk to each other — reliably, fast, and
-visibly, in BOTH directions.** The agent that owns the codebase lives in Zed;
-the rendered UI lives in Chrome. This project is the bridge between the two:
+**Make the coding agent and Google Chrome talk to each other — reliably, fast,
+and visibly, in both directions.** The agent owns the codebase; Chrome shows the
+rendered UI. This project is the bridge between the two:
 
-- **Chrome → Zed:** pick an element (or circle a region) on any running
+- **Chrome → agent:** pick an element (or circle a region) on any running
   localhost app and say what you want — the agent receives the prompt WITH full
   browser context (selector, xpath, text, styles, console + network errors,
   screenshots) and acts on it. Prompting on the pixel, not about it.
-- **Zed → Chrome:** the agent's state and results flow back into the page —
+- **Agent → Chrome:** the agent's state and results flow back into the page —
   honest live status (green = an agent is listening NOW, heartbeat-backed),
   per-prompt feedback chips, „nudge_X done" completion toasts, and
   resolve-with-proof after-screenshots.
@@ -33,9 +33,9 @@ dependencies on it — works on ANY localhost app, framework-agnostic by design)
 
 Automated suites A–N (isolated e2e, bridge-brutal, provenance/kidnap
 battletests, origin routing, toolbar UX, page inertness, amend) — runners,
-guards and last results in `test/protocols.md`. Screenshots demonstrably reach
-the model (agent reads `~/.claude/nudge/shots/*` directly — proven daily in
-live use).
+guards and last results in `test/protocols.md`. The runtime-neutral suite proves
+that Codex identity, shared store lookup, scoped context, hooks and resolve use
+one transport. Screenshots reach the agent through the same CLI-reported store.
 
 ## Parts
 
@@ -44,7 +44,7 @@ bridge/     @roots/nudge-bridge — one node process (dep: ws), two surfaces:
             bridge.mjs      HTTP :4700 (prompts, selection, resolve, /.identity,
                             /demo) + WebSocket (prompt list + agentLive pushes)
                             + dev auto-reload watch
-            store.mjs       store owner (GLOBAL ~/.claude/nudge): mtime-cached
+            store.mjs       global runtime-neutral store owner: mtime-cached
                             read, change events, projections, inbox md mirror
             watch-nudges.mjs  agent watcher: fs.watch on the store (event-driven
                             wake, ms not seconds) + bridge heartbeat every 2 s
@@ -78,11 +78,10 @@ extension/  Chrome MV3, load unpacked (styles.js = shadow-DOM CSS, content.js =
             - page inertness: reaching for the toolbar never dismisses the
               page's own popovers/dropdowns (moat + window-capture swallow)
             - options page: author name, attached to every prompt
-agent/      the Zed/Claude side: NUDGE-SKILL.md (the /nudge skill),
-            nudge-context.mjs (UserPromptSubmit hook: current mark as ambient
-            context, opt-in per armed session), nudge-session-start.sh
-            (SessionStart hook: bridge self-heal fallback), setup-agent.sh
-            (installs skill + hooks into ~/.claude, idempotent)
+agent/      runtime-neutral side: groundworks-nudge.mjs (watch, status, context,
+            queue, selection, show and resolve), NUDGE-SKILL.md
+            (`/groundworks-nudge`), optional Claude Code and Codex context hooks,
+            and setup-agent.sh (installs Claude Code + Codex Skill adapters)
 test/       suites A–N + latency bench + hardening; contract in protocols.md
 ```
 
@@ -120,11 +119,14 @@ autoreload-check.mjs cannot fully pass in CI - verify manually.
    service-worker suspends). No MCP entry, no per-project config. NOTE: the
    unpacked extension id derives from the absolute directory path — moving the
    repo means re-running this with the new id from chrome://extensions.
-4. `agent/setup-agent.sh` — installs the /nudge skill + hooks into `~/.claude`.
+4. `agent/setup-agent.sh` — installs the neutral CLI, `/groundworks-nudge`,
+   native Claude Code and Codex Skill adapters, and their optional context/start
+   hooks. It removes the retired compatibility alias when present.
 
-Agent side is GLOBAL (works in every project): store `~/.claude/nudge/`, skill
-`~/.claude/skills/nudge/`, hooks in `~/.claude/settings.json` (SessionStart =
-self-healing, UserPromptSubmit = current mark as context, opt-in per session).
+Agent side is global. Existing installations retain their legacy store; fresh
+ones use `~/.nudge`. The live bridge reports the authoritative path, so every
+runtime reads one store. Claude Code and Codex have native Skill discovery;
+other local agents can use the same `groundworks-nudge` CLI directly.
 
 ## Use
 
@@ -133,13 +135,13 @@ self-healing, UserPromptSubmit = current mark as context, opt-in per session).
 2. Pill toolbar, draggable (toggle: toolbar icon or Alt+C — off is browser-wide
    and stays off until you toggle back on) → "Pick" (P) → click
    an element → prompt + ↩ (Shift+↩ = newline; empty ↩ = numbered mark —
-   reference it in Zed as „Nudge 123 macht das").
-3. Agent side: type `/nudge` in the Zed session that should own the channel —
-   optionally with a name (`/nudge Login-Redesign`), which becomes the `Agent:`
+   reference it in the Agent chat as „Nudge 123 macht das").
+3. Agent side: invoke `/groundworks-nudge` in the session that should own the
+   channel. An optional name (`/groundworks-nudge Login-Redesign`) becomes the `Agent:`
    label in the toolbar; without one the agent derives it from the session's
    topic. It arms the watcher, reports which localhost it owns, and processes
-   prompts oldest-first; resolve via `POST /comments/<id>/resolve` after the verified
-   fix. With parallel dev servers, pick the owner per localhost in the
+   prompts oldest-first and resolves through the CLI after the verified fix.
+   With parallel dev servers, pick the owner per localhost in the
    toolbar's Switch-session dropdown.
 
 ## Known limitations (deliberate)

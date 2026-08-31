@@ -11,14 +11,13 @@
  * request). The store itself knows nothing about HTTP/WS/MCP.
  */
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
+import { resolveStoreDir } from '../agent/runtime.mjs'
 
-// Default store = ~/.claude/nudge — GLOBAL, one truth for every agent in every
-// project (Gerald 2026-07-05: Pin must work everywhere, not just roots-apps).
-// Never derive from process.cwd() (a restart from the wrong directory once
-// stranded marks in a test store). NUDGE_STORE still overrides for tests.
-export const STORE_DIR = process.env.NUDGE_STORE || path.join(os.homedir(), '.claude', 'nudge')
+// GLOBAL, one truth for every agent runtime and every project. Existing
+// ~/.claude/nudge installations remain valid; fresh installations use ~/.nudge.
+// Never derive from process.cwd(). NUDGE_STORE still overrides for tests.
+export const STORE_DIR = resolveStoreDir()
 export const SHOTS_DIR = path.join(STORE_DIR, 'shots')
 const INBOX_DIR = path.join(STORE_DIR, 'inbox')
 const STORE_FILE = path.join(STORE_DIR, 'store.json')
@@ -108,7 +107,7 @@ const cap = (v, n) => { const s = String(v ?? ''); return s ? s.slice(0, n) : ''
 const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
 // owner provenance stamp: { label, session } of the agent that owned the channel
 const sanitizeOwner = (o) => (o && typeof o === 'object' && (o.label || o.session))
-  ? { label: cap(o.label, 60) || null, session: o.session ? cap(o.session, 32) : null }
+  ? { label: cap(o.label, 60) || null, session: o.session ? cap(o.session, 128) : null }
   : null
 function sanitizeStyles(styles) {
   if (!styles || typeof styles !== 'object') return null

@@ -1,0 +1,90 @@
+import { execFileSync, spawn } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const BRIDGE = path.join(HERE, '../bridge/bridge.mjs')
+const CLI = path.join(HERE, '../agent/groundworks-nudge.mjs')
+const HOOK = path.join(HERE, '../agent/nudge-context.mjs')
+const STORE = fs.mkdtempSync(path.join(os.tmpdir(), 'nudge-runtime-integration-'))
+const PORT = 4817
+const BASE = `http://127.0.0.1:${PORT}`
+const AGENT_ID = '123e4567-e89b-12d3-a456-426614174000'
+const ENV = { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT) }
+const children = []
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const fail = (message) => { throw new Error(message) }
+const pass = (message) => console.log(`PASS ${message}`)
+
+function run(args, extraEnv = {}) {
+  return execFileSync('node', [CLI, ...args], { env: { ...ENV, ...extraEnv }, encoding: 'utf8', timeout: 8000 }).trim()
+}
+
+async function waitFor(test, message) {
+  for (let i = 0; i < 40; i++) {
+    try { if (await test()) return } catch { /* retry */ }
+    await sleep(150)
+  }
+  fail(message)
+}
+
+const bridge = spawn('node', [BRIDGE], { env: ENV, stdio: ['ignore', 'ignore', 'inherit'] })
+children.push(bridge)
+
+try {
+  await waitFor(async () => (await (await fetch(`${BASE}/.identity`)).json()).store === STORE, 'bridge did not start')
+
+  const watcher = spawn('node', [CLI, 'watch', '--label', 'Runtime parity', '--agent-id', AGENT_ID, '--runtime', 'Codex', '--surface', 'CLI', '--wake', 'pull'], {
+    env: ENV,
+    stdio: ['ignore', 'pipe', 'inherit'],
+  })
+  children.push(watcher)
+  await waitFor(async () => {
+    const live = await (await fetch(`${BASE}/.identity`)).json()
+    const agent = live.agents?.find((item) => item.session === AGENT_ID)
+    return agent?.runtime === 'Codex' && agent?.surface === 'CLI' && agent?.wake === 'pull'
+  }, 'Codex watcher did not register with a stable runtime-neutral identity')
+  pass('Codex identity reaches the shared roster with runtime, surface, and pull capability')
+
+  const created = await (await fetch(`${BASE}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: 'Tighten this spacing', url: 'http://localhost:5175/card', target: { selector: '.card', innerText: 'Card' } }),
+  })).json()
+  if (created.id !== 'nudge_1') fail(`unexpected id ${created.id}`)
+
+  const queue = JSON.parse(run(['list', '--agent-id', AGENT_ID, '--port', '5175']))
+  if (queue.store !== STORE || queue.open.length !== 1) fail('CLI did not read the bridge-reported shared store')
+  if (queue.open[0].owner?.session !== AGENT_ID) fail('created nudge lost its full Codex owner id')
+  pass('CLI reads the shared store and scopes the queue to the Codex owner and port')
+
+  const shown = JSON.parse(run(['show', '#1']))
+  if (shown.id !== created.id || shown.target?.selector !== '.card') fail('pill reference did not resolve to the open nudge')
+  pass('open pill reference resolves to full browser context')
+
+  const foreignHook = execFileSync('node', [HOOK], {
+    env: { ...ENV, CODEX_THREAD_ID: 'foreign-thread' },
+    input: JSON.stringify({ prompt: 'Nudge 1' }), encoding: 'utf8', timeout: 5000,
+  }).trim()
+  if (foreignHook) fail('foreign Codex session received Nudge context')
+  const ownHook = execFileSync('node', [HOOK], {
+    env: { ...ENV, CODEX_THREAD_ID: AGENT_ID },
+    input: JSON.stringify({ prompt: 'Nudge 1' }), encoding: 'utf8', timeout: 5000,
+  }).trim()
+  const hookContext = JSON.parse(ownHook).hookSpecificOutput?.additionalContext || ''
+  if (!hookContext.includes('REFERENZIERT nudge_1') || !hookContext.includes(STORE)) fail('armed Codex hook did not receive the referenced shared context')
+  pass('hook opt-in stays silent for foreign Codex sessions and works for the armed one')
+
+  const resolved = JSON.parse(run(['resolve', created.id, '--wait-evidence', '0']))
+  if (!resolved.resolved || resolved.evidence !== 'not_required') fail('element nudge resolve result is dishonest')
+  const saved = JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')).pins[0]
+  if (saved.status !== 'resolved') fail('resolved state was not persisted')
+  pass('resolve persists completion and reports the correct evidence requirement')
+
+  console.log('\nRuntime-neutral Nudge integration: ALL PASS')
+} finally {
+  for (const child of children.reverse()) { try { child.kill() } catch { /* already gone */ } }
+  fs.rmSync(STORE, { recursive: true, force: true })
+}

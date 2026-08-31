@@ -1,6 +1,5 @@
 import { chromium } from 'playwright'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 const HERE = path.dirname(new URL(import.meta.url).pathname)
 const EXT = path.join(HERE, '../extension')
@@ -14,16 +13,17 @@ const ta = page.locator('textarea[placeholder*="Prompt"]')
 await ta.waitFor(); await ta.fill('[TEST-FEED] Feed-Optik-Probe')
 await page.locator('.composer .send').click()
 await page.locator('.feed .item').first().waitFor({ timeout: 8000 })
-const id = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude/nudge/store.json'), 'utf8')).pins.at(-1).id
+const storeDir = (await (await fetch('http://localhost:4700/.identity')).json()).store
+const id = JSON.parse(fs.readFileSync(path.join(storeDir, 'store.json'), 'utf8')).pins.at(-1).id
 await fetch(`http://localhost:4700/comments/${id}/resolve`, { method: 'POST' })
 await page.locator('.feed .item', { hasText: 'erledigt' }).waitFor({ timeout: 6000 })
 await page.screenshot({ path: '/tmp/feed-shot.png', clip: { x: 900, y: 0, width: 500, height: 220 } })
 // cleanup test pin
-const f = path.join(os.homedir(), '.claude/nudge/store.json')
+const f = path.join(storeDir, 'store.json')
 const s = JSON.parse(fs.readFileSync(f, 'utf8'))
 s.pins = s.pins.filter(p => p.id !== id)
 fs.writeFileSync(f, JSON.stringify(s, null, 2))
-for (const x of [`inbox/${id}.md`, `shots/${id}.png`, `shots/${id}_full.jpg`, `shots/${id}_after.png`]) fs.rmSync(path.join(os.homedir(), '.claude/nudge', x), { force: true })
+for (const x of [`inbox/${id}.md`, `shots/${id}.png`, `shots/${id}_full.jpg`, `shots/${id}_after.png`]) fs.rmSync(path.join(storeDir, x), { force: true })
 console.log('shot ok, cleanup', id)
 void ctx.close().catch(() => {})
 setTimeout(() => process.exit(0), 800)

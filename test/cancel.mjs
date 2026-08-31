@@ -36,10 +36,10 @@ const cleanup = () => { for (const p of procs) { try { p.kill() } catch { } } tr
 const fail = (m) => { console.error('FAIL:', m); cleanup(); process.exit(1) }
 const pass = (m) => console.log('PASS', m)
 
-// a REAL watcher — the agent's wake channel, armed exactly as /nudge arms it
+// a REAL watcher — the Agent wake channel, armed through the neutral identity
 function watcher(label, session, extra = {}) {
   const w = spawn('node', [path.join(HERE, '../bridge/watch-nudges.mjs')], {
-    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: label, CLAUDE_CODE_SESSION_ID: session, NUDGE_WAKE: 'push', ...extra },
+    env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: label, NUDGE_AGENT_ID: session, NUDGE_WAKE: 'push', ...extra },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   w.lines = []
@@ -161,7 +161,7 @@ try {
     await del(id)
     await sleep(400)
     const hook = spawn('node', [path.join(HERE, '../agent/nudge-context.mjs')], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), CLAUDE_CODE_SESSION_ID: 'sessAAAA' },
+      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_ID: 'sessAAAA' },
       stdio: ['pipe', 'pipe', 'inherit'],
     })
     hook.stdin.end(JSON.stringify({ prompt: 'weiter bitte' }))
@@ -174,7 +174,7 @@ try {
 
     // and naming the number afterwards answers precisely, not "nie existiert"
     const hook2 = spawn('node', [path.join(HERE, '../agent/nudge-context.mjs')], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), CLAUDE_CODE_SESSION_ID: 'sessAAAA' },
+      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_ID: 'sessAAAA' },
       stdio: ['pipe', 'pipe', 'inherit'],
     })
     hook2.stdin.end(JSON.stringify({ prompt: `was ist mit ${id} passiert?` }))

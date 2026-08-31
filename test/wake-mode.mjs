@@ -1,5 +1,5 @@
-// Suite W — Wake mode (push vs pull). Two agent hosts, two wake models: Zed pushes
-// (a new nudge starts the agent itself), the Claude-CLI pulls (a nudge waits for the
+// Suite W — Wake mode (push vs pull). Two agents declare two capabilities: one pushes
+// (a new nudge starts the agent itself), the other pulls (a nudge waits for the
 // next prompt). The green icon must NOT imply „kommt automatisch" for a pull owner —
 // so the wake mode has to travel: watcher IDENTITY → roster → /.identity + WS snapshot,
 // and the extension renders it. This suite proves the DATA path end-to-end (the render
@@ -35,9 +35,9 @@ const identity = (host) => fetch(`${B}/.identity${host ? `?host=${encodeURICompo
 const agentBy = (j, se) => (j.agents || []).find(a => a.session === se)
 
 try {
-  // two armed sessions: a Zed pusher and a CLI puller, each on its own localhost
-  const push = { label: 'Zed-Sess', pid: 101, since: 1000, session: 'sessPush', host: 'Zed', wake: 'push' }
-  const pull = { label: 'CLI-Sess', pid: 202, since: 2000, session: 'sessPull', host: 'CLI', wake: 'pull' }
+  // two armed sessions with explicit capabilities, each on its own localhost
+  const push = { label: 'Push-Sess', pid: 101, since: 1000, session: 'sessPush', host: 'Zed', runtime: 'Claude Code', wake: 'push' }
+  const pull = { label: 'Pull-Sess', pid: 202, since: 2000, session: 'sessPull', host: 'CLI', runtime: 'Codex', wake: 'pull' }
   timers.push(setInterval(() => hb(push), 1000))
   timers.push(setInterval(() => hb(pull), 1000))
   await hb(push); await hb(pull); await sleep(300)
@@ -84,24 +84,24 @@ try {
     pass('W3 WS snapshot + /.identity routes[] carry the owner wake to the tab')
   }
 
-  // ---------- W4: missing/invalid wake DEFAULTS from host (never a false push) ----------
+  // ---------- W4: missing/invalid wake always defaults to pull ----------
   {
-    // an old skill / hand-start sends no wake — the bridge must derive, not assume push
+    // Runtime and editor surface cannot imply autonomous wake capability.
     await hb({ label: 'Old-Zed', pid: 303, since: 3000, session: 'sessOldZ', host: 'Zed' })
     await hb({ label: 'Old-CLI', pid: 404, since: 4000, session: 'sessOldC', host: 'CLI' })
     await hb({ label: 'Junk', pid: 505, since: 5000, session: 'sessJunk', host: 'CLI', wake: 'garbage' })
     await sleep(150)
     const j = await identity()
-    if (agentBy(j, 'sessOldZ')?.wake !== 'push') fail(`old Zed default = ${agentBy(j, 'sessOldZ')?.wake} (want push)`)
+    if (agentBy(j, 'sessOldZ')?.wake !== 'pull') fail(`old Zed default = ${agentBy(j, 'sessOldZ')?.wake} (want pull)`)
     if (agentBy(j, 'sessOldC')?.wake !== 'pull') fail(`old CLI default = ${agentBy(j, 'sessOldC')?.wake} (want pull)`)
     if (agentBy(j, 'sessJunk')?.wake !== 'pull') fail(`invalid wake not clamped: ${agentBy(j, 'sessJunk')?.wake}`)
-    pass('W4 missing/invalid wake derives from host (no false auto-wake)')
+    pass('W4 missing/invalid wake defaults to pull (no false auto-wake)')
   }
 
   // ---------- W5: the REAL watcher propagates NUDGE_WAKE end-to-end ----------
   {
     const w = spawn('node', [WATCHER], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Real-Pull', NUDGE_WAKE: 'pull', CLAUDE_CODE_SESSION_ID: 'realpull0-xyz' },
+      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'Real-Pull', NUDGE_AGENT_ID: 'realpull', NUDGE_WAKE: 'pull' },
       stdio: ['ignore', 'ignore', 'inherit'],
     })
     kids.push(w)

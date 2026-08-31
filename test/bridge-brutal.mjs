@@ -162,7 +162,7 @@ try {
     const idn = await (await fetch(`${B}/.identity`)).json()
     const a = idn.agents.find(x => x.pid === 77)
     if (!a) fail('D4: capped agent did not register')
-    if (a.label.length > 60 || (a.session || '').length > 32 || (a.project || '').length > 60 || (a.firstMsg || '').length > 90 || (a.host || '').length > 20)
+    if (a.label.length > 60 || (a.session || '').length > 128 || (a.project || '').length > 60 || (a.firstMsg || '').length > 90 || (a.host || '').length > 20)
       fail(`D4: roster fields not capped: ${JSON.stringify(a).slice(0, 200)}`)
     // oversize heartbeat body -> 413, not memory blow
     const big = await hb('{"pad":"' + 'x'.repeat(6_000_000) + '"}').catch(() => ({ status: 413 }))

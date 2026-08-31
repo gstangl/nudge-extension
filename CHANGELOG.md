@@ -5,6 +5,42 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.29.0 · Bridge 0.15.0 — 2026-08-28 (Ein Nudge-Kanal für alle Agenten)
+
+### Added
+- **`groundworks-nudge` ist die gemeinsame Agent-Schnittstelle.** Der neue
+  Befehl armt den Watcher, zeigt Status, Markierung und Queue, löst
+  Pillen-Nummern auf und resolved erst nach dem Proof. Claude Code, Codex und
+  andere lokale Agenten verwenden dieselben Befehle.
+- **Native Skill-Installation für Claude Code und Codex.** Das Setup installiert
+  `/groundworks-nudge` in beide Skill-Homes und verdrahtet die optionalen Hooks
+  beider Runtimes. Der frühere `/nudge`-Alias wird entfernt, damit nur der
+  kanonische Name im Command-Menü erscheint.
+- **Ein CI-Test für den runtime-neutralen Weg.** Er startet Bridge und Codex-
+  Watcher mit getrennten IDs, erzeugt einen echten Nudge und prüft Store,
+  Owner, Hook-Kontext, Pillen-Auflösung und Resolve.
+
+### Changed
+- **Agent-Identität statt Claude-Session.** `NUDGE_AGENT_ID` ist der neutrale
+  Eingang. Codex-Thread, Codex-Session und Claude-Code-Session werden nur noch
+  als Runtime-Adapter normalisiert. Runtime, Oberfläche und Wake-Fähigkeit sind
+  getrennte Felder.
+- **Fehlende Wake-Fähigkeit bedeutet immer Pull.** Zed oder ein anderes Editor-
+  Feld darf nie mehr automatisch Push behaupten.
+- **Ein Store für alle Runtimes.** Die Bridge meldet den verbindlichen Pfad.
+  Bestehende Installationen verwenden ihren bisherigen Store weiter. Neue
+  Installationen starten unter `~/.nudge`; zwei getrennte Stores führen zu
+  einem klaren Abbruch statt zu stiller Datenaufteilung.
+- **Browsertexte nennen die Agent-Session.** Status, Pull-Hinweis und Session-
+  Auswahl setzen keine bestimmte Runtime oder Oberfläche mehr voraus.
+
+### Fixed
+- **Codex las bisher einen anderen Store als die Bridge.** Die manuelle Skill-
+  Kopie zeigte auf einen Pfad, den die laufende Bridge nicht verwendete.
+- **Codex-Watcher hatten keine stabile Session-ID.** Dadurch waren Owner-
+  Zuordnung und parallele Localhost-Routen nicht belastbar. Der normalisierte
+  Agent-Key bleibt jetzt bis zum Resolve erhalten.
+
 ## 0.28.0 — 2026-08-14 (Plex Mono für die Maschinen-Strings)
 
 ### Changed

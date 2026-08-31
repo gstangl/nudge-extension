@@ -1,9 +1,9 @@
 {
   "name": "@roots/nudge-bridge",
-  "version": "0.14.1",
+  "version": "0.15.0",
   "private": true,
   "type": "module",
-  "description": "Pin bridge: HTTP+WS for the Chrome extension; the agent reads the global store files. Lifecycle owned by Chrome (native host).",
+  "description": "Nudge bridge: HTTP and WebSocket transport between the Chrome extension and any local coding agent. Lifecycle owned by Chrome (native host).",
   "bin": {
     "nudge-bridge": "./bridge.mjs"
   },
