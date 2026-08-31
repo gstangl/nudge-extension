@@ -5,6 +5,19 @@ All notable changes to Nudge (extension + bridge + agent wiring). Format follows
 product version**, bridge versions noted where they moved. Rule: every version
 bump lands here in the same change — no silent releases.
 
+## 0.29.1 — 2026-08-31 (Claude Code armt wieder push)
+
+### Fixed
+- **Der Skill nannte die Weckfähigkeit nur noch abstrakt.** Seit dem
+  runtime-neutralen Umbau stand dort nur „push nur, wenn diese Runtime
+  Watcher-Ausgabe als neuen Turn zeigen kann" — ohne zu sagen, welches Werkzeug
+  das leistet. Claude-Code-Sessions griffen daraufhin zur Hintergrund-Shell und
+  armten sich als pull, obwohl das persistente Monitor-Tool bereitstand; in der
+  Toolbar stand „Pull", wo vorher automatisch geweckt wurde. Der Skill ordnet
+  die Fähigkeit jetzt wieder konkret zu: Monitor ist der Push-Kanal, eine
+  Hintergrund-Shell ist keiner. Entscheidend bleibt das startende Werkzeug, nie
+  der Editor darum herum.
+
 ## 0.29.0 · Bridge 0.15.0 — 2026-08-28 (Ein Nudge-Kanal für alle Agenten)
 
 ### Added
