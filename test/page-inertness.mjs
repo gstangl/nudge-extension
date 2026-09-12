@@ -23,11 +23,11 @@ const HTML = `<!doctype html><html><head><meta charset=utf8><style>
   .ap{position:fixed;top:180px;left:120px;z-index:101;width:340px;height:200px;background:#fff;border:1px solid #ccc;padding:16px;opacity:0;pointer-events:none}
   .ap[aria-hidden=false]{opacity:1;pointer-events:auto}
 </style></head><body>
-  <button class="trigger" data-ap-trigger>Analyse anfragen</button>
+  <button class="trigger" data-ap-trigger>Request analysis</button>
   <div class="ap-overlay" data-ap-overlay aria-hidden="true"></div>
-  <div class="ap" data-ap aria-hidden="true"><h3>Anfrage</h3><input id="apname" placeholder="Name"></div>
-  <button class="sortanchor" style="position:fixed;top:120px;left:700px;padding:10px 16px">Zuletzt geändert ▾</button>
-  <div class="sortmenu" hidden style="position:fixed;top:160px;left:700px;background:#fff;border:1px solid #ccc;padding:8px;min-width:160px"><button>Zuletzt geändert</button><button>Titel A–Z</button></div>
+  <div class="ap" data-ap aria-hidden="true"><h3>Request</h3><input id="apname" placeholder="Name"></div>
+  <button class="sortanchor" style="position:fixed;top:120px;left:700px;padding:10px 16px">Last modified ▾</button>
+  <div class="sortmenu" hidden style="position:fixed;top:160px;left:700px;background:#fff;border:1px solid #ccc;padding:8px;min-width:160px"><button>Last modified</button><button>Title A–Z</button></div>
   <script>
     const overlay=document.querySelector('[data-ap-overlay]'),pop=document.querySelector('[data-ap]'),trig=document.querySelector('[data-ap-trigger]')
     function show(){overlay.setAttribute('aria-hidden','false');pop.setAttribute('aria-hidden','false');document.addEventListener('keydown',onKey)}
@@ -118,9 +118,9 @@ try {
     await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.btn-pick').click()); await sleep(120)
     const a = await p.evaluate(() => { const r = document.querySelector('.trigger').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })
     await p.mouse.click(a.x, a.y); await sleep(300)
-    await p.keyboard.type('mach das grün')
+    await p.keyboard.type('make this green')
     const typed = await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.composer textarea').value)
-    if (typed !== 'mach das grün') fail(`M5: composer textarea broken, got "${typed}"`)
+    if (typed !== 'make this green') fail(`M5: composer textarea broken, got "${typed}"`)
     await p.keyboard.press('Escape'); await sleep(80)
     const before = await pillRect()
     const g = await p.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.grip').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })

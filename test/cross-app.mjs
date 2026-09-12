@@ -6,7 +6,7 @@
 // interleaved creation under a heartbeat/resolve storm stays correctly attributed
 // and loses nothing. Reuses whatever app dev servers are already running; skips
 // an app that isn't reachable. Test bridge on side port 4792, extension
-// re-pointed via chrome.storage — Gerald's real Chrome on 4700 is untouched.
+// re-pointed via chrome.storage — the user's real Chrome on 4700 is untouched.
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
@@ -95,7 +95,7 @@ try {
   {
     for (const a of live) {
       await grab(a.owner.pid); await sleep(250) // this app's agent owns the channel now
-      const p = await nudgeOn(a, `[XAPP ${a.name}] gehört ${a.owner.label}`)
+      const p = await nudgeOn(a, `[XAPP ${a.name}] belongs to ${a.owner.label}`)
       if (p.owner !== a.owner.label) fail(`J1: ${a.name} nudge owner ${p.owner} != ${a.owner.label}`)
       const stored = JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')).pins.find(x => x.id === p.id)
       if (!stored.target?.selector || !stored.url.startsWith('http')) fail(`J1: ${a.name} captured no context`)

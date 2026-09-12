@@ -1,6 +1,6 @@
 // Suite E — Real Apps: the demo page proves mechanics, the REAL apps prove the
 // product. Picks/prompts against md-pdf, estimate (ProseMirror!) and media,
-// each started from THIS worktree on side ports (never Gerald's live dev
+// each started from THIS worktree on side ports (never the user's live dev
 // servers). The attractive edge cases live here: detached ProseMirror nodes
 // (A-2), selector uniqueness in a grid of identical cards, typed input values
 // that must NOT leak into a mark, per-route queue truth across apps.
@@ -37,7 +37,7 @@ async function ensureApp(app) {
   return url
 }
 
-// OWN side port — the live bridge on 4700 keeps serving Gerald untouched.
+// OWN side port — the live bridge on 4700 keeps serving the user untouched.
 // The extension in the TEST browser is re-pointed via chrome.storage.nudgePort
 // (see below); stealing 4700 once showed a test agent in the real toolbar.
 const TESTPORT = 4721
@@ -61,7 +61,7 @@ const until = async (fn, ms, what) => {
 }
 const selection = async () => (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
 const pins = async () => (await fetch(`http://localhost:${TESTPORT}/comments`)).json()
-// live agent so chips/status read "Agent arbeitet" deterministically
+// live agent so chips/status read "agent working" deterministically
 const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-e', pid: process.pid, since: Date.now() }) }
 const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
 await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
@@ -107,7 +107,7 @@ try {
     await page.locator('.composer .cancel').click()
     // load a REAL document via the dropzone (dynamic file input -> filechooser),
     // then pick inside the PagedJS print preview — a heavyweight rendered surface
-    fs.writeFileSync('/tmp/nudge-e1-doc.md', '# Suite-E Dokument\n\nEin Absatz mit **Substanz** für die Vorschau.\n\n- Punkt eins\n- Punkt zwei\n')
+    fs.writeFileSync('/tmp/nudge-e1-doc.md', '# Suite E document\n\nA paragraph with **substance** for the preview.\n\n- Point one\n- Point two\n')
     const chooser = page.waitForEvent('filechooser')
     await page.locator('#dz-card').click()
     await (await chooser).setFiles('/tmp/nudge-e1-doc.md')
@@ -131,11 +131,11 @@ try {
   {
     // doc is still loaded from E1 (same tab) — app controls are visible now.
     // The boundary this leg documents: PAGE-OWNED surfaces (title, url) carry
-    // whatever the page puts there (md-pdf reflects the Dokumenttitel field into
+    // whatever the page puts there (md-pdf reflects the document-title field into
     // document.title — that is the APP's exposure, reported faithfully);
     // ELEMENT-OWNED channels (innerText, outerHTML, styles, targets) must NEVER
     // carry a typed value — DOM properties are not serialized.
-    const SECRET = 'geheim-hunter2-4711'
+    const SECRET = 'secret-hunter2-4711'
     await page.locator('#settings-toggle').click()
     const inputs = page.locator('input[type="text"]:visible')
     const nIn = await inputs.count()
@@ -146,11 +146,11 @@ try {
     if (elementOwned.includes(SECRET)) fail('E4: typed value leaked into ELEMENT-owned channels')
     await page.locator('textarea[placeholder*="Nudge"]').fill('[TEST-E4] input hygiene')
     await page.locator('.composer .send').click()
-    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-E4]')), 6000, 'hygiene pin stored')
+    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-E4]')), 6000, 'hygiene nudge stored')
     const storedRaw = fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')
     const pinE4 = JSON.parse(storedRaw).pins.find(p => p.text.includes('[TEST-E4]'))
     const pinOwned = JSON.stringify({ ...pinE4, title: null, url: null })
-    if (pinOwned.includes(SECRET)) fail('E4: typed value leaked into the stored pin outside page-owned fields')
+    if (pinOwned.includes(SECRET)) fail('E4: typed value leaked into the stored nudge outside page-owned fields')
     console.log('PASS E4 input hygiene (typed values never in element-owned channels; page-owned title reflection is the app\'s, documented)')
   }
 
@@ -186,7 +186,7 @@ try {
     })
     await page.locator('textarea[placeholder*="Nudge"]').fill('[TEST-E2] detached PM node')
     await page.locator('.composer .send').click()
-    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-E2]')), 6000, 'detached-node pin stored')
+    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-E2]')), 6000, 'detached-node nudge stored')
     const pin = (await pins()).find(p => p.text?.includes('[TEST-E2]'))
     const stored = JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')).pins.find(p => p.id === pin.id)
     const r = stored.target?.rect
@@ -235,14 +235,14 @@ try {
 
   // ---------- E5: per-route queue truth ACROSS apps ----------
   {
-    // one open pin now exists on md-pdf (E4); create one on media, then check both badges.
+    // one open nudge now exists on md-pdf (E4); create one on media, then check both badges.
     // Pick the STATIC heading (renders regardless of backend) — #gallery is empty
     // when the worker (:8787) is down, and E5 only needs a second distinct route.
     await boot(urls['media'])
     await pick(page.locator('h1').first())
-    await page.locator('textarea[placeholder*="Nudge"]').fill('[TEST-E5] media pin')
+    await page.locator('textarea[placeholder*="Nudge"]').fill('[TEST-E5] media nudge')
     await page.locator('.composer .send').click()
-    await until(async () => (await pins()).filter(p => p.status === 'open').length >= 2, 6000, 'two open pins across apps')
+    await until(async () => (await pins()).filter(p => p.status === 'open').length >= 2, 6000, 'two open nudges across apps')
     await until(async () => ((await page.locator('.pill .count.show').textContent().catch(() => '')) || '').trim() === '1', 6000, 'media badge counts only its route')
     await boot(urls['md-pdf'])
     await until(async () => ((await page.locator('.pill .count.show').textContent().catch(() => '')) || '').trim() === '1', 6000, 'md-pdf badge counts only its route')

@@ -3,7 +3,7 @@
 The timeless core of Nudge. This file changes almost never — consult it before
 any decision about scope or direction. Everything current-state lives
 elsewhere: product definition and trade-offs in `PRODUCT.md`, workflow
-decisions in `DECISIONS.md`, the technical frame in `README.md`.
+decisions in `DECISIONS.md`, the technical frame in the top-level `README.md`.
 
 ## Mission
 
@@ -17,14 +17,14 @@ through it super-robustly: strictly ordered, nothing lost, done-with-proof.
 UI designers who vibe-code their own apps or visually polish an existing
 codebase. Their hardest problem in agentic development is the last visual
 mile — spacing, alignment, type, the final pixels — where prose prompts
-(„etwas mehr Abstand") are weakest and pointing is everything.
+("a bit more spacing") are weakest and pointing is everything.
 
 ## Agent-agnostic by intent
 
 Nudge serves EVERY agent that owns a codebase — IDE agents, CLI agents,
-MCP-connected agents. Zed is the first integration, not the boundary: the
-store and the protocol stay agent-neutral, so a new agent surface is an
-adapter, never a rewrite.
+MCP-connected agents. Claude Code and Codex ship with native Skill adapters;
+every other local agent uses the same CLI. The store and the protocol stay
+agent-neutral, so a new agent surface is an adapter, never a rewrite.
 
 ## The order of things (what everything is subordinated to)
 

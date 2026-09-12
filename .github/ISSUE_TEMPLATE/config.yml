@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Install and troubleshooting
+    url: https://github.com/gstangl/nudge-extension/blob/main/INSTALL.md
+    about: The toolbar is missing, the status dot is red or amber, or the Skill does not arm.
+  - name: Using Nudge (the Skill)
+    url: https://github.com/gstangl/nudge-extension/blob/main/README.md
+    about: Nudge is triggered with /groundworks-nudge in the agent session that owns your app.
+  - name: Security
+    url: https://github.com/gstangl/nudge-extension/blob/main/SECURITY.md
+    about: Please do not file vulnerabilities as public issues.
+

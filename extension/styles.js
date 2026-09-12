@@ -1,14 +1,14 @@
-// Pin overlay styles — injected into the shadow root by content.js via
+// Nudge overlay styles — injected into the shadow root by content.js via
 // adoptedStyleSheets (a manifest "css" entry would land in the page, not the
 // shadow DOM). Loaded before content.js; shared via globalThis like finder.js.
 //
 // DESIGN CONTRACT: the values below are MIRRORED from @roots/design tokens.css
-// (self-contained by design — Pin must work without the repo; keep in sync by
+// (self-contained by design — Nudge must work without the repo; keep in sync by
 // hand). Language: monochrome midnight — paper-on-midnight contrast everywhere;
 // COLOUR ONLY FOR STATUS (green live / amber degraded / red dead) and for the
 // on-page marking accent (highlight/lasso, brand terracotta). Type: IBM Plex Sans,
 // shipped as "Roots Nudge Sans" — the rename is an OFL obligation, not a whim:
-// "Plex" is a Reserved Font Name and we ship a subset. See fonts/HERKUNFT.md.
+// "Plex" is a Reserved Font Name and we ship a subset. See fonts/README.md.
 // Mono only for selectors.
 //
 // TYPE TUNING — replaced the licensed DIN Var (2026-08-14), matched to it by
@@ -109,9 +109,9 @@
       padding: 1px 5px; margin-left: 6px; white-space: nowrap;
     }
     .pill .who-host:empty { display: none; }
-    /* wake-mode tag: shown ONLY for a pull owner (CLI) — amber signals „needs your
+    /* wake-mode tag: shown ONLY for a pull owner (CLI) — amber signals "needs your
        action" (the nudge is stored but comes on the next terminal prompt, not by
-       itself). Auto/push owners show nothing: green already means „kommt von selbst". */
+       itself). Auto/push owners show nothing: green already means "comes on its own". */
     .pill .who-wake {
       flex: none; font-family: ${SANS}; font-size: 10px; line-height: 14px;
       font-variation-settings: "wght" 590; letter-spacing: .02em;
@@ -234,7 +234,7 @@
        id, text, age, ×) has an 18px first-line box, top-aligned via flex-start —
        so expanding only reveals more wrapped lines BELOW. Toggling used to swap
        align-items + margins + line-height at once, jittering the icon and text
-       on every open/close (Gerald 2026-07-05). */
+       on every open/close (2026-07-05). */
     .queue .q-row.open .q-text { white-space: normal; overflow: visible; text-overflow: clip; }
     .queue .q-dot {
       flex: none; width: 18px; height: 18px; border-radius: 50%;
@@ -248,7 +248,7 @@
     .queue .q-row.live .q-hand { animation: q-sweep 4s linear infinite; }
     @keyframes q-sweep { to { transform: rotate(360deg) } }
     /* the two numbers of a nudge, side by side and weighted by what they are FOR:
-       #47 is what Gerald reads off the pill and says out loud, so it leads and is
+       #47 is what the user reads off the pill and says out loud, so it leads and is
        legible; nudge_1046 is the identity behind it (files, commits) and stays a
        muted footnote. Same order and same pair as the inbox heading. */
     .queue .q-num {
@@ -278,7 +278,7 @@
        the mono is a static face, so a font-variation-settings would be inert —
        it was, silently, for as long as this line existed. Colour does the work. */
     .queue .q-amc { flex: none; font-family: ${MONO}; font-size: 10px; line-height: 18px; color: ${ACCENT}; }
-    /* "+ ergänzen" button — same ghost language as × */
+    /* "+ amend" button — same ghost language as × */
     .queue .q-add {
       flex: none; width: 18px; height: 18px; border: 0; border-radius: 6px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; padding: 0;
@@ -331,7 +331,7 @@
     }
 
     /* open-prompt pills: one readable NUMBER pill per marked element while its
-       prompt is open — the number is the chat referent („Nudge 123 macht das"),
+       prompt is open — the number is the chat referent ("Nudge 123 does that"),
        clock keeps the status language (sweep = agent live). Click opens the queue.
        The number is the bounded LABEL (max 3 digits, see store.mjs), never the
        raw id — the pill must stay this narrow after ten thousand nudges. */

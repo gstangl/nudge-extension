@@ -12,7 +12,7 @@ const OUT = path.join(HERE, '../extension/icons')
 fs.mkdirSync(OUT, { recursive: true })
 
 // Identity (chrome://extensions listing) = Lucide "pin" (thumbtack — kept as the brand glyph after the Nudge rename), plain black
-// stroke, nothing around it (Gerald, 2026-07-04). Action default = grey Lucide
+// stroke, nothing around it (2026-07-04). Action default = grey Lucide
 // CIRCLE — the status-dot convention (grey off / green active / red bridge-down)
 // must not lie before sw.js paints the live colour.
 const glyphSvg = (size, color) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"

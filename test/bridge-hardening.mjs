@@ -1,5 +1,5 @@
 // Bridge hardening checks (no browser): corrupt-store recovery incl. id-reuse
-// guard, owner-change broadcast without a pin event, 413 on oversize bodies.
+// guard, owner-change broadcast without a nudge event, 413 on oversize bodies.
 // Wins port 4700 like e2e (kill -> spawn -> verify workspace).
 import { spawn, execSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -39,13 +39,13 @@ try {
   if (list.length !== 0) fail(`corrupt store should serve empty, got ${list.length}`)
   const created = await (await fetch('http://localhost:4799/comments', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: 'nach dem Crash', url: 'http://localhost:4799/demo', target: { selector: '#x' } }),
+    body: JSON.stringify({ text: 'after the crash', url: 'http://localhost:4799/demo', target: { selector: '#x' } }),
   })).json()
   if (!bak && !fs.readdirSync(STORE).find(f => f.startsWith('store.json.corrupt-'))) fail('corrupt backup missing')
   if (Number(created.id.replace('nudge_', '')) <= 7) fail(`id reuse! got ${created.id} despite inbox floor nudge_7`)
   done(`corrupt-store recovery (backup + empty + seq floor: new id ${created.id})`)
 
-  // --- H2: owner change broadcasts WITHOUT a pin event ---
+  // --- H2: owner change broadcasts WITHOUT a nudge event ---
   const ws = new WebSocket('ws://127.0.0.1:4799')
   const labels = []
   ws.on('message', (m) => { const j = JSON.parse(m); if (j.type === 'pins') labels.push(j.agentLabel) })
@@ -59,7 +59,7 @@ try {
   await hb('session-B', 2000) // newer -> takes over
   await new Promise(r => setTimeout(r, 300))
   if (!labels.includes('session-A')) fail(`A never broadcast: ${JSON.stringify(labels)}`)
-  if (!labels.includes('session-B')) fail(`owner change B not broadcast without pin event: ${JSON.stringify(labels)}`)
+  if (!labels.includes('session-B')) fail(`owner change B not broadcast without nudge event: ${JSON.stringify(labels)}`)
   const loser = await (await hb('session-A', 1000)).json()
   if (loser.owner !== false) fail('older session must be told it lost')
   ws.close()
@@ -78,7 +78,7 @@ try {
   done('roster + manual owner choice (sticky against newer B)')
 
   // --- H6: one roster entry per SESSION; older watcher of the same session
-  //     is told it was replaced (Gerald: no stale names, ever) ---
+  //     is told it was replaced (no stale names, ever) ---
   const hbS = (pid, since) => fetch('http://localhost:4799/agent/heartbeat', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ label: 'thread-X', pid, since, session: 'abc12345' }),

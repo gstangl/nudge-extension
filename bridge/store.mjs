@@ -1,8 +1,8 @@
 /**
- * Pin store — single owner of .pin/ on disk (store.json + shots/ + inbox/ mirror).
+ * Nudge store — single owner of the store directory on disk (store.json + shots/ + inbox/ mirror).
  *
  * Read path is mtime-cached: several bridge processes can share one store (the
- * EADDRINUSE fallback runs a second, MCP-only bridge on the same .pin), so a plain
+ * EADDRINUSE fallback runs a second bridge on the same store), so a plain
  * in-memory cache would go stale. statSync per read is ~µs; full read+parse only
  * when another process actually wrote. Writes are last-writer-wins on the whole
  * file — acceptable at PoC scale, documented in the README.
@@ -87,11 +87,11 @@ export const getPin = (id) => load().pins.find(p => p.id === id)
 // watcher dedup, provenance in CHANGELOG and commits. It must NEVER be reused —
 // a manual seq reset did exactly that on 2026-07-04 and every recycled id was
 // silently swallowed (see addPin). So it counts up forever and gets long.
-// The LABEL is the other job: the number Gerald reads off the pill and types in
-// chat („Nudge 47 macht das"). That one only has to be unique among what is
+// The LABEL is the other job: the number the user reads off the pill and types in
+// chat ("Nudge 47 does that"). That one only has to be unique among what is
 // OPEN — one to five items — so it may wrap: nudge_1000 shows as 1. 999 slots
-// is ~11 weeks at Gerald's rate, far longer than a number stays on screen, so a
-// label he read minutes ago can never have moved to a different nudge.
+// is ~11 weeks at the user's rate, far longer than a number stays on screen, so a
+// label they read minutes ago can never have moved to a different nudge.
 // Derived, never stored: no second counter that could drift out of sync.
 const LABEL_POOL = 999
 export function labelOf(id) {
@@ -132,7 +132,7 @@ function sanitizeTarget(t) {
     rect: sanitizeRect(t.rect),
   }
 }
-// Multi-selection (Shift+Klick): several elements are ONE mark/prompt.
+// Multi-selection (Shift+click): several elements are ONE mark/prompt.
 // Cap + per-element trim keep store.json bounded no matter what a client posts.
 function sanitizeTargets(targets) {
   if (!Array.isArray(targets) || targets.length < 2) return null
@@ -197,7 +197,7 @@ function saveImage(id, suffix, dataUrl) {
 
 // `owner` is a SEPARATE arg, never read from payload: the bridge passes the
 // server-decided owner stamp so a client can NEVER inject or spoof provenance
-// (bulletproof binding — Gerald 2026-07-05: "nicht gekidnappt").
+// (bulletproof binding — 2026-07-05: "not hijacked").
 export function addPin(payload, owner) {
   const s = load()
   // ids must NEVER be reused (watchers dedup by id; a recycled id is silently
@@ -217,7 +217,7 @@ export function addPin(payload, owner) {
     // owner = the agent session that held the watch channel WHEN this nudge
     // arrived (server-decided, from the `owner` arg — payload.owner is IGNORED).
     // Immutable: a later owner switch never relabels an existing nudge —
-    // provenance stays put (Gerald 2026-07-05: "damit das erhalten bleibt").
+    // provenance stays put (2026-07-05: "so that it is preserved").
     owner: sanitizeOwner(owner),
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
@@ -248,9 +248,9 @@ export function resolvePin(id, ownerFallback) {
   return pin
 }
 
-// Append a follow-up to an OPEN nudge (Gerald: "ich hab den Prompt schon weg,
-// will noch was zum selben Nudge nachschieben"). Append-only: the original text
-// is immutable (provenance); nachträge accrue in `amendments`. Re-wakes the
+// Append a follow-up to an OPEN nudge (the user: "the prompt is already sent,
+// I want to add something to the same nudge"). Append-only: the original text
+// is immutable (provenance); follow-ups accrue in `amendments`. Re-wakes the
 // owning agent (the watcher's key changes) and re-mirrors the inbox. A resolved
 // nudge is NOT reopened — that would resurrect a done item into the queue.
 export function amendPin(id, { text, author } = {}) {
@@ -272,7 +272,7 @@ export function amendPin(id, { text, author } = {}) {
 // nothing is kept. seq is untouched (ids are never reused).
 //
 // WITHDRAWAL (2026-07-29): a nudge reaches its agent within MILLISECONDS, so by
-// the time Gerald hits × the work is usually already running. Deleting the pin
+// the time the user hits × the work is usually already running. Deleting the pin
 // used to be the whole story — the agent was never told and kept going, finding
 // out only via a 404 on resolve, after the work was done. So a discard now
 // leaves ONE marker behind: the pin content still goes (a slip must not linger),
@@ -304,8 +304,8 @@ function writeWithdrawnMarker(pin) {
   try {
     fs.mkdirSync(INBOX_DIR, { recursive: true })
     fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.withdrawn.md`),
-      `# ${pin.id} (#${labelOf(pin.id)}) - zurückgezogen\n\n`
-      + `Gerald hat diesen Nudge zurückgezogen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven.\n\n`
+      `# ${pin.id} (#${labelOf(pin.id)}) - withdrawn\n\n`
+      + `The user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n`
       + `- withdrawn: ${pin.withdrawnAt}\n- created: ${pin.createdAt}\n- url: ${pin.url}\n`
       + `- selector: \`${pin.target?.selector || '-'}\`\n`
       + (pin.owner?.label ? `- agent: ${pin.owner.label}\n` : '')
@@ -376,10 +376,10 @@ export function pinLine(p) {
   const route = (() => {
     try { const u = new URL(p.url); return (u.pathname + u.search + u.hash).slice(0, 60) } catch { return p.url.slice(0, 60) }
   })()
-  const text = !p.text ? `[${markLabel(p)} — "das hier"]` : (p.text.length > 80 ? `${p.text.slice(0, 80)}…` : p.text)
-  const n = p.targets?.length ? ` · ${p.targets.length} Elemente` : ''
+  const text = !p.text ? `[${markLabel(p)} — "this one"]` : (p.text.length > 80 ? `${p.text.slice(0, 80)}…` : p.text)
+  const n = p.targets?.length ? ` · ${p.targets.length} elements` : ''
   // id first (that is what commits and the inbox use), label in brackets — the
-  // agent needs both to map „Nudge 47" onto the file it has to open
+  // agent needs both to map "Nudge 47" onto the file it has to open
   return `${p.id} (#${labelOf(p.id)}) · ${p.status} · ${text}${n} · ${route}`
 }
 /** WS push — what the extension needs for badge, queue popover + open-prompt dots. */
@@ -387,7 +387,7 @@ export function pinForClient(p) {
   return {
     // label = the short number on the pill; id stays the identity behind it
     id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
-    amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // Gerald's follow-ups on this nudge
+    amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // the user's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
@@ -406,16 +406,16 @@ function writeInboxMirror(pin) {
   const owns = pin.owner?.label ? `\n- agent: ${pin.owner.label}` : ''
   const con = pin.console?.length ? `\n\n## Console\n\`\`\`\n${pin.console.join('\n')}\n\`\`\`\n` : ''
   const many = pin.targets?.length
-    ? `\n\n## Elemente (${pin.targets.length})\n${pin.targets.map((t, i) => `${i + 1}. \`${t.selector}\`${t.source ? ` — \`${t.source}\`` : ''}`).join('\n')}\n`
+    ? `\n\n## Elements (${pin.targets.length})\n${pin.targets.map((t, i) => `${i + 1}. \`${t.selector}\`${t.source ? ` — \`${t.source}\`` : ''}`).join('\n')}\n`
     : ''
-  const after = pin.screenshotAfter ? `\n## Beweis (nachher)\n\n![after](../${pin.screenshotAfter})\n` : ''
-  const quote = pin.text || `_(${markLabel(pin)} — reference for "das hier" in chat)_`
-  // follow-ups Gerald appended after sending — same nudge, later thoughts
+  const after = pin.screenshotAfter ? `\n## Evidence (after)\n\n![after](../${pin.screenshotAfter})\n` : ''
+  const quote = pin.text || `_(${markLabel(pin)} — reference for "this one" in chat)_`
+  // follow-ups the user appended after sending — same nudge, later thoughts
   const amends = pin.amendments?.length
-    ? '\n' + pin.amendments.map(a => `\n> **Nachtrag${a.at ? ` (${a.at.slice(11, 16)})` : ''}:** ${a.text}`).join('') + '\n'
+    ? '\n' + pin.amendments.map(a => `\n> **Amendment${a.at ? ` (${a.at.slice(11, 16)})` : ''}:** ${a.text}`).join('') + '\n'
     : ''
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
     // heading carries BOTH: the id (this file's name, what commits cite) and the
-    // label Gerald saw on the pill — so „Nudge 47" is greppable back to nudge_1047
+    // label the user saw on the pill — so "Nudge 47" is greppable back to nudge_1047
     `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
 }

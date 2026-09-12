@@ -7,6 +7,7 @@ RUNTIME="${1:-all}"
 CLAUDE_HOME="$HOME/.claude"
 CODEX_SKILLS="$HOME/.agents/skills"
 CODEX_HOOKS="$HOME/.codex/hooks"
+GROK_SKILLS="$HOME/.grok/skills"
 BIN_HOME="$HOME/.local/bin"
 LAUNCHER="$BIN_HOME/groundworks-nudge"
 
@@ -108,4 +109,14 @@ if [ "$RUNTIME" = "all" ] || [ "$RUNTIME" = "claude-code" ]; then
   merge_hook_config "$CLAUDE_HOME/settings.json" ".claude"
 fi
 
+if [ "$RUNTIME" = "all" ]; then
+  install_skill "$GROK_SKILLS"
+  remove_legacy_alias "$GROK_SKILLS"
+fi
+
 echo "installed: $LAUNCHER · groundworks-nudge ($RUNTIME)"
+echo
+echo "Next: in an agent session on the project you want to change, invoke:"
+echo "  /groundworks-nudge"
+echo "Then open http://localhost:4700/demo in Chrome and wait for the green status dot."
+echo "T3 Code: open a thread on that project and type /groundworks-nudge (or pick it from \$)."

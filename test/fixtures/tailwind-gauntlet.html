@@ -40,15 +40,15 @@
   <div class="relative p-4 w-full max-w-md">
     <div class="relative bg-white rounded-lg shadow">
       <div class="p-4 border-b rounded-t flex items-center justify-between">
-        <h3 id="g-modal-title" class="text-lg font-semibold text-gray-900">Finale Version freigeben?</h3>
+        <h3 id="g-modal-title" class="text-lg font-semibold text-gray-900">Release final version?</h3>
         <button data-modal-hide="g-modal" class="text-gray-400 hover:bg-gray-200 rounded-lg w-8 h-8" aria-label="Close">×</button>
       </div>
       <div class="p-4">
-        <p id="g-modal-body" class="text-sm text-gray-600">Diese Aktion veröffentlicht Build 4711 für alle Kunden.</p>
+        <p id="g-modal-body" class="text-sm text-gray-600">This action publishes build 4711 to all customers.</p>
       </div>
       <div class="p-4 border-t flex gap-2">
-        <button id="g-modal-ok" data-modal-hide="g-modal" class="text-white bg-blue-700 rounded-lg text-sm px-4 py-2">Freigeben</button>
-        <button data-modal-hide="g-modal" class="bg-gray-100 rounded-lg text-sm px-4 py-2">Abbrechen</button>
+        <button id="g-modal-ok" data-modal-hide="g-modal" class="text-white bg-blue-700 rounded-lg text-sm px-4 py-2">Release</button>
+        <button data-modal-hide="g-modal" class="bg-gray-100 rounded-lg text-sm px-4 py-2">Cancel</button>
       </div>
     </div>
   </div>
@@ -116,7 +116,7 @@
   for (let i = 0; i < 30; i++) {
     const p = document.createElement('p')
     p.className = 'text-gray-500'
-    p.textContent = `Absatz ${i + 1} — Fülltext für die Scroll-Strecke.`
+    p.textContent = `Paragraph ${i + 1} — filler text for the scroll run.`
     filler.appendChild(p)
   }
   // shadow-DOM component (open root, like Nudge's own overlay)
@@ -124,7 +124,7 @@
     connectedCallback() {
       const r = this.attachShadow({ mode: 'open' })
       r.innerHTML = `<style>.c{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.15);padding:20px;font-family:sans-serif}</style>
-        <div class="c"><b id="s-title">Shadow-Titel</b><p id="s-body">Inhalt in einer Shadow-Root.</p></div>`
+        <div class="c"><b id="s-title">Shadow title</b><p id="s-body">Content inside a shadow root.</p></div>`
     }
   })
 </script>

@@ -1,112 +1,195 @@
-# Nudge installieren & benutzen
+# Installing and using Nudge
 
-**Nudge = Pixel schupfen mit dem Agenten.** Du promptest direkt auf der laufenden
-Web-App. Der aktive Coding Agent erhält Screenshot, Element, Styles und Konsole.
-Danach meldet er das Ergebnis im Browser. Nudge funktioniert auf jeder
-`localhost`-Seite und mit jedem lokalen Agenten, der Befehle ausführen kann.
+**Nudge lets you prompt your coding agent directly on the running web app.**
+You point at an element or circle a region in Chrome, type what you want, and
+the active agent receives the screenshot, the element, its styles and the
+console. When it is done it reports back into the browser. Nudge works on any
+`localhost` page and with any local agent that can run commands.
 
----
+## Requirements
 
-## Voraussetzungen
+- **macOS or Linux.** Windows is not supported yet: Chrome's native messaging
+  needs a registry entry there, and nobody has written that installer. A pull
+  request is welcome.
+- **Google Chrome** (or Chromium).
+- **Node.js 22 or newer.** `node -v` must print a version.
+- **A local coding agent.** Claude Code and Codex are detected natively. T3 Code
+  and similar GUIs work through the CLI they drive — there is no separate T3
+  plugin. Any other agent can use the `groundworks-nudge` command directly.
+- This repository cloned locally:
+  ```sh
+  git clone https://github.com/gstangl/nudge-extension.git
+  ```
 
-- macOS mit **Google Chrome** und **Node.js** (`node -v` sollte etwas ausgeben)
-- ein lokaler Coding Agent. Claude Code und Codex werden nativ erkannt
-- Dieses Repository (`nudge-extension`) lokal geklont
+## Install (once per machine, about five minutes)
 
-## Installation — einmalig, ~5 Minuten
+### 1. Install the bridge dependency
 
-### 1. Bridge-Abhängigkeit installieren
-
-```bash
-cd <dein-pfad-zu>/nudge-extension/bridge
+```sh
+cd <path-to>/nudge-extension/bridge
 npm install
 ```
 
-### 2. Chrome-Extension laden (Developer-Modus)
+### 2. Load the extension into Chrome
 
-1. In Chrome `chrome://extensions` öffnen.
-2. Rechts oben den Schalter **„Entwicklermodus"** aktivieren.
-3. **„Entpackte Erweiterung laden"** klicken und diesen Ordner auswählen:
-   `nudge-extension/extension/`
-4. Die Karte „Roots Nudge" erscheint. **Kopiere die ID** (lange Buchstabenkette
-   unter dem Namen, z. B. `ianmgpfbb…`) — die brauchst du im nächsten Schritt.
+1. Open `chrome://extensions` in Chrome.
+2. Switch on **Developer mode** (toggle in the top right corner).
+3. Click **Load unpacked** and select the folder
+   `nudge-extension/extension/` (the folder that contains `manifest.json`).
+4. A card named **Roots Nudge** appears. Leave it enabled.
 
-### 3. Native Host registrieren (Chrome verwaltet ab dann die Bridge)
+The extension only runs on `http://localhost:*` and `http://127.0.0.1:*`. It
+does nothing on other sites.
 
-```bash
-cd <dein-pfad-zu>/nudge-extension/bridge
-./install-native-host.sh <deine-extension-id>
+### 3. Register the native messaging host
+
+```sh
+cd <path-to>/nudge-extension
+./bridge/install-native-host.sh
 ```
 
-Ab jetzt startet Chrome den lokalen Brücken-Prozess selbst und hält ihn am
-Leben — du musst nie ein Terminal dafür öffnen.
+From now on Chrome starts the local bridge process itself and keeps it alive.
+You never have to open a terminal for it.
 
-### 4. Agent-Seite einrichten
+The script derives the extension id from the folder path, which is how Chrome
+computes the id of an unpacked extension. Compare it with the id shown on the
+extension card in `chrome://extensions`. If they differ (for example because
+you loaded the folder through a symlink), run the script again with that id:
 
-```bash
-<dein-pfad-zu>/nudge-extension/agent/setup-agent.sh
+```sh
+./bridge/install-native-host.sh <extension-id>
 ```
 
-Das Script installiert:
+If you move the repository later, the id changes. Load the extension again
+from the new location and re-run the script.
 
-- den Befehl `groundworks-nudge` für alle Agenten,
-- den Skill `/groundworks-nudge` für Claude Code und Codex,
-- optionale Claude-Code- und Codex-Hooks für Markierungen im Prompt.
+### 4. Set up the agent side
 
-Der frühere Alias `/nudge` wird beim Setup entfernt.
+```sh
+./agent/setup-agent.sh
+```
 
-Alle Agenten lesen denselben Store. Bestehende Installationen behalten ihren
-bisherigen Pfad. Bei neuen Installationen liegt er unter `~/.nudge/`.
+This installs, for the current user only:
 
-Das Script erhält bestehende Agent-Einstellungen und ersetzt nur seine eigenen
-Nudge-Dateien. Es kann beliebig oft laufen.
+- the `groundworks-nudge` command in `~/.local/bin` (a symlink into the repo),
+- the Skill `/groundworks-nudge` for Claude Code (`~/.claude/skills`), Codex
+  (`~/.agents/skills`) and Grok Build (`~/.grok/skills`),
+- optional hooks for Claude Code and Codex: a session-start hook that makes
+  sure the bridge is up, and a prompt hook that injects the current mark and
+  queue into the conversation. Existing hook settings are preserved. The
+  script is idempotent and can be re-run at any time.
 
-### 5. Funktionstest
+Pass `claude-code` or `codex` as the only argument to set up just one runtime.
+T3 Code needs no extra step: it surfaces the Skill of the CLI it is driving.
 
-1. Beliebige `localhost`-Seite öffnen (z. B. deine Dev-App).
-2. Oben rechts erscheint die dunkle **Nudge-Leiste**. Der kleine Punkt links:
-   erst grau/amber, und sobald ein Agent lauscht **grün**.
-3. Agent-Session starten und `/groundworks-nudge` eingeben.
-   Der Agent verbindet sich selbst; der Punkt wird grün.
-4. **„Pick"** klicken → ein Element anklicken → kurzen Prompt tippen → **Senden**.
-   Rechts oben muss erscheinen: **„nudge_X — Agent arbeitet"**. Das war's.
+`~/.local/bin` must be on your `PATH` for the command to resolve. Most shells
+add it by default; if `groundworks-nudge help` prints "command not found", add
+`export PATH="$HOME/.local/bin:$PATH"` to your shell profile.
 
----
+### 5. Check that it works
 
-## Bedienung
+1. Open `http://localhost:4700/demo` in Chrome. This demo page is served by
+   the bridge, so if it loads, the bridge is running. (If it does not load,
+   click the Nudge icon in Chrome's toolbar once, or reload the extension in
+   `chrome://extensions`, and try again.)
+2. The dark **Nudge toolbar** appears at the top right of the page. The small
+   dot on its left is grey or amber for now.
+3. Arm an agent session **on the project you want to change**, not in this
+   repository. The Skill is user-level; after step 4 it is available
+   everywhere.
+   - **Terminal (Claude Code or Codex):** type `/groundworks-nudge`.
+   - **T3 Code:** open a thread on that project, choose Claude Code, Codex or
+     Grok as the provider, then type `/groundworks-nudge` or pick
+     `groundworks-nudge` from the `$` skill picker.
+   The agent arms itself. The dot turns **green** and the toolbar shows the
+   session's name. A *Pull* tag on the green dot (typical for T3 Code and
+   Codex) means the prompt is read with your next chat message, not by itself.
+4. Click **Pick**, click one of the cards, type a short prompt, press Enter.
+   A chip at the top right says **nudge_1 — agent working**. Done.
 
-| Aktion | So geht's |
+## Daily use
+
+| Action | How |
 |---|---|
-| **Leiste ein/aus** | `Alt+C` oder Klick aufs Nudge-Symbol in der Chrome-Toolbar |
-| **Element prompten** | „Pick" → Element anklicken → Prompt tippen → `⌘↩` |
-| **Ebene korrigieren** | Nach dem Klick zeigen Chips die Eltern-Elemente (`td → tr → table`) — klicke die Ebene, die du wirklich meinst |
-| **Mehrere Elemente** | `Shift+Klick` sammelt Elemente in EINEN Prompt („tausche diese beiden") — nochmal Shift+Klick nimmt eines wieder raus, normaler Klick startet neu mit einem Element |
-| **Region prompten** | „Freeform" → mit gedrückter Maustaste einkreisen → Prompt |
-| **Nur markieren** | Element anklicken → **leer senden** (oder Esc) — dann in der Agent-Session „mach *das hier* größer" schreiben |
-| **Viele Änderungen schnell** | Einfach hintereinander senden — der Agent arbeitet sie strikt der Reihe nach ab; der Zähler in der Leiste zeigt, wie viele offen sind |
+| Toolbar on/off | `Alt+C`, or click the Nudge icon in Chrome's toolbar. Off is browser-wide and stays off until you switch it on again |
+| Prompt on an element | **Pick** → click the element → type → `↩` |
+| Correct the level | after the click, chips show the parent elements (`td → tr → table`). Click the one you meant |
+| Several elements | `Shift+click` collects elements into one prompt ("swap these two"). Shift+click again removes one. A plain click starts over with one element |
+| Prompt on a region | **Freeform** → circle it with the mouse held down → type → `↩` |
+| Mark only | click an element → send empty (or Esc). Then write "make *this* larger" in the agent session |
+| Many changes, fast | send them one after another. The agent works through them strictly in order. The counter in the toolbar shows how many are open |
+| Add a thought to a sent prompt | click the counter → **+ amend** on the row |
+| Take a prompt back | click the counter → **×** on the row. The agent that has it is told to stop |
 
-**Feedback rechts oben (kleine Chips):**
-- ✈ „nudge_X — Agent arbeitet" — angekommen, Agent ist live dran
-- 🕐 „gespeichert — kein Agent verbunden" — geparkt, läuft beim nächsten Agenten
-- ⚠ „Bridge offline — Warteschlange" — wird automatisch nachgesendet
-- ✓ „nudge_X erledigt" — der Agent ist fertig (mit Vorher/Nachher-Beweis)
+**Feedback chips** (top right, small, they fade on their own):
 
-**Der Status-Punkt (Leiste + Chrome-Icon):**
+- ✈ **nudge_X — agent working**: arrived, an agent is on it now
+- 🕐 **nudge_X saved — no agent**: stored, runs when an agent arms
+- 🕐 **nudge_X received · arrives with the next message**: a pull agent has it and reads it on your next message
+- ⚠ **Bridge offline — queued**: re-sent automatically when the bridge is back
+- ✓ **nudge_X done**: the agent finished (with a before/after screenshot for region prompts)
 
-| Farbe | Bedeutung |
+**The status dot** (toolbar and Chrome icon):
+
+| Colour | Meaning |
 |---|---|
-| **Grün** | Eine Agent-Session ist aktiv. „Auto" startet selbst, „Pull" übernimmt mit der nächsten Nachricht |
-| **Amber** | Verbindung steht, aber kein Agent — Prompts werden gespeichert |
-| **Rot** | Brücke nicht erreichbar — Prompts landen in der Warteschlange |
-| **Grau** | Leiste ausgeschaltet (`Alt+C`) |
+| **green** | an agent session is armed. Without a tag it wakes by itself. With a *Pull* tag it reads on its next message |
+| **amber** | bridge is up, no agent is armed. Prompts are stored |
+| **red** | bridge unreachable. Prompts wait in the browser queue |
+| **grey** | toolbar switched off (`Alt+C`) |
 
-## Wenn etwas klemmt
+Click the dot for a one-line explanation of the current state.
 
-1. **Punkt bleibt rot:** ~10 Sekunden warten (Chrome repariert die Brücke
-   selbst). Bleibt er rot → Tab neu laden (`⌘R`).
-2. **Punkt bleibt amber:** Es lauscht kein Agent. Eine Session starten und
-   `/groundworks-nudge` eingeben.
-3. **Alles andere:** Im Agenten `/groundworks-nudge` eingeben. Die erste Zeile
-   ist immer der Verbindungs-Report, und der Agent repariert sich von dort.
-4. Nach Nudge-Updates aus dem Repo: einmal `chrome://extensions` → ↻ bei
-   „Roots Nudge", dann den Tab neu laden.
+## Working with several projects
+
+Each localhost port is owned by one agent session. When two dev servers run
+(say `localhost:5173` and `localhost:5174`), arm one session per project and
+pick the owner per port in the toolbar's **Switch session** dropdown. A prompt
+on one port never wakes the other project's agent.
+
+## Updating
+
+```sh
+cd <path-to>/nudge-extension && git pull
+cd bridge && npm install
+```
+
+Then, in `chrome://extensions`, click the reload arrow on the Roots Nudge card
+and reload your localhost tab. Re-run `./agent/setup-agent.sh` if the Skill or
+hooks changed (the changelog says so). The bridge picks up new code the next
+time it starts; to force it, stop the process on port 4700 and Chrome will
+start it again with the new code.
+
+## If something is stuck
+
+1. **Dot stays red.** Wait about ten seconds; Chrome repairs the bridge on its
+   own. Still red: reload the tab (`⌘R`). Still red: check that step 3 was run
+   from the folder the extension was loaded from, and that `node` is on your
+   `PATH`.
+2. **Dot stays amber.** No agent is armed. In the session that owns the page,
+   type `/groundworks-nudge` again. In T3 Code this has to be a thread on
+   **your app**, not on this repository.
+3. **Prompts do not reach the agent.** In the agent, type `/groundworks-nudge`
+   again. The first line is always the connection report and the agent repairs
+   itself from there. `groundworks-nudge status` in a terminal shows the same
+   report as JSON. If the green dot shows a *Pull* tag, send a short message
+   in the agent chat after you prompt from the page.
+4. **Toolbar vanished after a code update.** A small pill says "Nudge updated
+   — press ⌘R to reload the toolbar". Do that.
+5. **Everything else:** open an issue with the output of
+   `groundworks-nudge status` and the Chrome version.
+
+## Uninstall
+
+- Chrome: remove the extension in `chrome://extensions`.
+- Native host: delete `energy.roots.nudge.json` from
+  `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/` (macOS)
+  or `~/.config/google-chrome/NativeMessagingHosts/` (Linux), and the same in
+  the Chromium folder next to it.
+- Agent side: delete `~/.local/bin/groundworks-nudge`, the
+  `groundworks-nudge` folders in `~/.claude/skills`, `~/.agents/skills` and
+  `~/.grok/skills`, the `nudge-*.{mjs,sh}` and `runtime.mjs` files in
+  `~/.claude/hooks` and `~/.codex/hooks`, and the two Nudge entries under
+  `hooks` in `~/.claude/settings.json` and `~/.codex/hooks.json`.
+- Data: the store is `~/.nudge` (or `~/.claude/nudge` on installations older
+  than August 2026).

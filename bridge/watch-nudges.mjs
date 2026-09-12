@@ -31,7 +31,7 @@ function scan() {
   scanWithdrawn()
 }
 
-// ---------- withdrawals ("Gerald hat × gedrückt") ----------
+// ---------- withdrawals ("the user pressed ×") ----------
 // A discarded nudge is ABSENT from the store, and absence never fires scanPins —
 // which is exactly why a cancel used to reach the agent never (2026-07-29). Two
 // carriers now: the bridge's `withdrawn` WS frame (fast path, below) and the
@@ -50,7 +50,7 @@ function announceWithdrawn({ id, label, url, owner, at }) {
   // agent never had it and a "stop" line would be noise about unknown work
   if (!seenId.has(id)) return
   const when = at ? ` (${String(at).slice(11, 16)})` : ''
-  console.log(`Nudge ${id}${label ? ` (#${label})` : ''} ZURÜCKGEZOGEN${when} — Gerald hat ihn verworfen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven. ${url || ''}`.trim())
+  console.log(`Nudge ${id}${label ? ` (#${label})` : ''} WITHDRAWN${when} — the user discarded it. Stop work on it IMMEDIATELY, do not commit, do not resolve. ${url || ''}`.trim())
 }
 function scanWithdrawn() {
   let files
@@ -73,7 +73,7 @@ function scanWithdrawn() {
 // its host (localhost:port). Wake for a pin if it belongs to ME — a parallel
 // dev server's nudges thus reach only its own agent. A nudge without a
 // session-level owner (offline arrival, pid-keyed agent) falls back to the old
-// global gate (the owner watcher wakes). Gerald 2026-07-07.
+// global gate (the owner watcher wakes). 2026-07-07.
 const MY_SESSION = resolveAgentId()
 function scanPins(pins) {
   for (const p of pins) {
@@ -83,17 +83,17 @@ function scanPins(pins) {
     const lastAmend = p.amendments?.length ? p.amendments[p.amendments.length - 1] : null
     const key = p.id + (p.createdAt || '') + (lastAmend?.at || '')
     if (p.status !== 'open' || seen.has(key)) continue
-    const isAmendWake = seenId.has(p.id) // known id, new key -> Gerald appended a follow-up
+    const isAmendWake = seenId.has(p.id) // known id, new key -> the user appended a follow-up
     seen.add(key); seenId.add(p.id)
     const mine = !!(p.owner?.session && MY_SESSION && p.owner.session === MY_SESSION)
     const ownerless = !p.owner?.session // no session-level owner -> use the global gate
     if (!first && (mine || (ownerless && isOwner !== false))) {
       if (isAmendWake && lastAmend) {
-        console.log(`Nudge ${p.id} ergänzt: ${lastAmend.text.slice(0, 120)} — ${p.url}`)
+        console.log(`Nudge ${p.id} amended: ${lastAmend.text.slice(0, 120)} — ${p.url}`)
       } else {
         const sel = p.target?.selector || '?'
-        const text = p.text ? p.text.slice(0, 120) : '[Nur Markierung — Gerald referenziert sie gleich im Chat]'
-        console.log(`Neuer Pin ${p.id}: ${text} @ ${sel} — ${p.url}`)
+        const text = p.text ? p.text.slice(0, 120) : '[mark only — the user will reference it in chat]'
+        console.log(`New nudge ${p.id}: ${text} @ ${sel} — ${p.url}`)
       }
     }
   }
@@ -105,7 +105,7 @@ function scanPins(pins) {
 // (Zed/CLI), start time, session id, and the thread's FIRST USER MESSAGE
 // (optionally read from a native transcript when an adapter exposes one).
 const SINCE = Date.now()
-// OPT-IN FENCE (G-5): a session appears in the extension ONLY after Gerald
+// OPT-IN FENCE (G-5): a session appears in the extension ONLY after the user
 // invoked groundworks-nudge there — that path sets the topic label. Without a deliberate
 // NUDGE_AGENT_LABEL this watcher refuses to run, so accidental arming by
 // eager agents is physically impossible (no default dir+pid label any more).
@@ -162,12 +162,12 @@ const IDENTITY = {
   firstMsg: firstMessage(),
 }
 // STANDBY instead of exit (0.16.0): losers keep heartbeating silently — the
-// bridge keeps a roster and Gerald picks the owner in the toolbar dropdown.
+// bridge keeps a roster and the user picks the owner in the toolbar dropdown.
 // Only the owner prints wake lines; being (re)chosen prints ONE line so the
 // session knows it is on duty again.
 let isOwner = null // unknown until the first reply
 
-// Lifecycle (Gerald: inactive sessions get KILLED, stale names must vanish).
+// Lifecycle (the user's rule: inactive sessions get KILLED, stale names must vanish).
 // Three tripwires, checked every 5 s / per heartbeat:
 // 1) orphaned — the session process died, we got re-parented to launchd: exit
 // 2) replaced — the SAME session armed a newer watcher (bridge tells us): exit
@@ -192,7 +192,7 @@ function heartbeat() {
     .then(r => r.json())
     .then(({ owner, replaced }) => {
       if (replaced) process.exit(0) // same session armed a newer watcher
-      if (owner === true && isOwner === false) console.log('Watch-Kanal übernommen — diese Session ist jetzt Owner.')
+      if (owner === true && isOwner === false) console.log('Watch channel taken over — this session is now the owner.')
       isOwner = owner !== false
     })
     .catch(() => { /* bridge down — the icon shows it */ })
@@ -215,7 +215,7 @@ function connectPush() {
     try {
       const j = JSON.parse(m)
       if (j.type === 'pins') scanPins(j.pins)
-      if (j.type === 'withdrawn') announceWithdrawn(j) // Gerald pulled it — say so NOW, not on the next poll
+      if (j.type === 'withdrawn') announceWithdrawn(j) // the user pulled it — say so NOW, not on the next poll
     } catch { /* ignore */ }
   })
   sock.on('close', () => setTimeout(connectPush, 1500))

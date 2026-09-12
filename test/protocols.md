@@ -11,6 +11,8 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 - `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
   prompts against md-pdf, estimate (ProseMirror) and media, started from this
   worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.
+  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  and the other self-contained suites)
 - `node test/fixture-gauntlet.mjs` — **Suite F (Fixture Gauntlet)**, side port
   4722, static server 5320: third-party UI idioms from the internet, VENDORED
   under `test/fixtures/` (Flowbite/Tailwind components + TodoMVC React; sources +
@@ -36,20 +38,20 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   composer) — including on pages that own the keyboard, and without stealing the
   key from the page's own dialog. Run after any keyboard/listener/mode change.
 - `node test/multi-select.mjs` — **Suite P (Multi-selection)**, page server 5195:
-  Shift+Klick collects elements into ONE mark from BOTH entry paths (Shift on the
+  Shift+click collects elements into ONE mark from BOTH entry paths (Shift on the
   first click, or a plain pick extended afterwards), toggles off, keeps the typed
   text, and isn't eaten by the moat. Run after any pick/mode/moat change.
 - `node test/reload-resilience.mjs` — **Suite Q (Reload resilience)**, page server
   5196, extension re-pointed to the DEAD port 4799: the dev server reloads the tab
-  under Gerald's hands — toolbar, composer draft and Shift-collected set come back,
+  under the user's hands — toolbar, composer draft and Shift-collected set come back,
   a late-hydrating element is found again, and a mark whose element is gone keeps
   its frozen context instead of silently re-anchoring. Run after any change to the
   session snapshot, the pick context or the composer lifecycle.
 - `node test/amend.mjs` — **Suite N (Amend)**, side port 4788: append-only
   follow-ups to an open nudge — original immutable + inbox mirror, order,
   resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
-  History "+ ergänzen" UI round-trips. Run after any store/amend/watcher/queue change.
-- `node test/cancel.mjs` — **Suite X (Withdrawal)**, side port 4791: Gerald pulls
+  History "+ amend" UI round-trips. Run after any store/amend/watcher/queue change.
+- `node test/cancel.mjs` — **Suite X (Withdrawal)**, side port 4791: the user pulls
   a nudge back with the queue ×. Proves delivery is real (so a × cancels RUNNING
   work), that the stop reaches the OWNING agent and only it, that the caller
   learns who was told, the marker trace (no prompt text), the list clearing, the
@@ -64,19 +66,20 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   return once capture is healthy. Run after any change to captureRegion, sw.js
   capture handling, or the Freeform commit path.
 - `node test/off-means-off.mjs` — **Suite Z (Off means off)**, side port 4786,
-  Seitenserver 5201: das Toolbar-Icon und die Pill-Leiste behaupten dasselbe und
-  müssen sich einig sein. Beweist, dass der Icon-Klick die Leiste ausblendet UND
-  „inaktiv" meldet, dass „aus" Reload, neuen Tab und einen zweiten
-  localhost-Origin überlebt, dass ein Toggle alle offenen Tabs live mitschaltet,
-  und dass eine SPA-Navigation per `history.pushState` den Zustand neu meldet
-  (Chrome setzt Icon und Badge dabei auf Grau zurück). Run after any change to
-  the toggle, `restoreSession`, the `nudgeOff`-Persistenz or the icon wiring in
-  sw.js.
+  page server 5201: the toolbar icon and the pill toolbar claim the same thing
+  and must agree. Proves that the icon click hides the toolbar AND reports
+  "inactive", that "off" survives a reload, a new tab and a second localhost
+  origin, that a toggle switches every open tab live, and that an SPA navigation
+  via `history.pushState` re-reports the state (Chrome resets icon and badge to
+  grey on it). Run after any change to the toggle, `restoreSession`, the
+  `nudgeOff` persistence or the icon wiring in sw.js.
 - `node test/cross-app.mjs` — **Suite J (Cross-App + Multi-Session)**, side port
   4792: nudges across the REAL apps at once (md-pdf, estimate, media, website) in
   four simultaneous tabs with four armed sessions and churning ownership — per-app
   binding, per-route isolation (no cross-app leak), concurrent interleaved creation
   under a heartbeat/resolve storm. Reuses running dev servers; skips unreachable.
+  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  and the other self-contained suites)
 - `node test/battletest.mjs` — **Suite I (Kidnap Battletest)**, side port 4793,
   static 5321: END-TO-END through the real extension — a nudge is set in a new app
   under one owner, then 4 attacker agents storm the bridge (heartbeats, /agent/owner
@@ -96,12 +99,12 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   the real watcher carries `NUDGE_WAKE` through. Run after any change to the wake plumbing.
 - `npm run test:ci` — fast units, the runtime-neutral Bridge/Watcher/CLI/Hook
   round trip and the idempotent Claude Code + Codex installer. Required in CI.
-- `node test/latency-bench.mjs` — **Wake-Latenz** (Seitenport 4799): POST →
-  Watcher-Zeile, WS-Push vs fs-Fallback. Referenz 2026-07-05: 2,1 ms vs 23,7 ms.
-- `node test/bridge-hardening.mjs` — **Bridge-Härtung** (Seitenport 4799): corrupt-store
-  recovery (Backup + seq-Floor aus Inbox), Owner-Wechsel-Broadcast, 413,
-  atomic persist. Nach JEDER Bridge-Änderung mitlaufen lassen.
-- `node test/bridge-brutal.mjs` — **Suite D (Bridge Brutal)**, Seitenport 4798:
+- `node test/latency-bench.mjs` — **Wake latency** (side port 4799): POST →
+  watcher line, WS push vs fs fallback. Reference 2026-07-05: 2.1 ms vs 23.7 ms.
+- `node test/bridge-hardening.mjs` — **Bridge hardening** (side port 4799): corrupt-store
+  recovery (backup + seq floor from the inbox), owner-change broadcast, 413,
+  atomic persist. Run alongside after EVERY bridge change.
+- `node test/bridge-brutal.mjs` — **Suite D (Bridge Brutal)**, side port 4798:
   adversarial battery — the bridge must survive everything a hostile/buggy local
   client or a mangled disk can throw at it, and the identity surface must never
   lie. Run after ANY bridge/store/watcher change, together with the hardening
@@ -110,17 +113,19 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   store, estimate app on :5185 + a throwaway generic app. Run before "releases"
   and after infra changes (bridge lifecycle, store, hooks). Writes `[TEST-…]`
   pins and cleans them up itself (never resets seq).
+  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  and the other self-contained suites)
 - **Suite C** — manual drills, each tied to a trigger ("run after X changed").
 
 **Edge-case catalog:** `scenarios.md` — every bug/lesson with coverage status;
-the backlog for new legs lives there (section „Building new legs").
+the backlog for new legs lives there (section "Building new legs").
 
 **Standing rules**
 - **Tests NEVER touch port 4700.** Every suite runs its own bridge on its own
   side port (A:4720 · E:4721 · D:4798 · hardening/bench:4799) and re-points the
   TEST browser's extension via `chrome.storage.local.nudgePort` (0.16.3). The
-  live bridge keeps serving Gerald through every run. History: suites used to
-  steal 4700 — his toolbar showed „Agent: suite-e" (2026-07-05, G-7).
+  live bridge keeps serving the user through every run. History: suites used to
+  steal 4700 — the user's toolbar showed "Agent: suite-e" (2026-07-05, G-7).
 - Suites verify their bridge by EXACT store path (`/.identity.store`), not by
   workspace dirname — two `/tmp` test stores look identical by dirname.
 - Never reset the store seq; test pins carry a `[TEST-…]` prefix and are removed
@@ -132,13 +137,13 @@ the backlog for new legs lives there (section „Building new legs").
   or REAL watchers can leak them if a run is interrupted — a leaked watcher on a
   side port silently pollutes later runs (a ghost agent appears in the switcher).
   Clean up by SIDE PORT / test store, never blanket. **NEVER blanket-kill
-  `watch-nudges` processes**: they are usually Gerald's REAL armed sessions
-  heartbeating 4700 (2026-07-07 — a cleanup grep flagged his live watchers as
-  „strays"). Before killing anything, check the live roster
+  `watch-nudges` processes**: they are usually the user's REAL armed sessions
+  heartbeating 4700 (2026-07-07 — a cleanup grep flagged the user's live watchers as
+  "strays"). Before killing anything, check the live roster
   (`curl -s localhost:4700/.identity`) — if a name matches, it is real; leave it.
 - **Test every affordance of an input, not one happy path.** A green submit test
   can hide a dead-end field: Suite N5 passed on ⌘↩ while the amend field was
-  UNUSABLE for Gerald — no visible send button, and Shift+Enter (what he pressed)
+  UNUSABLE for the user — no visible send button, and Shift+Enter (what the user pressed)
   was a newline, not send (2026-07-07). For any text input assert the FULL
   contract: the visible control (button) works, EACH key path a human tries
   (Enter, ⌘↩), the NEGATIVE (what must NOT submit — Shift+Enter → newline), and
@@ -146,7 +151,8 @@ the backlog for new legs lives there (section „Building new legs").
   is not "a human can send it."
 - **Reproduce page-interaction bugs against the REAL page, not from theory.** The
   toolbar-dismiss bugs only became clear by starting the actual site
-  (`website`: `npm run start`, then trigger `.nav__cta`) and instrumenting what
+  (the maintainer's private `website` app: `npm run start`, then trigger
+  `.nav__cta`) and instrumenting what
   fired — the dismiss mechanism was NOT what the first guess assumed. Read the
   page's own dismiss code (e.g. `packages/ui/src/popover.ts`) to know the exact
   event + phase, THEN build a hermetic leg (Suite M) that replays that mechanism.
@@ -157,17 +163,17 @@ the backlog for new legs lives there (section „Building new legs").
 |---|--------|------|
 | A1 | **Report completeness (element)**: DOM-only — text, url, title, ua, viewport, unique selector, xpath, innerText, source hint, outerHTML, categorized styles, console incl. `[net]` ≥400. NO screenshot (element pins are DOM-only) | ✅ 2026-07-05 |
 | A2 | **Capture accuracy** (dpr derived from bitmap÷viewport, not trusted) | ✅ 2026-07-05 |
-| A3 | **Pick = mark**: element selection published on pick DOM-ONLY (no screenshot, no flicker), chip retarget updates it, Abbrechen keeps selection, creates NO pin | ✅ 2026-07-05 |
+| A3 | **Pick = mark**: element selection published on pick DOM-ONLY (no screenshot, no flicker), chip retarget updates it, Cancel keeps selection, creates NO pin | ✅ 2026-07-05 |
 | A4 | **Prompt tracking**: badge counts this route's open prompts, clears on resolve; ONE NUMBER PILL per marked element while its prompt is open (0.20.0: readable nudge number = chat referent; 0.9.0: no popovers/threads, pill click opens the queue), pills gone after resolve/discard, hidden in evidence shots. Badge CLICK → queue popover (id · text · age, midnight style), closes on Escape/outside/empty. **Caret aligned to the badge (C-7); a row does NOT jitter on accordion toggle (C-6, dot/id hold their offset)** | ✅ 2026-07-09 |
-| A5 | **Resolve (element)**: HTTP resolve → „pin_X erledigt"-chip, badge drops, NO after-shot (element = DOM-only). Freeform pins keep the before/after evidence loop (asserted in A6) | ✅ 2026-07-05 |
+| A5 | **Resolve (element)**: HTTP resolve → "pin_X done" chip, badge drops, NO after-shot (element = DOM-only). Freeform pins keep the before/after evidence loop (asserted in A6) | ✅ 2026-07-05 |
 | A6 | **Freeform (region)**: stroke stored, centroid selector, AND a screenshot (only the Freeform tool captures) + resolve → after-shot evidence loop | ✅ 2026-07-05 |
 | A7 | **SPA refilter**: hashchange/popstate refilter the badge (route = pathname+hash; query deliberately ignored) | ✅ 2026-07-05 |
-| A8 | **Connection visibility / feedback feed** (CORE, see PRODUCT.md): every prompt answers in the top-right feed — „Agent arbeitet" (send icon) / „gespeichert — kein Agent" (clock) / „Bridge offline — Warteschlange" (alert) / „erledigt" (check); connection loss + recovery land there too; chips are Lucide-iconed, max 4, self-fading. Texts asserted in A/B runs, look via design-shots | ✅ 2026-07-05 |
-| A9 | **Multi-selection (Shift+Klick)**: two shift-clicks → selection carries `targets[]` (2 Elemente, DOM-only), composer counts mit, one transient outline per element; send → pin carries both targets (selector+xpath each), NO screenshot, outlines gone after send (fire-and-forget). Late re-check: element pins never gain an after-shot | ✅ 2026-07-05 |
-| A10 | **Queue management (0.9.0)**: text-less prompt shows a speaking label („Markierung: ‚innerText'" / N Elemente / selector); row × discards via DELETE (store + inbox + shots weg, feed chip „verworfen"); dots lifecycle asserted (3 → 2 after discard) | ✅ 2026-07-05 |
-| A12 | **Zustands-Feedback 0.12.0**: Punkt GRÜN bei agentLive (Suite-Heartbeat), amber sonst; Badge zählt nur OFFENE, verschwindet bei 0; Erledigt-History im Queue-Popover (q-div „Erledigt", Zeile mit grünem Check, resolvedAt-Alter) | ✅ 2026-07-05 |
-| A11 | **Härtung 0.10.0 / Composer-Submit 0.20.0**: CORS-Grenze (fremder Origin → keine CORS-Header, localhost reflektiert); leeres Senden = NUMMERIERTE MARKE (Pin ohne Text, „nudge_X marked"-Chip, Nummern-Pille am Element — kehrt die 0.10.0-Regel um); Enter sendet / Shift+Enter = Zeilenumbruch (sendet NICHT); Klick-Konvention (normaler Klick setzt Multi auf Einzel zurück, nur ⇧ sammelt); Agent-Wiring-Drift-Check (Repo = installiert) als Schlussbein | ✅ 2026-07-09 |
-| A13 | **Status-Hinweis 0.21.3**: Klick auf den Status-Punkt öffnet ein Zustands-Popover (grüner Push-Owner → „Agent aktiv"), Caret auf den Punkt ausgerichtet, schließt per Escape — der Punkt erklärt sich, armt/weckt aber NICHT aus dem Browser | ✅ 2026-07-21 |
+| A8 | **Connection visibility / feedback feed** (CORE, see PRODUCT.md): every prompt answers in the top-right feed — "agent working" (send icon) / "saved — no agent" (clock) / "Bridge offline — queued" (alert) / "done" (check); connection loss + recovery land there too; chips are Lucide-iconed, max 4, self-fading. Texts asserted in A/B runs, look via design-shots | ✅ 2026-07-05 |
+| A9 | **Multi-selection (Shift+click)**: two shift-clicks → selection carries `targets[]` (2 elements, DOM-only), the composer counts along, one transient outline per element; send → pin carries both targets (selector+xpath each), NO screenshot, outlines gone after send (fire-and-forget). Late re-check: element pins never gain an after-shot | ✅ 2026-07-05 |
+| A10 | **Queue management (0.9.0)**: text-less prompt shows a speaking label ("Mark: 'innerText'" / N elements / selector); row × discards via DELETE (store + inbox + shots gone, feed chip "discarded"); dots lifecycle asserted (3 → 2 after discard) | ✅ 2026-07-05 |
+| A12 | **State feedback 0.12.0**: dot GREEN on agentLive (suite heartbeat), amber otherwise; badge counts only OPEN, disappears at 0; done history in the queue popover (q-div "Done", row with a green check, resolvedAt age) | ✅ 2026-07-05 |
+| A11 | **Hardening 0.10.0 / Composer submit 0.20.0**: CORS boundary (foreign origin → no CORS headers, localhost reflected); empty send = NUMBERED MARK (pin without text, "nudge_X marked" chip, number pill on the element — reverses the 0.10.0 rule); Enter sends / Shift+Enter = newline (does NOT send); click convention (a plain click resets multi to single, only ⇧ collects); agent-wiring drift check (repo = installed) as the closing leg | ✅ 2026-07-09 |
+| A13 | **Status hint 0.21.3**: clicking the status dot opens a state popover (green push owner → "Agent active"), caret aligned to the dot, closes on Escape — the dot explains itself but does NOT arm/wake from the browser | ✅ 2026-07-21 |
 
 **Toolbar chrome geometry (2026-07-06):** Suite A also locks in the popover
 carets (queue → badge, Switch-session → its label, C-7), the accordion no-jitter
@@ -178,7 +184,7 @@ catalog in `scenarios.md` groups C/D/F.
 
 | # | Guards | Last |
 |---|--------|------|
-| B1 | **Bidirectional, click-only**: pick on :5185 → `/selection` fresh in <10 s AND the user-level hook surfaces AKTUELLE MARKIERUNG (what a Zed agent sees on the next message) | ✅ 2026-07-05 |
+| B1 | **Bidirectional, click-only**: pick on :5185 → `/selection` fresh in <10 s AND the user-level hook surfaces CURRENT MARK (what a Zed agent sees on the next message) | ✅ 2026-07-05 |
 | B2 | **Rapid-fire queue**: 3 prompts in quick succession → ids strictly monotonic, arrival order = send order, badge +3; watcher wakes arrive in order (observed live in the agent session, 3× on 2026-07-05) | ✅ 2026-07-05 |
 | B3 | **Resolve loop on the live page**: feed chip + evidence against the real store | ✅ 2026-07-05 |
 | B4 | **Generic web app**: framework-free static page (python http.server) — pick, selection, prompt land identically. Nudge is app-agnostic | ✅ 2026-07-05 |
@@ -233,8 +239,8 @@ from this worktree on side ports (5313 md-pdf · 5315 estimate · 5318 media).
 
 | # | Guards | Last |
 |---|--------|------|
-| E1 | **md-pdf**: pick on the dropzone (DOM-only, innermost element inside the card); load a REAL document (dynamic file input → filechooser, staging step, »Generate document«) and pick inside the PagedJS print preview | ✅ 2026-07-05 |
-| E4 | **Input hygiene on a real form**: typed values NEVER reach element-owned channels (innerText/outerHTML/styles/targets/selector/xpath) — DOM properties are not serialized. Page-owned surfaces (title/url) carry what the page puts there: md-pdf reflects the Dokumenttitel field into document.title — the app's exposure, reported faithfully | ✅ 2026-07-05 |
+| E1 | **md-pdf**: pick on the dropzone (DOM-only, innermost element inside the card); load a REAL document (dynamic file input → filechooser, staging step, "Generate document") and pick inside the PagedJS print preview | ✅ 2026-07-05 |
+| E4 | **Input hygiene on a real form**: typed values NEVER reach element-owned channels (innerText/outerHTML/styles/targets/selector/xpath) — DOM properties are not serialized. Page-owned surfaces (title/url) carry what the page puts there: md-pdf reflects the document-title field into document.title — the app's exposure, reported faithfully | ✅ 2026-07-05 |
 | E2 | **estimate/ProseMirror — the A-2 case**: open a real document, pick a paragraph, DETACH the node before send (clone+replace = PM re-render) → pick-time rect + selector survive via the fallback chain. Library data comes through vite's proxy from the worker (:8787) — if that backend is down the leg SKIPS honestly instead of reddening the suite | ✅ 2026-07-05 |
 | E3 | **media grid**: picked thumb in a grid of near-identical cards yields a UNIQUE selector pointing at the right card; shift-multi across two cards (first click already with ⇧ — A-7 convention) | ✅ 2026-07-05 |
 | E5 | **Cross-app queue truth**: open pins on md-pdf AND media → each tab's count shows only its own route | ✅ 2026-07-05 |
@@ -248,7 +254,7 @@ bugs surfaced here (see run log 2026-07-05).
 
 | # | Guards | Last |
 |---|--------|------|
-| F1 | **Flowbite modal (A-8 in the wild)**: modal with a backdrop outside-close survives the toolbar click AND an in-modal pick — the exact „Finale Version freigeben?" trap, now against real Flowbite JS | ✅ 2026-07-05 |
+| F1 | **Flowbite modal (A-8 in the wild)**: modal with a backdrop outside-close survives the toolbar click AND an in-modal pick — the exact "Release final version?" trap, now against real Flowbite JS | ✅ 2026-07-05 |
 | F2 | **Dropdown / anchor**: pick a menu item (an `<a href>`) → selector captured, the href is NOT followed, the page does not navigate (trailing-click suppression) | ✅ 2026-07-05 |
 | F3 | **Scroll + near-identical table**: deep pick after scrolling has a viewport-relative rect; row 35 of 40 near-identical rows is uniquely addressed (right INV number) | ✅ 2026-07-05 |
 | F4 | **CSS-transformed parent**: element under `scale()+rotate()` → selection rect equals the VISUAL box (getBoundingClientRect) within 2 px | ✅ 2026-07-05 |
@@ -258,24 +264,24 @@ bugs surfaced here (see run log 2026-07-05).
 
 ## Suite G — Hook Opt-in Gate (hook-optin.mjs)
 
-The immanent guarantee Gerald asked for: a session becomes Nudge-aware ONLY by
-his hand (invoking groundworks-nudge, which arms a watcher → its Agent id enters the
+The immanent guarantee the user asked for: a session becomes Nudge-aware ONLY by
+the user's hand (invoking groundworks-nudge, which arms a watcher → its Agent id enters the
 roster). The UserPromptSubmit hook runs in EVERY session but reveals Nudge
 context only to roster members; everyone else is silent. The SessionStart hook
 injects nothing at all any more (it only ensures the bridge is up).
 
 | # | Guards | Last |
 |---|--------|------|
-| G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, a live owner in the store — and even when its prompt REFERENCES a nudge („Nudge 1"), the 0.20.0 reference pull must not pierce the gate | ✅ 2026-07-09 |
+| G1 | **Foreign session → total silence**: a session id NOT in the roster gets NO output, even with an open pin, a fresh selection, a live owner in the store — and even when its prompt REFERENCES a nudge ("Nudge 1"), the 0.20.0 reference pull must not pierce the gate | ✅ 2026-07-09 |
 | G2 | **No Agent id → silence**: a session without a normalized identity cannot prove participation → nothing | ✅ 2026-08-28 |
-| G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and the referenceable open list („Offene Nudges" — id · gist · route) | ✅ 2026-07-09 |
-| G3b | **Reference pull (0.20.0)**: „Nudge 1" in the armed session's prompt injects that nudge's full context (`REFERENZIERT nudge_1` + text); an unknown id is named as missing („Nudge 7: nicht im Store"), never invented | ✅ 2026-07-09 |
+| G3 | **Armed session → full context**: the roster-member session sees status (owner label), current mark, and the referenceable open list ("Open nudges" — id · gist · route) | ✅ 2026-07-09 |
+| G3b | **Reference pull (0.20.0)**: "Nudge 1" in the armed session's prompt injects that nudge's full context (`REFERENCED nudge_1` + text); an unknown id is named as missing ("Nudge 7: not in store"), never invented | ✅ 2026-07-09 |
 | G4 | **Disarm returns to silence**: when a session's watcher stops and it ages out of the roster, even the same id goes silent again | ✅ 2026-07-09 |
 
 ## Suite H — Provenance (provenance.mjs)
 
 The **Nudge History** (the badge-click popover: open nudges + a DONE history,
-each row naming its agent) rests on one contract Gerald leans the bridge's
+each row naming its agent) rests on one contract the user leans the bridge's
 robustness on: **once a nudge is created it stays bound to the agent session
 that owned the channel at that instant — forever, and no other process or agent
 can kidnap it.** Bulletproofed here from every angle.
@@ -284,7 +290,7 @@ can kidnap it.** Bulletproofed here from every angle.
 |---|-----------------------|------|
 | H1 | **Client spoof**: a forged `owner` in the POST body (object/string/array) is IGNORED — owner is a separate server-decided arg, never read from the payload | ✅ 2026-07-05 |
 | H2 | **Heartbeat owner switch**: newer session takes the channel → existing nudge keeps its owner | ✅ 2026-07-05 |
-| H3 | **Dropdown pick** (`/agent/owner`): Gerald re-chooses the channel owner → existing nudges unchanged, only NEW ones take the chosen owner | ✅ 2026-07-05 |
+| H3 | **Dropdown pick** (`/agent/owner`): the user re-chooses the channel owner → existing nudges unchanged, only NEW ones take the chosen owner | ✅ 2026-07-05 |
 | H4 | **Resolve by a stranger**: B resolves an A-owned nudge → stays A | ✅ 2026-07-05 |
 | H5 | **Double/triple resolve**: idempotent, owner never drifts | ✅ 2026-07-05 |
 | H6 | **SIGKILL + restart**: owner is persisted (store.json), survives a crash | ✅ 2026-07-05 |
@@ -315,8 +321,8 @@ while Owner-Alpha holds the channel; then 4 attacker agents storm the bridge for
 ## Suite J — Cross-App + Multi-Session (cross-app.mjs)
 
 The whole system under realistic load: four real apps open at once, four agent
-sessions armed in parallel, ownership churning — Gerald's "mehrere Sessions
-gleichzeitig". Uses whatever dev servers are running (md-pdf :5313, estimate
+sessions armed in parallel, ownership churning — the user's "several sessions
+at once". Uses whatever dev servers are running (md-pdf :5313, estimate
 :5315, media :5318, website :4321); skips an app that isn't up.
 
 | # | Guards | Last |
@@ -328,7 +334,7 @@ gleichzeitig". Uses whatever dev servers are running (md-pdf :5313, estimate
 
 ## Suite K — Origin routing (origin-routing.mjs)
 
-The multi-localhost model (Gerald opens many worktrees, each its own dev server;
+The multi-localhost model (the user opens many worktrees, each its own dev server;
 a nudge on a localhost must reach THAT worktree's agent, not a single global
 owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
 
@@ -344,7 +350,7 @@ owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
 ## Suite W — Wake mode: push vs pull (wake-mode.mjs)
 
 Push-capable runtimes can start the Agent, while pull runtimes wait for the next
-prompt. The editor does not decide that capability. The green icon must not imply „kommt automatisch" for a pull
+prompt. The editor does not decide that capability. The green icon must not imply "comes automatically" for a pull
 owner — so the mode has to travel to the extension. Own bridge on 4788, no browser.
 
 | # | Guards | Last |
@@ -359,7 +365,7 @@ owner — so the mode has to travel to the extension. Own bridge on 4788, no bro
 
 Locks in the toolbar/popover polish (2026-07-07) so a later refactor can't break
 it silently. Own bridge on 4785, own page server on 5196; two sessions armed
-with Gerald-style port-suffixed labels ("Estimate Templates :5175").
+with port-suffixed labels in the user's style ("Estimate Templates :5175").
 
 | # | Guards | Last |
 |---|--------|------|
@@ -368,7 +374,7 @@ with Gerald-style port-suffixed labels ("Estimate Templates :5175").
 | L3 | Only one popover open at a time — Nudge History ↔ Switch-session are mutually exclusive | ✅ 2026-07-07 |
 | L4 | P/F hotkeys switch tools when the overlay is active, and are suppressed while typing in a page field | ✅ 2026-07-07 |
 | L5 | `prefers-reduced-motion: reduce` collapses the overlay's transitions (no gliding highlight / spinning clock) | ✅ 2026-07-07 |
-| L6 | An orphaned tab (extension reload) shows the „⌘R" hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-31 |
+| L6 | An orphaned tab (extension reload) shows the ⌘R hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-31 |
 | L7 | The toolbar stays completely inside the viewport — when the viewport shrinks under it (docked DevTools) AND when the bar grows on its own with no resize event (longer session label) — and returns to the dropped spot once the room is back | ✅ 2026-07-31 |
 
 ## Suite M — Page inertness (page-inertness.mjs)
@@ -376,7 +382,7 @@ with Gerald-style port-suffixed labels ("Estimate Templates :5175").
 The Nudge overlay is a full-screen `pointer-events:none` host over the page, so a
 click that MISSES the toolbar falls through. On a page whose modal uses a
 backdrop that hides on outside-click (roots' RequestPopover), that means
-reaching for the toolbar dismissed the page's popover (Gerald 2026-07-07). Fixed
+reaching for the toolbar dismissed the page's popover (2026-07-07, user report). Fixed
 with a thin "moat": near-miss clicks around visible Nudge chrome are absorbed at
 window-capture (idle/composing only — picking/drawing need page clicks). A second
 leak: dropdowns that detect outside-clicks with a document CAPTURE-phase
@@ -415,8 +421,8 @@ keep grip/draw/composer exempt (M5) — they need their own pointerdown.
 
 ## Suite O — Escape clears marks (escape-clear.mjs)
 
-The keyboard half of Suite M's lesson (Gerald 2026-07-29: "wenn ich Escape drücke,
-sollten die Markierungen wieder verschwinden"). Escape was handled on `document`
+The keyboard half of Suite M's lesson (2026-07-29, user report: "when I press Escape,
+the marks should disappear again"). Escape was handled on `document`
 capture; dialog/dropdown libraries (Radix, Headless UI, `@roots/ui`) handle it on
 **window** capture and stop propagation while their layer is open, so the key
 never reached Nudge — Esc silently stopped clearing the pick and P/F stopped
@@ -443,9 +449,9 @@ has focus — there the keystroke was aimed at Nudge, so `ta`'s target-phase
 
 ## Suite P — Multi-selection (multi-select.mjs)
 
-Shift+Klick collects several elements into ONE mark/prompt ("tausche diese
-beiden"). It worked or didn't depending on how the selection STARTED (Gerald
-2026-07-29, "nicht zuverlässig"): Shift on the very first click restored
+Shift+click collects several elements into ONE mark/prompt ("swap these
+two"). It worked or didn't depending on how the selection STARTED (2026-07-29,
+user report: "not reliable"): Shift on the very first click restored
 `mode = 'picking'` and kept collecting; a plain click first left `mode` at
 `'composing'`, and `onClick` dropped every later click at its first line. Second
 half of the same report: the composer opens BESIDE the mark, so the next element
@@ -470,9 +476,9 @@ Shift-on-first-click, the path that happened to work.
 
 ## Suite Q — Reload resilience (reload-resilience.mjs)
 
-The agent edits code while Gerald is mid-thought; the dev server reloads the tab
-and the content script dies with the half-written nudge inside it (Gerald
-2026-07-29: „ich verliere gerade, was ich machen wollte"). A content script
+The agent edits code while the user is mid-thought; the dev server reloads the tab
+and the content script dies with the half-written nudge inside it (2026-07-29,
+user report: "I'm losing what I was about to do right now"). A content script
 cannot survive a navigation, so the working state is snapshotted into
 sessionStorage (per tab, per origin) and rebuilt on the next load. The contract
 under test is asymmetric on purpose: the TEXT always comes back, the DOM anchor
@@ -484,7 +490,7 @@ extension re-pointed to the dead port 4799 (no fetch can reach the live bridge).
 | Q1 | Composer draft + target survive a page reload | ✅ 2026-07-29 |
 | Q2 | The restored mark snaps back onto its live element (highlight within 3px) | ✅ 2026-07-29 |
 | Q3 | An element rendered ~1s after load is found inside the retry window | ✅ 2026-07-29 |
-| Q4 | Element gone for good: text kept, anchor honestly reported („Element weg") | ✅ 2026-07-29 |
+| Q4 | Element gone for good: text kept, anchor honestly reported ("element gone") | ✅ 2026-07-29 |
 | Q5 | Such a mark still SENDS (frozen context, queued offline, no crash) | ✅ 2026-07-29 |
 | Q6 | Escape before the reload leaves nothing to restore (no zombie draft) | ✅ 2026-07-29 |
 | Q7 | A Shift-collected set of elements survives the reload | ✅ 2026-07-29 |
@@ -492,22 +498,22 @@ extension re-pointed to the dead port 4799 (no fetch can reach the live bridge).
 Q4 earned its place on the first run: the mark on `#alpha` did not report a lost
 anchor — it had silently re-anchored onto `#beta`, because the structural xpath
 is POSITIONAL and `/div[1]` simply resolves to whoever moved up. A stranger under
-the composer's tip is worse than an honest „Element weg", so the xpath fallback
+the composer's tip is worse than an honest "element gone", so the xpath fallback
 now has to prove identity (tag, id, and — idless — the visible text).
 
 ## Suite N — Amend (amend.mjs)
 
-Append-only follow-ups (0.19.0). Gerald sends a nudge, then wants to add one more
-thought to the SAME nudge. Original text is immutable (provenance); nachträge
+Append-only follow-ups (0.19.0). The user sends a nudge, then wants to add one more
+thought to the SAME nudge. Original text is immutable (provenance); amendments
 accrue in `amendments`. `POST /comments/:id/amend {text}`.
 
 | # | Guards | Last |
 |---|--------|------|
-| N1 | An open nudge takes a follow-up: original immutable, stored with timestamp, inbox mirror carries original + Nachtrag | ✅ 2026-07-07 |
+| N1 | An open nudge takes a follow-up: original immutable, stored with timestamp, inbox mirror carries original + amendment | ✅ 2026-07-07 |
 | N2 | Multiple follow-ups accrue in order; an empty/whitespace follow-up is rejected (400) | ✅ 2026-07-07 |
 | N3 | A resolved nudge refuses a follow-up (409, no re-open); unknown id is 404 | ✅ 2026-07-07 |
 | N4 | **A REAL watcher wakes on the fresh nudge AND re-wakes on the amendment** (the owning agent sees the follow-up) | ✅ 2026-07-07 |
-| N5 | History "+ ergänzen" round-trips (via the send button): follow-up reaches the store, the "+N" badge shows, AND its text is readable under the expanded row | ✅ 2026-07-07 |
+| N5 | History "+ amend" round-trips (via the send button): follow-up reaches the store, the "+N" badge shows, AND its text is readable under the expanded row | ✅ 2026-07-07 |
 | N6 | Submit contract: **Enter sends, Shift+Enter is a newline (not send), the field clears after a send** — N5 alone was green while the field was unsendable (no button, ⌘↩-only) | ✅ 2026-07-07 |
 
 ## Suite C — manual drills (trigger-bound)
@@ -515,13 +521,13 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
 | # | Drill | Trigger | Last |
 |---|-------|---------|------|
 | C1 | Capture at Chrome zoom 80/150 % on Retina — crop still centred | after sw.js capture changes | ⬜ |
-| C2 | **Offline queue**: bridge down → send → „Bridge offline – Warteschlange"-toast, parked in chrome.storage; bridge back → auto-flush „✓ n nachgesendet". Backoff caps at 8 s; tab return reconnects immediately | after connection-logic changes | ⬜ |
+| C2 | **Offline queue**: bridge down → send → "Bridge offline — queued" toast, parked in chrome.storage; bridge back → auto-flush "✓ n resent". Backoff caps at 8 s; tab return reconnects immediately | after connection-logic changes | ⬜ |
 | C3 | **Dev auto-reload** (known caveat: fails under Playwright's --load-extension; real "Load unpacked" only) | after extension file-watch changes | ⚠️ standing |
 | C4 | **Security boundary**: 127.0.0.1-only bind (LAN curl refused); no secrets in store; overlay never captures itself | quarterly / before team rollout | ⬜ |
-| C5 | **Status truth (agentLive)**: no watcher → amber; armed → green ≤5 s; watcher killed → amber ≤15 s; bridge killed → red. Green must never lie | after heartbeat/status changes | teilweise ✅ (Flips live beobachtet 2026-07-04/05) |
+| C5 | **Status truth (agentLive)**: no watcher → amber; armed → green ≤5 s; watcher killed → amber ≤15 s; bridge killed → red. Green must never lie | after heartbeat/status changes | partly ✅ (flips observed live 2026-07-04/05) |
 | C6 | **Overlay perf** on a heavy TipTap doc: no hover lag (fastPath), glide stays smooth | after picker changes | ⬜ |
 | C7 | **Foreign-project Agent**: install the global adapter, invoke `groundworks-nudge`, then prove a prompt round trip outside Roots Apps | after wiring changes | ⬜ (neutral CLI + installer automated ✅ 2026-08-28) |
-| C8 | **Real-Chrome self-heal**: kill bridge with only Gerald's Chrome running → circle red → green again without any agent/terminal | after native-host changes | ⬜ (Chromium-automated ✅ = B5) |
+| C8 | **Real-Chrome self-heal**: kill bridge with only the user's Chrome running → circle red → green again without any agent/terminal | after native-host changes | ⬜ (Chromium-automated ✅ = B5) |
 
 ## Removed (2026-07-05 architecture pass)
 
@@ -554,7 +560,7 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
   the neighbouring element instead of reporting the loss (see Suite Q). Second
   finding, from reading the capture path while wiring the snapshot: `captureRegion`
   hid the composer and never restored it — the bridge-triggered after-shot could
-  therefore make Gerald's OPEN input field vanish mid-sentence whenever some other
+  therefore make the user's OPEN input field vanish mid-sentence whenever some other
   nudge on the page got resolved.
 
 - **2026-07-05 — Multi-selection (0.8.0): Suite A 9/9 + Suite B 5/5.** Two

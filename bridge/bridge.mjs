@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pin bridge — entry point. One process, two surfaces over one GLOBAL store:
+ * Nudge bridge — entry point. One process, two surfaces over one GLOBAL store:
  *  - HTTP on NUDGE_PORT (default 4700): extension posts prompts/selection,
  *    /.identity pairing, /demo test page. Port taken -> exit is fine, another
  *    bridge is serving (native host + hooks keep exactly one alive).
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.15.0'
+const VERSION = '0.16.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -76,7 +76,7 @@ function handle(req, res) {
     const qHost = url.searchParams.get('host') || ''
     const gOwner = ownerForHost(qHost)
     // routes: for every open localhost tab, WHO owns it right now — the map that
-    // lets a watcher tell Gerald "I own localhost:5175" and match it to the
+    // lets a watcher tell the user "I own localhost:5175" and match it to the
     // toolbar. viaFallback = the returned owner came from newest-wins, NOT from a
     // live explicit pick (per-host or '*'). Derived from the ACTUAL resolution:
     // a pick whose agent just died still sits in chosenByHost until the 5 s sweep,
@@ -118,18 +118,18 @@ function handle(req, res) {
         lastSeen: Date.now(),
       })
       // Push whenever the visible session list OR the ownership map changed — a
-      // new session must reach the Switch-session dropdown at once (Gerald
-      // 2026-07-06); ownership is per-host now, no single global owner.
+      // new session must reach the Switch-session dropdown at once
+      // (2026-07-06); ownership is per-host now, no single global owner.
       if (rosterSig() !== lastBroadcastSig) pushSnapshot()
       return json(res, 200, { ok: true, owner: agentOwnsAnything(roster.get(key)) })
     })
-  // toolbar dropdown: Gerald picks which session owns a given LOCALHOST. The
+  // toolbar dropdown: the user picks which session owns a given LOCALHOST. The
   // extension sends its own location.host, so a pick on localhost:5186 routes
   // that origin's nudges to the chosen agent; no host = the machine-wide default.
   if (req.method === 'POST' && url.pathname === '/agent/owner')
     return readBody(req, res, ({ pid, session, host }) => {
       // pick by SESSION id (stable) when given, pid only as fallback — a re-armed
-      // session (new watcher pid) stays selectable (Gerald 2026-07-06)
+      // session (new watcher pid) stays selectable (2026-07-06)
       const target = freshAgents().find(a => (session && a.session === session) || a.pid === pid)
       if (!target) return json(res, 404, { error: 'no such live agent' })
       const h = host ? normHost(String(host).slice(0, 120)) : '*'
@@ -148,7 +148,7 @@ function handle(req, res) {
     } catch { return json(res, 404, { error: 'demo page missing' }) }
   }
   // Current selection — set on every element pick (no send needed), read by the
-  // agent hook to answer "was ist gerade markiert".
+  // agent hook to answer "what is marked right now".
   if (req.method === 'GET' && url.pathname === '/selection')
     return json(res, 200, store.getSelection() || {})
   if (req.method === 'POST' && url.pathname === '/selection')
@@ -169,7 +169,7 @@ function handle(req, res) {
   if (req.method === 'POST' && m)
     // offline-created nudges are attributed on resolve to the owner of THEIR host
     return store.resolvePin(m[1], ownerStamp(hostOf(store.getPin(m[1])?.url))) ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
-  // append a follow-up to an OPEN nudge (History "+ ergänzen") — re-wakes its agent
+  // append a follow-up to an OPEN nudge (History "+ amend") — re-wakes its agent
   const mam = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/amend$/)
   if (req.method === 'POST' && mam)
     return readBody(req, res, ({ text, author }) => {
@@ -181,7 +181,7 @@ function handle(req, res) {
   // discard from the queue popover (×) — remove entirely, not a work outcome.
   // A nudge reaches its agent in milliseconds, so this is almost always a
   // WITHDRAWAL of running work, not a tidy-up: answer with WHO was told, so the
-  // toolbar can say „Agent informiert" instead of a hopeful „dismissed".
+  // toolbar can say "agent informed" instead of a hopeful "dismissed".
   const md = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)$/)
   if (req.method === 'DELETE' && md) {
     const target = store.getPin(md[1])
@@ -230,7 +230,7 @@ if (prunedW) log(`pruned ${prunedW} withdrawal markers (>24h) from the inbox`)
 // ---------- agent roster + ORIGIN-AWARE ownership ----------
 // A nudge belongs to the agent that owns ITS HOST (localhost:5186 = worktree B).
 // Ownership is per-host so parallel dev servers each route to their own agent
-// (Gerald 2026-07-07). `chosenByHost` holds the manual per-localhost picks; the
+// (2026-07-07). `chosenByHost` holds the manual per-localhost picks; the
 // '*' key is the machine-wide default; with nothing assigned it degrades to the
 // old single-owner behaviour (newest fresh agent owns every host).
 const roster = new Map() // pid -> full identity + lastSeen (standby sessions incl.)
@@ -323,11 +323,11 @@ wss.on('connection', (ws) => {
 store.onChange((kind, pin) => {
   if (kind === 'selection') return // picks are hover-frequency; tabs render nothing from it
   pushSnapshot() // keeps lastBroadcastSig fresh too, so roster pushes don't double-fire
-  // after-shot evidence only for pins that HAD a before-shot (lasso/Kreis) —
+  // after-shot evidence only for pins that HAD a before-shot (lasso) —
   // element pins are DOM-only by design, nothing to compare against
   if (kind === 'resolved' && pin.screenshot && !pin.screenshotAfter)
     broadcast({ type: 'capture-after', pin: store.pinForClient(pin) })
-  // WITHDRAWAL — the only push that says „stop working". A deleted pin is simply
+  // WITHDRAWAL — the only push that says "stop working". A deleted pin is simply
   // ABSENT from the snapshot, and absence is not an event: the watcher's scanPins
   // emits for new OPEN pins only, so before this frame existed a discarded nudge
   // reached the agent never (verified 2026-07-29, test/cancel.mjs). Owner rides

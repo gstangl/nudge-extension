@@ -184,7 +184,7 @@ try {
     await boot('todomvc-react/index.html')
     const input = page.locator('.new-todo')
     await input.waitFor({ timeout: 5000 })
-    for (const t of ['Bridge härten', 'Suiten grün halten', 'Release taggen']) {
+    for (const t of ['Harden the bridge', 'Keep the suites green', 'Tag the release']) {
       await input.fill(t)
       await input.press('Enter')
     }
@@ -197,12 +197,12 @@ try {
     await page.waitForTimeout(300)
     await page.locator('textarea[placeholder*="Nudge"]').fill('[TEST-F7] re-render pick')
     await page.locator('.composer .send').click()
-    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-F7]')), 6000, 'todo pin stored')
+    await until(async () => (await pins()).some(p => p.text?.includes('[TEST-F7]')), 6000, 'todo nudge stored')
     const stored = JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')).pins.find(p => p.text.includes('[TEST-F7]'))
     const r = stored.target?.rect
-    if (!r || !(r.w > 10 || r.width > 10)) fail(`F7: pin lost its rect after re-render (${JSON.stringify(r)})`)
+    if (!r || !(r.w > 10 || r.width > 10)) fail(`F7: nudge lost its rect after re-render (${JSON.stringify(r)})`)
     if (Math.abs((r.y ?? 0) - (selBefore.rect?.y ?? -999)) > 30) fail('F7: rect drifted far from pick-time')
-    if (!stored.target?.innerText?.includes('Suiten grün halten')) fail(`F7: innerText lost (${stored.target?.innerText})`)
+    if (!stored.target?.innerText?.includes('Keep the suites green')) fail(`F7: innerText lost (${stored.target?.innerText})`)
     console.log('PASS F7 TodoMVC (React re-render between pick and send — selector, rect, text survive)')
   }
 

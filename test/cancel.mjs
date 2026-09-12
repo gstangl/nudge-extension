@@ -1,4 +1,4 @@
-// Suite X — Withdrawal (queue-popover ×). Gerald pulls back a nudge the agent is
+// Suite X — Withdrawal (queue-popover ×). The user pulls back a nudge the agent is
 // ALREADY working on. Before 2026-07-29 the × was a pure store delete: the row
 // vanished, the agent was never told and kept going, finding out only via a 404
 // on resolve — after the work was done. This suite pins the whole chain:
@@ -44,7 +44,7 @@ function watcher(label, session, extra = {}) {
   })
   w.lines = []
   w.stdout.on('data', d => { for (const l of String(d).split('\n')) if (l.trim()) w.lines.push(l.trim()) })
-  w.stderr.on('data', d => { const s = String(d).trim(); if (s && !s.includes('verweigert')) console.error(`  [${label}]`, s) })
+  w.stderr.on('data', d => { const s = String(d).trim(); if (s && !s.includes('refused')) console.error(`  [${label}]`, s) })
   procs.push(w)
   return w
 }
@@ -54,7 +54,7 @@ const del = (id) => fetch(`${B}/comments/${id}`, { method: 'DELETE' })
 const readStore = () => { try { return JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')) } catch { return { pins: [] } } }
 const marker = (id) => path.join(STORE, 'inbox', `${id}.withdrawn.md`)
 const until = async (fn, ms, what) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return true; await sleep(120) } fail(`timeout waiting for ${what}`) }
-const stopLine = (w, id) => w.lines.find(l => l.includes(id) && l.includes('ZURÜCKGEZOGEN'))
+const stopLine = (w, id) => w.lines.find(l => l.includes(id) && l.includes('WITHDRAWN'))
 
 // a WS client standing in for an open tab — records every snapshot pushed
 const tab = new WebSocket(`ws://127.0.0.1:${PORT}`)
@@ -70,17 +70,17 @@ try {
 
   // ---------- X1: delivery is real — the premise of the whole suite ----------
   {
-    const id = await addNudge('Das braucht mehr Abstand.')
-    await until(() => A.lines.some(l => l.includes(id) && l.includes('Neuer Pin')), 4000, 'wake line for a new nudge')
+    const id = await addNudge('This needs more spacing.')
+    await until(() => A.lines.some(l => l.includes(id) && l.includes('New nudge')), 4000, 'wake line for a new nudge')
     pass('X1 a new nudge reaches the agent in ms — a × is therefore a cancel of RUNNING work, not a tidy-up')
 
     // ---------- X2: × tells that agent to stop ----------
     const r = await del(id)
     if (r.status !== 200) fail(`X2: DELETE returned ${r.status}`)
-    await until(() => stopLine(A, id), 4000, 'ZURÜCKGEZOGEN line on the agent channel')
+    await until(() => stopLine(A, id), 4000, 'WITHDRAWN line on the agent channel')
     const line = stopLine(A, id)
-    if (!/einstellen|stoppen/i.test(line)) fail(`X2: stop line is not actionable: ${line}`)
-    if (!line.includes('nicht resolven')) fail(`X2: stop line must forbid resolving: ${line}`)
+    if (!/stop/i.test(line)) fail(`X2: stop line is not actionable: ${line}`)
+    if (!/not resolve|don't resolve/i.test(line)) fail(`X2: stop line must forbid resolving: ${line}`)
     pass('X2 × reaches the working agent — actionable stop line, not just a vanished row')
 
     // ---------- X4: the caller learns WHO was told (honest toolbar toast) ----------
@@ -92,8 +92,8 @@ try {
     // ---------- X5: durable trace, no prompt text ----------
     if (!fs.existsSync(marker(id))) fail('X5: no withdrawal marker written')
     const md = fs.readFileSync(marker(id), 'utf8')
-    if (md.includes('Das braucht mehr Abstand')) fail('X5: marker leaks the discarded prompt text — a discard must not linger')
-    if (!md.includes('zurückgezogen') || !md.includes(id)) fail(`X5: marker not identifiable:\n${md}`)
+    if (md.includes('This needs more spacing')) fail('X5: marker leaks the discarded prompt text — a discard must not linger')
+    if (!md.includes('withdrawn') || !md.includes(id)) fail(`X5: marker not identifiable:\n${md}`)
     if (fs.existsSync(path.join(STORE, 'inbox', `${id}.md`))) fail('X5: the original inbox mirror must be gone')
     pass('X5 durable trace left behind (id, time, route) — prompt text deliberately gone')
 
@@ -117,8 +117,8 @@ try {
     await post('/agent/owner', { session: 'sessAAAA', host: `localhost:${PAGE}` })
     await post('/agent/owner', { session: 'sessBBBB', host: `localhost:${PAGE_B}` })
     await sleep(300)
-    const mine = await addNudge('Gehört A.', PAGE)
-    await until(() => A.lines.some(l => l.includes(mine) && l.includes('Neuer Pin')), 4000, "A's wake line")
+    const mine = await addNudge('Belongs to A.', PAGE)
+    await until(() => A.lines.some(l => l.includes(mine) && l.includes('New nudge')), 4000, "A's wake line")
     const beforeB = Bw.lines.length
     await del(mine)
     await until(() => stopLine(A, mine), 4000, "A's stop line")
@@ -130,7 +130,7 @@ try {
 
   // ---------- X8: a nudge the agent never got makes no noise ----------
   {
-    const id = await addNudge('Sofort wieder weg.', PAGE_B) // B's host, and B is dead now
+    const id = await addNudge('Gone again at once.', PAGE_B) // B's host, and B is dead now
     const before = A.lines.length
     await del(id)
     await sleep(900)
@@ -141,22 +141,22 @@ try {
 
   // ---------- X11: discarding a RESOLVED nudge is housekeeping, not a withdrawal ----------
   {
-    const id = await addNudge('Schon erledigt.')
-    await until(() => A.lines.some(l => l.includes(id) && l.includes('Neuer Pin')), 4000, 'wake line')
+    const id = await addNudge('Already done.')
+    await until(() => A.lines.some(l => l.includes(id) && l.includes('New nudge')), 4000, 'wake line')
     await post(`/comments/${id}/resolve`)
     await sleep(300)
     const before = A.lines.length
     const r = await del(id)
     await sleep(700)
     if (fs.existsSync(marker(id))) fail('X11: a resolved nudge must not leave a withdrawal marker')
-    if (A.lines.slice(before).some(l => l.includes('ZURÜCKGEZOGEN'))) fail('X11: no stop line for work that was already done')
+    if (A.lines.slice(before).some(l => l.includes('WITHDRAWN'))) fail('X11: no stop line for work that was already done')
     if ((await r.json()).notified !== false) fail('X11: DELETE of a resolved nudge must not claim a notification')
     pass('X11 discarding a DONE nudge is housekeeping — no stop line, no marker, no false claim')
   }
 
   // ---------- X9: the pull path (CLI) learns it on the next prompt ----------
   {
-    const id = await addNudge('Pull-Pfad.')
+    const id = await addNudge('Pull path.')
     await until(() => A.lines.some(l => l.includes(id)), 4000, 'wake line')
     await del(id)
     await sleep(400)
@@ -164,26 +164,26 @@ try {
       env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_ID: 'sessAAAA' },
       stdio: ['pipe', 'pipe', 'inherit'],
     })
-    hook.stdin.end(JSON.stringify({ prompt: 'weiter bitte' }))
+    hook.stdin.end(JSON.stringify({ prompt: 'carry on please' }))
     let out = ''
     hook.stdout.on('data', d => { out += d })
     await new Promise(r => hook.on('close', r))
     const ctxText = JSON.parse(out || '{}').hookSpecificOutput?.additionalContext || ''
-    if (!ctxText.includes('ZURÜCKGEZOGEN') || !ctxText.includes(id)) fail(`X9: withdrawal not surfaced to a pull session:\n${ctxText}`)
+    if (!ctxText.includes('WITHDRAWN') || !ctxText.includes(id)) fail(`X9: withdrawal not surfaced to a pull session:\n${ctxText}`)
     pass('X9 a CLI session sees the withdrawal in its next prompt context — as close to a stop as pull can get')
 
-    // and naming the number afterwards answers precisely, not "nie existiert"
+    // and naming the number afterwards answers precisely, not "never existed"
     const hook2 = spawn('node', [path.join(HERE, '../agent/nudge-context.mjs')], {
       env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_ID: 'sessAAAA' },
       stdio: ['pipe', 'pipe', 'inherit'],
     })
-    hook2.stdin.end(JSON.stringify({ prompt: `was ist mit ${id} passiert?` }))
+    hook2.stdin.end(JSON.stringify({ prompt: `what happened to ${id}?` }))
     let out2 = ''
     hook2.stdout.on('data', d => { out2 += d })
     await new Promise(r => hook2.on('close', r))
     const ctx2 = JSON.parse(out2 || '{}').hookSpecificOutput?.additionalContext || ''
-    if (!/ZURÜCKGEZOGEN/.test(ctx2)) fail(`X9b: a named withdrawn nudge must answer "zurückgezogen", not "nie existiert":\n${ctx2}`)
-    pass('X9b naming a withdrawn nudge answers „zurückgezogen", not „nie existiert" — the ambiguity is gone')
+    if (!/WITHDRAWN/.test(ctx2)) fail(`X9b: a named withdrawn nudge must answer "withdrawn", not "never existed":\n${ctx2}`)
+    pass('X9b naming a withdrawn nudge answers "withdrawn", not "never existed" — the ambiguity is gone')
   }
 
   // ---------- X7: file fallback — no WS, still told ----------
@@ -192,8 +192,8 @@ try {
     await until(async () => (await (await fetch(`${B}/.identity`)).json()).agents.some(a => a.session === 'sessCCCC'), 8000, 'watcher C live')
     await post('/agent/owner', { session: 'sessCCCC', host: `localhost:${PAGE}` })
     await sleep(500)
-    const id = await addNudge('Ohne WS.')
-    await until(() => C.lines.some(l => l.includes(id) && l.includes('Neuer Pin')), 8000, "C's wake line (poll path)")
+    const id = await addNudge('Without WS.')
+    await until(() => C.lines.some(l => l.includes(id) && l.includes('New nudge')), 8000, "C's wake line (poll path)")
     await del(id)
     await until(() => stopLine(C, id), 9000, "C's stop line from the marker file")
     pass('X7 file fallback carries the withdrawal too — a WS-less / restarted watcher still stops')
@@ -219,9 +219,9 @@ try {
     // TWO nudges, withdraw ONE: the popover stays open, so this asserts the row
     // really leaves the LIST — not just that the popover closed because the page
     // ran out of open nudges (which is what a single-nudge check would prove)
-    const keep = (await (await post('/comments', { text: 'Der bleibt.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
-    const id = (await (await post('/comments', { text: 'Weg damit.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
-    await until(() => A.lines.some(l => l.includes(id) && l.includes('Neuer Pin')), 5000, 'wake line for the browser nudge')
+    const keep = (await (await post('/comments', { text: 'This one stays.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
+    const id = (await (await post('/comments', { text: 'Away with it.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
+    await until(() => A.lines.some(l => l.includes(id) && l.includes('New nudge')), 5000, 'wake line for the browser nudge')
     await page.locator('.pill .count').click()
     const row = page.locator('.q-row', { hasText: id })
     await row.waitFor({ timeout: 5000 })
@@ -231,8 +231,8 @@ try {
     if (!await page.locator('.q-row', { hasText: keep }).isVisible()) fail('X12: withdrawing one nudge must not disturb the others')
     if ((await page.locator('.pill .count').textContent()) !== '1') fail('X12: badge count did not follow the withdrawal')
     const toast = (await page.locator('.feed .item .feed-text').last().textContent()) || ''
-    if (!/zurückgezogen/i.test(toast)) fail(`X12: toast must say the nudge was withdrawn, got „${toast}"`)
-    if (!toast.includes('Agent A')) fail(`X12: toast must name the notified agent, got „${toast}"`)
+    if (!/withdrawn/i.test(toast)) fail(`X12: toast must say the nudge was withdrawn, got "${toast}"`)
+    if (!toast.includes('Agent A')) fail(`X12: toast must name the notified agent, got "${toast}"`)
     await until(() => stopLine(A, id), 5000, 'stop line from a REAL × click')
     pass('X12 real × click: row leaves the list, neighbours untouched, toast names the informed agent, agent stops')
 

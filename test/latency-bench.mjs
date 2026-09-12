@@ -1,4 +1,4 @@
-// Wake-latency benchmark: POST /comments -> watcher stdout line, per pin.
+// Wake-latency benchmark: POST /comments -> watcher stdout line, per nudge.
 // Runs the SAME bridge twice against two watcher modes:
 //   1) WS push (fast path, bridge 0.8+)   2) NUDGE_NO_WS=1 (fs.watch fallback)
 // Prints median/max per mode — the delta is the handover win.
@@ -64,10 +64,10 @@ async function measure(mode, extraEnv) {
   watcher.kill(); bridge.kill()
   const ok = lat.filter(Number.isFinite).sort((a, b) => a - b)
   const med = ok[Math.floor(ok.length / 2)]
-  console.log(`${mode}: median ${med.toFixed(1)} ms · max ${Math.max(...ok).toFixed(1)} ms · (${ok.length}/${N} gemessen)`)
+  console.log(`${mode}: median ${med.toFixed(1)} ms · max ${Math.max(...ok).toFixed(1)} ms · (${ok.length}/${N} measured)`)
   return med
 }
 
-const fsPath = await measure('fs.watch-Fallback', { NUDGE_NO_WS: '1' })
-const wsPath = await measure('WS-Push        ', {})
-console.log(`Handover-Gewinn: ${(fsPath - wsPath).toFixed(1)} ms (${(fsPath / wsPath).toFixed(1)}x)`)
+const fsPath = await measure('fs.watch fallback', { NUDGE_NO_WS: '1' })
+const wsPath = await measure('WS push        ', {})
+console.log(`Handover gain: ${(fsPath - wsPath).toFixed(1)} ms (${(fsPath / wsPath).toFixed(1)}x)`)

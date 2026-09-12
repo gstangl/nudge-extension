@@ -1,5 +1,5 @@
-// Suite O — Escape always clears the marks. Gerald 2026-07-29: "wenn ich Escape
-// drücke, sollten die Markierungen wieder verschwinden" — they didn't, on a real
+// Suite O — Escape always clears the marks. 2026-07-29: "when I press Escape,
+// the marks should disappear again" — they didn't, on a real
 // app. Same class of bug as the moat (Suite M): the page gets the event FIRST.
 // Dialog/dropdown libraries (Radix, Headless UI, @roots/ui) listen for Escape on
 // WINDOW capture and stopImmediatePropagation() it while their layer is open —

@@ -38,12 +38,16 @@ try {
   if (!help.includes('watch --label') || !help.includes('resolve')) fail('installed launcher does not expose the neutral CLI')
   pass('runtime-neutral CLI launcher installs and runs')
 
-  for (const home of [path.join(HOME_DIR, '.claude/skills'), path.join(HOME_DIR, '.agents/skills')]) {
+  for (const home of [
+    path.join(HOME_DIR, '.claude/skills'),
+    path.join(HOME_DIR, '.agents/skills'),
+    path.join(HOME_DIR, '.grok/skills'),
+  ]) {
     const main = fs.readFileSync(path.join(home, 'groundworks-nudge/SKILL.md'), 'utf8')
     if (!main.includes('name: groundworks-nudge')) fail(`missing canonical Skill in ${home}`)
     if (fs.existsSync(path.join(home, 'nudge/SKILL.md'))) fail(`legacy alias remains in ${home}`)
   }
-  pass('Claude Code and Codex receive only the canonical Skill')
+  pass('Claude Code, Codex and Grok receive only the canonical Skill')
 
   for (const [runtime, configFile, hooksDir] of [
     ['Claude Code', '.claude/settings.json', '.claude/hooks'],

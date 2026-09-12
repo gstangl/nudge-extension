@@ -1,7 +1,7 @@
-// Suite Q — Reload resilience. Gerald 2026-07-29: „jedes Mal wenn der Browser neu
-// lädt, weil im Hintergrund der Agent irgendwas macht, geht kurz meine Nudge-Bar
-// verloren, mein Eingabefeld, und ich verliere gerade, was ich machen wollte."
-// The dev server reloads the tab under Gerald's hands; the content script dies
+// Suite Q — Reload resilience. 2026-07-29: "every time the browser reloads
+// because the agent is doing something in the background, my Nudge bar briefly
+// disappears, my input field too, and I lose what I was about to do."
+// The dev server reloads the tab under the user's hands; the content script dies
 // with the half-written nudge in it. A content script cannot survive a
 // navigation — so the WORKING state is snapshotted into sessionStorage and
 // rebuilt on the next load. Legs cover the promise and its accepted worst case:
@@ -9,7 +9,7 @@
 // element again (incl. late hydration), and a mark whose element is gone still
 // sends instead of throwing.
 // Hermetic: own page server on 5196, extension re-pointed to a DEAD bridge port
-// (4799) so no fetch can ever reach Gerald's live bridge on 4700.
+// (4799) so no fetch can ever reach the user's live bridge on 4700.
 import { chromium } from 'playwright'
 import http from 'node:http'
 import path from 'node:path'
@@ -78,12 +78,12 @@ try {
   {
     await arm()
     await click('beta')
-    await p.keyboard.type('mach den Rand hier runder')
+    await p.keyboard.type('round off this edge')
     await sleep(400) // let the snapshot settle (pagehide flushes anyway)
     await p.reload({ waitUntil: 'domcontentloaded' })
     await ready()
     if (!await open()) fail('Q1: the composer did not come back after the reload')
-    else if (await taVal() !== 'mach den Rand hier runder') fail(`Q1: typed text lost, got "${await taVal()}"`)
+    else if (await taVal() !== 'round off this edge') fail(`Q1: typed text lost, got "${await taVal()}"`)
     else if (!(await meta()).includes('#beta')) fail(`Q1: the mark lost its target, meta="${await meta()}"`)
     else pass('Q1 draft + target survive a page reload')
   }
@@ -102,11 +102,11 @@ try {
     await arm()
     await until(async () => p.evaluate(`!!document.getElementById('late')`), 4000, '#late to render')
     await click('late')
-    await p.keyboard.type('das hier erst nach dem Hydrate')
+    await p.keyboard.type('this one only after hydration')
     await sleep(400)
     await p.reload({ waitUntil: 'domcontentloaded' })
     await ready() // the content script is up while #late does not exist yet
-    if (await taVal() !== 'das hier erst nach dem Hydrate') fail('Q3: text lost on the late-element reload')
+    if (await taVal() !== 'this one only after hydration') fail('Q3: text lost on the late-element reload')
     else if (!await until(async () => !await metaLost() && await hlTop() !== null, 8000, 'the late element to be relocated')) { /* reported */ }
     else if (!(await meta()).includes('#late')) fail(`Q3: relocated onto the wrong node, meta="${await meta()}"`)
     else pass('Q3 an element rendered ~1s after load is found inside the retry window')
@@ -116,14 +116,14 @@ try {
   {
     await arm()
     await click('alpha')
-    await p.keyboard.type('Alpha verschwindet gleich')
+    await p.keyboard.type('Alpha is about to vanish')
     await sleep(400)
     await p.goto(`http://localhost:${PAGE}/?gone=1`, { waitUntil: 'domcontentloaded' }) // same route, #alpha no longer rendered
     await ready()
     if (!await open()) fail('Q4: composer gone — the draft must outlive its element')
-    else if (await taVal() !== 'Alpha verschwindet gleich') fail(`Q4: typed text lost with the element, got "${await taVal()}"`)
+    else if (await taVal() !== 'Alpha is about to vanish') fail(`Q4: typed text lost with the element, got "${await taVal()}"`)
     else if (!await until(metaLost, 12000, 'the mark to report its lost anchor')) { /* reported */ }
-    else if (!(await meta()).startsWith('Element weg')) fail(`Q4: the meta must SAY the anchor is gone, got "${await meta()}"`)
+    else if (!(await meta()).startsWith('element gone')) fail(`Q4: the meta must SAY the anchor is gone, got "${await meta()}"`)
     else pass('Q4 element gone: text kept, anchor honestly reported as lost')
   }
 
@@ -144,7 +144,7 @@ try {
   {
     await arm()
     await click('beta')
-    await p.keyboard.type('das will ich doch nicht')
+    await p.keyboard.type('never mind, not this')
     await sleep(300)
     await p.keyboard.press('Escape')
     await sleep(300)
@@ -160,12 +160,12 @@ try {
     await arm()
     await click('beta')
     await shiftClick('gamma')
-    await p.keyboard.type('tausche diese beiden')
+    await p.keyboard.type('swap these two')
     await sleep(400)
     if (await outlines() !== 2) fail('Q7: setup — the multi-selection did not form')
     await p.reload({ waitUntil: 'domcontentloaded' })
     await ready()
-    if (await taVal() !== 'tausche diese beiden') fail('Q7: text lost on the multi reload')
+    if (await taVal() !== 'swap these two') fail('Q7: text lost on the multi reload')
     else if (!await until(async () => await outlines() === 2, 8000, 'both outlines to come back')) { /* reported */ }
     else if (!(await meta()).startsWith('2 elements')) fail(`Q7: the set lost its count, meta="${await meta()}"`)
     else pass('Q7 a Shift-collected set of elements survives the reload')

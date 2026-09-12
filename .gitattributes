@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.woff2 binary
+*.png binary
+
+extension/vendor/** linguist-vendored
+test/fixtures/** linguist-vendored
+test/node_modules/** linguist-vendored
+bridge/node_modules/** linguist-vendored
