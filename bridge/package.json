@@ -12,6 +12,6 @@
     "nudge-bridge": "./bridge.mjs"
   },
   "dependencies": {
-    "ws": "^8.21.0"
+    "ws": "^8.21.3"
   }
 }
