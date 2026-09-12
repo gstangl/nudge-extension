@@ -1,4 +1,4 @@
-// Suite K — Origin routing (parallel localhosts → per-agent). Gerald opens many
+// Suite K — Origin routing (parallel localhosts → per-agent). The user opens many
 // worktrees, each with its own dev server (localhost:5185, :5186, …); a nudge on
 // a given localhost must reach the AGENT working on THAT worktree, not a single
 // global owner. Proves: per-host ownership + stamping, per-client snapshot, the

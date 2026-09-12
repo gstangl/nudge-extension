@@ -11,7 +11,7 @@
 // bridge roster. Every other session (a CI agent, an unrelated task) gets TOTAL
 // SILENCE. Before, any existing global store leaked status + mark + queue into
 // every agent, and a foreign agent adopted the owner's session as its own
-// (Gerald's screenshot: „Die neuen Nudges gehören der suite-e-Session"). No
+// (the user's screenshot: "The new nudges belong to the suite-e session"). No
 // roster membership, no output — full stop.
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,8 +20,8 @@ import { resolveAgentId, resolveStoreDir } from './runtime.mjs'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 let PIN_DIR = resolveStoreDir()
 
-// Gerald's prompt (hook stdin JSON) — scanned for nudge references („Nudge 123",
-// „nudge_123", „#123"): a named nudge gets its FULL context injected right here,
+// The user's prompt (hook stdin JSON) — scanned for nudge references ("Nudge 123",
+// "nudge_123", "#123"): a named nudge gets its FULL context injected right here,
 // so referencing marked numbers is instant — no wake, no skill ceremony.
 let promptText = ''
 try { promptText = String(JSON.parse(fs.readFileSync(0, 'utf8')).prompt || '') } catch { /* no stdin payload */ }
@@ -39,7 +39,7 @@ try {
   const armed = mySession && (identity.agents || []).some(a => a.session === mySession)
   if (!armed) process.exit(0) // this session does not participate in Nudge — say nothing
   if (identity.store) PIN_DIR = identity.store
-  status = identity.agentLive ? `Bridge ✓ · Agent-Watch ✓ (${identity.agentLabel || 'unbenannt'})` : 'Bridge ✓ · Agent-Watch ✗ — Nudges werden nur gespeichert.'
+  status = identity.agentLive ? `Bridge ✓ · Agent watch ✓ (${identity.agentLabel || 'unnamed'})` : 'Bridge ✓ · Agent watch ✗ — nudges are only stored.'
 } catch {
   process.exit(0) // bridge unreachable → can't prove participation → stay silent
 }
@@ -83,41 +83,41 @@ const labelOf = (id) => {
 }
 const lines = [`[Nudge] ${status}`]
 if (age <= 15 && (useSel ? selection : newestPin)) {
-  // multi-selection (Shift+Klick): several elements are ONE mark
+  // multi-selection (Shift+click): several elements are ONE mark
   const multiLine = (targets) => targets?.length
-    ? `  ${targets.length} Elemente: ${targets.map(t => t.selector).join(' · ').slice(0, 160)}` : null
+    ? `  ${targets.length} elements: ${targets.map(t => t.selector).join(' · ').slice(0, 160)}` : null
   if (useSel) {
     lines.push(
-      `AKTUELLE MARKIERUNG (Selektion, vor ${age} min): ${selection.targets?.length ? `${selection.targets.length} Elemente` : selection.selector || '?'}${selection.source ? ` (${selection.source})` : ''}`,
+      `CURRENT MARK (selection, ${age} min ago): ${selection.targets?.length ? `${selection.targets.length} elements` : selection.selector || '?'}${selection.source ? ` (${selection.source})` : ''}`,
       ...(multiLine(selection.targets) ? [multiLine(selection.targets)] : []),
-      `  Seite: ${routeOf(selection.url)}${selection.innerText ? ` · Text: „${selection.innerText.slice(0, 80)}"` : ''}${selection.screenshot ? ` · Screenshot: ${path.join(PIN_DIR, 'shots', 'selection.png')}` : ''}`,
-      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Details: ${path.join(PIN_DIR, 'selection.json')}`,
+      `  Page: ${routeOf(selection.url)}${selection.innerText ? ` · Text: "${selection.innerText.slice(0, 80)}"` : ''}${selection.screenshot ? ` · Screenshot: ${path.join(PIN_DIR, 'shots', 'selection.png')}` : ''}`,
+      `When the user says "this"/"this spot", they mean THIS mark. Details: ${path.join(PIN_DIR, 'selection.json')}`,
     )
   } else {
-    const text = newestPin.text ? `„${newestPin.text.slice(0, 120)}"` : '[Nur Markierung]'
+    const text = newestPin.text ? `"${newestPin.text.slice(0, 120)}"` : '[mark only]'
     lines.push(
-      `AKTUELLE MARKIERUNG (${newestPin.id}, Pille #${labelOf(newestPin.id)}, vor ${age} min): ${text}`,
-      `  Element: ${newestPin.targets?.length ? `${newestPin.targets.length} Elemente (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?'} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · bereits beantwortet' : ''}`,
-      `Sagt Gerald „das hier"/„diese Stelle", meint er DIESE Markierung. Screenshot: ${path.join(PIN_DIR, 'shots', `${newestPin.id}.png`)}`,
+      `CURRENT MARK (${newestPin.id}, pill #${labelOf(newestPin.id)}, ${age} min ago): ${text}`,
+      `  Element: ${newestPin.targets?.length ? `${newestPin.targets.length} elements (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?'} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · already answered' : ''}`,
+      `When the user says "this"/"this spot", they mean THIS mark. Screenshot: ${path.join(PIN_DIR, 'shots', `${newestPin.id}.png`)}`,
     )
   }
 } else {
-  lines.push('Keine aktuelle Markierung (Fenster: 15 min).')
+  lines.push('No current mark (window: 15 min).')
 }
-// ---------- referenced nudges: „Nudge 123 macht das" pulls 123's context into
-// THIS prompt. Lookup over ALL pins, not the origin-filtered list — Gerald typed
+// ---------- referenced nudges: "Nudge 123 does that" pulls 123's context into
+// THIS prompt. Lookup over ALL pins, not the origin-filtered list — the user typed
 // the id in THIS session, so the explicit naming beats the origin stamp.
 const referenced = []
 const addRef = (n) => { const v = String(Number(n)); if (v !== 'NaN' && !referenced.includes(v)) referenced.push(v) }
 for (const m of promptText.matchAll(/\b(?:nudges?|pins?)[\s_#-]*(\d{1,6})((?:\s*(?:,|und|and|&|\+)\s*#?\d{1,6})*)/gi)) {
   addRef(m[1])
-  for (const n of (m[2] || '').matchAll(/\d{1,6}/g)) addRef(n[0]) // „Nudge 12, 14 und 15"
+  for (const n of (m[2] || '').matchAll(/\d{1,6}/g)) addRef(n[0]) // "Nudge 12, 14 and 15"
 }
 for (const m of promptText.matchAll(/(?:^|\s)#(\d{1,6})\b/g)) addRef(m[1])
 const allPins = store?.pins || []
 // A typed number is the LABEL first — the number on the pill, which is what
-// Gerald reads off the page — and the raw id second. Order matters once ids pass
-// 999 and the two can collide: an OPEN nudge he is looking at beats a
+// the user reads off the page — and the raw id second. Order matters once ids pass
+// 999 and the two can collide: an OPEN nudge they are looking at beats a
 // long-resolved nudge_47 from eleven weeks ago. Below 999 both rules agree, so
 // nothing changes for today's ids.
 const resolveRef = (n) => {
@@ -129,7 +129,7 @@ const resolveRef = (n) => {
     || allPins.findLast(p => labelOf(p.id) === num)
     || null
 }
-// ---------- withdrawals: „Gerald hat × gedrückt" ----------------------------
+// ---------- withdrawals: "the user pressed ×" -----------------------------------
 // A discarded nudge leaves inbox/<id>.withdrawn.md behind (store.deletePin).
 // The live channel is the watcher's WS frame — but a CLI session (wake: 'pull')
 // has no autonomous wake, so THIS is where it learns. Read once, here, before
@@ -148,28 +148,28 @@ try {
   }
 } catch { /* no inbox yet */ }
 // only FRESH ones (30 min): past that the work is long done either way, and a
-// stale „stop" line on every prompt would be noise
+// stale "stop" line on every prompt would be noise
 const freshWithdrawn = withdrawn.filter(w => !w.at || Date.now() - Date.parse(w.at) < 30 * 60_000)
 if (freshWithdrawn.length) {
-  lines.push(`ZURÜCKGEZOGEN (${freshWithdrawn.length}) — Gerald hat diese Nudges verworfen. Arbeit daran SOFORT einstellen, nichts committen, nicht resolven:`)
+  lines.push(`WITHDRAWN (${freshWithdrawn.length}) — the user discarded these nudges. Stop work on them IMMEDIATELY, do not commit, do not resolve:`)
   for (const w of freshWithdrawn) lines.push(`  #${w.label} (${w.id})${w.at ? ` · ${w.at.slice(11, 16)}` : ''} · ${routeOf(w.url)}`)
 }
 const refPins = []
 for (const n of referenced) {
   const p = resolveRef(n)
   if (!p) {
-    // „nie existiert" and „verworfen" are different answers — the marker file
+    // "never existed" and "discarded" are different answers — the marker file
     // makes the second one provable instead of a guess
     const w = withdrawn.find(x => x.id === `nudge_${n}` || x.id === `pin_${n}` || String(x.label) === String(Number(n)))
     lines.push(w
-      ? `Nudge ${n} (${w.id}): ZURÜCKGEZOGEN${w.at ? ` um ${w.at.slice(11, 16)}` : ''} — Gerald hat ihn verworfen, nicht bearbeiten.`
-      : `Nudge ${n}: nicht im Store (nie existiert oder verworfen).`)
+      ? `Nudge ${n} (${w.id}): WITHDRAWN${w.at ? ` at ${w.at.slice(11, 16)}` : ''} — the user discarded it, do not work on it.`
+      : `Nudge ${n}: not in the store (never existed or discarded).`)
     continue
   }
   if (!refPins.includes(p)) refPins.push(p)
 }
-// ---------- referenced by ELEMENT TEXT: „der Nudge am Speichern-Button" ------
-// Gerald looks at the page, not at numbers. The marked element's own words are
+// ---------- referenced by ELEMENT TEXT: "the nudge on the Save button" -------
+// The user looks at the page, not at numbers. The marked element's own words are
 // already in the store, so naming them resolves too. Deliberately tight — this
 // hook runs on EVERY prompt in EVERY project, and a wrong hit injects the wrong
 // nudge into unrelated work: open nudges only, button-/label-sized text (5..40
@@ -187,38 +187,38 @@ if (!refPins.length) {
   if (hits.length === 1) refPins.push(hits[0])
 }
 for (const p of refPins) {
-  const text = p.text ? `„${p.text.slice(0, 200)}"` : '[Nur Markierung — der Prompt hier IST der Arbeitsauftrag]'
+  const text = p.text ? `"${p.text.slice(0, 200)}"` : '[mark only — THIS prompt is the work order]'
   const els = p.targets?.length
-    ? `${p.targets.length} Elemente: ${p.targets.map(t => t.selector).join(' · ').slice(0, 160)}`
+    ? `${p.targets.length} elements: ${p.targets.map(t => t.selector).join(' · ').slice(0, 160)}`
     : (p.target?.selector || '?')
   const extra = [
     p.owner?.label ? `Agent: ${p.owner.label}` : null,
-    p.amendments?.length ? `${p.amendments.length} Nachtrag/Nachträge` : null,
+    p.amendments?.length ? `${p.amendments.length} amendment(s)` : null,
   ].filter(Boolean).join(' · ')
   lines.push(
-    `REFERENZIERT ${p.id} (#${labelOf(p.id)}, ${p.status === 'open' ? 'offen' : 'bereits resolved'}): ${text}`,
-    `  Element: ${els} · ${routeOf(p.url)}${p.target?.innerText ? ` · Text: „${p.target.innerText.slice(0, 60)}"` : ''}${extra ? ` · ${extra}` : ''}`,
+    `REFERENCED ${p.id} (#${labelOf(p.id)}, ${p.status === 'open' ? 'open' : 'already resolved'}): ${text}`,
+    `  Element: ${els} · ${routeOf(p.url)}${p.target?.innerText ? ` · Text: "${p.target.innerText.slice(0, 60)}"` : ''}${extra ? ` · ${extra}` : ''}`,
     `  Details: ${path.join(PIN_DIR, 'inbox', `${p.id}.md`)}${p.screenshot ? ` · Screenshot: ${path.join(PIN_DIR, p.screenshot)}` : ''}`,
   )
 }
 
 // ---------- open queue: a compact, REFERENCEABLE list (id + gist + route) so
-// „Nudge 123" works without Gerald memorizing numbers. [Mark]-Zeilen sind
-// Referenz-Anker (Nummern-Pille auf der Seite), keine Arbeitsaufträge.
+// "Nudge 123" works without the user memorizing numbers. [Mark] lines are
+// reference anchors (the number pill on the page), not work orders.
 const open = pins.filter(p => p.status === 'open')
 if (open.length) {
-  lines.push(`Offene Nudges (${open.length}) — explizit genannte IDs zuerst, sonst oldest-first (groundworks-nudge); [Mark] = nur Anker.`)
-  // #N ist die Pillen-Nummer auf der Seite (das, was Gerald sagt), nudge_N die
-  // Identität dahinter (Dateien, Commits, CHANGELOG) — beide in einer Zeile,
-  // damit der Agent von der gesagten Nummer direkt auf die inbox-Datei kommt.
-  lines.push('  Format: #Pillennummer (id) · Gist · Route')
+  lines.push(`Open nudges (${open.length}) — explicitly named ids first, otherwise oldest-first (groundworks-nudge); [Mark] = anchor only.`)
+  // #N is the pill number on the page (what the user says), nudge_N the
+  // identity behind it (files, commits, CHANGELOG) — both on one line, so the
+  // agent gets from the spoken number straight to the inbox file.
+  lines.push('  Format: #pill-number (id) · gist · route')
   for (const p of open.slice(0, 10)) {
     const gist = p.text
-      ? `„${p.text.slice(0, 60)}${p.text.length > 60 ? '…' : ''}"`
+      ? `"${p.text.slice(0, 60)}${p.text.length > 60 ? '…' : ''}"`
       : `[Mark: ${(p.target?.innerText || p.target?.selector || '?').trim().slice(0, 40)}]`
     lines.push(`  #${labelOf(p.id)} (${p.id}) · ${gist} · ${routeOf(p.url)}`)
   }
-  if (open.length > 10) lines.push(`  … +${open.length - 10} weitere`)
+  if (open.length > 10) lines.push(`  … +${open.length - 10} more`)
 }
 
 console.log(JSON.stringify({

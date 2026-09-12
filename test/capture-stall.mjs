@@ -3,7 +3,7 @@
 // restored AFTER the await. `chrome.tabs.captureVisibleTab` does not always
 // settle — with a debugger attached to the tab (BrowserTools MCP, 2026-07-29) it
 // neither resolves nor throws, so sw.js never answers and the await hung forever:
-// Gerald circled a region and was left with a stroke on the page, no toolbar, no
+// the user circled a region and was left with a stroke on the page, no toolbar, no
 // composer, and an EMPTY console (nothing threw, so nothing was logged).
 //
 // The stall is reproduced exactly at its source: captureVisibleTab is replaced in
@@ -71,7 +71,7 @@ try {
     await page.locator('.pill .btn-draw').click()
     await lasso(page, await page.locator('.banner').boundingBox())
     await ta.waitFor({ timeout: 4000 })
-    await ta.fill('Gesunder Pfad — mit Bild.')
+    await ta.fill('Healthy path — with picture.')
     await page.locator('.composer .send').click()
     await until(() => store().pins.length === 1, 8000, 'the nudge to land')
     const pin = store().pins[0]
@@ -104,11 +104,11 @@ try {
 
   // ---------- Y3: the nudge still goes out, without the picture ----------
   {
-    await ta.fill('Gestallt — aber der Nudge muss trotzdem raus.')
+    await ta.fill('Stalled — but the nudge still has to go out.')
     await page.locator('.composer .send').click()
     await until(() => store().pins.length === 2, 12000, 'the nudge to land despite the stall')
     const pin = store().pins[1]
-    if (pin.text !== 'Gestallt — aber der Nudge muss trotzdem raus.') fail(`Y3: wrong text: ${pin.text}`)
+    if (pin.text !== 'Stalled — but the nudge still has to go out.') fail(`Y3: wrong text: ${pin.text}`)
     if (!pin.annotations?.[0]?.points?.length) fail('Y3: the stroke must still ship — it is the mark')
     if (pin.screenshot) fail('Y3: a stalled capture must not fabricate a screenshot')
     pass('Y3 the nudge ships without the picture — stroke + element context intact')
@@ -116,7 +116,7 @@ try {
 
   // ---------- Y4: it says so, instead of pretending ----------
   {
-    await until(async () => (await page.locator('.feed .item', { hasText: 'Kein Screenshot' }).count()) > 0, 6000, 'the honest toast')
+    await until(async () => (await page.locator('.feed .item', { hasText: 'No screenshot' }).count()) > 0, 6000, 'the honest toast')
     if (!warnings.some(w => w.includes('capture failed') && /timed out/i.test(w)))
       fail(`Y4: the timeout must be logged for diagnosis, got: ${JSON.stringify(warnings)}`)
     pass('Y4 honest about it: toast in the feed + a console warning naming the timeout')
@@ -131,7 +131,7 @@ try {
     await page.locator('.pill .btn-draw').click()
     await lasso(page, await page.locator('.banner').boundingBox())
     await page.locator('.composer textarea').waitFor({ timeout: 4000 })
-    await page.locator('.composer textarea').fill('Wieder gesund.')
+    await page.locator('.composer textarea').fill('Healthy again.')
     await page.locator('.composer .send').click()
     await until(() => store().pins.length === 3, 8000, 'the third nudge')
     if (!store().pins[2].screenshot) fail('Y5: screenshots must return once the browser is healthy again')

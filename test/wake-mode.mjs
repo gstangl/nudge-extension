@@ -1,6 +1,6 @@
 // Suite W — Wake mode (push vs pull). Two agents declare two capabilities: one pushes
 // (a new nudge starts the agent itself), the other pulls (a nudge waits for the
-// next prompt). The green icon must NOT imply „kommt automatisch" for a pull owner —
+// next prompt). The green icon must NOT imply "wakes automatically" for a pull owner —
 // so the wake mode has to travel: watcher IDENTITY → roster → /.identity + WS snapshot,
 // and the extension renders it. This suite proves the DATA path end-to-end (the render
 // is asserted in the extension e2e). Side port 4788, /tmp store, no browser.

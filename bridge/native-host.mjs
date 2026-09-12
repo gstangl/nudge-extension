@@ -1,4 +1,4 @@
-// Pin native messaging host — Chrome owns the bridge lifecycle.
+// Nudge native messaging host — Chrome owns the bridge lifecycle.
 //
 // The extension calls chrome.runtime.connectNative('energy.roots.nudge'); Chrome
 // spawns THIS process (stdio = native messaging wire: 4-byte LE length + JSON).

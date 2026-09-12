@@ -40,15 +40,16 @@ groundworks-nudge watch --label "<label>" --wake <push|pull>
 Use `push` only when this runtime can surface watcher output as a new agent turn.
 Use `pull` otherwise. Missing or invalid capability is always `pull`.
 
-What decides this is the tool that starts the watcher, never the editor around it:
+What decides this is the tool that starts the watcher, never the editor around it
+(T3 Code, Cursor, and similar GUIs are the editor, not the runtime):
 
 - **Claude Code** — start it with the persistent `Monitor` tool and pass
   `--wake push`. Monitor's stdout re-enters the conversation, and that is the
   autonomous wake. A background shell is not a push channel: its output goes to a
   file no turn reads, so a watcher armed that way is `--wake pull`.
-- **Codex and other local agents** — start it as a long-running child process and
-  pass `--wake pull`, unless that runtime has its own channel that turns watcher
-  output into a new turn.
+- **Codex, Grok Build, and other local agents** — start it as a long-running
+  child process and pass `--wake pull`, unless that runtime has its own channel
+  that turns watcher output into a new turn.
 
 Keep the `agentId` printed by the command for later scoped reads. The command
 normalizes Claude Code, Codex, and generic agent identities before joining the
@@ -76,7 +77,14 @@ The selection is current for 15 minutes. After that, say it is stale.
 
 ## Queue
 
-Process one prompt at a time.
+Opening the channel is not an assignment. Arming a watcher connects a session;
+it does not hand that session the Nudges that were already open. On a fresh
+arming, never start work on a pre-existing prompt on your own reading of the
+invocation text. Name what is in the queue in one line — how many open prompts,
+and who owns them — and ask which to take. Only a prompt the user names, or one
+that arrives after arming, is yours to process without asking.
+
+Then process one prompt at a time.
 
 1. Explicitly named Nudges go first, in the order named.
 2. Otherwise process open prompts oldest-first.
@@ -86,6 +94,8 @@ Process one prompt at a time.
    bounded task, then pull it.
 5. An amendment belongs to the same work order. Re-read it before resolving.
 6. With a port scope, never edit or resolve a Nudge from another port.
+7. A Nudge owned by another live agent stays with that agent. Take it over only
+   when the user reassigns it, and say so when you do.
 
 If a Nudge is withdrawn, stop immediately. Do not commit or resolve it. Revert
 partial work that has no independent reason to remain, then report that it was

@@ -1,17 +1,19 @@
 {
   "name": "nudge-test",
   "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
   "description": "Nudge test suites. `npm test` runs the fast Vitest units (unit/); the .mjs files are the spawned-bridge integration/e2e harnesses, run per protocols.md (node test/<suite>.mjs).",
   "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "vitest run",
     "test:runtime": "node runtime-neutral.mjs",
     "test:setup": "node setup-agent.mjs",
     "test:ci": "npm test && npm run test:runtime && npm run test:setup"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "playwright": "^1.61.1"
   },

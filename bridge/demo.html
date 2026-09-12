@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Pin PoC — Demo</title>
+<title>Nudge — Demo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root { --ink:#1a1a1a; --muted:#6b6b6b; --accent:#b45a38; --line:#e3ded7; }
@@ -28,8 +28,8 @@
   <div class="eyebrow" data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="12:4">Roots · Energy</div>
   <h1 data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="14:4">Electrons in.<br><em>Heat out.</em></h1>
   <p class="lede" data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="17:4">
-    Testseite für Nudge. Markiere ein Element und schreib einen Kommentar —
-    er landet als strukturierter Kontext samt Screenshot bei der aktiven Agent-Session.
+    Test page for Nudge. Mark an element and write a prompt —
+    it reaches the active agent session as structured context with a screenshot.
   </p>
 
   <section data-astro-source-file="src/pages/demo.astro" data-astro-source-loc="23:4">
@@ -54,9 +54,9 @@
     <div class="banner" data-astro-source-file="src/components/ScopBanner.astro" data-astro-source-loc="3:1">SCOP 3.5 to 7×</div>
   </section>
   <script>
-    // Testsignale für den Console-/Netzwerk-Beifang der Pin-Extension
-    console.error('Demo-Fehler: SCOP-Wert konnte nicht geladen werden (Testdaten)')
-    fetch('/api/scop-values').catch(() => {}) // -> 404 von der Bridge
+    // Test signals for the Nudge extension's console/network capture
+    console.error('Demo error: SCOP value could not be loaded (test data)')
+    fetch('/api/scop-values').catch(() => {}) // -> 404 from the bridge
   </script>
 </body>
 </html>

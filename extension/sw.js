@@ -1,4 +1,4 @@
-// Pin PoC service worker: one viewport capture -> dpr-correct crop (PNG) +
+// Nudge service worker: one viewport capture -> dpr-correct crop (PNG) +
 // downscaled full-viewport overview (JPEG). The content script does the posting.
 
 const toDataUrl = (blob) => new Promise((res, rej) => {
@@ -67,7 +67,7 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 // ---------- toolbar icon as status display ----------
 // Lucide "circle" (24x24 viewBox, cx/cy 12, r 10), filled so it reads as a
-// status dot at 16px. Colour semantics (Gerald, 2026-07-04):
+// status dot at 16px. Colour semantics (2026-07-04):
 //   grey  = overlay off
 //   red   = overlay active but bridge NOT reachable
 //   amber = bridge reachable but NO agent listening (prompt is stored, not acted on)
@@ -96,18 +96,18 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   chrome.action.setBadgeBackgroundColor({ tabId, color })
   chrome.action.setBadgeText({ tabId, text: msg.active && msg.open > 0 ? String(msg.open) : '' })
 })
-// Chrome setzt Icon UND Badge eines Tabs bei JEDER Navigation auf den Default
-// zurück — und der Default ist Grau, also „nicht aktiv". Das trifft auch die
-// reine History-Navigation eines SPA-Routers (history.pushState: kein Reload,
-// kein hashchange, der Content-Script merkt nichts und meldet nichts nach). Das
-// Icon stand danach auf Grau, während die Toolbar oben rechts weiterlief — zwei
-// Anzeigen, die sich widersprechen (Gerald 2026-08-05, estimate/#/ersteinschaetzung).
-// Also nach jeder Navigation den Zustand neu abholen; der Tab kennt ihn.
+// Chrome resets a tab's icon AND badge to the default on EVERY navigation —
+// and the default is grey, i.e. "not active". That includes the pure history
+// navigation of an SPA router (history.pushState: no reload, no hashchange, the
+// content script notices nothing and reports nothing). The icon then sat on
+// grey while the toolbar kept running top right — two displays contradicting
+// each other (2026-08-05, estimate/#/ersteinschaetzung).
+// So re-fetch the state after every navigation; the tab knows it.
 const LOCAL_TAB = /^http:\/\/(localhost|127\.0\.0\.1)([:/]|$)/
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
-  if (!info.url && info.status !== 'complete') return // Titel-, Favicon-, Audio-Updates gehen uns nichts an
+  if (!info.url && info.status !== 'complete') return // title, favicon and audio updates are none of our business
   if (!LOCAL_TAB.test(tab?.url || '')) return
-  chrome.tabs.sendMessage(tabId, { type: 'nudge-state-req' }).catch(() => { /* noch/kein Content-Script */ })
+  chrome.tabs.sendMessage(tabId, { type: 'nudge-state-req' }).catch(() => { /* no content script (yet) */ })
 })
 
 // ---------- bridge lifecycle via native messaging ----------

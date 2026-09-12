@@ -1,8 +1,8 @@
 # Nudge — Product Definition
 
-2026-07-05 · Owner: Gerald · Register: PM. One page; the timeless core lives in
-`VISION.md` (read that first), the technical frame in `README.md`, the test
-contract in `test/protocols.md`. Standalone repo since 2026-07-08 (extracted
+2026-07-05. One page; the timeless core lives in
+`VISION.md` (read that first), the technical frame in the top-level `README.md`,
+the test contract in `test/protocols.md`. Standalone repo since 2026-07-08 (extracted
 from the roots-apps monorepo — zero code dependencies).
 
 **Mission — see `VISION.md`.** This page is the current embodiment of it: a
@@ -16,8 +16,8 @@ Everything below serves that line.
 element (or circle a region) in the running UI, say what you want, and the
 Agent acts on it with full context: selector, xpath, text, styles,
 console (and a screenshot for region marks). Open prompts stay subtly visible
-as number pills — the number is what you reference in the Agent chat („Nudge 123 macht
-das"); everything else is fire-and-forget. The pill number is deliberately
+as number pills — the number is what you reference in the Agent chat ("Nudge 123 does
+that"); everything else is fire-and-forget. The pill number is deliberately
 BOUNDED (wraps at 999, so it never grows into an unreadable id) and only has to
 be unique among the handful of open prompts; the id behind it counts up forever
 and is what files, commits and the CHANGELOG cite.
@@ -28,7 +28,7 @@ The pin was never the point — it is just the gesture. The CORE of the app is
 **nudging: polishing the last details of a rendered UI** — spacing, alignment,
 type, the final pixels. For UI designers this is one of the hardest parts of
 agentic development: it has to happen ON the presentation layer, deterministic
-and visual, where prose prompts ("etwas mehr Abstand") are weakest and pointing
+and visual, where prose prompts ("a bit more spacing") are weakest and pointing
 is everything. Nudge names that job; "Pin" named the mechanism.
 
 ## USP — what everything else is subordinated to
@@ -43,11 +43,11 @@ is everything. Nudge names that job; "Pin" named the mechanism.
 3. **Rapid-fire work sessions.** Fire 10 changes faster than the agent works —
    the store IS the queue: strictly ordered, oldest-first, nothing lost,
    in-page toast when each one is done. A sent nudge is not sealed: while it is
-   still open you can append a follow-up to it ("+ ergänzen") — the same nudge,
+   still open you can append a follow-up to it ("+ amend") — the same nudge,
    a later thought (append-only, re-wakes its agent; 0.19.0).
 4. **Best-in-class UI picking.** Gliding highlight, layer chips (pick the
-   ancestor you meant), Shift+Klick multi-select ("tausche diese beiden"),
-   freehand lasso, pick-without-send ("das hier").
+   ancestor you meant), Shift+click multi-select ("swap these two"),
+   freehand lasso, pick-without-send ("this one").
 
 ## Core: the connection must be reliable — and visibly so
 
@@ -57,15 +57,15 @@ always visible, in both directions:
 
 - [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
       red no bridge / amber no agent / **green = agent live**. Green never lies
-      (heartbeat-backed). A green pull owner additionally shows a „Pull" tag:
+      (heartbeat-backed). A green pull owner additionally shows a "Pull" tag:
       the Agent is live, but a Nudge arrives with the next prompt rather than by
       itself. Green must not imply autonomous wake.
 - [x] **Chrome, per nudge pill:** shows the nudge NUMBER (the chat referent);
       amber clock = accepted/stored, sweeping hand = agent live, gone = done
       (history with check marks lives in the queue popover only).
-- [x] **Chrome, per prompt:** feedback the moment you send — „nudge_X — agent
-      arbeitet" (send), „gespeichert — kein Agent" (clock), „Bridge offline —
-      Warteschlange" (alert), „nudge_X erledigt" (check).
+- [x] **Chrome, per prompt:** feedback the moment you send — "nudge_X — agent
+      working" (send), "nudge_X saved — no agent" (clock), "Bridge offline —
+      queued" (alert), "nudge_X done" (check).
 - [x] **Chrome, feedback feed:** all events listed unobtrusively top right —
       small chips with Lucide icons, max 4, self-fading. Connection losses and
       recoveries land there too.
@@ -82,7 +82,7 @@ always visible, in both directions:
 - [x] Works on ANY localhost app — framework-agnostic by design (extension,
       not dev-server middleware). Roots apps are the first user, not the limit.
 - [x] Prompt + context arrive as one unit the agent can act on without asking back.
-- [x] The current mark is ambient agent context ("das hier" just works).
+- [x] The current mark is ambient agent context ("this one" just works).
 - [x] Connection truth at every step: icon, send-toast, per-message status line.
 - [x] Evidence loop: resolve captures the after-state, invisibly.
 - [x] One runtime-neutral CLI and store serve every local Agent. Claude Code and
@@ -96,7 +96,7 @@ always visible, in both directions:
 ## Non-goals
 
 - **No annotation/collaboration tool.** No persistent markers, no threads, no
-  assignees — that is the Estimate comments feature, not Nudge.
+  assignees — that belongs in a collaboration tool, not Nudge.
 - **No history.** Only "what is marked NOW" and the open queue matter; resolved
   prompts persist solely as evidence for the agent.
 - **No browser automation or audits.** Agent→browser (navigate, click, Lighthouse)
@@ -127,7 +127,7 @@ always visible, in both directions:
   nudge on an UNassigned host falls back to the newest armed session — with
   parallel servers you pick the owner once per localhost.
 - **A page reload keeps the work, not necessarily the anchor** (0.23.0). The
-  agent edits code while Gerald types; the dev server reloads the tab and no
+  agent edits code while the user types; the dev server reloads the tab and no
   content script can survive a navigation. The working state (draft text,
   markings, toolbar position and mode, History popover, half-typed follow-ups)
   is therefore snapshotted into `sessionStorage` — per tab, per origin, dies with
@@ -135,9 +135,9 @@ always visible, in both directions:
   at pick time. What cannot be guaranteed is the live DOM node: the restore looks
   for it for 6s (selector, then an identity-checked xpath, so a re-render never
   hands the mark a stranger), and if the app does not render it again the nudge
-  keeps the frozen context and says „Element weg". Gerald's own framing of the
-  acceptable worst case: „im Worst Case einfach nur die Nudges verloren, die
-  gerade an irgendeinem DOM-Element gehangen wären".
+  keeps the frozen context and says "element gone". The owner's own framing of
+  the acceptable worst case: "in the worst case you only lose the nudges that
+  happened to hang on some DOM element".
 - **Source hints are generic, not resolved.** data-* attributes where frameworks
   provide them, selector/xpath/text otherwise; mapping to code stays the agent's
   job (it has the repo). No server-side sourcemap machinery.

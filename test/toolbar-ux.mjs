@@ -3,7 +3,7 @@
 // ALWAYS a clean pill (never an inline ":port" in any label), only one popover
 // is open at a time, the P/F tool hotkeys are tightly gated, and reduced-motion
 // is honoured. Own bridge on side port 4785, own tiny page server on 5196 —
-// Gerald's real Chrome on 4700 is untouched.
+// the user's real Chrome on 4700 is untouched.
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
 import http from 'node:http'
@@ -30,7 +30,7 @@ const pass = (m) => console.log('PASS', m)
 
 const now = Date.now()
 const hb = o => fetch(`${B}/agent/heartbeat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) })
-// two sessions labelled Gerald-style, with the :PORT suffix in the name
+// two sessions labelled the way a user would, with the :PORT suffix in the name
 const A = { label: 'Estimate Templates :5175', pid: 701, session: 'estT', since: now - 5 * 60000, project: 'roots-apps', branch: 'feat/x', host: 'Zed' }
 const M = { label: 'Maps-Refactor :5276', pid: 702, session: 'mapR', since: now - 3 * 60000, project: 'roots-apps', branch: 'feat/y', host: 'Zed' }
 const beat = setInterval(() => { hb(A); hb(M) }, 1000)
@@ -150,8 +150,8 @@ try {
   }
 
   // ---------- L7: the toolbar stays COMPLETELY visible ----------
-  // Gerald 2026-07-31: „wenn sich ein Browser automatisch öffnet oder ich rechts
-  // die Inspection Bar aufmache, ist die Toolbar oft verdeckt und verschwunden."
+  // 2026-07-31: "when a browser opens automatically, or I open the inspection
+  // bar on the right, the toolbar is often covered and gone."
   // A docked DevTools panel shrinks the page viewport exactly like a smaller
   // window does — and the bar ALSO grows on its own when a longer session label
   // arrives. Both must keep it inside; neither may cost the remembered spot.
@@ -176,16 +176,16 @@ try {
     await p.waitForTimeout(200)
     const dropped = await box()
     if (!inside(dropped)) fail(`L7: dropping the bar at the right edge already put it outside: ${JSON.stringify(dropped)}`)
-    A.label = 'Estimate Templates mit einem wirklich sehr langen Sessionnamen :5175'
+    A.label = 'Estimate Templates with a really very long session name :5175'
     await hb(A)
     await p.waitForTimeout(1600) // heartbeat -> bridge -> WS frame -> toolbar
     const grown = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
-    if (!grown.includes('sehr langen')) fail(`L7: the long label never reached the toolbar, got "${grown}"`)
+    if (!grown.includes('very long')) fail(`L7: the long label never reached the toolbar, got "${grown}"`)
     b = await box()
     // guard against a vacuous test: if the label doesn't widen the bar, step 2 proves nothing
     if (b.right - b.left <= dropped.right - dropped.left) fail('L7: the long label did not widen the toolbar — the growth case is not being exercised')
     if (!inside(b)) fail(`L7: the toolbar grew out of the viewport with no resize to correct it: ${JSON.stringify(b)}`)
-    // 3. room comes back (DevTools closed) -> back to where Gerald dropped it
+    // 3. room comes back (DevTools closed) -> back to where the user dropped it
     await p.setViewportSize({ width: 1400, height: 900 })
     await p.waitForTimeout(250)
     b = await box()
@@ -197,7 +197,7 @@ try {
     pass('L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot')
   }
 
-  // ---------- L6: an orphaned tab tells Gerald to ⌘R instead of dying silently ----------
+  // ---------- L6: an orphaned tab tells the user to ⌘R instead of dying silently ----------
   // (runs LAST: chrome.runtime.reload() kills the SW handle for good)
   {
     await sw.evaluate(() => chrome.runtime.reload()).catch(() => {}) // handle dies mid-call — expected

@@ -4,7 +4,7 @@
 // to kidnap the channel AND the nudge — newest-wins heartbeats, /agent/owner
 // grabs, stranger resolves, forged-owner posts, all concurrently for seconds.
 // The nudge's binding and the exact context it captured must not budge. This is
-// the "rock solid" proof (Gerald 2026-07-05). New app: the Tailwind Gauntlet
+// the "rock solid" proof (2026-07-05). New app: the Tailwind Gauntlet
 // fixture on a side port; test bridge on 4793; extension re-pointed via storage.
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
@@ -63,7 +63,7 @@ try {
     await page.locator('.pill .btn-pick').click()
     await page.locator('#g-brand').click() // pick a concrete element
     await page.locator('textarea[placeholder*="Nudge"]').waitFor({ timeout: 4000 })
-    await page.locator('textarea[placeholder*="Nudge"]').fill('[BATTLE] dieser Nudge gehört Owner-Alpha')
+    await page.locator('textarea[placeholder*="Nudge"]').fill('[BATTLE] this nudge belongs to Owner-Alpha')
     await page.locator('.composer .send').click()
     // wait for it in the store
     for (let i = 0; i < 30 && !nudgeId; i++) { await sleep(200); const p = (await pins()).find(x => x.text?.includes('[BATTLE]')); if (p) nudgeId = p.id }
@@ -120,7 +120,7 @@ try {
     await page.locator('#g-deep-title').scrollIntoViewIfNeeded()
     await page.locator('#g-deep-title').click()
     await page.locator('textarea[placeholder*="Nudge"]').waitFor({ timeout: 4000 })
-    await page.locator('textarea[placeholder*="Nudge"]').fill('[BATTLE2] neuer Nudge unter Kidnap-4')
+    await page.locator('textarea[placeholder*="Nudge"]').fill('[BATTLE2] new nudge under Kidnap-4')
     await page.locator('.composer .send').click()
     let n2 = null
     for (let i = 0; i < 30 && !n2; i++) { await sleep(200); const p = (await pins()).find(x => x.text?.includes('[BATTLE2]')); if (p) n2 = p }

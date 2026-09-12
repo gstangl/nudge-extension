@@ -74,7 +74,7 @@ try {
     input: JSON.stringify({ prompt: 'Nudge 1' }), encoding: 'utf8', timeout: 5000,
   }).trim()
   const hookContext = JSON.parse(ownHook).hookSpecificOutput?.additionalContext || ''
-  if (!hookContext.includes('REFERENZIERT nudge_1') || !hookContext.includes(STORE)) fail('armed Codex hook did not receive the referenced shared context')
+  if (!hookContext.includes('REFERENCED nudge_1') || !hookContext.includes(STORE)) fail('armed Codex hook did not receive the referenced shared context')
   pass('hook opt-in stays silent for foreign Codex sessions and works for the armed one')
 
   const resolved = JSON.parse(run(['resolve', created.id, '--wait-evidence', '0']))

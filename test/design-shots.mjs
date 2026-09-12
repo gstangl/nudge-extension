@@ -1,4 +1,4 @@
-// Capture every UI state of the Pin overlay for design review.
+// Capture every UI state of the Nudge overlay for design review.
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
@@ -36,11 +36,11 @@ try {
   // composer with layer chips
   await page.locator('#card-conversion').click()
   await page.locator('textarea[placeholder*="Prompt"]').waitFor()
-  await page.locator('textarea[placeholder*="Prompt"]').fill('Die Karte braucht mehr Abstand zum Titel.')
+  await page.locator('textarea[placeholder*="Prompt"]').fill('The card needs more space from the title.')
   await page.waitForTimeout(150)
   await shot('3-composer-chips')
-  await page.getByText('Senden').click()
-  await page.locator('.feed .item', { hasText: 'pin_1' }).waitFor({ timeout: 8000 })
+  await page.getByText('Send').click()
+  await page.locator('.feed .item', { hasText: 'nudge_1' }).waitFor({ timeout: 8000 })
   await shot('4-toast-badge') // fire-and-forget: toast + badge, no marker on the page
 
   // lasso stroke mid-draw + its composer
@@ -56,10 +56,10 @@ try {
   }
   await page.mouse.up()
   await page.locator('textarea[placeholder*="Prompt"]').waitFor()
-  await page.locator('textarea[placeholder*="Prompt"]').fill('Banner wirkt verloren.')
+  await page.locator('textarea[placeholder*="Prompt"]').fill('Banner looks lost.')
   await page.waitForTimeout(150)
   await shot('6-lasso-composer')
-  await page.getByText('Senden').click()
+  await page.getByText('Send').click()
   await page.locator('.feed .item', { hasText: 'pin_2' }).waitFor({ timeout: 8000 })
   await page.waitForTimeout(300)
   await shot('7-idle-in-flight') // badge shows prompts in flight; page otherwise untouched

@@ -13,8 +13,8 @@
   // Bridge endpoints. TEST SUITES may re-point them via
   // chrome.storage.local.nudgePort (set through the extension's service worker
   // BEFORE pages load) — real Chrome never sets it and stays on 4700. Root
-  // cause: suites used to STEAL port 4700 from the live bridge, and Gerald's
-  // real toolbar briefly showed the suite's test agent („Agent: suite-e",
+  // cause: suites used to STEAL port 4700 from the live bridge, and the user's
+  // real toolbar briefly showed the suite's test agent ("Agent: suite-e",
   // 2026-07-05). Tests never touch the live port again.
   let HTTP = 'http://localhost:4700'
   let WS = 'ws://localhost:4700'
@@ -29,8 +29,8 @@
 
   // Nudge chrome must be INERT for the page: clicks on the pill/queue/composer
   // bubble (composed) to document and count as outside-clicks — they dismissed
-  // page popovers before one could pick them (bit Gerald 2026-07-05,
-  // „Finale Version freigeben?"). Inner handlers run first (host is last in
+  // page popovers before one could pick them (bit us 2026-07-05, the
+  // "Release final version?" dialog). Inner handlers run first (host is last in
   // the bubble path), then we stop everything here.
   for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'focusin']) {
     host.addEventListener(type, (e) => e.stopPropagation())
@@ -66,11 +66,11 @@
   const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
-  // "Roots Nudge Sans" (IBM Plex Sans, OFL — see fonts/HERKUNFT.md for why it
+  // "Roots Nudge Sans" (IBM Plex Sans, OFL — see fonts/README.md for why it
   // carries our name and not IBM's). Self-contained: @font-face cannot load from
   // a shadow-root adopted sheet, so declare it once at DOCUMENT level; the woff2
   // ships WITH the extension (web_accessible_resources) — no dependency on the
-  // host page. TWO files, because this family has a REAL drawn italic (the „a"
+  // host page. TWO files, because this family has a REAL drawn italic (the "a"
   // turns single-storey) — not a synthesised slant like the faces before it.
   if (!document.getElementById('__roots-nudge-font')) {
     const f = document.createElement('style')
@@ -95,16 +95,16 @@
   let author = ''
   chrome.storage.sync.get('nudgeAuthor', (v) => { author = v.nudgeAuthor || '' })
 
-  // ---------- „aus" ist eine Entscheidung, kein Tab-Detail ----------
-  // Der Toggle (Icon / Alt+C) lebte NUR im sessionStorage-Snapshot, also pro Tab:
-  // abschalten, neuen Tab öffnen — und die Toolbar war zurück (Gerald 2026-08-05:
-  // „wenn ich draufgeklickt habe, damit sie inaktiv ist, dann hätte ich gern,
-  // dass sich auch die Toolbar ausblendet. Momentan ist sie immer sichtbar").
-  // Aus bleibt jetzt aus: chrome.storage.local ist die Wahrheit — origin-über-
-  // greifend, überlebt Tab, Reload und Browserneustart, und onChanged schaltet
-  // alle offenen Tabs sofort mit. localStorage spiegelt sie nur, weil es SYNCHRON
-  // lesbar ist: ein frischer Tab zeigt die Leiste so gar nicht erst, statt sie
-  // einen Frame später wieder wegzunehmen.
+  // ---------- "off" is a decision, not a tab detail ----------
+  // The toggle (icon / Alt+C) lived ONLY in the sessionStorage snapshot, i.e. per
+  // tab: switch off, open a new tab — and the toolbar was back (2026-08-05:
+  // "when I click it to make it inactive, I'd like the toolbar to hide as
+  // well. Right now it is always visible").
+  // Off now stays off: chrome.storage.local is the truth — cross-origin, it
+  // survives tab, reload and browser restart, and onChanged flips every open tab
+  // at once. localStorage only mirrors it because it is SYNCHRONOUSLY readable:
+  // a fresh tab then never shows the bar in the first place, instead of taking
+  // it away a frame later.
   const OFF_KEY = '__rootsNudgeOff'
   const offSync = () => { try { return localStorage.getItem(OFF_KEY) === '1' } catch { return false } }
   function mirrorOff(off) { try { off ? localStorage.setItem(OFF_KEY, '1') : localStorage.removeItem(OFF_KEY) } catch { /* storage blocked */ } }
@@ -147,7 +147,7 @@
   const inView = (client, inner) => (client > 0 && inner - client <= 40 ? client : inner)
   const viewW = () => inView(document.documentElement.clientWidth, window.innerWidth)
   const viewH = () => inView(document.documentElement.clientHeight, window.innerHeight)
-  // Two different things, deliberately kept apart: where Gerald PUT the toolbar
+  // Two different things, deliberately kept apart: where the user PUT the toolbar
   // (the intent, unclamped) and where it is DRAWN (that intent pushed inside the
   // current viewport). So a viewport that shrinks under the bar only BORROWS the
   // position — the bar returns to its spot the moment the room is back.
@@ -156,12 +156,12 @@
 
   function placePill(x, y) { pillWant = { x, y }; fitPill() }
 
-  // The toolbar has to be COMPLETELY visible at all times — Gerald 2026-07-31:
-  // „wenn sich ein Browser automatisch öffnet oder ich rechts die Inspection Bar
-  // aufmache, dann ist die Toolbar oft verdeckt und verschwunden". Two things
+  // The toolbar has to be COMPLETELY visible at all times — 2026-07-31:
+  // "when a browser opens automatically or I open the inspection bar on the
+  // right, the toolbar is often covered and gone". Two things
   // move under it and only one of them was ever watched: the VIEWPORT shrinks
   // (DevTools docked right, a small automation window, browser zoom) — and the
-  // PILL GROWS, when the session label, the id, the localhost pill, the „Pull"
+  // PILL GROWS, when the session label, the id, the localhost pill, the "Pull"
   // tag or the badge land on a WS frame long after it was placed. A bar that
   // fitted a second ago then hangs over the edge with nothing to correct it.
   // So: measure now, clamp now, on every signal that either of the two changed.
@@ -211,7 +211,7 @@
   }
   // DRAG: move the OPEN popover by the SAME delta as the pill — window + caret
   // travel together as one unit (the popover belongs to the toolbar). No caret
-  // recompute → it never slides while the window stays put (Gerald 2026-07-06).
+  // recompute → it never slides while the window stays put (2026-07-06).
   function trackPopover(popover) {
     const pillR = pill.getBoundingClientRect()
     const left = Math.max(8, Math.min(pillR.left + (popover._dx || 0), viewW() - (popover._w || 340) - 8))
@@ -237,7 +237,7 @@
     dragOff = null
     grip.classList.remove('dragging')
     // the drop point as SEEN, not the raw pointer (which may have left the window
-    // mid-drag) — that is what „back to where I put it" has to mean
+    // mid-drag) — that is what "back to where I put it" has to mean
     const r = pill.getBoundingClientRect()
     pillWant = { x: r.left, y: r.top }
     chrome.storage.local.set({ nudgePillPos: pillWant })
@@ -347,8 +347,8 @@
     Object.assign(hl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' })
     hl.querySelector('.chip').textContent = label ?? ''
   }
-  // ---------- multi-selection (Shift+Klick, stagewise pattern) ----------
-  // Shift collects elements into ONE mark/prompt ("tausche diese beiden");
+  // ---------- multi-selection (Shift+click, stagewise pattern) ----------
+  // Shift collects elements into ONE mark/prompt ("swap these two");
   // a plain click resets to single mode. Outlines are transient — they exist
   // only while composing (fire-and-forget: nothing survives the send/Esc).
   // `el`/`outline` are null for an entry restored after a page reload until its
@@ -393,7 +393,7 @@
   // PICK fires on POINTERDOWN, not click (DevTools-inspector pattern): on live
   // pages a mousedown can trigger re-renders (RTC comment rail, editor focus
   // dances) that destroy the target before mouseup — the click event then never
-  // arrives (bit Gerald 2026-07-05 on the v2 editor's comment rail, whose
+  // arrives (bit us 2026-07-05 on the v2 editor's comment rail, whose
   // ProseMirror layer additionally overlays the rail area). preventDefault on
   // pointerdown also suppresses the whole downstream mouse cascade — pick mode
   // takes the interaction over completely.
@@ -415,8 +415,8 @@
     // Shift extends a selection that started as a PLAIN pick, too. The composer
     // is open and mode is 'composing' by then, which used to bail out one line
     // below — so "⇧click add element" (the composer's own placeholder) only ever
-    // held when Shift was already down on the very FIRST click (bit Gerald
-    // 2026-07-29: "geht nicht zuverlässig" — it worked or not depending on how
+    // held when Shift was already down on the very FIRST click (bit us
+    // 2026-07-29: "doesn't work reliably" — it worked or not depending on how
     // the selection happened to start). Element picks only: a lasso region has
     // no element to collect with.
     const extending = mode === 'composing' && e.shiftKey && !!picked && !picked.stroke
@@ -479,7 +479,7 @@
   // publish "what is marked right now" to the bridge (latest-wins, fire-and-forget).
   // keepShot: false marks prior screenshots stale (fresh pick, new shot incoming);
   // true (default) lets the bridge keep them (chip retarget, same region).
-  // full DOM context for one element (shared by selection, pins, multi targets)
+  // full DOM context for one element (shared by selection, nudges, multi targets)
   function elementContext(el, selector, source) {
     return {
       selector, source: source ?? sourceHint(el),
@@ -569,7 +569,7 @@
     // the circled region is the mark, send stays optional (same as element picks)
     postSelection(null, { keepShot: false })
     // The composer used to open only AFTER the screenshot came back — so a capture
-    // that never settles (debugger attached, 2026-07-29) cost Gerald the input
+    // that never settles (debugger attached, 2026-07-29) cost the user the input
     // field entirely, with the toolbar hidden on top. Now the shot and the field
     // race: whichever is first opens it. Normal capture (~150 ms) still wins, so
     // the field appears once, with its picture already attached; a stuck capture
@@ -582,20 +582,20 @@
       clearTimeout(grace)
       open()
       if (shot) postSelection(shot)
-      else notify('alert', 'Kein Screenshot — Nudge geht mit Markierung raus')
+      else notify('alert', 'No screenshot — nudge ships with the mark only')
     })()
   })
 
   // ---------- composer ----------
   // WHAT is marked — and, after a reload, whether the live element behind the
-  // mark was found again. „suche Element" while the app is still re-rendering,
-  // „Element weg" once the search gave up (the nudge then ships the frozen
-  // context — losing the anchor must not cost Gerald the typed thought).
+  // mark was found again. "finding element" while the app is still re-rendering,
+  // "element gone" once the search gave up (the nudge then ships the frozen
+  // context — losing the anchor must not cost the user the typed thought).
   function renderMeta() {
     if (multi.length > 1) return multiMeta()
     const m = composer.querySelector('.meta')
     const lost = !!picked && !picked.el && !picked.stroke
-    const tag = picked?.stroke ? 'Region · ' : lost ? (relocating ? 'suche Element · ' : 'Element weg · ') : ''
+    const tag = picked?.stroke ? 'Region · ' : lost ? (relocating ? 'finding element · ' : 'element gone · ') : ''
     m.textContent = tag + (picked?.source || picked?.selector || '')
     m.classList.toggle('lost', lost && !relocating)
   }
@@ -694,7 +694,7 @@
       pill.style.display = pillWas
       dots.style.display = dotsWas
       // The after-shot (evidence loop) is triggered by the BRIDGE — it can fire
-      // while Gerald is typing into the composer. It used to hide the composer and
+      // while the user is typing into the composer. It used to hide the composer and
       // never put it back: the agent resolving some other nudge on this page made
       // the open input field disappear mid-sentence. Restore exactly what was there —
       // but ONLY our own hide: the lasso opens the composer on a grace timer while
@@ -721,7 +721,7 @@
       // attached to the tab (BrowserTools MCP, 2026-07-29) it neither resolves nor
       // throws, so sw.js never answers and this await hung FOREVER — toolbar
       // hidden, composer never opened, and an EMPTY console to debug it with.
-      // A shot is a nice-to-have; the chrome Gerald works with is not.
+      // A shot is a nice-to-have; the chrome the user works with is not.
       const res = await Promise.race([
         chrome.runtime.sendMessage({ type: 'nudge-capture', token, rect: crop, vw: window.innerWidth, vh: window.innerHeight, dpr: window.devicePixelRatio }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('capture timed out (debugger attached?)')), CAPTURE_TIMEOUT)),
@@ -763,12 +763,12 @@
     })
   }
   // the 5s orphan check leaves a WINDOW: an event can fire on a freshly
-  // invalidated context before `dead` flips (bit Gerald 2026-07-05:
+  // invalidated context before `dead` flips (bit us 2026-07-05:
   // "Uncaught: Extension context invalidated at flushQueue/onVisibility")
   const alive = () => { try { chrome.runtime.getURL(''); return true } catch { return false } }
   function flushQueue() {
     // only the VISIBLE tab flushes — two open tabs racing the same
-    // chrome.storage queue would double-send every queued pin
+    // chrome.storage queue would double-send every queued nudge
     if (dead || document.hidden || !alive()) return
     chrome.storage.local.get({ nudgeQueue: [] }, async ({ nudgeQueue }) => {
       if (!nudgeQueue.length) return
@@ -784,7 +784,7 @@
   async function send() {
     if (!picked) return
     // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
-    // the pin's number is the referent for chat — Gerald marks fast in the
+    // the nudge's number is the referent for chat — the user marks fast in the
     // browser, then prompts in the owning Agent session. The watcher wake
     // line flags it as reference-only, the skill does not work it unprompted.
     const btn = composer.querySelector('.send')
@@ -808,7 +808,7 @@
       if (r.width < 2 && r.height < 2) r = target.rect
     }
     const rect = { left: r.left, top: r.top, width: r.width || (r.right - r.left), height: r.height || (r.bottom - r.top) }
-    // Screenshot ONLY for the Freeform (lasso) tool (region = pixels). Element pins
+    // Screenshot ONLY for the Freeform (lasso) tool (region = pixels). Element nudges
     // ship DOM context only — faster, lighter, no overlay flicker.
     const res = target.stroke ? await captureRegion(rect, { withHighlight: false }) : null
     const payload = {
@@ -830,14 +830,14 @@
     }
     try {
       const id = await postPin(payload)
-      // the moment of truth: tell Gerald what actually happens to this prompt.
+      // the moment of truth: tell the user what actually happens to this prompt.
       // A pull owner (CLI) is live but won't START on its own — say so, or the
-      // green icon's „agent working" would be a lie (Gerald: Nudges „kommen nicht an").
+      // green icon's "agent working" would be a lie (user feedback: nudges "don't arrive").
       if (!payload.text) notify('check', `${id} marked`)
-      else if (agentLive && agentWake === 'pull') notify('clock', `${id} erfasst · kommt mit der nächsten Nachricht`)
+      else if (agentLive && agentWake === 'pull') notify('clock', `${id} received · arrives with the next message`)
       else if (agentLive) notify('send', `${id} — agent working`)
       else notify('clock', `${id} saved — no agent`)
-      // team rollout: anonymous pins are useless in a shared store — hint ONCE
+      // team rollout: anonymous nudges are useless in a shared store — hint ONCE
       if (!author) {
         chrome.storage.local.get('nudgeAuthorHinted', (v) => {
           if (v.nudgeAuthorHinted) return
@@ -896,7 +896,7 @@
   }
 
   // ---------- prompt tracking ----------
-  // Product change 2026-07-05 (Gerald): open prompts SHOULD stay subtly visible —
+  // Product change 2026-07-05: open prompts SHOULD stay subtly visible —
   // one small amber status dot per marked element while the prompt is open
   // (disappears on resolve/discard). Still no popovers/threads on the page;
   // the queue popover is the management surface (labels + discard ×). Evidence
@@ -908,7 +908,7 @@
     try { const a = new URL(u), b = new URL(location.href); return a.origin === b.origin && a.pathname === b.pathname && a.hash === b.hash } catch { return false }
   }
   // resolve feedback: when the agent finishes a prompt, close the loop right here
-  // in the page — Gerald must not have to switch to the Agent to know it's done
+  // in the page — the user must not have to switch to the Agent to know it's done
   const knownStatus = new Map()
   let statusSeeded = false
   // screenshots are data-URLs of megabyte size — the session snapshot keeps the
@@ -929,7 +929,7 @@
       if (statusSeeded && knownStatus.get(p.id) === 'open' && p.status === 'resolved' && samePage(p.url))
         notify('check', `${p.id} done`)
       knownStatus.set(p.id, p.status)
-      // evidence backlog: resolved KREIS prompts on this page that still lack
+      // evidence backlog: resolved LASSO prompts on this page that still lack
       // their after-shot (elements are DOM-only — no before, no after)
       if (p.status === 'resolved' && p.screenshot && !p.screenshotAfter && samePage(p.url)) captureAfter(p)
     }
@@ -944,7 +944,7 @@
     const m = Math.max(0, Math.round((Date.now() - t) / 60000))
     return m < 60 ? `${m} min` : `${Math.round(m / 60)} h`
   }
-  // Gerald names each worktree's session with its localhost port ("Estimate
+  // The user names each worktree's session with its localhost port ("Estimate
   // Templates :5175"). Split that suffix off so the name renders clean and the
   // port becomes its own right-aligned tag.
   function splitLabel(label) {
@@ -958,21 +958,21 @@
       const row = document.createElement('div')
       row.className = 'w-row' + (a.owner ? ' is-owner' : '')
       // a.session (shown as id8) is the un-collidable key: the arm report in the
-      // chat prints the same id, so Gerald matches chat ↔ dropdown 1:1 even when
+      // chat prints the same id, so the user matches chat ↔ dropdown 1:1 even when
       // two sessions share a label
-      // wake mode per row: „Auto" starts on its own; „Pull" arrives with the next
-      // Agent prompt. Gerald picks the owner knowing which capability it has.
+      // wake mode per row: "Auto" starts on its own; "Pull" arrives with the next
+      // Agent prompt. The user picks the owner knowing which capability it has.
       const wakeTag = a.wake === 'pull' ? 'Pull' : a.wake === 'push' ? 'Auto' : null
-      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.runtime, a.surface || a.host, wakeTag, `seit ${sinceAge(a.since)}`, a.session?.slice(0, 8) || null].filter(Boolean).join(' · ')
+      const l2 = [a.project, a.branch ? `@ ${a.branch}` : null, a.runtime, a.surface || a.host, wakeTag, `up ${sinceAge(a.since)}`, a.session?.slice(0, 8) || null].filter(Boolean).join(' · ')
       row.innerHTML = '<div class="w-line1"><span class="w-name"></span><span class="w-host"></span></div><div class="w-line2"></div><div class="w-line3"></div>'
       const parts = splitLabel(a.label)
       row.querySelector('.w-name').textContent = (a.owner ? '● ' : '') + parts.name
-      // localhost as a subtle right-aligned tag on each session row (Gerald 2026-07-07)
+      // localhost as a subtle right-aligned tag on each session row (2026-07-07)
       const wh = row.querySelector('.w-host')
       if (parts.port) wh.textContent = `localhost:${parts.port}`; else wh.remove()
       row.querySelector('.w-line2').textContent = l2
       const l3 = row.querySelector('.w-line3')
-      if (a.firstMsg) l3.textContent = `„${a.firstMsg}…“`
+      if (a.firstMsg) l3.textContent = `“${a.firstMsg}…”`
       else l3.remove()
       row.addEventListener('click', async () => {
         try {
@@ -981,7 +981,7 @@
           const r = await fetch(`${HTTP}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: a.pid, session: a.session, host: location.host }) })
           const s = splitLabel(a.label)
           if (r.ok) notify('check', `→ ${s.name}`, s.port ? `localhost:${s.port}` : '')
-          else notify('alert', `${s.name} nicht mehr aktiv`) // gone since the list was drawn — never claim success
+          else notify('alert', `${s.name} no longer active`) // gone since the list was drawn — never claim success
         } catch { notify('alert', 'Bridge offline') }
         whoMenu.classList.remove('on')
       })
@@ -1000,23 +1000,23 @@
   // ---------- status hint (click on the status dot) ----------
   // The dot is honest but mute: a click turns it into a one-line guide for the
   // CURRENT state. It NEVER arms/wakes from the browser (that's the opt-in fence);
-  // it only tells Gerald what the state means and what to do next.
+  // it only tells the user what the state means and what to do next.
   function renderStatusMenu() {
     const head = statusMenu.querySelector('.q-head')
     const body = statusMenu.querySelector('.sm-body')
     const name = agentLabel ? splitLabel(agentLabel).name : '?'
     if (!wsOk) {
-      head.textContent = 'Bridge nicht erreichbar'
-      body.innerHTML = 'Keine Verbindung zur Bridge. Fokussiere Chrome oder starte <b>/groundworks-nudge</b> in der Agent-Session.'
+      head.textContent = 'Bridge unreachable'
+      body.innerHTML = 'No connection to the bridge. Focus Chrome or run <b>/groundworks-nudge</b> in the agent session.'
     } else if (!agentLive) {
-      head.textContent = 'Kein Agent aktiv'
-      body.innerHTML = 'Nudges werden gespeichert, aber keine Agent-Session reagiert. Starte <b>/groundworks-nudge</b> in der Session, die sie übernehmen soll.'
+      head.textContent = 'No agent active'
+      body.innerHTML = 'Nudges are stored, but no agent session is responding. Run <b>/groundworks-nudge</b> in the session that should take them.'
     } else if (agentWake === 'pull') {
-      head.textContent = `Agent aktiv: ${name} · Pull`
-      body.innerHTML = 'Gespeichert — der Nudge kommt mit der nächsten Nachricht an die Agent-Session, nicht von selbst.'
+      head.textContent = `Agent active: ${name} · pull`
+      body.innerHTML = 'Stored — the nudge reaches the agent session with your next message, not on its own.'
     } else {
-      head.textContent = `Agent aktiv: ${name}`
-      body.innerHTML = 'Läuft: neue Nudges starten den Agenten automatisch.'
+      head.textContent = `Agent active: ${name}`
+      body.innerHTML = 'Live: new nudges wake the agent automatically.'
     }
   }
   pill.querySelector('.status').addEventListener('click', (e) => {
@@ -1028,7 +1028,7 @@
     statusMenu.classList.add('on')
   })
 
-  // ---------- bridge connection (status dot + live pins) ----------
+  // ---------- bridge connection (status dot + live nudges) ----------
   let wsOk = false
   let agentLive = false
   let agentLabel = null // which session owns the wake channel (bridge arbiter)
@@ -1040,7 +1040,7 @@
     const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000))
     return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`
   }
-  // The number Gerald reads and says: the bridge's bounded LABEL (wraps at 999,
+  // The number the user reads and says: the bridge's bounded LABEL (wraps at 999,
   // see store.mjs), not the ever-growing id. Both are shown wherever there is
   // room — the id is what commits and inbox files cite. Fallback keeps an older
   // bridge's payload (no `label`) rendering something sane instead of blank.
@@ -1077,10 +1077,10 @@
     for (const p of open) {
       const row = document.createElement('div')
       row.className = 'q-row' + (wsOk && agentLive ? ' live' : '')
-      row.innerHTML = `${Q_CLOCK}<span class="q-num"></span><span class="q-id"></span><span class="q-text"></span><span class="q-amc"></span><span class="q-who"></span><span class="q-age"></span><button class="q-add" title="Nachtrag ergänzen">+</button><button class="q-x" title="Dismiss nudge">×</button>`
+      row.innerHTML = `${Q_CLOCK}<span class="q-num"></span><span class="q-id"></span><span class="q-text"></span><span class="q-amc"></span><span class="q-who"></span><span class="q-age"></span><button class="q-add" title="Amend nudge">+</button><button class="q-x" title="Dismiss nudge">×</button>`
       // BOTH numbers, and this is the only surface that shows them side by side:
-      // #47 is the pill on the element (how Gerald finds this row and what he
-      // says), nudge_1046 the identity behind it (files, commits). Seeing them
+      // #47 is the pill on the element (how the user finds this row and what they
+      // say), nudge_1046 the identity behind it (files, commits). Seeing them
       // together here is what keeps the two from ever reading as a contradiction.
       row.querySelector('.q-num').textContent = `#${numOf(p)}`
       row.querySelector('.q-id').textContent = p.id
@@ -1090,7 +1090,7 @@
       row.querySelector('.q-who').textContent = p.owner ? splitLabel(p.owner.label).name : '' // which session owns this nudge (stamped at arrival, immutable); host is implied by the route
       row.querySelector('.q-age').textContent = ageOf(p.createdAt)
       // existing follow-ups — a READABLE block under the row (shows when the row
-      // is expanded or being amended), so Gerald can re-read what he appended
+      // is expanded or being amended), so the user can re-read what they appended
       if (p.amendments?.length) {
         const amlist = document.createElement('div')
         amlist.className = 'q-amend-list'
@@ -1100,7 +1100,7 @@
       // input (with a send button) to append one more (append-only) — only while amending
       const panel = document.createElement('div')
       panel.className = 'q-amend'
-      panel.innerHTML = `<div class="q-amend-row"><textarea class="q-amend-input" rows="1" placeholder="Nachtrag zu ${p.id} … (↩ senden, ⇧↩ Zeile)"></textarea><button class="q-amend-send" title="Nachtrag senden (↩)"><svg viewBox="0 0 24 24">${FEED_ICONS.send}</svg></button></div>`
+      panel.innerHTML = `<div class="q-amend-row"><textarea class="q-amend-input" rows="1" placeholder="Amend ${p.id}… (↩ send · ⇧↩ newline)"></textarea><button class="q-amend-send" title="Send amendment (↩)"><svg viewBox="0 0 24 24">${FEED_ICONS.send}</svg></button></div>`
       row.appendChild(panel)
       panel.addEventListener('click', (e) => e.stopPropagation()) // typing must not toggle the accordion
       const input = panel.querySelector('.q-amend-input')
@@ -1114,16 +1114,16 @@
         // Clear the draft + close BEFORE the network round-trip. The bridge's WS
         // 'amended' push can re-render this row while the fetch is still in flight;
         // if the draft were still present the fresh row would restore the field
-        // WITH the just-sent text (bit Gerald 2026-07-07: "steht noch drin"). On
+        // WITH the just-sent text (bit us 2026-07-07: "it's still in there"). On
         // failure we put the text back.
         closeAmend()
         let ok = false
         try {
           const r = await fetch(`${HTTP}/comments/${p.id}/amend`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, author }) })
-          if (r.ok) { notify('check', `${p.id} ergänzt`); ok = true }
-          else if (r.status === 409) { notify('alert', `${p.id} schon erledigt`); ok = true } // resolved: don't reopen, the amend is moot
-          else notify('alert', `${p.id} nicht ergänzt`)
-        } catch { notify('alert', 'Bridge offline — nicht ergänzt') }
+          if (r.ok) { notify('check', `${p.id} amended`); ok = true }
+          else if (r.status === 409) { notify('alert', `${p.id} already done`); ok = true } // resolved: don't reopen, the amend is moot
+          else notify('alert', `${p.id} not amended`)
+        } catch { notify('alert', 'Bridge offline — not amended') }
         if (!ok) { qAmendDraft.set(p.id, text); input.value = text; row.classList.add('amending', 'open'); input.focus() } // give the text back
         amSending = false
       }
@@ -1148,13 +1148,13 @@
           const r = await fetch(`${HTTP}/comments/${p.id}`, { method: 'DELETE' })
           if (!r.ok) return notify('alert', `${p.id} not found`)
           // The row vanishes either way (WS refresh) — but WHO was told is the
-          // part Gerald actually needs: a nudge is at its agent in milliseconds,
+          // part the user actually needs: a nudge is at its agent in milliseconds,
           // so this is normally a withdrawal of running work, not a tidy-up. Say
-          // what really happened instead of a hopeful „dismissed" (2026-07-29).
+          // what really happened instead of a hopeful "dismissed" (2026-07-29).
           const { notified, agent, wake } = await r.json().catch(() => ({}))
-          if (!notified) notify('check', `#${numOf(p)} verworfen — kein Agent auf Kanal`)
-          else if (wake === 'pull') notify('check', `#${numOf(p)} zurückgezogen — ${agent} erfährt es beim nächsten Prompt`)
-          else notify('check', `#${numOf(p)} zurückgezogen — ${agent} informiert`)
+          if (!notified) notify('check', `#${numOf(p)} discarded — no agent on the channel`)
+          else if (wake === 'pull') notify('check', `#${numOf(p)} withdrawn — ${agent} learns on its next prompt`)
+          else notify('check', `#${numOf(p)} withdrawn — ${agent} notified`)
         } catch { notify('alert', 'Bridge offline — not dismissed') }
       })
       list.appendChild(row)
@@ -1183,7 +1183,7 @@
 
   // ---------- open-nudge pills (subtle DOM presence of the queue) ----------
   // Each open nudge shows its NUMBER at the marked element — the number is the
-  // referent for chat („Nudge 123 macht das"), so it must be readable, not a dot.
+  // referent for chat ("Nudge 123 does that"), so it must be readable, not a dot.
   const dotTargets = (p) => (p.targets?.length ? p.targets.map(t => t.selector) : [p.target?.selector]).filter(Boolean)
   function renderDots() {
     dots.innerHTML = ''
@@ -1193,7 +1193,7 @@
         d.className = 'dot' + (wsOk && agentLive ? ' live' : '')
         // same badge language as the queue rows: ring + Lucide clock, the hand
         // sweeps while an agent is live (a plain green dot read like a stuck
-        // status LED — a running clock reads as work, Gerald 2026-07-05)
+        // status LED — a running clock reads as work, 2026-07-05)
         d.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="d-hand"><path d="M12 6v6l4 2"/></g></svg><span class="d-num"></span>'
         d.querySelector('.d-num').textContent = numOf(p)
         d.title = `#${numOf(p)} · ${p.id} · ${p.text || markLabel(p)}`
@@ -1248,9 +1248,9 @@
     dot.classList.toggle('half', wsOk && !agentLive)
     dot.title = !wsOk ? 'Bridge unreachable'
       : !agentLive ? 'Bridge up — no agent (nudges are stored)'
-      : pull ? `Erfasst — ${agentLabel ? splitLabel(agentLabel).name : '?'} (Pull): kommt mit der nächsten Nachricht`
-      : `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'} (kommt automatisch)`
-    // session label + this tab's localhost IN the toolbar (Gerald: always know
+      : pull ? `Received — ${agentLabel ? splitLabel(agentLabel).name : '?'} (pull): arrives with the next message`
+      : `Agent live — ${agentLabel ? splitLabel(agentLabel).name : '?'} (wakes automatically)`
+    // session label + this tab's localhost IN the toolbar (the user must always know
     // which agent reacts AND which localhost this is)
     const who = pill.querySelector('.who')
     const showWho = wsOk && (agentLive && !!agentLabel || agents.length > 0)
@@ -1259,15 +1259,15 @@
     who.querySelector('.who-kind').textContent = owner ? 'Agent:' : ''
     who.querySelector('.who-label').textContent = owner ? owner.name : (agents.length ? `${agents.length} sessions` : '')
     // the owner's session id8, visible WITHOUT any click — the un-collidable key
-    // the arm report prints, so Gerald matches chat ↔ toolbar at a glance
+    // the arm report prints, so the user matches chat ↔ toolbar at a glance
     const ownerAgent = agents.find(a => a.owner)
     who.querySelector('.who-id').textContent = owner && ownerAgent?.session ? ownerAgent.session.slice(0, 8) : ''
-    // honest wake mode right in the toolbar: „Pull" (amber, needs your action)
+    // honest wake mode right in the toolbar: "Pull" (amber, needs your action)
     // for a pull owner, nothing for an auto-waking owner — green must not imply
-    // „kommt automatisch" when it does not
+    // "comes automatically" when it does not
     const wakeTag = who.querySelector('.who-wake')
     wakeTag.textContent = pull ? 'Pull' : ''
-    wakeTag.title = pull ? 'Nudge ist gespeichert und kommt mit der nächsten Nachricht an die Agent-Session' : ''
+    wakeTag.title = pull ? 'Nudge is stored and reaches the agent session with your next message' : ''
     wakeTag.style.display = pull ? 'inline-block' : 'none'
     // the localhost as a clean pill (from the label's :PORT suffix), never inline in the name
     who.querySelector('.who-host').textContent = owner?.port ? `localhost:${owner.port}` : ''
@@ -1323,7 +1323,7 @@
   }
   // exponential backoff, capped LOW (browser-tools-mcp reconnects at a fixed 5s —
   // a tab must not be blind for half a minute after a bridge restart), plus an
-  // immediate retry when Gerald returns to the tab
+  // immediate retry when the user returns to the tab
   function scheduleRetry() {
     if (dead) return
     clearTimeout(retryTimer)
@@ -1358,8 +1358,8 @@
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
   document.addEventListener('click', onClickSuppress, true)
-  // WINDOW capture, the first hop — not document (bit Gerald 2026-07-29: "die
-  // Markierungen verschwinden nicht"). Dialog/dropdown libraries (Radix, Headless
+  // WINDOW capture, the first hop — not document (bit us 2026-07-29: "the
+  // marks don't go away"). Dialog/dropdown libraries (Radix, Headless
   // UI, @roots/ui) handle Escape on window capture and stopPropagation() it while
   // their layer is open; a document-capture listener downstream then never runs,
   // so Esc silently stopped clearing the pick — and P/F stopped switching tools —
@@ -1374,7 +1374,7 @@
   // outside it (roots' own RequestPopover: overlay-click → hide). The Nudge host
   // is full-screen but pointer-events:none, so a click that just MISSES the
   // toolbar falls THROUGH and dismisses the page's modal — reaching for the
-  // toolbar shouldn't touch the page (bit Gerald 2026-07-07). Absorb near-miss
+  // toolbar shouldn't touch the page (bit us 2026-07-07). Absorb near-miss
   // clicks in a thin moat around visible Nudge chrome. Only idle/composing —
   // picking/drawing genuinely need page clicks — and only the immediate margin,
   // so real page clicks farther away dismiss the modal as the page intends.
@@ -1394,8 +1394,8 @@
   const swallowMoat = (e) => {
     if (mode === 'off' || mode === 'picking' || mode === 'drawing') return
     // ...and never a Shift+click that extends the selection: the composer opens
-    // BESIDE the mark, so the next element Gerald wants is often exactly in the
-    // moat — the second half of "Shift geht nicht zuverlässig" (2026-07-29).
+    // BESIDE the mark, so the next element the user wants is often exactly in the
+    // moat — the second half of "Shift doesn't work reliably" (2026-07-29).
     // Nobody reaches for the toolbar with Shift held, so the moat's premise
     // (an ACCIDENTAL near-miss) simply doesn't apply to this gesture.
     if (e.shiftKey && mode === 'composing' && picked && !picked.stroke) return
@@ -1410,8 +1410,8 @@
   // Page menus/dropdowns often detect outside-clicks with a document CAPTURE-phase
   // pointerdown listener (roots' own @roots/ui actionMenu: addEventListener(
   // 'pointerdown', onOutside, true)). A click on Nudge chrome retargets to our
-  // host — "outside" their menu — so the menu closes the instant Gerald reaches
-  // for the toolbar (bit Gerald 2026-07-07 on the estimate sort dropdown). The
+  // host — "outside" their menu — so the menu closes the instant the user reaches
+  // for the toolbar (bit us 2026-07-07 on the estimate sort dropdown). The
   // host bubble-stop is too late (capture fires first). Swallow the pointerdown/
   // mousedown of a genuine Nudge-widget hit at WINDOW capture, the first hop, so
   // no page outside-detector — capture or bubble — ever sees it. Our controls act
@@ -1436,15 +1436,15 @@
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'nudge-toggle') {
       const off = mode !== 'off'
-      persistOff(off) // erst merken, dann schalten — der Rest der Tabs zieht über onChanged nach
+      persistOff(off) // remember first, then switch — the other tabs follow via onChanged
       setMode(off ? 'off' : 'idle')
     }
-    // Chrome wirft Icon UND Badge eines Tabs bei jeder Navigation weg, auch bei
-    // der reinen History-Navigation eines SPA-Routers. Der SW fragt danach nach.
+    // Chrome drops a tab's icon AND badge on every navigation, including the
+    // pure history navigation of an SPA router. The SW asks for them afterwards.
     if (msg.type === 'nudge-state-req') updatePill()
   })
-  // Ein Toggle gilt sofort überall: der Tab, in dem geklickt wurde, hat schon
-  // geschaltet — alle anderen (und andere localhost-Ports) hören hier zu.
+  // A toggle applies everywhere at once: the tab that was clicked has already
+  // switched — all others (and other localhost ports) listen here.
   chrome.storage.onChanged.addListener((changes, area) => {
     if (dead || area !== 'local' || !changes.nudgeOff) return
     const off = !!changes.nudgeOff.newValue
@@ -1455,14 +1455,14 @@
   // Orphan self-cleanup: after chrome.runtime.reload() (dev auto-reload), content
   // scripts in tabs that did not refresh keep running with an INVALIDATED extension
   // context — the overlay looks alive but chrome.* calls throw and buttons half-work
-  // (bit Gerald 2026-07-04: "Abbrechen tut nichts"). Detect invalidation and remove
+  // (bit us 2026-07-04: "Cancel does nothing"). Detect invalidation and remove
   // the whole overlay; the refreshed tab gets a fresh, working script. Crucially,
   // tear down the GLOBAL capture-phase listeners too: a removed host still left
   // onClick/onMove on document, so a dead overlay kept swallowing clicks
   // (preventDefault/stopPropagation) and ran openComposer on a detached composer —
-  // pinning silently died with NO popover until a manual refresh (bit Gerald
-  // 2026-07-05 during the port: "das Popover erscheint nicht").
-  // Additionally (bit Gerald 2026-07-05 after the Nudge rename): closing the
+  // pinning silently died with NO popover until a manual refresh (bit us
+  // 2026-07-05 during the port: "the popover doesn't appear").
+  // Additionally (bit us 2026-07-05 after the Nudge rename): closing the
   // socket fires onclose -> scheduleRetry -> the reconnect loop SURVIVED the
   // cleanup and spammed "WebSocket connection failed" forever; the
   // visibilitychange flush threw on the dead context too. `dead` gates all of
@@ -1482,30 +1482,30 @@
       for (const t of MOAT_EVENTS) window.removeEventListener(t, swallowMoat, true)
       for (const t of CHROME_POINTER_EVENTS) window.removeEventListener(t, swallowChromePointer, true)
       host.remove()
-      showReloadHint() // don't vanish silently — tell Gerald the one keystroke that heals the tab
+      showReloadHint() // don't vanish silently — tell the user the one keystroke that heals the tab
     }
   }, 5000)
 
   // The overlay used to disappear WITHOUT A WORD when the extension reloaded
-  // (dev auto-reload, update): the tab looked like "Nudge kaputt" until a manual
-  // page reload (bit Gerald 2026-07-08). Plain-DOM banner — no chrome.* (the
+  // (dev auto-reload, update): the tab looked like "Nudge broken" until a manual
+  // page reload (bit us 2026-07-08). Plain-DOM banner — no chrome.* (the
   // context is dead), no shadow styles (the host is gone): one pill in the brand
   // midnight, dismiss on click, gone with the reload it asks for.
   function showReloadHint() {
     if (document.getElementById('__roots-nudge-reload-hint')) return
     const n = document.createElement('div')
     n.id = '__roots-nudge-reload-hint'
-    n.textContent = 'Nudge aktualisiert — ⌘R lädt die Toolbar neu'
-    n.title = 'Klicken zum Ausblenden'
+    n.textContent = 'Nudge updated — press ⌘R to reload the toolbar'
+    n.title = 'Click to dismiss'
     n.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#1A1F26;color:#F2EFEA;font:500 12px/1.4 -apple-system,"Helvetica Neue",sans-serif;letter-spacing:.01em;padding:8px 14px;border-radius:999px;border:1px solid #3A4250;box-shadow:0 1px 2px rgba(0,0,0,.3),0 4px 12px rgba(14,19,24,.35);cursor:pointer;'
     n.addEventListener('click', () => n.remove())
     document.documentElement.appendChild(n)
   }
 
   // ---------- reload resilience: the working state survives the page reload ----------
-  // The agent edits code WHILE Gerald is mid-thought — the dev server reloads the
-  // tab and the content script dies with the half-written nudge inside it (Gerald
-  // 2026-07-29: „ich verliere gerade, was ich machen wollte"). Nothing in the DOM
+  // The agent edits code WHILE the user is mid-thought — the dev server reloads the
+  // tab and the content script dies with the half-written nudge inside it
+  // (2026-07-29: "I'm losing what I was about to do"). Nothing in the DOM
   // survives a navigation, so the WORKING state is snapshotted into sessionStorage
   // (per TAB and per origin: it dies with the tab, and two tabs on the same route
   // never restore each other's draft) and rebuilt on the next load.
@@ -1515,11 +1515,11 @@
   // that copy when the element is gone. Worst case the ANCHOR is lost and the
   // composer says so; the typed text never is.
   const SNAP_KEY = '__rootsNudgeSession'
-  const SNAP_TTL = 6 * 3600e3 // sessionStorage also survives „reopen closed tab" — never restore an ancient draft
+  const SNAP_TTL = 6 * 3600e3 // sessionStorage also survives "reopen closed tab" — never restore an ancient draft
   const RELOCATE_MS = 6000 // how long to keep looking for the element after a reload
   let queueWanted = false // the History popover was open when the reload hit
   let relocating = false // searching for the marked element right now
-  let pinCache = [] // last pin list WITHOUT screenshots (those are megabytes)
+  let pinCache = [] // last nudge list WITHOUT screenshots (those are megabytes)
   let snapTimer = 0
 
   function saveSnap() { clearTimeout(snapTimer); snapTimer = setTimeout(saveSnapNow, 200) }
@@ -1563,7 +1563,7 @@
   // The xpath is POSITIONAL, though: with the marked element gone, /div[1] simply
   // resolves to whatever moved up into its place. Suite Q4 caught exactly that
   // (a mark on #alpha silently re-anchored onto #beta). A stranger under the
-  // composer's tip is worse than an honest „Element weg" — the frozen context is
+  // composer's tip is worse than an honest "element gone" — the frozen context is
   // still correct and still sends — so the xpath hit must prove its identity:
   // same tag, same id, and (idless) the same visible text.
   const tagOfCtx = (ctx) => (/^<([a-z0-9-]+)/i.exec(ctx?.outerHTML || '') || [])[1]?.toLowerCase()
@@ -1634,7 +1634,7 @@
         relocating = false
         renderMeta()
         // honest, once: the mark keeps its context, it just lost its anchor
-        if (left) notify('alert', picked.el ? 'Ein Element ist nach dem Reload weg' : 'Element nach dem Reload weg — Kontext bleibt')
+        if (left) notify('alert', picked.el ? 'One element is gone after the reload' : 'Element gone after the reload — context kept')
         return
       }
       setTimeout(tick, 150)
@@ -1668,15 +1668,15 @@
       try { ta.setSelectionRange(c.sel?.[0] ?? ta.value.length, c.sel?.[1] ?? ta.value.length) } catch { /* text got shorter */ }
     }
     relocate()
-    notify('check', c.text ? 'Entwurf wiederhergestellt' : 'Markierung wiederhergestellt')
+    notify('check', c.text ? 'Draft restored' : 'Mark restored')
   }
   function restoreSession() {
     const snap = snapRead()
-    // Aus schlägt alles: ein abgeschalteter Nudge stellt nichts her, was man
-    // sieht — keine Toolbar, kein Entwurf. Nur die gemerkte Position, damit die
-    // Leiste beim Einschalten dort steht, wo Gerald sie hingezogen hat.
+    // Off beats everything: a switched-off Nudge restores nothing visible — no
+    // toolbar, no draft. Only the remembered position, so the bar sits where the
+    // user dragged it when switched back on.
     if (offSync()) { if (snap?.pill) placePill(snap.pill.x, snap.pill.y); setMode('off'); return }
-    if (!snap) { setMode('idle'); return } // PoC default: overlay visible on localhost
+    if (!snap) { setMode('idle'); return } // default: overlay visible on localhost
     // 1. the toolbar at its remembered spot in the FIRST paint — the async
     //    chrome.storage read lands on the same coordinates a tick later
     if (snap.pill) placePill(snap.pill.x, snap.pill.y)
@@ -1689,7 +1689,7 @@
     for (const id of snap.queue?.expanded || []) qExpanded.add(id)
     for (const [id, text] of snap.queue?.amend || []) qAmendDraft.set(id, text)
     queueWanted = sameRoute && !!snap.queue?.open
-    // 3. the mode Gerald left the tab in — an overlay he switched off stays off
+    // 3. the mode the user left the tab in — an overlay they switched off stays off
     setMode(snap.mode === 'composing' ? 'idle' : (snap.mode || 'idle'))
     // 4. badge, dots and session label from the last known list. The WS frame
     //    overwrites all of it within a moment; this only kills the flicker.
@@ -1703,14 +1703,14 @@
       if (snap.mode === 'picking') mode = 'picking' // Shift-collecting stayed armed
     }
   }
-  // A snapshot from an older version must never cost Gerald the overlay itself
+  // A snapshot from an older version must never cost the user the overlay itself
   try { restoreSession() } catch (e) {
     console.warn('[roots-nudge] session restore failed:', e)
     try { sessionStorage.removeItem(SNAP_KEY) } catch { /* storage blocked */ }
     setMode(offSync() ? 'off' : 'idle')
   }
-  // Die synchrone Spiegelung kennt nur DIESEN Origin — ein Tab, der localhost:5276
-  // zum ersten Mal sieht, erfährt die Wahrheit erst hier, einen Tick später.
+  // The synchronous mirror only knows THIS origin — a tab seeing localhost:5276
+  // for the first time learns the truth only here, a tick later.
   try {
     chrome.storage.local.get('nudgeOff', ({ nudgeOff }) => {
       if (nudgeOff === undefined || dead) return

@@ -1,9 +1,13 @@
 {
   "name": "@roots/nudge-bridge",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Nudge bridge: HTTP and WebSocket transport between the Chrome extension and any local coding agent. Lifecycle owned by Chrome (native host).",
+  "engines": {
+    "node": ">=22"
+  },
   "bin": {
     "nudge-bridge": "./bridge.mjs"
   },

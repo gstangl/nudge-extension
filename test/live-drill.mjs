@@ -1,6 +1,6 @@
 // LIVE chain drill — runs against the REAL bridge (port 4700, global store) and
 // the REAL estimate app (:5185) plus a throwaway generic web app. This is the
-// bidirectional + rapid-fire acceptance run; test pins are cleaned afterwards.
+// bidirectional + rapid-fire acceptance run; test nudges are cleaned afterwards.
 // Requires: bridge running, estimate dev server on :5185, native host installed.
 import { chromium } from 'playwright'
 import { spawn, execSync } from 'node:child_process'
@@ -24,8 +24,8 @@ const until = async (fn, ms, what) => {
 // throwaway generic web app (plain static page, no framework)
 fs.mkdirSync('/tmp/pin-generic', { recursive: true })
 fs.writeFileSync('/tmp/pin-generic/index.html', `<!doctype html><html><body>
-  <h1 id="generic-title">Generische App</h1>
-  <button id="generic-btn" style="padding:12px 24px;background:#246;color:#fff">Kauf mich</button>
+  <h1 id="generic-title">Generic app</h1>
+  <button id="generic-btn" style="padding:12px 24px;background:#246;color:#fff">Buy me</button>
 </body></html>`)
 const statics = spawn('python3', ['-m', 'http.server', '8907', '-d', '/tmp/pin-generic'], { stdio: 'ignore' })
 await new Promise(r => setTimeout(r, 800))
@@ -58,14 +58,14 @@ try {
     const s = await api('/selection')
     return s.selector?.includes('lib-btn') && Date.now() - Date.parse(s.at) < 10000
   }, 5000, 'selection on :5185')
-  // the agent-side view: the user-level hook must surface it as AKTUELLE MARKIERUNG
+  // the agent-side view: the user-level hook must surface it as CURRENT MARK
   const hookOut = execSync(`echo '{}' | node ${os.homedir()}/.claude/hooks/nudge-context.mjs`).toString()
-  leg('estimate: pick → selection + hook context', selOk && hookOut.includes('AKTUELLE MARKIERUNG'),
-    `hook sieht Markierung: ${hookOut.includes('AKTUELLE MARKIERUNG')}`)
+  leg('estimate: pick → selection + hook context', selOk && hookOut.includes('CURRENT MARK'),
+    `hook sees the mark: ${hookOut.includes('CURRENT MARK')}`)
   await page.locator('.composer .cancel').click()
 
   // ---- Leg 2: rapid-fire — 3 prompts in quick succession, order preserved ----
-  // route the pins land on (pathname+hash; query is ignored for route identity)
+  // route the nudges land on (pathname+hash; query is ignored for route identity)
   const routeOpen = async () => {
     const u = new URL(page.url())
     const key = u.pathname + u.hash
@@ -76,10 +76,10 @@ try {
     await page.locator('.pill .btn-pick').click()
     await page.locator('.lib-btn').first().click()
     await ta.waitFor({ timeout: 3000 })
-    await ta.fill(`[TEST-RF${i}] Rapid-Fire-Probe ${i} — bitte ignorieren`)
+    await ta.fill(`[TEST-RF${i}] rapid-fire probe ${i} — please ignore`)
     await page.locator('.composer .send').click()
     // wait on the STORE, not on a toast (the toast lingers and matches loosely)
-    if (!(await until(async () => (await api('/comments')).length === before + i, 8000, `store hat RF${i}`))) break
+    if (!(await until(async () => (await api('/comments')).length === before + i, 8000, `store has RF${i}`))) break
   }
   const fresh = (await api('/comments')).slice(before)
   testIds.push(...fresh.map(p => p.id))
@@ -90,18 +90,18 @@ try {
   // badge == open prompts on this route per the store (robust vs. pre-existing state)
   const expected = (await routeOpen()).length
   const badgeOk = await until(async () => (Number(await page.locator('.pill .count').textContent().catch(() => '0')) || 0) === expected, 5000, 'badge == route open count')
-  leg('rapid-fire: 3 Prompts, Reihenfolge + Badge', ordered && badgeOk, `ids ${fresh.map(p => p.id).join(',')} · badge==${expected}`)
+  leg('rapid-fire: 3 prompts, order + badge', ordered && badgeOk, `ids ${fresh.map(p => p.id).join(',')} · badge==${expected}`)
 
   // ---- Leg 3: resolve loop — feed chip on the live page. These are element
-  //      pins (DOM-only, no screenshot) → no after-shot expected; the chip +
-  //      badge-drop is the closure. (Kreis evidence loop is covered in Suite A.)
+  //      nudges (DOM-only, no screenshot) → no after-shot expected; the chip +
+  //      badge-drop is the closure. (lasso evidence loop is covered in Suite A.)
   const openBeforeResolve = (await routeOpen()).length
   await fetch(`http://localhost:4700/comments/${testIds[0]}/resolve`, { method: 'POST' })
-  const chipOk = await page.locator('.feed .item', { hasText: `${testIds[0]} erledigt` }).waitFor({ timeout: 6000 }).then(() => true).catch(() => false)
+  const chipOk = await page.locator('.feed .item', { hasText: `${testIds[0]} done` }).waitFor({ timeout: 6000 }).then(() => true).catch(() => false)
   const droppedOk = await until(async () =>
     (Number(await page.locator('.pill .count').textContent().catch(() => '0')) || 0) === openBeforeResolve - 1, 5000, 'badge dropped by 1')
   const noShot = !(await api('/comments')).find(p => p.id === testIds[0])?.hasEvidence
-  leg('resolve: Feed-Chip + Badge fällt (Element = kein Screenshot)', chipOk && droppedOk && noShot)
+  leg('resolve: feed chip + badge drops (element = no screenshot)', chipOk && droppedOk && noShot)
 
   // ---- Leg 4: generic web app (framework-free static page) ----
   await page.goto('http://localhost:8907/')
@@ -110,27 +110,27 @@ try {
   await page.locator('#generic-btn').click()
   const genOk = await until(async () => (await api('/selection')).selector === '#generic-btn', 5000, 'generic selection')
   await ta.waitFor({ timeout: 3000 })
-  await ta.fill('[TEST-GEN] Prompt aus generischer App — bitte ignorieren')
+  await ta.fill('[TEST-GEN] prompt from a generic app — please ignore')
   await page.locator('.composer .send').click()
-  // chip text depends on live agent state (watcher heartbeat): „Agent arbeitet"
-  // with one, „gespeichert — kein Agent" without — both mean "prompt landed"
-  await page.locator('.feed .item', { hasText: /Agent arbeitet|kein Agent/ }).waitFor({ timeout: 8000 })
+  // chip text depends on live agent state (watcher heartbeat): "agent working"
+  // with one, "saved — no agent" without — both mean "prompt landed"
+  await page.locator('.feed .item', { hasText: /agent working|no agent/ }).waitFor({ timeout: 8000 })
   const genPin = (await api('/comments')).at(-1)
   if (genPin.text.includes('TEST-GEN')) testIds.push(genPin.id)
-  leg('generisch: Pick + Prompt auf fremder App', genOk && genPin.text.includes('TEST-GEN') && genPin.url.includes('8907'))
+  leg('generic: pick + prompt on a foreign app', genOk && genPin.text.includes('TEST-GEN') && genPin.url.includes('8907'))
 
   // ---- Leg 5: self-healing — kill the bridge, Chrome revives it (native host) ----
   execSync('lsof -tnP -iTCP:4700 -sTCP:LISTEN | xargs kill 2>/dev/null || true')
   await new Promise(r => setTimeout(r, 500))
   const healed = await until(async () => (await api('/.identity')).app === 'roots-nudge', 35000, 'self-heal')
-  leg('self-healing: Bridge stirbt → Extension belebt sie (Native Host)', healed)
+  leg('self-healing: bridge dies → extension revives it (native host)', healed)
 } finally {
   // hard watchdog: ctx.close() can hang on an open native-messaging port; the
   // browser dies with the process anyway, results matter more than grace
   const watchdog = setTimeout(() => { console.log('watchdog exit'); process.exit(results.every(r => r.ok) ? 0 : 1) }, 8000)
   watchdog.unref?.()
   statics.kill()
-  // cleanup: drop test pins (NEVER reset seq), age the selection out of the window
+  // cleanup: drop test nudges (NEVER reset seq), age the selection out of the window
   try {
     const storeFile = path.join(PIN, 'store.json')
     const s = JSON.parse(fs.readFileSync(storeFile, 'utf8'))
@@ -144,9 +144,9 @@ try {
     const sel = JSON.parse(fs.readFileSync(selFile, 'utf8'))
     sel.at = new Date(Date.now() - 3600_000).toISOString() // hide the test mark from the 15-min window
     fs.writeFileSync(selFile, JSON.stringify(sel, null, 2))
-    console.log(`cleanup: ${testIds.join(', ')} entfernt, Selektion gealtert`)
+    console.log(`cleanup: ${testIds.join(', ')} removed, selection aged`)
   } catch (e) { console.log('cleanup issue:', e.message) }
-  console.log('\n== ERGEBNIS ==')
+  console.log('\n== RESULT ==')
   for (const r of results) console.log(`${r.ok ? '✅' : '❌'} ${r.name}`)
   void ctx.close().catch(() => {})
   setTimeout(() => process.exit(results.every(r => r.ok) ? 0 : 1), 1000)

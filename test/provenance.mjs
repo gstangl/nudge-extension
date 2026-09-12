@@ -1,4 +1,4 @@
-// Suite H — Provenance (bulletproof owner binding). The contract Gerald leans
+// Suite H — Provenance (bulletproof owner binding). The contract the user leans
 // the bridge's robustness on: once a nudge is created, it stays bound to the
 // agent session that owned the channel at that instant — FOREVER, and no other
 // process or agent can kidnap it. This suite attacks that binding from every
@@ -65,7 +65,7 @@ try {
     if (await ownerOf(nBefore.id) !== 'Agent-B') fail('H3 setup: expected Agent-B')
     const pick = await (await fetch(`${B}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: 101 }) })).json()
     if (pick.owner !== 'Agent-A') fail(`H3: dropdown pick failed (${JSON.stringify(pick)})`)
-    // Gerald switched the CHANNEL back to A — but the nudge created under B stays B
+    // The user switched the CHANNEL back to A — but the nudge created under B stays B
     if (await ownerOf(nBefore.id) !== 'Agent-B') fail(`H3: dropdown pick kidnapped an existing nudge (${await ownerOf(nBefore.id)})`)
     // and a NEW nudge now belongs to A (the freshly chosen owner)
     const nAfter = await mk()
@@ -120,7 +120,7 @@ try {
     pass('H7 offline nudge attributed to resolver (Agent-C), then immutable against Agent-D')
   }
 
-  // ---------- H8: the stamp is BOUNDED (a huge roster label can't bloat pins) ----------
+  // ---------- H8: the stamp is BOUNDED (a huge roster label can't bloat nudges) ----------
   {
     await hb('L'.repeat(5000), 505, 7000, 'S'.repeat(5000)); await sleep(200)
     await fetch(`${B}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: 505 }) })

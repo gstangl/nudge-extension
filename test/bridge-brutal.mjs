@@ -172,7 +172,7 @@ try {
   }
 
   // ---------- D5: IDENTITY TRUTH — the toolbar must never lie about WHO is connected ----------
-  // This is the core Gerald contract: the extension UI shows the owning agent,
+  // This is the core user contract: the extension UI shows the owning agent,
   // pushed on every change, stale entries vanish on a bounded clock.
   {
     // restart clean so D4's fuzz agents don't linger
@@ -267,7 +267,7 @@ try {
     const ids = results.map(r => Number(r.id.replace('nudge_', '')))
     if (new Set(ids).size !== 100) fail(`D7: duplicate ids under parallel load (${100 - new Set(ids).size} dupes)`)
     JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')) // parses = intact
-    // resolve/delete race on the same pins — must answer 200/404, never crash
+    // resolve/delete race on the same nudges — must answer 200/404, never crash
     for (const id of results.slice(0, 10).map(r => r.id)) {
       const [a, b] = await Promise.all([
         fetch(`${B}/comments/${id}/resolve`, { method: 'POST' }),
@@ -281,7 +281,7 @@ try {
     pass('D7 concurrency storm (100 parallel posts -> 100 unique ids; resolve/delete races clean; 50 selection floods)')
   }
 
-  // ---------- D8: restart-storm durability — every acked pin survives SIGKILL ----------
+  // ---------- D8: restart-storm durability — every acked nudge survives SIGKILL ----------
   {
     const acked = []
     for (let round = 0; round < 5; round++) {
@@ -295,7 +295,7 @@ try {
     const list = await (await fetch(`${B}/comments`)).json()
     for (const id of acked) if (!list.some(p => p.id === id)) fail(`D8: acked ${id} LOST after SIGKILL`)
     if (fs.existsSync(path.join(STORE, 'store.json.tmp'))) fail('D8: tmp residue after kill storm')
-    pass('D8 restart-storm durability (5x SIGKILL mid-traffic -> all acked pins survive, no residue)')
+    pass('D8 restart-storm durability (5x SIGKILL mid-traffic -> all acked nudges survive, no residue)')
   }
 
   // ---------- D9: hostile sockets — half-open request, raw garbage bytes ----------
@@ -367,10 +367,10 @@ try {
     }).catch(e => fail(`D12: ${e.message}`))
     ws.close()
     const done = snap.pins.filter(p => p.status !== 'open').length
-    if (done > 40) fail(`D12: snapshot ships ${done} resolved pins (diet is 40)`)
+    if (done > 40) fail(`D12: snapshot ships ${done} resolved nudges (diet is 40)`)
     const all = await (await fetch(`${B}/comments`)).json()
     if (all.length < 60) fail(`D12: GET /comments must still return full history (${all.length})`)
-    pass(`D12 snapshot diet (60 pins, 50 resolved -> snapshot carries ${done} done, HTTP full)`)
+    pass(`D12 snapshot diet (60 nudges, 50 resolved -> snapshot carries ${done} done, HTTP full)`)
   }
 
   // ---------- D13: bind surface — localhost only ----------
@@ -406,7 +406,7 @@ try {
   }
 
   // ---------- D15: owner provenance — stamped at arrival, IMMUTABLE across a
-  //     later owner switch (Gerald: a nudge must not get a new context when the
+  //     later owner switch (a nudge must not get a new context when the
   //     channel owner changes); offline-created nudges get attributed on resolve
   {
     bridge.kill(); await sleep(200)
@@ -435,7 +435,7 @@ try {
 
   // ---------- D16: roster changes are PUSHED to the dropdown promptly — a new
   //     session joining while a sticky owner is set must reach the extension at
-  //     once (not minutes later on the next unrelated broadcast; Gerald 2026-07-06)
+  //     once (not minutes later on the next unrelated broadcast; 2026-07-06)
   {
     bridge.kill(); await sleep(200); fs.rmSync(STORE, { recursive: true, force: true }); startBridge()
     if (!await up()) fail('D16: restart failed')
@@ -468,7 +468,7 @@ try {
 
   // ---------- D17: ownership is SESSION-keyed — survives a re-arm (new watcher
   //     pid), pick works by session even with a stale pid, dead session -> 404
-  //     (Gerald 2026-07-06: 404 on a session whose pid moved / that had ended)
+  //     (2026-07-06: 404 on a session whose pid moved / that had ended)
   {
     bridge.kill(); await sleep(200); fs.rmSync(STORE, { recursive: true, force: true }); startBridge()
     if (!await up()) fail('D17: restart failed')

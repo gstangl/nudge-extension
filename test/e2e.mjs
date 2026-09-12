@@ -14,7 +14,7 @@ const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension') // override
 const STORE = '/tmp/pin-e2e-store'
 fs.rmSync(STORE, { recursive: true, force: true })
 
-// OWN side port — the live bridge on 4700 keeps serving Gerald untouched.
+// OWN side port — the live bridge on 4700 keeps serving the user untouched.
 // The extension in the TEST browser is re-pointed via chrome.storage.nudgePort
 // (see below); stealing 4700 once showed a test agent in the real toolbar.
 const TESTPORT = 4720
@@ -38,10 +38,10 @@ const until = async (fn, ms, what) => {
   fail(`timeout waiting for ${what}`)
 }
 // Suite A simulates a LIVE agent: without this heartbeat the status dot stays
-// amber and every „Agent arbeitet" expectation depends on whether some real
+// amber and every "agent working" expectation depends on whether some real
 // session happens to run a watcher (bit us 2026-07-05 after the Nudge rename).
-// host:'Zed'+wake:'push' → this simulated agent is a live AUTO-waker („kommt
-// automatisch"), the common case; the pull-owner status is asserted in Suite W
+// host:'Zed'+wake:'push' → this simulated agent is a live AUTO-waker ("wakes
+// automatically"), the common case; the pull-owner status is asserted in Suite W
 const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', pid: process.pid, since: Date.now(), host: 'Zed', wake: 'push' }) }
 const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
 await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
@@ -94,9 +94,9 @@ try {
   await until(async () => !(await page.locator('.who-menu.on').count()), 2000, 'dropdown closes on Escape')
 
   // --- status hint: clicking the status dot opens a guide for the CURRENT state
-  //     (green push owner → „Agent aktiv"), closes on Escape ---
+  //     (green push owner → "Agent active"), closes on Escape ---
   await page.locator('.pill .status').click()
-  await page.locator('.status-menu.on .q-head', { hasText: 'Agent aktiv' }).waitFor({ timeout: 3000 })
+  await page.locator('.status-menu.on .q-head', { hasText: 'Agent active' }).waitFor({ timeout: 3000 })
   { // caret points at the dot it opened from (same popover contract as who/queue)
     const dΔ = await page.evaluate(() => {
       const r = document.getElementById('__roots-nudge-host').shadowRoot
@@ -111,7 +111,7 @@ try {
   console.log('PASS status hint (click dot → state guide, caret aligned, Escape)')
 
   // --- movable toolbar: drag the grip, position changes and persists; an OPEN
-  //     popover belongs to the toolbar and must MOVE WITH it (Gerald 2026-07-06) ---
+  //     popover belongs to the toolbar and must MOVE WITH it (2026-07-06) ---
   await page.locator('.pill .who').click() // open Switch session before dragging
   await page.locator('.who-menu.on').waitFor({ timeout: 3000 })
   const menuBefore = await page.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.who-menu').getBoundingClientRect().left)
@@ -138,7 +138,7 @@ try {
   await page.evaluate(() => {
     const pop = document.createElement('div')
     pop.id = 'page-pop'
-    pop.textContent = 'Finale Version freigeben?'
+    pop.textContent = 'Release the final version?'
     pop.style.cssText = 'position:fixed;left:40px;bottom:40px;background:#fff;border:1px solid #999;padding:10px;z-index:10;'
     document.body.appendChild(pop)
     document.addEventListener('click', (e) => { if (!pop.contains(e.target)) pop.remove() }) // typical outside-close
@@ -166,7 +166,7 @@ try {
   if (!active.includes('card-conversion')) fail(`active chip after switch: ${active}`)
   // --- the PICK already published the selection (no send needed) — DOM only,
   //     NO screenshot for elements (browser-tools-mcp style; screenshots are
-  //     exclusive to the Kreis tool). The chip then retargets to the card. ---
+  //     exclusive to the lasso tool). The chip then retargets to the card. ---
   await until(async () => {
     const sel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
     return !!sel.selector && !!sel.xpath && !sel.screenshot
@@ -177,24 +177,24 @@ try {
     return sel.selector === '#card-conversion' && !sel.screenshot
   }, 5000, 'chip retarget updates selection (still DOM-only)')
 
-  // --- Abbrechen keeps the selection valid (mark without sending) ---
+  // --- Cancel keeps the selection valid (mark without sending) ---
   await page.locator('.composer .cancel').click()
   await page.waitForTimeout(200)
-  if (await page.locator('.composer').isVisible()) fail('composer did not close on Abbrechen')
+  if (await page.locator('.composer').isVisible()) fail('composer did not close on Cancel')
   const selAfterCancel = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
   if (selAfterCancel.selector !== '#card-conversion') fail('selection lost after cancel')
-  // store.json does not even exist yet — a pure mark must create NO pin
-  if (fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length) fail('cancel must not create a pin')
-  console.log('PASS pick = mark (selection published, survives Abbrechen, no pin created)')
+  // store.json does not even exist yet — a pure mark must create NO nudge
+  if (fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length) fail('cancel must not create a nudge')
+  console.log('PASS pick = mark (selection published, survives Cancel, no nudge created)')
 
   // --- empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
-  //     plain Enter mints a referenceable pin, its number pill sits at the element ---
+  //     plain Enter mints a referenceable nudge, its number pill sits at the element ---
   await page.locator('.pill .btn-pick').click()
   await page.locator('#card-conversion').click({ position: { x: 10, y: 10 } })
   await ta.waitFor({ timeout: 3000 })
   await ta.press('Enter') // plain Enter sends (⌘↩ keeps working, Shift+Enter = newline)
   await page.locator('.feed .item', { hasText: 'nudge_1 marked' }).waitFor({ timeout: 8000 })
-  await until(() => fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length === 1 && store().pins[0].text === '', 5000, 'mark-only pin in store')
+  await until(() => fs.existsSync(path.join(STORE, 'store.json')) && store().pins.length === 1 && store().pins[0].text === '', 5000, 'mark-only nudge in store')
   // the pill at the element shows the readable NUMBER — the chat referent
   await until(async () => (await page.locator('.dot:visible .d-num').first().textContent()) === '1', 5000, 'number pill shows 1')
   // discard the mark so the suite's downstream arithmetic starts clean (ids stay monotonic)
@@ -207,7 +207,7 @@ try {
   await page.locator('#card-conversion').click()
   await ta.waitFor({ timeout: 3000 })
   await page.locator('.composer .layers button', { hasText: 'card-conversion' }).click()
-  await ta.fill('Die Heat-pump-Karte braucht mehr Abstand zum Titel.')
+  await ta.fill('The heat-pump card needs more space from the title.')
   await ta.press('Shift+Enter') // newline convention: must NOT send
   await page.waitForTimeout(250)
   if (!(await page.locator('.composer').isVisible())) fail('Shift+Enter must not send')
@@ -231,10 +231,10 @@ try {
   if (!pin.target.styles?.typography?.color) fail(`categorized styles missing: ${JSON.stringify(pin.target.styles)}`)
   if (!pin.target.xpath?.startsWith('/html/')) fail(`xpath missing: ${pin.target.xpath}`)
   if (!pin.target.innerText) fail('innerText missing')
-  if (!pin.console?.some(l => l.includes('Demo-Fehler'))) fail(`console excerpt missing: ${JSON.stringify(pin.console)}`)
+  if (!pin.console?.some(l => l.includes('Demo error'))) fail(`console excerpt missing: ${JSON.stringify(pin.console)}`)
   if (!pin.console?.some(l => l.includes('[net]') && l.includes('404'))) fail(`network error missing: ${JSON.stringify(pin.console)}`)
-  // element pin = DOM only, NO screenshot (Gerald 2026-07-05)
-  if (pin.screenshot) fail(`element pin must have no screenshot: ${pin.screenshot}`)
+  // element nudge = DOM only, NO screenshot (2026-07-05)
+  if (pin.screenshot) fail(`element nudge must have no screenshot: ${pin.screenshot}`)
 
   // --- badge counts the in-flight prompt; ONE amber dot marks the element (0.9.0:
   //     open prompts stay subtly visible — no popovers/threads, just the dot) ---
@@ -246,7 +246,7 @@ try {
   await page.locator('.pill .count').click()
   await page.locator('.queue.on .q-row', { hasText: 'nudge_2' }).waitFor({ timeout: 3000 })
   // provenance in the list: each row names the agent session that owns the nudge
-  // (stamped at arrival, immutable) — so Gerald sees which agent it belongs to
+  // (stamped at arrival, immutable) — so the user sees which agent it belongs to
   const who1 = await page.locator('.queue.on .q-row', { hasText: 'nudge_2' }).locator('.q-who').textContent()
   if (who1 !== 'suite-a') fail(`queue row must show the owning session, got "${who1}"`)
   // caret aligned to the badge (C-7) + a row must NOT jitter on accordion toggle (C-6):
@@ -266,14 +266,14 @@ try {
   await until(async () => !(await page.locator('.queue.on').count()), 2000, 'queue closes on Escape')
   console.log('PASS badge queue popover (open, content, owner shown, Escape)')
 
-  // --- resolve: feed chip + badge clears; element pins get NO after-shot
-  //     (no before-shot to compare — that stays a Kreis-pin feature) ---
+  // --- resolve: feed chip + badge clears; element nudges get NO after-shot
+  //     (no before-shot to compare — that stays a lasso-nudge feature) ---
   await fetch(`http://localhost:${TESTPORT}/comments/nudge_2/resolve`, { method: 'POST' })
   await page.locator('.feed .item', { hasText: 'nudge_2 done' }).waitFor({ timeout: 5000 }) // in-page loop closure
   await until(async () => !(await page.locator('.pill .count.show').count()), 5000, 'badge cleared after resolve')
   await until(async () => !(await page.locator('.dot:visible').count()), 3000, 'dot gone after resolve')
   await page.waitForTimeout(500)
-  if (store().pins[0].screenshotAfter) fail('element pin must NOT get an after-shot')
+  if (store().pins[0].screenshotAfter) fail('element nudge must NOT get an after-shot')
 
   console.log('PASS pick + chips + styles + net-errors (DOM-only, no screenshot) + badge')
   console.log(`  nudge_2:      "${pin.text}" @ ${pin.target.selector} (xpath ${pin.target.xpath})`)
@@ -291,11 +291,11 @@ try {
   }
   await page.mouse.up()
   await ta.waitFor({ timeout: 3000 })
-  await ta.fill('Dieser Banner wirkt verloren - breiter und mit mehr Präsenz.')
+  await ta.fill('This banner looks lost - wider and with more presence.')
   await page.locator('.composer .send').click()
   await page.locator('.feed .item', { hasText: 'nudge_3' }).waitFor({ timeout: 8000 })
   // history: with the lasso nudge open, the badge exists — the popover lists
-  // the resolved nudge_2 under „Erledigt" with a check icon
+  // the resolved nudge_2 under "Done" with a check icon
   await page.locator('.pill .count').click()
   await page.locator('.queue.on .q-div', { hasText: 'Done' }).waitFor({ timeout: 3000 })
   await page.locator('.queue.on .q-row.done', { hasText: 'nudge_2' }).waitFor({ timeout: 3000 })
@@ -304,29 +304,29 @@ try {
   const lasso = store().pins[1]
   if (!lasso.annotations?.[0]?.points?.length) fail('lasso stroke not stored')
   if (!lasso.target.selector.includes('banner')) fail(`lasso centroid selector: ${lasso.target.selector}`)
-  // the Kreis tool is the ONLY one that captures a screenshot (region = pixels)
-  if (!lasso.screenshot || fs.statSync(path.join(STORE, lasso.screenshot)).size < 2000) fail('lasso pin must carry a screenshot')
+  // the lasso tool is the ONLY one that captures a screenshot (region = pixels)
+  if (!lasso.screenshot || fs.statSync(path.join(STORE, lasso.screenshot)).size < 2000) fail('lasso nudge must carry a screenshot')
 
-  console.log('PASS lasso (stroke + screenshot; screenshots exclusive to Kreis)')
+  console.log('PASS lasso (stroke + screenshot; screenshots exclusive to lasso)')
   console.log(`  nudge_3:      "${lasso.text}" (stroke ${lasso.annotations[0].points.length} points)`)
 
   // --- SPA navigation: badge counts only THIS route's open prompts ---
   await until(async () => (await page.locator('.pill .count').textContent()) === '1', 5000, 'badge = 1 (open lasso prompt)')
-  await page.evaluate(() => { location.hash = '#/andere-seite' })
+  await page.evaluate(() => { location.hash = '#/other-page' })
   await until(async () => !(await page.locator('.pill .count.show').count()), 3000, 'badge cleared after hashchange')
   await page.evaluate(() => { history.back() })
   await until(async () => (await page.locator('.pill .count').textContent()) === '1', 3000, 'badge back after returning')
   console.log('PASS SPA navigation badge refilter (hashchange/popstate)')
 
-  // --- evidence loop lives on for Kreis pins: resolve nudge_3 -> after-shot ---
+  // --- evidence loop lives on for lasso nudges: resolve nudge_3 -> after-shot ---
   await fetch(`http://localhost:${TESTPORT}/comments/nudge_3/resolve`, { method: 'POST' })
   await until(() => store().pins[1].screenshotAfter, 10000, 'lasso after-shot in store')
   // late re-check: the WS-snapshot backlog path must not capture for element
-  // pins either (it once did — the +500ms check above only won by timing)
-  if (store().pins[0].screenshotAfter) fail('element pin got an after-shot via the snapshot backlog path')
-  console.log('PASS Kreis evidence loop (resolve -> after-shot; element pins stay shot-free)')
+  // nudges either (it once did — the +500ms check above only won by timing)
+  if (store().pins[0].screenshotAfter) fail('element nudge got an after-shot via the snapshot backlog path')
+  console.log('PASS lasso evidence loop (resolve -> after-shot; element nudges stay shot-free)')
 
-  // --- multi-selection: Shift+Klick collects elements into ONE mark/prompt ---
+  // --- multi-selection: Shift+click collects elements into ONE mark/prompt ---
   await page.locator('.pill .btn-pick').click()
   await page.locator('#card-conversion').click({ modifiers: ['Shift'] })
   await ta.waitFor({ timeout: 3000 })
@@ -338,16 +338,16 @@ try {
   const meta = await page.locator('.composer .meta').textContent()
   if (!meta.startsWith('2 elements')) fail(`composer meta should count elements: ${meta}`)
   if (await page.locator('.hl-multi').count() !== 2) fail('expected one outline per collected element')
-  await ta.fill('Tausche diese beiden Elemente.')
+  await ta.fill('Swap these two elements.')
   await page.locator('.composer .send').click()
   await page.locator('.feed .item', { hasText: 'nudge_4' }).waitFor({ timeout: 8000 })
   const multiPin = store().pins[2]
-  if (multiPin.targets?.length !== 2) fail(`multi pin targets: ${JSON.stringify(multiPin.targets?.map(t => t.selector))}`)
+  if (multiPin.targets?.length !== 2) fail(`multi nudge targets: ${JSON.stringify(multiPin.targets?.map(t => t.selector))}`)
   if (!multiPin.targets.every(t => t.selector && t.xpath)) fail('each target needs selector + xpath')
-  if (multiPin.screenshot) fail('multi pin is element context -> no screenshot')
+  if (multiPin.screenshot) fail('multi nudge is element context -> no screenshot')
   // fire-and-forget: nothing survives the send, incl. the collection outlines
   if (await page.locator('.hl-multi').count()) fail('multi outlines must vanish after send')
-  console.log('PASS multi-selection (Shift+Klick -> 2 targets in selection + pin, outlines transient)')
+  console.log('PASS multi-selection (Shift+click -> 2 targets in selection + nudge, outlines transient)')
 
   // --- click convention (0.10.0): plain click RESETS an active multi-selection
   //     to a single pick (Finder/Figma: click = one, Shift = collect) ---
@@ -364,14 +364,14 @@ try {
   console.log('PASS click convention (plain click resets multi to single)')
 
   // --- queue management (0.9.0): speaking label + discard × + dots lifecycle ---
-  // a text-less pin (legacy „nur Markierung" shape) posted directly: the queue must
+  // a text-less nudge (legacy "mark only" shape) posted directly: the queue must
   // say WHAT is marked, the × must remove it entirely, its dot must disappear
   const pageUrl = await page.evaluate(() => location.href)
   await fetch(`http://localhost:${TESTPORT}/comments`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: '', url: pageUrl, target: { selector: '#card-source', innerText: 'Energy sources' } }),
   })
-  // open on this route now: multi pin (2 target dots) + the mark (1 dot)
+  // open on this route now: multi nudge (2 target dots) + the mark (1 dot)
   await until(async () => (await page.locator('.dot:visible').count()) === 3, 5000, '3 dots (2 multi targets + 1 mark)')
   await page.locator('.pill .count').click()
   const markRow = page.locator('.queue.on .q-row', { hasText: 'nudge_5' })
@@ -385,20 +385,21 @@ try {
   if ((await markRow.getAttribute('class')).includes('open')) fail('second click must collapse')
   await markRow.locator('.q-x').click()
   // the × is a WITHDRAWAL since 0.22: a nudge is at its agent in milliseconds, so
-  // the toast names WHO was told to stop instead of the old hopeful „dismissed".
+  // the toast names WHO was told to stop instead of the old hopeful "dismissed".
   // Full withdrawal chain (agent channel, routing, marker, pull path) → Suite X.
-  await page.locator('.feed .item', { hasText: '#5 zurückgezogen — suite-a informiert' }).waitFor({ timeout: 5000 })
+  await page.locator('.feed .item', { hasText: '#5 withdrawn — suite-a notified' }).waitFor({ timeout: 5000 })
   await until(() => !store().pins.some(p => p.id === 'nudge_5'), 3000, 'nudge_5 removed from store')
   if (fs.existsSync(path.join(STORE, 'inbox', 'nudge_5.md'))) fail('inbox mirror must be deleted on discard')
   if (!fs.existsSync(path.join(STORE, 'inbox', 'nudge_5.withdrawn.md'))) fail('discard must leave a withdrawal marker behind')
   await until(async () => (await page.locator('.dot:visible').count()) === 2, 3000, 'dot gone after discard')
-  console.log('PASS queue management (label „was ist markiert", discard ×, dots lifecycle)')
+  console.log('PASS queue management (label "what is marked", discard ×, dots lifecycle)')
 
   // --- agent wiring drift: installed copies must equal the repo sources
   //     (hook + skill exist twice by design; drift was only noticeable manually) ---
   for (const [repo, installed] of [
     [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.claude/skills/groundworks-nudge/SKILL.md')],
     [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.agents/skills/groundworks-nudge/SKILL.md')],
+    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.grok/skills/groundworks-nudge/SKILL.md')],
     [path.join(HERE, '../agent/nudge-context.mjs'), path.join(os.homedir(), '.claude/hooks/nudge-context.mjs')],
     [path.join(HERE, '../agent/runtime.mjs'), path.join(os.homedir(), '.claude/hooks/runtime.mjs')],
     [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.claude/hooks/nudge-session-start.sh')],
@@ -407,11 +408,12 @@ try {
     [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.codex/hooks/nudge-session-start.sh')],
   ]) {
     if (fs.existsSync(installed) && !fs.readFileSync(repo).equals(fs.readFileSync(installed)))
-      fail(`agent wiring drift: ${path.basename(repo)} (repo != installiert - nudge/agent/setup-agent.sh ausführen)`)
+      fail(`agent wiring drift: ${path.basename(repo)} (repo != installed - run nudge/agent/setup-agent.sh)`)
   }
   for (const alias of [
     path.join(os.homedir(), '.claude/skills/nudge/SKILL.md'),
     path.join(os.homedir(), '.agents/skills/nudge/SKILL.md'),
+    path.join(os.homedir(), '.grok/skills/nudge/SKILL.md'),
   ]) if (fs.existsSync(alias)) fail(`legacy alias still installed: ${alias}`)
   console.log('PASS agent wiring in sync (repo = installed)')
 } catch (e) {

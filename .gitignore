@@ -1,4 +1,5 @@
 node_modules/
+bridge/native-host-wrapper.sh
 extension/version.txt
 *.log
 .DS_Store

@@ -1,5 +1,5 @@
-// Suite P — Multi-selection (Shift+Klick). Gerald 2026-07-29: "ein Element
-// markieren, dann mit Shift weitere dazu" ging nicht zuverlässig — it depended on
+// Suite P — Multi-selection (Shift+click). 2026-07-29: "mark one element,
+// then add more with Shift" did not work reliably — it depended on
 // how the selection STARTED. Shift on the very first click worked (that path puts
 // mode back to 'picking'); a plain click first opened the composer, left mode at
 // 'composing', and every further click was dropped at the top of onClick. The
@@ -93,10 +93,10 @@ try {
   {
     await arm()
     await click('a')
-    await p.keyboard.type('tausche diese beiden')
+    await p.keyboard.type('swap these two')
     await shiftClick('b')
     if ((await outlines()) !== 2) fail('P5: setup — Shift did not extend')
-    else if (await taVal() !== 'tausche diese beiden') fail(`P5: composer text lost on extend, got "${await taVal()}"`)
+    else if (await taVal() !== 'swap these two') fail(`P5: composer text lost on extend, got "${await taVal()}"`)
     else pass('P5 the typed nudge survives extending the selection')
   }
 
@@ -110,7 +110,7 @@ try {
   }
 
   // ---------- P7: the moat must not eat a deliberate Shift+click ----------
-  // The composer opens BESIDE the mark, so the next element Gerald wants is often
+  // The composer opens BESIDE the mark, so the next element the user wants is often
   // right next to it — inside the 12px moat that absorbs near-miss clicks.
   {
     await arm()

@@ -1,10 +1,10 @@
 // MAIN-world hook (document_start): ring buffer of the page's recent console
 // errors/warnings + uncaught errors + network failures. The isolated-world
-// content script requests it via CustomEvents right before sending a pin.
+// content script requests it via CustomEvents right before sending a nudge.
 //
 // KNOWN TRADE-OFF: because this wraps console.error/warn, Chrome attributes
 // every page warning/error passing through to the extension - they show up on
-// chrome://extensions -> Fehler (dev-mode error collection only). Cosmetic;
+// chrome://extensions -> Errors (dev-mode error collection only). Cosmetic;
 // the alternative (inline page injection) is blocked by CSP on many setups.
 ;(() => {
   if (window.top !== window) return

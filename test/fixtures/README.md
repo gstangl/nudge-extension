@@ -2,7 +2,7 @@
 
 Real-world pages/templates the suites pick against, VENDORED so test runs are
 hermetic (no network). These files are test material, never product code —
-they must not leak into `apps/` or `packages/`. Served locally by
+they must never be imported by product code (`extension/`, `bridge/`, `agent/`). Served locally by
 `test/fixture-gauntlet.mjs` (python http.server on a side port).
 
 | What | Files | Source | License | Fetched |

@@ -1,156 +1,215 @@
-# nudge-extension — a bidirectional bridge between coding agents and Chrome
+# Nudge
 
-## Goal
+**Prompt your coding agent on the pixel.** Nudge is a Chrome extension plus a
+small local bridge. You pick an element or circle a region in any `localhost`
+app, type what you want, and the prompt reaches the coding agent that owns the
+codebase, together with the selector, computed styles, console and network
+errors, and a screenshot. The agent fixes it, verifies it, and reports back
+into the page.
 
-**Make the coding agent and Google Chrome talk to each other — reliably, fast,
-and visibly, in both directions.** The agent owns the codebase; Chrome shows the
-rendered UI. This project is the bridge between the two:
+[![Test](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml/badge.svg)](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- **Chrome → agent:** pick an element (or circle a region) on any running
-  localhost app and say what you want — the agent receives the prompt WITH full
-  browser context (selector, xpath, text, styles, console + network errors,
-  screenshots) and acts on it. Prompting on the pixel, not about it.
-- **Agent → Chrome:** the agent's state and results flow back into the page —
-  honest live status (green = an agent is listening NOW, heartbeat-backed),
-  per-prompt feedback chips, „nudge_X done" completion toasts, and
-  resolve-with-proof after-screenshots.
+Works with **Claude Code** and **Codex** out of the box, with GUIs such as
+**T3 Code** that drive those CLIs, and with any local agent that can run a
+shell command.
 
-The connection IS the product: self-healing (Chrome owns the bridge lifecycle
-via a native messaging host), honest (the status circle never lies), and fast
-(mark → agent context < 2 s, prompt → agent wake ~1 s measured). Timeless
-vision: `VISION.md` · full product definition and trade-offs: `PRODUCT.md` ·
-end-user install: `INSTALL.md` · test contract: `test/protocols.md`.
+**New here?** [Install once](#install) (Chrome + Skill). Then, in the project
+you want to change, arm the agent with `/groundworks-nudge`. That Skill is the
+trigger. The extension does not watch the browser on its own.
 
-**Nudge = pixel nudging with the agent — you pin a PROMPT onto the running UI**
-(Gerald, 2026-07-04): pick an element in Chrome → write what you want → send →
-the agent gets text + selector + source hint + screenshots and ACTS.
-Fire-and-forget — nothing stays on the page; feedback is the toast, the
-in-flight badge, and the status circle. Historic name: Pin; grown inside the
-roots-apps monorepo, extracted to this standalone repo 2026-07-08 (zero code
-dependencies on it — works on ANY localhost app, framework-agnostic by design).
+## The Skill is the trigger
 
-## Verified
-
-Automated suites A–N (isolated e2e, bridge-brutal, provenance/kidnap
-battletests, origin routing, toolbar UX, page inertness, amend) — runners,
-guards and last results in `test/protocols.md`. The runtime-neutral suite proves
-that Codex identity, shared store lookup, scoped context, hooks and resolve use
-one transport. Screenshots reach the agent through the same CLI-reported store.
-
-## Parts
+The agent does not watch the browser on its own. You switch Nudge on **inside
+the agent session that owns your app** — not inside this repository — by
+invoking the Skill:
 
 ```
-bridge/     @roots/nudge-bridge — one node process (dep: ws), two surfaces:
-            bridge.mjs      HTTP :4700 (prompts, selection, resolve, /.identity,
-                            /demo) + WebSocket (prompt list + agentLive pushes)
-                            + dev auto-reload watch
-            store.mjs       global runtime-neutral store owner: mtime-cached
-                            read, change events, projections, inbox md mirror
-            watch-nudges.mjs  agent watcher: fs.watch on the store (event-driven
-                            wake, ms not seconds) + bridge heartbeat every 2 s
-            native-host.mjs Chrome-spawned launcher — ensures the bridge runs
-                            (detached); install-native-host.sh registers it
-extension/  Chrome MV3, load unpacked (styles.js = shadow-DOM CSS, content.js =
-            logic; hover chip uses a cheap path, the unique finder selector is
-            computed only on click). Shadow-DOM overlay:
-            - pill toolbar, draggable: status dot, Pick + Freeform (hotkeys
-              P/F), open-prompt counter → Nudge History popover (open + done,
-              append-only follow-ups „+ ergänzen"), owner line
-              „Agent: <session> <id8> ⟨localhost:port⟩" + Switch-session
-              dropdown (per-localhost ownership — parallel worktrees route to
-              their own agents)
-            - element picker (hover highlight + source chip) with LAYER CHIPS
-              (pick the ancestor you meant), Shift+click multi-select;
-              selectors via vendored @medv/finder (extension/vendor/finder.js, MIT)
-            - freehand lasso (circle a region; stroke burned into the
-              screenshot, polyline stored as annotation)
-            - FIRE-AND-FORGET: a sent prompt leaves NOTHING on the page except
-              a readable NUMBER pill per open prompt (the number is the chat
-              referent: „Nudge 123 macht das"). The pill number is BOUNDED —
-              it wraps at 999, so it stays short forever, while the id behind
-              it (nudge_1046, used for files and commits) counts up and is
-              never reused. Feedback = feed chips under the toolbar + badge +
-              status dot (grey/red/amber/green)
-            - RESOLVE WITH EVIDENCE (invisible): resolve triggers an
-              after-screenshot of the same region in the open browser
-            - offline queue: bridge down → the prompt parks in chrome.storage
-              and is re-sent on reconnect
-            - page inertness: reaching for the toolbar never dismisses the
-              page's own popovers/dropdowns (moat + window-capture swallow)
-            - options page: author name, attached to every prompt
-agent/      runtime-neutral side: groundworks-nudge.mjs (watch, status, context,
-            queue, selection, show and resolve), NUDGE-SKILL.md
-            (`/groundworks-nudge`), optional Claude Code and Codex context hooks,
-            and setup-agent.sh (installs Claude Code + Codex Skill adapters)
-test/       suites A–N + latency bench + hardening; contract in protocols.md
+/groundworks-nudge
 ```
 
-## Updating
+| You are in | How to invoke it |
+|---|---|
+| Terminal (Claude Code or Codex) | type `/groundworks-nudge` |
+| T3 Code | open a thread on **your app**, pick Claude Code, Codex or Grok, then type `/groundworks-nudge` or choose it from the `$` skill picker |
 
-- Versions: extension = manifest.json (= the PRODUCT version), bridge = VERSION
-  in bridge.mjs + package.json. Bump on behaviour change — and **every bump
-  gets a `CHANGELOG.md` entry in the same change** (Keep-a-Changelog format,
-  newest first). No silent releases.
-- Vendored `extension/vendor/finder.js` (@medv/finder, MIT): replace the file
-  with the new upstream dist build, keep the `window.__nudgeFinder` export line.
-- Bridge code changes: kill the process on :4700 — the extension revives it via
-  the native host with the new code (or the next session hook does).
-- Extension changes reload themselves while a bridge runs (see below).
+That single command arms the session: it starts a watcher, tells the toolbar
+in Chrome which session owns your localhost (the status dot turns green), and
+from then on every prompt you send from the page lands in that session.
+Without the Skill, prompts are stored and wait. Nothing is lost, but nothing
+happens either.
 
-## Dev auto-reload
+The Skill is user-level (`./agent/setup-agent.sh`). After that, it is available
+in every project. You do not open this repository to use Nudge.
 
-The bridge watches `extension/` (fs.watch). On change it broadcasts `reload`
-over the WS; the SW refreshes the localhost tabs first, then calls
-`chrome.runtime.reload()` (crx-hotreload pattern) - by the time the tabs
-inject content scripts, the fresh extension is active. Zero manual clicks
-after code changes. An orphaned tab (reload raced it) shows a „⌘R" hint pill
-instead of losing the toolbar silently.
-Caveat: works for real "Load unpacked" installs; under Playwright's
-`--load-extension` the runtime.reload() kills the extension instead, so
-autoreload-check.mjs cannot fully pass in CI - verify manually.
+## How it works
 
-## Install (once per machine) — end-user guide: INSTALL.md
+```
+Chrome (localhost tab)            bridge (Node, port 4700)          agent session
+┌───────────────────────┐  HTTP/WS  ┌─────────────────────┐  watcher  ┌────────────────────┐
+│ Nudge toolbar         │ ────────▶ │ store in ~/.nudge   │ ────────▶ │ /groundworks-nudge │
+│ pick · lasso · send   │ ◀──────── │ roster and routing  │ ◀──────── │ groundworks-nudge  │
+│ status dot · chips    │   state   │ evidence screenshots│  resolve  │ CLI                │
+└───────────────────────┘           └─────────────────────┘           └────────────────────┘
+```
 
-1. `cd bridge && npm install`
-2. Chrome → `chrome://extensions` → Developer mode → **Load unpacked** →
-   `extension/`
-3. `./install-native-host.sh [extension-id]` — registers the native messaging
-   host: from then on **Chrome starts the bridge itself** (detached, survives
-   service-worker suspends). No MCP entry, no per-project config. NOTE: the
-   unpacked extension id derives from the absolute directory path — moving the
-   repo means re-running this with the new id from chrome://extensions.
-4. `agent/setup-agent.sh` — installs the neutral CLI, `/groundworks-nudge`,
-   native Claude Code and Codex Skill adapters, and their optional context/start
-   hooks. It removes the retired compatibility alias when present.
+- **Extension** (`extension/`): a shadow-DOM overlay on `http://localhost:*`
+  and `http://127.0.0.1:*`. Toolbar with Pick and Freeform (lasso), layer
+  chips, Shift+click multi-select, number pills for open prompts, feedback
+  chips, and a status dot that never lies (grey off, red no bridge, amber no
+  agent, green agent live).
+- **Bridge** (`bridge/`): one Node process. HTTP and WebSocket on port 4700, a
+  global store in `~/.nudge` (prompts, screenshots, Markdown mirrors of every
+  prompt), a roster of armed agent sessions, per-localhost routing. Chrome
+  starts and heals it through a native messaging host. You never run it by
+  hand.
+- **Agent side** (`agent/`): the `groundworks-nudge` CLI (watch, status,
+  context, show, resolve) and the `/groundworks-nudge` Skill. Claude Code and
+  Codex get native Skill adapters plus optional hooks. Any other agent uses the
+  same CLI.
 
-Agent side is global. Existing installations retain their legacy store; fresh
-ones use `~/.nudge`. The live bridge reports the authoritative path, so every
-runtime reads one store. Claude Code and Codex have native Skill discovery;
-other local agents can use the same `groundworks-nudge` CLI directly.
+## Requirements
 
-## Use
+| | |
+|---|---|
+| OS | macOS or Linux. Windows is not supported yet (see [INSTALL.md](INSTALL.md)). |
+| Browser | Google Chrome or Chromium with Developer mode. |
+| Node.js | 22 or newer. |
+| Agent | Claude Code, Codex, T3 Code driving either of them, or any local agent that can run shell commands. |
 
-1. Open any `http://localhost:*` page (demo: start bridge manually
-   `node bridge/bridge.mjs` → http://localhost:4700/demo).
-2. Pill toolbar, draggable (toggle: toolbar icon or Alt+C — off is browser-wide
-   and stays off until you toggle back on) → "Pick" (P) → click
-   an element → prompt + ↩ (Shift+↩ = newline; empty ↩ = numbered mark —
-   reference it in the Agent chat as „Nudge 123 macht das").
-3. Agent side: invoke `/groundworks-nudge` in the session that should own the
-   channel. An optional name (`/groundworks-nudge Login-Redesign`) becomes the `Agent:`
-   label in the toolbar; without one the agent derives it from the session's
-   topic. It arms the watcher, reports which localhost it owns, and processes
-   prompts oldest-first and resolves through the CLI after the verified fix.
-   With parallel dev servers, pick the owner per localhost in the
-   toolbar's Switch-session dropdown.
+The only runtime dependency is `ws`. Playwright, Vitest and Python 3 are
+needed for the test suites only.
 
-## Known limitations (deliberate)
+## Install
+
+Takes about five minutes. The full guide with troubleshooting is
+[INSTALL.md](INSTALL.md).
+
+```sh
+git clone https://github.com/gstangl/nudge-extension.git
+cd nudge-extension/bridge && npm install && cd ..
+```
+
+1. **Load the extension.** Chrome → `chrome://extensions` → switch on
+   *Developer mode* (top right) → *Load unpacked* → select the `extension/`
+   folder of this repository.
+2. **Register the native host** so that Chrome runs the bridge for you:
+   ```sh
+   ./bridge/install-native-host.sh
+   ```
+   The script derives the extension id from the folder path. If
+   `chrome://extensions` shows a different id, pass that id as the argument.
+3. **Set up the agent side.** Installs the CLI and the Skill for Claude Code,
+   Codex and Grok Build, plus optional hooks for Claude Code and Codex:
+   ```sh
+   ./agent/setup-agent.sh
+   ```
+   T3 Code has no separate plugin. It picks up the same user-level Skill from
+   the CLI it drives.
+4. **Try it.** Open `http://localhost:4700/demo` in Chrome. In an agent session
+   **on any project of yours**, invoke `/groundworks-nudge`, wait for the green
+   dot, click **Pick**, click a card, type a prompt, press Enter.
+
+## Daily use
+
+| You want to | Do this |
+|---|---|
+| Toggle the toolbar | `Alt+C`, or click the Nudge icon in Chrome's toolbar |
+| Prompt on an element | **Pick** (or `P`) → click the element → type → `↩` (`⇧↩` for a newline) |
+| Pick the parent you meant | after the click, use the layer chips (`td → tr → table`) |
+| Several elements, one prompt | `Shift+click` adds or removes elements |
+| Prompt on a region | **Freeform** (or `F`) → circle it → type → `↩` |
+| Mark only, talk in chat | click an element and send empty. A numbered pill appears. In the agent chat say "Nudge 12: make this larger" |
+| Follow up on a sent prompt | open the counter popover → **+ amend** |
+| Take a prompt back | open the counter popover → **×**. The agent is told to stop |
+
+**Status dot** (toolbar and Chrome icon):
+
+| Colour | Meaning |
+|---|---|
+| grey | toolbar off |
+| red | bridge unreachable. Prompts queue in the browser and are re-sent |
+| amber | bridge up, no agent armed. Prompts are stored |
+| green | an agent session is armed. A *Pull* tag means it reads on its next message instead of waking |
+
+## Agents and wake modes
+
+The Skill is the entry point for every runtime. What differs is whether a new
+prompt can wake the agent by itself (`push`) or is read with the next message
+(`pull`). The toolbar shows which one you have.
+
+| Runtime | Skill location | Wake | Notes |
+|---|---|---|---|
+| Claude Code (terminal) | `~/.claude/skills/groundworks-nudge` | push | The watcher runs under the `Monitor` tool. A prompt wakes the session in about a second. |
+| Codex CLI | `~/.agents/skills/groundworks-nudge` | pull | Prompts arrive with your next message. The `UserPromptSubmit` hook injects the current mark and the open queue. |
+| Grok Build | `~/.grok/skills/groundworks-nudge` (also sees the Claude/Codex homes) | pull | Same Skill; start the watcher as a long-running child process. |
+| T3 Code | through the Claude Code, Codex or Grok CLI it drives | pull | No extra install. Open a thread on **your app**, then `/groundworks-nudge` or `$`. A *Pull* tag on the green dot means send a chat message after you prompt from the page. |
+| Other local agents | none needed | pull | Run `groundworks-nudge watch --label "<name>" --wake pull` as a long-running child process, then use `groundworks-nudge context`, `show` and `resolve`. |
+
+Parallel projects: each localhost port is owned by one session. With several
+dev servers running, pick the owner per port in the toolbar's *Switch session*
+dropdown.
+
+## Repository layout
+
+```
+extension/   Chrome MV3 extension, load unpacked. No build step.
+             content.js overlay logic · styles.js shadow-DOM CSS · sw.js
+             service worker (capture, status icon, bridge lifecycle) ·
+             page-hook.js console/network ring buffer · vendor/finder.js
+             (@medv/finder, MIT) · fonts/ (IBM Plex subsets, OFL)
+bridge/      bridge.mjs HTTP + WebSocket · store.mjs the global store ·
+             watch-nudges.mjs the agent watcher · native-host.mjs the
+             launcher Chrome spawns · install-native-host.sh · demo.html
+agent/       groundworks-nudge.mjs CLI · NUDGE-SKILL.md the Skill ·
+             nudge-context.mjs and nudge-session-start.sh optional hooks ·
+             setup-agent.sh installer
+test/        Vitest units (unit/), the CI integration checks, and the
+             Playwright suites described in test/protocols.md
+docs/        VISION.md · PRODUCT.md · DECISIONS.md (index: docs/README.md)
+```
+
+## Documentation
+
+- [INSTALL.md](INSTALL.md): end-user install, update and troubleshooting.
+- [AGENTS.md](AGENTS.md): start file for coding agents working **on this
+  repository** (as opposed to using Nudge in another project).
+- [CONTRIBUTING.md](CONTRIBUTING.md): dev setup, tests, versioning, PR rules.
+- [SUPPORT.md](SUPPORT.md): where to get help.
+- [docs/VISION.md](docs/VISION.md): mission, audience and non-goals. Read
+  this before proposing scope.
+- [docs/PRODUCT.md](docs/PRODUCT.md): current product definition and
+  accepted trade-offs.
+- [docs/DECISIONS.md](docs/DECISIONS.md): why the repository is shaped the
+  way it is.
+- [CHANGELOG.md](CHANGELOG.md): every version, newest first.
+- [test/protocols.md](test/protocols.md): the test contract.
+  [test/scenarios.md](test/scenarios.md): the edge-case catalogue.
+- [agent/NUDGE-SKILL.md](agent/NUDGE-SKILL.md): what the agent does when you
+  invoke `/groundworks-nudge`.
+
+## Known limitations
 
 - `<all_urls>` host permission: `captureVisibleTab` rejects narrow host
-  patterns; localhost is the trust boundary (CORS restricted to localhost).
-- Source hints via `data-*` attributes only (Astro/JSX-style); runtime-built
-  DOM (TipTap) keeps selector + class names as the hint.
-- Bridge lifecycle is Chrome's: if Chrome AND all sessions are gone, nothing
-  runs — by design (no daemon).
-- chrome://extensions → Fehler shows PAGE warnings/errors as phantom extension
-  errors (the console hook wraps console.warn/error). Cosmetic, dev-mode only.
+  patterns. The content script itself only runs on localhost, and the bridge
+  restricts CORS to localhost origins.
+- Source hints come from `data-*` attributes where a framework provides them
+  (Astro, JSX tooling). Otherwise the agent gets selector, xpath and text and
+  maps them to code itself.
+- The bridge lives as long as Chrome or an armed session does. If both are
+  gone nothing runs, by design. No daemon.
+- `chrome://extensions` → Errors lists the page's own console warnings as
+  extension errors because the page hook wraps `console.warn` and
+  `console.error`. Cosmetic, developer mode only.
+- Chrome or Chromium only. macOS and Linux only.
+
+## Security
+
+`localhost` is the trust boundary: any local process can post or resolve
+prompts, and the bridge port must never be exposed. Details and how to report
+a vulnerability are in [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE). Third-party notices for the vendored selector
+library, the fonts and the test fixtures are listed there.

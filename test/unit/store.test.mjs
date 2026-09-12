@@ -24,7 +24,7 @@ beforeEach(() => {
   fs.rmSync(STORE, { recursive: true, force: true })
 })
 
-describe('store.mjs — pin lifecycle', () => {
+describe('store.mjs — nudge lifecycle', () => {
   it('issues sequential nudge_N ids and never reuses one after delete', () => {
     expect(store.addPin({ text: 'a', url: 'https://x/' }, null).id).toBe('nudge_1')
     expect(store.addPin({ text: 'b', url: 'https://x/' }, null).id).toBe('nudge_2')
@@ -40,7 +40,7 @@ describe('store.mjs — pin lifecycle', () => {
     expect(pin.author).toHaveLength(80)
   })
 
-  it('advances seq past any existing pin number so a hand-edited store cannot cause id reuse', () => {
+  it('advances seq past any existing nudge number so a hand-edited store cannot cause id reuse', () => {
     store.addPin({ text: 'a', url: 'https://x/' }, null) // nudge_1
     fs.writeFileSync(storeFile(), JSON.stringify({
       seq: 1,
@@ -51,11 +51,11 @@ describe('store.mjs — pin lifecycle', () => {
     expect(store.addPin({ text: 'b', url: 'https://x/' }, null).id).toBe('nudge_51')
   })
 
-  it('prunes old resolved pins but never open ones', () => {
+  it('prunes old resolved nudges but never open ones', () => {
     const open = store.addPin({ text: 'open', url: 'https://x/' }, null)
     const done = store.addPin({ text: 'done', url: 'https://x/' }, null)
     store.resolvePin(done.id, null)
-    // age the resolved pin far past the 7-day window
+    // age the resolved nudge far past the 7-day window
     const data = JSON.parse(fs.readFileSync(storeFile(), 'utf8'))
     for (const p of data.pins) if (p.status === 'resolved') p.resolvedAt = new Date(Date.now() - 30 * 24 * 3600e3).toISOString()
     fs.writeFileSync(storeFile(), JSON.stringify(data))
@@ -70,9 +70,9 @@ describe('store.mjs — owner provenance (bulletproof binding)', () => {
   it('stamps the server-decided owner and ignores any owner in the payload', () => {
     const pin = store.addPin(
       { text: 't', url: 'https://x/', owner: { label: 'SPOOFED', session: 'evil' } },
-      { label: 'Gerald S.', session: 'sess-1' },
+      { label: 'Real Owner', session: 'sess-1' },
     )
-    expect(pin.owner).toEqual({ label: 'Gerald S.', session: 'sess-1' })
+    expect(pin.owner).toEqual({ label: 'Real Owner', session: 'sess-1' })
   })
 
   it('caps owner label to 60 and session to 128', () => {
@@ -81,7 +81,7 @@ describe('store.mjs — owner provenance (bulletproof binding)', () => {
     expect(pin.owner.session).toHaveLength(128)
   })
 
-  it('keeps an owned pin immutable on resolve, but attributes the resolver when the pin was unowned', () => {
+  it('keeps an owned nudge immutable on resolve, but attributes the resolver when the nudge was unowned', () => {
     const owned = store.addPin({ text: 'owned', url: 'https://x/' }, { label: 'Owner A', session: 's1' })
     expect(store.resolvePin(owned.id, { label: 'Resolver B', session: 's2' }).owner.label).toBe('Owner A')
 
@@ -119,11 +119,11 @@ describe('store.mjs — sanitizing + projections', () => {
   it('projects a speaking mark label and a client view that passes owner through', () => {
     const pin = store.addPin(
       { text: '', url: 'https://x/y', target: { selector: '.btn', innerText: 'Save' } },
-      { label: 'Gerald S.', session: 's' },
+      { label: 'Real Owner', session: 's' },
     )
     expect(store.markLabel(pin)).toBe('Mark: “Save”')
     const view = store.pinForClient(pin)
-    expect(view.owner).toEqual({ label: 'Gerald S.', session: 's' })
+    expect(view.owner).toEqual({ label: 'Real Owner', session: 's' })
     expect(view.target.selector).toBe('.btn')
   })
 })
