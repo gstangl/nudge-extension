@@ -16,6 +16,13 @@ The changelog is English throughout.
 - Added a prominent README callout recommending Claude Code with Monitor for
   automatic wake and explaining the extra chat message required by pull runtimes.
 
+## 0.32.1 — 2026-09-13 (Crosshair toolbar icon)
+
+### Changed
+- Replaced the generic status dot and thumbtack identity with the Lucide
+  Crosshair icon. Its grey, red, amber and green states retain their existing
+  connection-status meanings.
+
 ## 0.31.1 — 2026-09-12 (Docs for coding agents)
 
 ### Changed

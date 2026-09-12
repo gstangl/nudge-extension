@@ -66,26 +66,27 @@ chrome.runtime.onMessage.addListener((msg) => {
 })
 
 // ---------- toolbar icon as status display ----------
-// Lucide "circle" (24x24 viewBox, cx/cy 12, r 10), filled so it reads as a
-// status dot at 16px. Colour semantics (2026-07-04):
+// Lucide "crosshair" (24x24 viewBox). It gives Nudge a recognisable visual
+// identity while its colour still communicates connection state:
 //   grey  = overlay off
 //   red   = overlay active but bridge NOT reachable
 //   amber = bridge reachable but NO agent listening (prompt is stored, not acted on)
 //   green = agent live — a prompt gets acted on NOW
 // Badge = open prompt count (only while active).
-function drawPinIcon(size, color) {
+function drawCrosshairIcon(size, color) {
   const c = new OffscreenCanvas(size, size)
   const ctx = c.getContext('2d')
   ctx.scale(size / 24, size / 24)
-  const circle = new Path2D('M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0') // Lucide circle
-  ctx.fillStyle = color
+  const centre = new Path2D('M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0')
+  const arms = new Path2D('M3 12h3m12 0h3M12 3v3m0 12v3')
   ctx.strokeStyle = color
   ctx.lineWidth = 2
-  ctx.fill(circle)
-  ctx.stroke(circle)
+  ctx.lineCap = 'round'
+  ctx.stroke(centre)
+  ctx.stroke(arms)
   return ctx.getImageData(0, 0, size, size)
 }
-function iconImages(color) { return { 16: drawPinIcon(16, color), 32: drawPinIcon(32, color), 48: drawPinIcon(48, color) } }
+function iconImages(color) { return { 16: drawCrosshairIcon(16, color), 32: drawCrosshairIcon(32, color), 48: drawCrosshairIcon(48, color) } }
 const GREEN = '#3fa34d', AMBER = '#d9a441', RED = '#d0342c', GREY = '#9a948b' // green/amber match the pill's dot
 chrome.action.setIcon({ imageData: iconImages(GREY) }) // global default: grey (SW start)
 chrome.runtime.onMessage.addListener((msg, sender) => {
