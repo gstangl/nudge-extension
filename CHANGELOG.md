@@ -7,6 +7,15 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.32.2 — 2026-09-13 (Astra wake compatibility clarification)
+
+### Changed
+- Clarified that the current Codex integration remains pull when using GPT-6
+  Astra. Distinguished bridge delivery, context hooks and runtime turn-start
+  support, with explicit limits on the automated tests and live Astra evidence.
+- Added a prominent README callout recommending Claude Code with Monitor for
+  automatic wake and explaining the extra chat message required by pull runtimes.
+
 ## 0.31.1 — 2026-09-12 (Docs for coding agents)
 
 ### Changed

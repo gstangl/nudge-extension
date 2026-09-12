@@ -15,6 +15,16 @@ Works with **Claude Code** and **Codex** out of the box. Tested in the
 **terminal**, in **Zed**, and in **T3 Code**. Any other local agent that can
 run a shell command uses the same CLI.
 
+> [!IMPORTANT]
+> **We recommend Claude Code for Nudging.** In the current integration, only
+> **Claude Code with Monitor** has a verified path for automatically waking the
+> agent when you submit a browser prompt, without another chat message.
+>
+> **Codex (including GPT-6 Astra) and other pull runtimes require an additional
+> chat message** after you submit a browser prompt so the agent reads it.
+> A green connection indicator does **not** mean the agent wakes automatically.
+> See [wake modes and verification limits](#agents-and-wake-modes).
+
 **New here?** [Install once](#install) (Chrome + Skill). Then, in the project
 you want to change, arm the agent with `/groundworks-nudge`. That Skill is the
 trigger. The extension does not watch the browser on its own.
@@ -144,10 +154,43 @@ prompt can wake the agent by itself (`push`) or is read with the next message
 |---|---|---|---|
 | Claude Code (terminal) | `~/.claude/skills/groundworks-nudge` | push | Tested. The watcher runs under the `Monitor` tool. A prompt wakes the session in about a second. |
 | Zed | same user-level Skill as the CLI it drives | push | Tested. Invoke `/groundworks-nudge` in the agent panel on **your app**. Claude Code in Zed uses Monitor, so a prompt wakes the session. |
-| Codex CLI | `~/.agents/skills/groundworks-nudge` | pull | Prompts arrive with your next message. The `UserPromptSubmit` hook injects the current mark and the open queue. |
+| Codex CLI (including GPT-6 Astra) | `~/.agents/skills/groundworks-nudge` | pull | Send a chat message, then read the queue through the Skill/CLI. Where the runtime supports the installed `UserPromptSubmit` hook, it adds context to that message; it does not start a turn. |
 | Grok Build | `~/.grok/skills/groundworks-nudge` (also sees the Claude/Codex homes) | pull | Same Skill; start the watcher as a long-running child process. |
 | T3 Code | through the Claude Code, Codex or Grok CLI it drives | pull | Tested. No extra install. Open a thread on **your app**, then `/groundworks-nudge` or `$`. A *Pull* tag on the green dot means send a chat message after you prompt from the page. |
 | Other local agents | none needed | pull | Run `groundworks-nudge watch --label "<name>" --wake pull` as a long-running child process, then use `groundworks-nudge context`, `show` and `resolve`. |
+
+### GPT-6 Astra: what is verified
+
+Reviewed on 2026-09-13. The bridge stores browser prompts and notifies the
+watcher; the watcher writes to stdout. A runtime must deliver that output into
+the conversation to wake an idle agent. Declaring `--wake push` only advertises
+a capability; it does not implement one. The current integration has no Astra
+API or Codex turn-start adapter. Claude Code with Monitor remains the only
+documented, previously tested autonomous wake path. This is a runtime
+integration limit, not a claim that Astra cannot support push.
+
+[OpenAI's Astra documentation](https://developers.openai.com/api/docs/guides/latest-model)
+describes asynchronous tool calling and mid-turn steering. Those features need
+application-side delivery and do not automatically connect Nudge to an idle
+Codex conversation. A background process whose output the agent explicitly
+polls is still pull.
+
+The locally inspected Codex CLI 0.154.0 exposes `codex queue --thread <thread>
+--message <text>`. Nudge does not call it. Its availability is a possible
+integration lead, not a verified browser-to-Astra wake path; no message was
+queued into a live session during this review.
+
+Verification: `cd test && npm run test:ci` exercises a real isolated bridge,
+watcher, scoped queue, directly invoked context hook, and resolution.
+The CI command passed on the review date. `node test/wake-mode.mjs` passed
+the roster and per-host wake checks, then failed with `no scoped snapshot` at
+the WebSocket check in the current working tree. Neither runner launches a
+model session or proves native hook execution inside Codex.
+`node test/e2e.mjs` (Suite A) also passed with the version bump; its agent
+heartbeat is simulated, so it proves extension behavior rather than model wake.
+**An idle Astra session waking from a browser prompt without another chat
+message has not been verified.** Keep Astra on pull until that exact live test
+passes; do not treat green connection status or watcher output as proof.
 
 Parallel projects: each localhost port is owned by one session. With several
 dev servers running, pick the owner per port in the toolbar's *Switch session*
