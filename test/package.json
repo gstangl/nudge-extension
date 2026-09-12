@@ -15,7 +15,7 @@
     "test:ci": "npm test && npm run test:runtime && npm run test:setup"
   },
   "dependencies": {
-    "playwright": "^1.61.1"
+    "playwright": "^1.63.0"
   },
   "devDependencies": {
     "vitest": "~3.2.0"
