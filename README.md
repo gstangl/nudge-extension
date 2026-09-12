@@ -177,6 +177,7 @@ docs/        VISION.md · PRODUCT.md · DECISIONS.md (index: docs/README.md)
 - [INSTALL.md](INSTALL.md): end-user install, update and troubleshooting.
 - [AGENTS.md](AGENTS.md): start file for coding agents working **on this
   repository** (as opposed to using Nudge in another project).
+  [CLAUDE.md](CLAUDE.md) is a one-line pointer at that file.
 - [CONTRIBUTING.md](CONTRIBUTING.md): dev setup, tests, versioning, PR rules.
 - [SUPPORT.md](SUPPORT.md): where to get help.
 - [docs/VISION.md](docs/VISION.md): mission, audience and non-goals. Read

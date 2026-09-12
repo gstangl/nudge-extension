@@ -1,4 +1,4 @@
-# Nudge — Product Definition
+# Groundworks Nudge — Product Definition
 
 2026-07-05. One page; the timeless core lives in
 `VISION.md` (read that first), the technical frame in the top-level `README.md`,

@@ -7,6 +7,14 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.31.1 — 2026-09-12 (Docs for coding agents)
+
+### Changed
+- `AGENTS.md` is command-first and points at one docs file per task.
+  `CLAUDE.md` is a pointer so Claude Code and Grok do not load a second
+  constitution. `docs/README.md` says when to open Vision, Product, or
+  Decisions.
+
 ## 0.31.0 · Bridge 0.17.0 — 2026-09-12 (Groundworks Nudge)
 
 ### Changed

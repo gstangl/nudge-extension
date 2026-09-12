@@ -3,11 +3,16 @@
 Canonical product writing. Install and daily use live at the repository root
 ([README.md](../README.md), [INSTALL.md](../INSTALL.md)).
 
-| File | What it is |
-|---|---|
-| [VISION.md](VISION.md) | Mission, audience, non-goals. Read this before proposing scope. |
-| [PRODUCT.md](PRODUCT.md) | Current product definition and accepted trade-offs. |
-| [DECISIONS.md](DECISIONS.md) | Why the repository is shaped the way it is. Newest first. |
+Agents: read **one** of these per task, not all three. Humans: same map.
 
-Changing this repository: [../AGENTS.md](../AGENTS.md) and
+| File | When | What it is |
+|---|---|---|
+| [VISION.md](VISION.md) | Scope, new capability, "should we build X?" | Mission, audience, priority, timeless non-goals. Almost never changes. |
+| [PRODUCT.md](PRODUCT.md) | Changing current behaviour | What the product is *now*: connection, goals, trade-offs. |
+| [DECISIONS.md](DECISIONS.md) | About to reverse a past choice | Why the repo is shaped this way. Newest date wins on conflict. |
+
+Vision is the north star. Product is the snapshot. Decisions is the log.
+Do not copy intent between them.
+
+Changing this repository: [../AGENTS.md](../AGENTS.md). Pull requests:
 [../CONTRIBUTING.md](../CONTRIBUTING.md).

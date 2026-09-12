@@ -1,16 +1,15 @@
 # Vision
 
-The timeless core of Nudge. This file changes almost never — consult it before
-any decision about scope or direction. Everything current-state lives
-elsewhere: product definition and trade-offs in `PRODUCT.md`, workflow
-decisions in `DECISIONS.md`, the technical frame in the top-level `README.md`.
+The timeless core of Groundworks Nudge. This file changes almost never —
+consult it before any decision about scope or direction. Current-state lives
+in `PRODUCT.md`; why a shape exists lives in `DECISIONS.md`.
 
 ## Mission
 
-**Nudge is the companion extension for coding agents — pixel nudging on the
-rendered UI.** When a UI is standing, you give rapid-fire visual feedback
-directly on the pixels — pick, prompt, next, bum-bum-bum — and the agent works
-through it super-robustly: strictly ordered, nothing lost, done-with-proof.
+**Groundworks Nudge is the companion extension for coding agents: you point
+at the rendered UI, type what you want, and the agent that owns the codebase
+does the work.** Prompts are strictly ordered, nothing is lost, and a nudge
+is done only with proof. The short name is Nudge.
 
 ## Who it serves
 

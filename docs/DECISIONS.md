@@ -3,7 +3,8 @@
 Why nudge-extension is shaped the way it is — the meta/workflow choices a future
 developer (or agent) would otherwise re-litigate. The timeless core lives in
 `VISION.md`; product goals, trade-offs and non-goals in `PRODUCT.md`; this file
-does NOT duplicate them. Newest first.
+does NOT duplicate them. Newest first. **If two entries conflict, the newer
+date wins.**
 
 ## Open source: pull requests from forks, main stays green (2026-09-12)
 The repository is public. Contributors work on a fork or a branch and open a
