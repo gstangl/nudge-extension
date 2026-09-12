@@ -7,6 +7,14 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.31.0 · Bridge 0.17.0 — 2026-09-12 (Groundworks Nudge)
+
+### Changed
+- The product name is **Groundworks Nudge** (Chrome card, native host,
+  bridge identity). This is the first public release of a Groundworks
+  Framework piece. Re-run `./bridge/install-native-host.sh` so Chrome
+  talks to `dev.groundworks.nudge` instead of `energy.roots.nudge`.
+
 ## 0.30.1 — 2026-09-12 (Zed named as a tested surface)
 
 ### Changed
@@ -92,10 +100,10 @@ runtime-neutral CLI. Behaviour described here is still in the product unless
 a later version replaced it.
 
 ### 0.28.0 — 2026-08-14
-Plex Mono for selectors, ids and host chips, shipped as “Roots Nudge Mono”.
+Plex Mono for selectors, ids and host chips, shipped as “Groundworks Nudge Mono”.
 
 ### 0.27.0 — 2026-08-14
-IBM Plex Sans becomes the toolbar face, shipped as “Roots Nudge Sans” (OFL
+IBM Plex Sans becomes the toolbar face, shipped as “Groundworks Nudge Sans” (OFL
 rename required; Reserved Font Name “Plex”).
 
 ### 0.26.0 — 2026-08-14
@@ -170,7 +178,7 @@ amber / green). Number pills instead of persistent page markers.
 
 ### 0.11.0 — 2026-07-05
 Renamed Pin → Nudge. Ids `nudge_N` (legacy `pin_N` still addressable).
-Native host name `energy.roots.nudge`.
+Native host name `dev.groundworks.nudge`.
 
 ### 0.10.0 — 2026-07-05
 CORS restricted to localhost origins. Empty send no longer creates a prompt.

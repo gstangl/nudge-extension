@@ -15,7 +15,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 EXT_DIR="$(cd "$HERE/../extension" && pwd -P)"
-HOST_NAME="energy.roots.nudge"
+HOST_NAME="dev.groundworks.nudge"
 WRAPPER="$HERE/native-host-wrapper.sh"
 
 sha256_hex() {

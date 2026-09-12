@@ -40,7 +40,7 @@ try {
   await p.locator('.pill').waitFor({ timeout: 15000 })
   await sleep(500)
 
-  const sr = 'document.getElementById("__roots-nudge-host").shadowRoot'
+  const sr = 'document.getElementById("__groundworks-nudge-host").shadowRoot'
   const outlines = () => p.evaluate(`${sr}.querySelectorAll('.hl-multi').length`)
   const meta = () => p.evaluate(`${sr}.querySelector('.composer .meta').textContent`)
   const strokes = () => p.evaluate(`${sr}.querySelectorAll('.draw path').length`)

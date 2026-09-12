@@ -80,7 +80,7 @@ always visible, in both directions:
 ## Goals
 
 - [x] Works on ANY localhost app — framework-agnostic by design (extension,
-      not dev-server middleware). Roots apps are the first user, not the limit.
+      not dev-server middleware). Any localhost app — that is the point.
 - [x] Prompt + context arrive as one unit the agent can act on without asking back.
 - [x] The current mark is ambient agent context ("this one" just works).
 - [x] Connection truth at every step: icon, send-toast, per-message status line.

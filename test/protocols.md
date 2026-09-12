@@ -11,7 +11,7 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 - `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
   prompts against md-pdf, estimate (ProseMirror) and media, started from this
   worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.
-  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  (maintainer-only: needs the maintainer's private apps; contributors run Suite A, D, F
   and the other self-contained suites)
 - `node test/fixture-gauntlet.mjs` — **Suite F (Fixture Gauntlet)**, side port
   4722, static server 5320: third-party UI idioms from the internet, VENDORED
@@ -78,7 +78,7 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   four simultaneous tabs with four armed sessions and churning ownership — per-app
   binding, per-route isolation (no cross-app leak), concurrent interleaved creation
   under a heartbeat/resolve storm. Reuses running dev servers; skips unreachable.
-  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  (maintainer-only: needs the maintainer's private apps; contributors run Suite A, D, F
   and the other self-contained suites)
 - `node test/battletest.mjs` — **Suite I (Kidnap Battletest)**, side port 4793,
   static 5321: END-TO-END through the real extension — a nudge is set in a new app
@@ -113,7 +113,7 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   store, estimate app on :5185 + a throwaway generic app. Run before "releases"
   and after infra changes (bridge lifecycle, store, hooks). Writes `[TEST-…]`
   pins and cleans them up itself (never resets seq).
-  (maintainer-only: needs the private Roots apps; contributors run Suite A, D, F
+  (maintainer-only: needs the maintainer's private apps; contributors run Suite A, D, F
   and the other self-contained suites)
 - **Suite C** — manual drills, each tied to a trigger ("run after X changed").
 
@@ -526,7 +526,7 @@ accrue in `amendments`. `POST /comments/:id/amend {text}`.
 | C4 | **Security boundary**: 127.0.0.1-only bind (LAN curl refused); no secrets in store; overlay never captures itself | quarterly / before team rollout | ⬜ |
 | C5 | **Status truth (agentLive)**: no watcher → amber; armed → green ≤5 s; watcher killed → amber ≤15 s; bridge killed → red. Green must never lie | after heartbeat/status changes | partly ✅ (flips observed live 2026-07-04/05) |
 | C6 | **Overlay perf** on a heavy TipTap doc: no hover lag (fastPath), glide stays smooth | after picker changes | ⬜ |
-| C7 | **Foreign-project Agent**: install the global adapter, invoke `groundworks-nudge`, then prove a prompt round trip outside Roots Apps | after wiring changes | ⬜ (neutral CLI + installer automated ✅ 2026-08-28) |
+| C7 | **Foreign-project Agent**: install the global adapter, invoke `groundworks-nudge`, then prove a prompt round trip outside this repository | after wiring changes | ⬜ (neutral CLI + installer automated ✅ 2026-08-28) |
 | C8 | **Real-Chrome self-heal**: kill bridge with only the user's Chrome running → circle red → green again without any agent/terminal | after native-host changes | ⬜ (Chromium-automated ✅ = B5) |
 
 ## Removed (2026-07-05 architecture pass)

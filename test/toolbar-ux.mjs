@@ -53,24 +53,24 @@ try {
   await p.waitForTimeout(150)
 
   const rd = fn => p.evaluate(fn)
-  const click = sel => p.evaluate(s => document.getElementById('__roots-nudge-host').shadowRoot.querySelector(s).click(), sel)
+  const click = sel => p.evaluate(s => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector(s).click(), sel)
   const noInlinePort = s => !/:\d{2,5}\b/.test(s || '')
 
   // ---------- L1: localhost is a pill, never inline — toolbar + switcher rows ----------
   {
-    const tl = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
-    const th = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-host').textContent)
-    const tk = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-kind').textContent)
+    const tl = await rd(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
+    const th = await rd(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-host').textContent)
+    const tk = await rd(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-kind').textContent)
     if (tk !== 'Agent:') fail(`L1: toolbar should label the owner with "Agent:", got "${tk}"`)
     // the owner's session id is visible in the toolbar WITHOUT any click
-    const tid = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-id').textContent)
+    const tid = await rd(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-id').textContent)
     if (tid !== 'estT') fail(`L1: toolbar should show the owner's session id (estT) without a click, got "${tid}"`)
     if (!noInlinePort(tl)) fail(`L1: toolbar label has inline port: "${tl}"`)
     // the toolbar shows the localhost as a clean pill (owner is "Estimate Templates :5175")
     if (th !== 'localhost:5175') fail(`L1: toolbar host pill should be localhost:5175, got "${th}"`)
     await click('.pill .who')
     await p.locator('.who-menu.on').waitFor({ timeout: 3000 })
-    const rows = await rd(() => [...document.getElementById('__roots-nudge-host').shadowRoot.querySelectorAll('.who-menu .w-row')].map(x => ({ name: x.querySelector('.w-name').textContent, host: x.querySelector('.w-host')?.textContent || null, l2: x.querySelector('.w-line2')?.textContent || '' })))
+    const rows = await rd(() => [...document.getElementById('__groundworks-nudge-host').shadowRoot.querySelectorAll('.who-menu .w-row')].map(x => ({ name: x.querySelector('.w-name').textContent, host: x.querySelector('.w-host')?.textContent || null, l2: x.querySelector('.w-line2')?.textContent || '' })))
     // each row carries its session id — the key the /groundworks-nudge arm-report
     // prints, so chat ↔ dropdown match 1:1 even with duplicate labels
     for (const want of [{ n: 'Estimate Templates', id: 'estT' }, { n: 'Maps-Refactor', id: 'mapR' }]) {
@@ -92,7 +92,7 @@ try {
 
   // ---------- L2: connection feed chip — clean name + host pill ----------
   {
-    const chips = await rd(() => [...document.getElementById('__roots-nudge-host').shadowRoot.querySelectorAll('.feed .item')].map(it => ({ text: it.querySelector('.feed-text')?.textContent, host: it.querySelector('.feed-host')?.textContent || null })))
+    const chips = await rd(() => [...document.getElementById('__groundworks-nudge-host').shadowRoot.querySelectorAll('.feed .item')].map(it => ({ text: it.querySelector('.feed-text')?.textContent, host: it.querySelector('.feed-host')?.textContent || null })))
     const agentChips = chips.filter(c => /^Agent: /.test(c.text || ''))
     if (!agentChips.length) fail('L2: no "Agent: …" connection chip appeared')
     for (const c of agentChips) {
@@ -107,7 +107,7 @@ try {
     // one open nudge so the count badge + queue exist
     await fetch(`${B}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'note', url: `http://localhost:${PAGE}/`, target: { selector: '#t' } }) })
     await p.waitForTimeout(300)
-    const state = () => rd(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot; return { queue: !!r.querySelector('.queue.on'), who: !!r.querySelector('.who-menu.on') } })
+    const state = () => rd(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; return { queue: !!r.querySelector('.queue.on'), who: !!r.querySelector('.who-menu.on') } })
     await click('.pill .count'); await p.waitForTimeout(120)
     let s = await state(); if (!(s.queue && !s.who)) fail(`L3: after opening queue: ${JSON.stringify(s)}`)
     await click('.pill .who'); await p.waitForTimeout(120)
@@ -120,7 +120,7 @@ try {
 
   // ---------- L4: P/F tool hotkeys, tightly gated ----------
   {
-    const modeCls = () => rd(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot; return { pick: r.querySelector('.btn-pick').classList.contains('active'), draw: r.querySelector('.btn-draw').classList.contains('active') } })
+    const modeCls = () => rd(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; return { pick: r.querySelector('.btn-pick').classList.contains('active'), draw: r.querySelector('.btn-draw').classList.contains('active') } })
     await p.locator('body').click({ position: { x: 5, y: 5 } }) // focus the page, not an input
     await p.keyboard.press('p'); await p.waitForTimeout(80)
     let m = await modeCls(); if (!(m.pick && !m.draw)) fail(`L4: "p" should enter picking, got ${JSON.stringify(m)}`)
@@ -141,7 +141,7 @@ try {
   {
     await p.emulateMedia({ reducedMotion: 'reduce' })
     await p.waitForTimeout(80)
-    const dur = await rd(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const hl = r.querySelector('.hl'); return getComputedStyle(hl).transitionDuration })
+    const dur = await rd(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const hl = r.querySelector('.hl'); return getComputedStyle(hl).transitionDuration })
     // "0.001s" (our near-zero override) or "0s" both mean motion is off
     const secs = Math.max(...String(dur).split(',').map(x => parseFloat(x) || 0))
     if (secs > 0.05) fail(`L5: highlight still animates under reduced-motion (transition-duration ${dur})`)
@@ -157,7 +157,7 @@ try {
   // arrives. Both must keep it inside; neither may cost the remembered spot.
   {
     const box = () => rd(() => {
-      const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect()
+      const r = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect()
       return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, vw: document.documentElement.clientWidth, vh: document.documentElement.clientHeight }
     })
     const inside = b => b.left >= 0 && b.top >= 0 && b.right <= b.vw && b.bottom <= b.vh
@@ -179,7 +179,7 @@ try {
     A.label = 'Estimate Templates with a really very long session name :5175'
     await hb(A)
     await p.waitForTimeout(1600) // heartbeat -> bridge -> WS frame -> toolbar
-    const grown = await rd(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
+    const grown = await rd(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent)
     if (!grown.includes('very long')) fail(`L7: the long label never reached the toolbar, got "${grown}"`)
     b = await box()
     // guard against a vacuous test: if the label doesn't widen the bar, step 2 proves nothing
@@ -202,12 +202,12 @@ try {
   {
     await sw.evaluate(() => chrome.runtime.reload()).catch(() => {}) // handle dies mid-call — expected
     let hint = null
-    for (let i = 0; i < 24; i++) { await sleep(500); hint = await p.evaluate(() => document.getElementById('__roots-nudge-reload-hint')?.textContent || null); if (hint) break }
+    for (let i = 0; i < 24; i++) { await sleep(500); hint = await p.evaluate(() => document.getElementById('__groundworks-nudge-reload-hint')?.textContent || null); if (hint) break }
     if (!hint || !hint.includes('⌘R')) fail(`L6: orphaned tab must show the ⌘R reload hint, got ${JSON.stringify(hint)}`)
-    const hostGone = await p.evaluate(() => !document.getElementById('__roots-nudge-host'))
+    const hostGone = await p.evaluate(() => !document.getElementById('__groundworks-nudge-host'))
     if (!hostGone) fail('L6: the dead overlay must remove itself alongside the hint')
-    await p.evaluate(() => document.getElementById('__roots-nudge-reload-hint').click())
-    if (await p.evaluate(() => !!document.getElementById('__roots-nudge-reload-hint'))) fail('L6: click must dismiss the hint')
+    await p.evaluate(() => document.getElementById('__groundworks-nudge-reload-hint').click())
+    if (await p.evaluate(() => !!document.getElementById('__groundworks-nudge-reload-hint'))) fail('L6: click must dismiss the hint')
     pass('L6 an orphaned tab (extension reload) shows the ⌘R hint instead of vanishing silently; click dismisses')
   }
 

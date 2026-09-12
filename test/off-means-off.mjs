@@ -62,7 +62,7 @@ try {
     await chrome.tabs.sendMessage(t.id, { type: 'nudge-toggle' })
   })
   const bar = (pg) => pg.evaluate(() => {
-    const sr = document.getElementById('__roots-nudge-host')?.shadowRoot
+    const sr = document.getElementById('__groundworks-nudge-host')?.shadowRoot
     if (!sr) return 'no-host'
     return getComputedStyle(sr.querySelector('.pill')).display === 'none' ? 'hidden' : 'visible'
   })

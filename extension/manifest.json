@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Roots Nudge",
-  "version": "0.30.1",
+  "name": "Groundworks Nudge",
+  "version": "0.31.0",
   "web_accessible_resources": [
     {
       "resources": [
@@ -34,7 +34,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Roots Nudge - toggle (Alt+C)",
+    "default_title": "Groundworks Nudge - toggle (Alt+C)",
     "default_icon": {
       "16": "icons/circle-grey-16.png",
       "32": "icons/circle-grey-32.png",

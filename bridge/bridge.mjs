@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import * as store from './store.mjs'
 
-const VERSION = '0.16.0'
+const VERSION = '0.17.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -85,7 +85,7 @@ function handle(req, res) {
     const pickAlive = (h) => { const k = chosenByHost.get(h) || chosenByHost.get('*'); return !!k && fresh.some(a => agentKey(a) === k) }
     const tabHosts = [...new Set([...wss.clients].map(c => hostOf(c.meta?.url || '')).filter(Boolean))]
     const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session, wake: o.wake } : null, viaFallback: !pickAlive(h) } })
-    return json(res, 200, { app: 'roots-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+    return json(res, 200, { app: 'groundworks-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
   }
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")

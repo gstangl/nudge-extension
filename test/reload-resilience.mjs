@@ -51,7 +51,7 @@ try {
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), DEAD_PORT)
 
   const p = await ctx.newPage()
-  const sr = 'document.getElementById("__roots-nudge-host").shadowRoot'
+  const sr = 'document.getElementById("__groundworks-nudge-host").shadowRoot'
   const ready = async () => { await p.locator('.pill').waitFor({ timeout: 15000 }); await sleep(250) }
   const meta = () => p.evaluate(`${sr}.querySelector('.composer .meta').textContent`)
   const metaLost = () => p.evaluate(`${sr}.querySelector('.composer .meta').classList.contains('lost')`)

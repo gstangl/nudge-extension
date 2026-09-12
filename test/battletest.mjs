@@ -137,7 +137,7 @@ try {
     await page.locator('.queue.on').waitFor({ timeout: 3000 })
     await page.waitForTimeout(300)
     const rows = await page.evaluate(() => {
-      const root = document.getElementById('__roots-nudge-host').shadowRoot
+      const root = document.getElementById('__groundworks-nudge-host').shadowRoot
       return [...root.querySelectorAll('.queue .q-row')].map(r => ({ id: r.querySelector('.q-id')?.textContent, who: r.querySelector('.q-who')?.textContent }))
     })
     const first = rows.find(r => r.id === nudgeId)

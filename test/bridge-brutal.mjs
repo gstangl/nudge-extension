@@ -306,7 +306,7 @@ try {
     await sleep(300)
     // while it hangs, everyone else is served
     const during = await (await fetch(`${B}/.identity`, { signal: AbortSignal.timeout(2000) })).json()
-    if (during.app !== 'roots-nudge') fail('D9: bridge blocked by half-open socket')
+    if (during.app !== 'groundworks-nudge') fail('D9: bridge blocked by half-open socket')
     hang.destroy()
     // raw garbage on the port
     for (const bytes of ['GARBAGE\r\n\r\n', 'GET / HTTP/9.9\r\n\r\n', '\x00\x01\x02\x03\xff\xfe']) {

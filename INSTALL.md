@@ -1,6 +1,6 @@
-# Installing and using Nudge
+# Installing and using Groundworks Nudge
 
-**Nudge lets you prompt your coding agent directly on the running web app.**
+**Groundworks Nudge lets you prompt your coding agent directly on the running web app.**
 You point at an element or circle a region in Chrome, type what you want, and
 the active agent receives the screenshot, the element, its styles and the
 console. When it is done it reports back into the browser. Nudge works on any
@@ -37,7 +37,7 @@ npm install
 2. Switch on **Developer mode** (toggle in the top right corner).
 3. Click **Load unpacked** and select the folder
    `nudge-extension/extension/` (the folder that contains `manifest.json`).
-4. A card named **Roots Nudge** appears. Leave it enabled.
+4. A card named **Groundworks Nudge** appears. Leave it enabled.
 
 The extension only runs on `http://localhost:*` and `http://127.0.0.1:*`. It
 does nothing on other sites.
@@ -157,7 +157,7 @@ cd <path-to>/nudge-extension && git pull
 cd bridge && npm install
 ```
 
-Then, in `chrome://extensions`, click the reload arrow on the Roots Nudge card
+Then, in `chrome://extensions`, click the reload arrow on the Groundworks Nudge card
 and reload your localhost tab. Re-run `./agent/setup-agent.sh` if the Skill or
 hooks changed (the changelog says so). The bridge picks up new code the next
 time it starts; to force it, stop the process on port 4700 and Chrome will
@@ -185,7 +185,8 @@ start it again with the new code.
 ## Uninstall
 
 - Chrome: remove the extension in `chrome://extensions`.
-- Native host: delete `energy.roots.nudge.json` from
+- Native host: delete `dev.groundworks.nudge.json` (and the older
+  `energy.roots.nudge.json`, if present) from
   `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/` (macOS)
   or `~/.config/google-chrome/NativeMessagingHosts/` (Linux), and the same in
   the Chromium folder next to it.

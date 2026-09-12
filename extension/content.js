@@ -1,4 +1,4 @@
-// Roots Nudge content script — UI prompting, fire-and-forget.
+// Groundworks Nudge content script — UI prompting, fire-and-forget.
 // Pin a PROMPT onto the running UI: element picker with layer chips (pick the
 // ancestor you meant) or freehand lasso, composer, send — nothing stays on the
 // page (no persistent markers). Feedback: Lucide-iconed feed chips top right
@@ -22,7 +22,7 @@
 
   // ---------- shadow root + styles ----------
   const host = document.createElement('div')
-  host.id = '__roots-nudge-host'
+  host.id = '__groundworks-nudge-host'
   host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483647;'
   const root = host.attachShadow({ mode: 'open' })
   document.documentElement.appendChild(host)
@@ -66,20 +66,20 @@
   const statusMenu = el('div', 'status-menu', '<div class="q-head"></div><div class="sm-body"></div>')
   const dots = el('div', 'dots') // open-prompt dots: amber status per marked element
 
-  // "Roots Nudge Sans" (IBM Plex Sans, OFL — see fonts/README.md for why it
+  // "Groundworks Nudge Sans" (IBM Plex Sans, OFL — see fonts/README.md for why it
   // carries our name and not IBM's). Self-contained: @font-face cannot load from
   // a shadow-root adopted sheet, so declare it once at DOCUMENT level; the woff2
   // ships WITH the extension (web_accessible_resources) — no dependency on the
   // host page. TWO files, because this family has a REAL drawn italic (the "a"
   // turns single-storey) — not a synthesised slant like the faces before it.
-  if (!document.getElementById('__roots-nudge-font')) {
+  if (!document.getElementById('__groundworks-nudge-font')) {
     const f = document.createElement('style')
-    f.id = '__roots-nudge-font'
-    const face = (file, style) => `@font-face { font-family: "Roots Nudge Sans"; src: url("${chrome.runtime.getURL(file)}") format("woff2-variations"); font-weight: 100 700; font-style: ${style}; font-display: swap; }`
+    f.id = '__groundworks-nudge-font'
+    const face = (file, style) => `@font-face { font-family: "Groundworks Nudge Sans"; src: url("${chrome.runtime.getURL(file)}") format("woff2-variations"); font-weight: 100 700; font-style: ${style}; font-display: swap; }`
     // Plex Mono for the machine strings — selectors, ids, hosts. Shipped rather
     // than left to ui-monospace, which is three different faces on macOS, Windows
     // and Linux; an open-source install should look the same everywhere.
-    const mono = `@font-face { font-family: "Roots Nudge Mono"; src: url("${chrome.runtime.getURL('fonts/rn-mono.woff2')}") format("woff2"); font-weight: 400; font-display: swap; }`
+    const mono = `@font-face { font-family: "Groundworks Nudge Mono"; src: url("${chrome.runtime.getURL('fonts/rn-mono.woff2')}") format("woff2"); font-weight: 400; font-display: swap; }`
     f.textContent = face('fonts/rn-sans.woff2', 'normal') + face('fonts/rn-sans-italic.woff2', 'italic') + mono
     document.head.appendChild(f)
   }
@@ -642,10 +642,10 @@
   // ---------- console + network excerpt from the MAIN-world hook ----------
   function getConsole() {
     return new Promise((res) => {
-      const done = (e) => { removeEventListener('roots-nudge-console-res', done); clearTimeout(t); res(JSON.parse(e.detail || '[]')) }
-      const t = setTimeout(() => { removeEventListener('roots-nudge-console-res', done); res([]) }, 300)
-      addEventListener('roots-nudge-console-res', done)
-      dispatchEvent(new CustomEvent('roots-nudge-console-req'))
+      const done = (e) => { removeEventListener('groundworks-nudge-console-res', done); clearTimeout(t); res(JSON.parse(e.detail || '[]')) }
+      const t = setTimeout(() => { removeEventListener('groundworks-nudge-console-res', done); res([]) }, 300)
+      addEventListener('groundworks-nudge-console-res', done)
+      dispatchEvent(new CustomEvent('groundworks-nudge-console-req'))
     })
   }
 
@@ -727,8 +727,8 @@
         new Promise((_, rej) => setTimeout(() => rej(new Error('capture timed out (debugger attached?)')), CAPTURE_TIMEOUT)),
       ])
       if (res?.ok) out = res
-      else console.warn('[roots-nudge] capture failed:', res?.error)
-    } catch (err) { console.warn('[roots-nudge] capture failed:', err) }
+      else console.warn('[groundworks-nudge] capture failed:', res?.error)
+    } catch (err) { console.warn('[groundworks-nudge] capture failed:', err) }
     finally {
       clearTimeout(graceTimer)
       chrome.runtime.onMessage.removeListener(onGrabbed)
@@ -738,7 +738,7 @@
     // frame. Evidence with our own UI baked into it is worse than no evidence —
     // drop it rather than ship a picture that misleads the agent.
     if (out && !grabbedClean) {
-      console.warn('[roots-nudge] capture discarded: grabbed after the overlay was restored')
+      console.warn('[groundworks-nudge] capture discarded: grabbed after the overlay was restored')
       out = null
     }
     return out
@@ -1492,9 +1492,9 @@
   // context is dead), no shadow styles (the host is gone): one pill in the brand
   // midnight, dismiss on click, gone with the reload it asks for.
   function showReloadHint() {
-    if (document.getElementById('__roots-nudge-reload-hint')) return
+    if (document.getElementById('__groundworks-nudge-reload-hint')) return
     const n = document.createElement('div')
-    n.id = '__roots-nudge-reload-hint'
+    n.id = '__groundworks-nudge-reload-hint'
     n.textContent = 'Nudge updated — press ⌘R to reload the toolbar'
     n.title = 'Click to dismiss'
     n.style.cssText = 'position:fixed;top:16px;right:16px;z-index:2147483647;background:#1A1F26;color:#F2EFEA;font:500 12px/1.4 -apple-system,"Helvetica Neue",sans-serif;letter-spacing:.01em;padding:8px 14px;border-radius:999px;border:1px solid #3A4250;box-shadow:0 1px 2px rgba(0,0,0,.3),0 4px 12px rgba(14,19,24,.35);cursor:pointer;'
@@ -1705,7 +1705,7 @@
   }
   // A snapshot from an older version must never cost the user the overlay itself
   try { restoreSession() } catch (e) {
-    console.warn('[roots-nudge] session restore failed:', e)
+    console.warn('[groundworks-nudge] session restore failed:', e)
     try { sessionStorage.removeItem(SNAP_KEY) } catch { /* storage blocked */ }
     setMode(offSync() ? 'off' : 'idle')
   }

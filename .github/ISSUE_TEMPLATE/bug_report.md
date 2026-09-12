@@ -19,7 +19,7 @@ What you expected instead.
 **Environment**
 - OS and Chrome version:
 - Node version (`node -v`):
-- Extension version (chrome://extensions → Roots Nudge):
+- Extension version (chrome://extensions → Groundworks Nudge):
 - Agent runtime (Claude Code / Codex / Zed / T3 Code / other, with version):
 - Output of `groundworks-nudge status` (remove anything private):
 

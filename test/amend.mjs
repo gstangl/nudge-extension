@@ -104,22 +104,22 @@ try {
     await p.goto(`http://localhost:${PAGE}/`, { waitUntil: 'domcontentloaded' })
     await p.locator('.pill .status').waitFor({ timeout: 15000 }); await sleep(600)
     // open History, open the amend panel on the row, type + ⌘↩
-    await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill .count').click())
+    await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .count').click())
     await p.locator('.queue.on').waitFor({ timeout: 3000 })
-    await p.evaluate((nid) => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const rows = [...r.querySelectorAll('.q-row')]; const row = rows.find(x => x.querySelector('.q-id')?.textContent === nid); row.querySelector('.q-add').click() }, id)
+    await p.evaluate((nid) => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const rows = [...r.querySelectorAll('.q-row')]; const row = rows.find(x => x.querySelector('.q-id')?.textContent === nid); row.querySelector('.q-add').click() }, id)
     await sleep(150)
-    await p.evaluate(() => { const ta = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.q-row.amending .q-amend-input'); ta.focus(); ta.value = 'one more detail'; ta.dispatchEvent(new Event('input', { bubbles: true })) })
+    await p.evaluate(() => { const ta = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.q-row.amending .q-amend-input'); ta.focus(); ta.value = 'one more detail'; ta.dispatchEvent(new Event('input', { bubbles: true })) })
     // the subtle send button right of the input (the affordance the user asked for)
-    await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.q-row.amending .q-amend-send').click())
+    await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.q-row.amending .q-amend-send').click())
     for (let i = 0; i < 30; i++) { await sleep(100); const pin = readStore().pins.find(x => x.id === id); if (pin?.amendments?.length) break }
     const pin = readStore().pins.find(x => x.id === id)
     if (pin.amendments?.[0]?.text !== 'one more detail') fail(`N5: UI amend did not reach the store: ${JSON.stringify(pin.amendments)}`)
-    const badgeOf = (nid) => p.evaluate((n) => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === n); return row?.querySelector('.q-amc')?.textContent || null }, nid)
+    const badgeOf = (nid) => p.evaluate((n) => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === n); return row?.querySelector('.q-amc')?.textContent || null }, nid)
     let badge = null
     for (let i = 0; i < 30; i++) { await sleep(100); badge = await badgeOf(id); if (badge === '+1') break } // poll the WS re-render (no fixed sleep)
     if (badge !== '+1') fail(`N5: the "+1" follow-up badge did not appear, got ${JSON.stringify(badge)}`)
     // and the follow-up TEXT must be readable in the expanded row (not just the badge)
-    const shown = await p.evaluate((nid) => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === nid); const items = [...row.querySelectorAll('.q-amend-item')]; return { open: row.classList.contains('open'), texts: items.map(i => i.textContent), visible: items.some(i => i.offsetParent !== null) } }, id)
+    const shown = await p.evaluate((nid) => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === nid); const items = [...row.querySelectorAll('.q-amend-item')]; return { open: row.classList.contains('open'), texts: items.map(i => i.textContent), visible: items.some(i => i.offsetParent !== null) } }, id)
     if (!shown.texts.includes('one more detail') || !shown.visible) fail(`N5: the follow-up text is not readable under the row: ${JSON.stringify(shown)}`)
     pass('N5 History "+ amend" round-trips: follow-up reaches the store, the "+1" badge shows, and its TEXT is readable under the expanded row')
 
@@ -130,16 +130,16 @@ try {
     {
       const id2 = await addNudge('Second UI nudge.')
       await sleep(300) // WS refresh brings the new row into the open History
-      const openPanel = () => p.evaluate((nid) => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === nid); row.querySelector('.q-add').click() }, id2)
+      const openPanel = () => p.evaluate((nid) => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === nid); row.querySelector('.q-add').click() }, id2)
       const amInput = '.q-row.amending .q-amend-input'
       await openPanel(); await sleep(150)
-      await p.evaluate((s) => document.getElementById('__roots-nudge-host').shadowRoot.querySelector(s).focus(), amInput)
+      await p.evaluate((s) => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector(s).focus(), amInput)
       await p.keyboard.type('first line')
       await p.keyboard.press('Shift+Enter') // must NOT submit — inserts a newline
       await sleep(250)
       let pin2 = readStore().pins.find(x => x.id === id2)
       if (pin2.amendments) fail('N6: Shift+Enter submitted — it must only insert a newline')
-      const val = await p.evaluate((s) => document.getElementById('__roots-nudge-host').shadowRoot.querySelector(s)?.value, amInput)
+      const val = await p.evaluate((s) => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector(s)?.value, amInput)
       if (!val || !val.includes('\n')) fail(`N6: Shift+Enter did not insert a newline, value=${JSON.stringify(val)}`)
       await p.keyboard.type('second line')
       await p.keyboard.press('Enter') // plain Enter sends
@@ -147,13 +147,13 @@ try {
       pin2 = readStore().pins.find(x => x.id === id2)
       if (pin2.amendments?.[0]?.text !== 'first line\nsecond line') fail(`N6: Enter did not send the full follow-up, got ${JSON.stringify(pin2.amendments)}`)
       // poll for the WS re-render to close the panel (fixed sleeps flake here)
-      const amendingNow = (nid) => p.evaluate((n) => { const r = document.getElementById('__roots-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === n); return row?.classList.contains('amending') || false }, nid)
+      const amendingNow = (nid) => p.evaluate((n) => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; const row = [...r.querySelectorAll('.q-row')].find(x => x.querySelector('.q-id')?.textContent === n); return row?.classList.contains('amending') || false }, nid)
       let stillAmending = true
       for (let i = 0; i < 30; i++) { await sleep(100); stillAmending = await amendingNow(id2); if (!stillAmending) break }
       if (stillAmending) fail('N6: the field did not clear/close after a successful send')
       // and NO amend input anywhere may still hold the just-sent text (the WS
       // re-render must not restore the field mid-send — 2026-07-07 race)
-      const lingering = await p.evaluate((t) => [...document.getElementById('__roots-nudge-host').shadowRoot.querySelectorAll('.q-amend-input')].some(i => i.value.includes(t)), 'second line')
+      const lingering = await p.evaluate((t) => [...document.getElementById('__groundworks-nudge-host').shadowRoot.querySelectorAll('.q-amend-input')].some(i => i.value.includes(t)), 'second line')
       if (lingering) fail('N6: the sent follow-up text still lingers in an amend input after send')
       pass('N6 submit contract: Enter sends, Shift+Enter is a newline (not send), the field clears after a successful send')
     }

@@ -37,8 +37,8 @@ const UDD = '/tmp/pin-drill-udd'
 fs.rmSync(UDD, { recursive: true, force: true })
 fs.mkdirSync(path.join(UDD, 'NativeMessagingHosts'), { recursive: true })
 fs.copyFileSync(
-  path.join(os.homedir(), 'Library/Application Support/Chromium/NativeMessagingHosts/energy.roots.nudge.json'),
-  path.join(UDD, 'NativeMessagingHosts/energy.roots.nudge.json'),
+  path.join(os.homedir(), 'Library/Application Support/Chromium/NativeMessagingHosts/dev.groundworks.nudge.json'),
+  path.join(UDD, 'NativeMessagingHosts/dev.groundworks.nudge.json'),
 )
 const ctx = await chromium.launchPersistentContext(UDD, {
   headless: false, viewport: { width: 1600, height: 1000 },
@@ -122,7 +122,7 @@ try {
   // ---- Leg 5: self-healing — kill the bridge, Chrome revives it (native host) ----
   execSync('lsof -tnP -iTCP:4700 -sTCP:LISTEN | xargs kill 2>/dev/null || true')
   await new Promise(r => setTimeout(r, 500))
-  const healed = await until(async () => (await api('/.identity')).app === 'roots-nudge', 35000, 'self-heal')
+  const healed = await until(async () => (await api('/.identity')).app === 'groundworks-nudge', 35000, 'self-heal')
   leg('self-healing: bridge dies → extension revives it (native host)', healed)
 } finally {
   // hard watchdog: ctx.close() can hang on an open native-messaging port; the

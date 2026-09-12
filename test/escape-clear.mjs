@@ -55,7 +55,7 @@ try {
   await p.locator('.pill').waitFor({ timeout: 15000 })
   await sleep(500)
 
-  const sr = 'document.getElementById("__roots-nudge-host").shadowRoot'
+  const sr = 'document.getElementById("__groundworks-nudge-host").shadowRoot'
   // what is visibly marked right now
   const marks = () => p.evaluate(`(() => { const r = ${sr}; return {
     hl: r.querySelector('.hl').classList.contains('on'),

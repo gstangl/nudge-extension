@@ -122,7 +122,7 @@ function ensureBridge() {
   if (now - lastEnsure < 5000) return // don't hammer while a tab retries
   lastEnsure = now
   try {
-    const port = chrome.runtime.connectNative('energy.roots.nudge')
+    const port = chrome.runtime.connectNative('dev.groundworks.nudge')
     port.onMessage.addListener(() => port.disconnect()) // launcher answered — done
     port.onDisconnect.addListener(() => { /* host exits, bridge lives on */ })
   } catch { /* native host not installed */ }

@@ -1,7 +1,8 @@
-# Nudge
+# Groundworks Nudge
 
-**Prompt your coding agent on the pixel.** Nudge is a Chrome extension plus a
-small local bridge. You pick an element or circle a region in any `localhost`
+**Prompt your coding agent on the pixel.** Groundworks Nudge is a Chrome
+extension plus a small local bridge — the first public piece of the
+Groundworks Framework. You pick an element or circle a region in any `localhost`
 app, type what you want, and the prompt reaches the coding agent that owns the
 codebase, together with the selector, computed styles, console and network
 errors, and a screenshot. The agent fixes it, verifies it, and reports back

@@ -113,7 +113,7 @@ try {
       // open the History and confirm the single open row is THIS app's nudge with THIS owner
       await a.page.locator('.pill .count').click()
       await a.page.locator('.queue.on').waitFor({ timeout: 3000 })
-      const rows = await a.page.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot; return [...r.querySelectorAll('.queue .q-row:not(.done)')].map(x => ({ id: x.querySelector('.q-id')?.textContent, who: x.querySelector('.q-who')?.textContent })) })
+      const rows = await a.page.evaluate(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; return [...r.querySelectorAll('.queue .q-row:not(.done)')].map(x => ({ id: x.querySelector('.q-id')?.textContent, who: x.querySelector('.q-who')?.textContent })) })
       if (rows.length !== 1 || rows[0].id !== a.firstNudge) fail(`J2: ${a.name} History shows ${rows.length} open rows (cross-app leak?) ${JSON.stringify(rows)}`)
       if (rows[0].who !== a.owner.label) fail(`J2: ${a.name} row owner ${rows[0].who} != ${a.owner.label}`)
       await a.page.keyboard.press('Escape')
@@ -163,7 +163,7 @@ try {
       await a.page.bringToFront(); await a.page.waitForTimeout(200)
       await a.page.locator('.pill .count').click()
       await a.page.locator('.queue.on').waitFor({ timeout: 3000 })
-      const rows = await a.page.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot; return [...r.querySelectorAll('.queue .q-row')].map(x => ({ id: x.querySelector('.q-id')?.textContent, who: x.querySelector('.q-who')?.textContent, done: x.classList.contains('done') })) })
+      const rows = await a.page.evaluate(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot; return [...r.querySelectorAll('.queue .q-row')].map(x => ({ id: x.querySelector('.q-id')?.textContent, who: x.querySelector('.q-who')?.textContent, done: x.classList.contains('done') })) })
       // every row shown on this tab must be a nudge whose owner is THIS app's agent
       // (all nudges on this route were created while this app's agent owned)
       const foreign = rows.filter(x => x.who && x.who !== a.owner.label)

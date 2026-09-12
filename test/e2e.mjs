@@ -84,7 +84,7 @@ try {
   await page.locator('.who-menu.on .w-row.is-owner', { hasText: 'suite-a' }).waitFor({ timeout: 3000 })
   // it is a real popover: the caret points at the session label it opened from (C-7)
   const whoCaretΔ = await page.evaluate(() => {
-    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const r = document.getElementById('__groundworks-nudge-host').shadowRoot
     const m = r.querySelector('.who-menu'), who = r.querySelector('.pill .who').getBoundingClientRect()
     const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
     return Math.abs(caretX - (who.left + who.width / 2))
@@ -99,7 +99,7 @@ try {
   await page.locator('.status-menu.on .q-head', { hasText: 'Agent active' }).waitFor({ timeout: 3000 })
   { // caret points at the dot it opened from (same popover contract as who/queue)
     const dΔ = await page.evaluate(() => {
-      const r = document.getElementById('__roots-nudge-host').shadowRoot
+      const r = document.getElementById('__groundworks-nudge-host').shadowRoot
       const m = r.querySelector('.status-menu'), s = r.querySelector('.pill .status').getBoundingClientRect()
       const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
       return Math.abs(caretX - (s.left + s.width / 2))
@@ -114,7 +114,7 @@ try {
   //     popover belongs to the toolbar and must MOVE WITH it (2026-07-06) ---
   await page.locator('.pill .who').click() // open Switch session before dragging
   await page.locator('.who-menu.on').waitFor({ timeout: 3000 })
-  const menuBefore = await page.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.who-menu').getBoundingClientRect().left)
+  const menuBefore = await page.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.who-menu').getBoundingClientRect().left)
   const before = await page.locator('.pill').boundingBox()
   const grip = await page.locator('.pill .grip').boundingBox()
   await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
@@ -124,7 +124,7 @@ try {
   const after = await page.locator('.pill').boundingBox()
   if (Math.abs(after.x - before.x) < 200 || Math.abs(after.y - before.y) < 100) fail(`pill did not move: ${JSON.stringify({ before, after })}`)
   const followGeo = await page.evaluate(() => {
-    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const r = document.getElementById('__groundworks-nudge-host').shadowRoot
     const m = r.querySelector('.who-menu'), who = r.querySelector('.pill .who').getBoundingClientRect()
     const caretX = m.getBoundingClientRect().left + parseFloat(m.style.getPropertyValue('--caret-x'))
     return { left: m.getBoundingClientRect().left, on: m.classList.contains('on'), caretΔ: Math.abs(caretX - (who.left + who.width / 2)) }
@@ -217,7 +217,7 @@ try {
   // floating in the screen corner) — placeFeed tracks the movable pill
   {
     const geo = await page.evaluate(() => {
-      const r = document.getElementById('__roots-nudge-host').shadowRoot
+      const r = document.getElementById('__groundworks-nudge-host').shadowRoot
       const f = r.querySelector('.feed').getBoundingClientRect(), p = r.querySelector('.pill').getBoundingClientRect()
       return { dLeft: Math.abs(f.left - p.left), dTop: f.top - p.bottom }
     })
@@ -252,7 +252,7 @@ try {
   // caret aligned to the badge (C-7) + a row must NOT jitter on accordion toggle (C-6):
   // collapsed and open share one first-line geometry, so dot/id hold their offset
   const qgeo = await page.evaluate(() => {
-    const r = document.getElementById('__roots-nudge-host').shadowRoot
+    const r = document.getElementById('__groundworks-nudge-host').shadowRoot
     const q = r.querySelector('.queue'), badge = r.querySelector('.pill .count').getBoundingClientRect()
     const caretX = q.getBoundingClientRect().left + parseFloat(q.style.getPropertyValue('--caret-x'))
     const row = r.querySelector('.queue .q-row')

@@ -2,12 +2,12 @@
 // adoptedStyleSheets (a manifest "css" entry would land in the page, not the
 // shadow DOM). Loaded before content.js; shared via globalThis like finder.js.
 //
-// DESIGN CONTRACT: the values below are MIRRORED from @roots/design tokens.css
-// (self-contained by design — Nudge must work without the repo; keep in sync by
-// hand). Language: monochrome midnight — paper-on-midnight contrast everywhere;
+// DESIGN CONTRACT: the values below are a self-contained token set (Nudge must
+// work without any other repo). Language: monochrome midnight — paper-on-midnight
+// contrast everywhere;
 // COLOUR ONLY FOR STATUS (green live / amber degraded / red dead) and for the
 // on-page marking accent (highlight/lasso, brand terracotta). Type: IBM Plex Sans,
-// shipped as "Roots Nudge Sans" — the rename is an OFL obligation, not a whim:
+// shipped as "Groundworks Nudge Sans" — the rename is an OFL obligation, not a whim:
 // "Plex" is a Reserved Font Name and we ship a subset. See fonts/README.md.
 // Mono only for selectors.
 //
@@ -23,7 +23,7 @@
 // Figures are tabular by default here — `font-variant-numeric: tabular-nums`
 // below is belt-and-braces, not load-bearing.
 ;(() => {
-  // — mirrored Roots tokens —
+  // — tokens —
   const MID = '#1A1F26'        // --midnight        structural set
   const MID_DEEP = '#0E1318'   // --midnight-deep   deepest bands
   const MID_2 = '#2A3038'      // --midnight-2      hairlines on midnight
@@ -32,8 +32,8 @@
   const ACCENT = '#b45a38'     // brand terracotta — ON-PAGE marking only
   const GREEN = '#3fa34d'      // status: agent live
   const AMBER = '#d9a441'      // status: degraded
-  const SANS = `"Roots Nudge Sans", -apple-system, 'Helvetica Neue', sans-serif`
-  const MONO = `"Roots Nudge Mono", ui-monospace, 'SF Mono', Menlo, monospace`
+  const SANS = `"Groundworks Nudge Sans", -apple-system, 'Helvetica Neue', sans-serif`
+  const MONO = `"Groundworks Nudge Mono", ui-monospace, 'SF Mono', Menlo, monospace`
 
   globalThis.__nudgeCss = `
     :host { all: initial }

@@ -47,7 +47,7 @@
     })
     return origOpen.call(this, method, url, ...rest)
   }
-  addEventListener('roots-nudge-console-req', () => {
-    dispatchEvent(new CustomEvent('roots-nudge-console-res', { detail: JSON.stringify(buf) }))
+  addEventListener('groundworks-nudge-console-req', () => {
+    dispatchEvent(new CustomEvent('groundworks-nudge-console-res', { detail: JSON.stringify(buf) }))
   })
 })()

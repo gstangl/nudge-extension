@@ -60,11 +60,11 @@ try {
   await p.goto(`http://localhost:${PAGE}/`, { waitUntil: 'domcontentloaded' })
   await p.locator('.pill').waitFor({ timeout: 15000 }); await sleep(400)
   // move the pill to a clear area (its default corner may overlap page chrome)
-  { const g = await p.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.grip').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(560, 480, { steps: 6 }); await p.mouse.up(); await sleep(150) }
+  { const g = await p.evaluate(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.grip').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }); await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(560, 480, { steps: 6 }); await p.mouse.up(); await sleep(150) }
 
   const open = () => p.evaluate(() => document.querySelector('[data-ap]').getAttribute('aria-hidden') === 'false')
   const reopen = async () => { await p.evaluate(() => window.__show()); await sleep(120) }
-  const pillRect = () => p.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height } })
+  const pillRect = () => p.evaluate(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height } })
 
   // ---------- M1: near-miss around the toolbar is absorbed ----------
   {
@@ -90,7 +90,7 @@ try {
   // ---------- M3: clicking a Nudge widget never leaks to the page ----------
   {
     await reopen(); if (!await open()) fail('M3: setup')
-    await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.btn-pick').click())
+    await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.btn-pick').click())
     await sleep(150)
     if (!await open()) fail('M3: clicking the Pick widget dismissed the page modal')
     // reset pick mode so the run ends clean
@@ -101,10 +101,10 @@ try {
   // ---------- M4: a document-capture-pointerdown dropdown survives a widget click ----------
   {
     const menuOpen = () => p.evaluate(() => window.__menuOpen())
-    const pickActive = () => p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.btn-pick').classList.contains('active'))
+    const pickActive = () => p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.btn-pick').classList.contains('active'))
     await p.locator('.sortanchor').click(); await sleep(150)
     if (!await menuOpen()) fail('M4: setup — dropdown did not open')
-    const bp = await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.btn-pick').getBoundingClientRect())
+    const bp = await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.btn-pick').getBoundingClientRect())
     await p.mouse.click(bp.x + bp.width / 2, bp.y + bp.height / 2); await sleep(200)
     if (!await menuOpen()) fail('M4: clicking Nudge Pick closed the dropdown (page capture-phase outside-click leaked)')
     if (!await pickActive()) fail('M4: Pick did not activate — the widget click was swallowed too')
@@ -115,15 +115,15 @@ try {
   // ---------- M5: swallowing the widget pointerdown didn't break our own controls ----------
   {
     // pick an element → composer opens → type; then drag the grip
-    await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.btn-pick').click()); await sleep(120)
+    await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.btn-pick').click()); await sleep(120)
     const a = await p.evaluate(() => { const r = document.querySelector('.trigger').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })
     await p.mouse.click(a.x, a.y); await sleep(300)
     await p.keyboard.type('make this green')
-    const typed = await p.evaluate(() => document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.composer textarea').value)
+    const typed = await p.evaluate(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.composer textarea').value)
     if (typed !== 'make this green') fail(`M5: composer textarea broken, got "${typed}"`)
     await p.keyboard.press('Escape'); await sleep(80)
     const before = await pillRect()
-    const g = await p.evaluate(() => { const r = document.getElementById('__roots-nudge-host').shadowRoot.querySelector('.grip').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })
+    const g = await p.evaluate(() => { const r = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.grip').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })
     await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(720, 300, { steps: 6 }); await p.mouse.up(); await sleep(150)
     const after = await pillRect()
     if (Math.abs(after.x - before.x) < 50) fail('M5: grip drag broken by the pointerdown swallow')

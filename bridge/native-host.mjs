@@ -1,6 +1,6 @@
 // Nudge native messaging host — Chrome owns the bridge lifecycle.
 //
-// The extension calls chrome.runtime.connectNative('energy.roots.nudge'); Chrome
+// The extension calls chrome.runtime.connectNative('dev.groundworks.nudge'); Chrome
 // spawns THIS process (stdio = native messaging wire: 4-byte LE length + JSON).
 // Job: make sure the bridge is running, report status, idle. Deliberately a thin
 // LAUNCHER, not the bridge itself: MV3 service workers suspend after ~30 s which

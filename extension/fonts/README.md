@@ -7,10 +7,10 @@ the SIL Open Font License 1.1. The full license text is in `OFL-IBMPlexSans.txt`
 |---|---|---|
 | `rn-sans.woff2` | IBM Plex Sans | width axis pinned to `wdth 100` (only `wght 100–700` stays variable), subsetted, renamed |
 | `rn-sans-italic.woff2` | IBM Plex Sans Italic | same |
-| `rn-mono.woff2` | IBM Plex Mono Regular | subsetted, renamed to "Roots Nudge Mono" |
+| `rn-mono.woff2` | IBM Plex Mono Regular | subsetted, renamed to "Groundworks Nudge Mono" |
 
 Each file is subsetted to Latin plus German typography.
-**Renamed to "Roots Nudge Sans" and "Roots Nudge Mono".**
+**Renamed to "Groundworks Nudge Sans" and "Groundworks Nudge Mono".**
 
 The rename is a license requirement, not cosmetics: IBM Plex carries the
 Reserved Font Name **"Plex"**. The OFL forbids modified versions from using that
