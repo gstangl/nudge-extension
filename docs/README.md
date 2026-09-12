@@ -14,5 +14,7 @@ Agents: read **one** of these per task, not all three. Humans: same map.
 Vision is the north star. Product is the snapshot. Decisions is the log.
 Do not copy intent between them.
 
+Working notes and porting plans are not in this repository.
+
 Changing this repository: [../AGENTS.md](../AGENTS.md). Pull requests:
 [../CONTRIBUTING.md](../CONTRIBUTING.md).

@@ -2,4 +2,8 @@ node_modules/
 bridge/native-host-wrapper.sh
 extension/version.txt
 *.log
+artifacts/safari/
 .DS_Store
+
+# Personal implementation and porting drafts. Not public product docs.
+docs/plans/
