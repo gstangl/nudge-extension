@@ -7,6 +7,13 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.30.1 — 2026-09-12 (Zed named as a tested surface)
+
+### Changed
+- Install and onboarding name **Zed** next to the terminal and T3 Code. All
+  three are tested. Invoke `/groundworks-nudge` in Zed’s agent panel on the
+  project you want to change; Claude Code in Zed arms as push.
+
 ## 0.30.0 · Bridge 0.16.0 — 2026-09-12 (Open-source packaging)
 
 ### Added
@@ -15,7 +22,7 @@ The changelog is English throughout.
   templates.
 - [AGENTS.md](AGENTS.md) — start file for coding agents working on this
   repository, as opposed to using Nudge in another project. The Skill
-  `/groundworks-nudge` is the trigger in every runtime, including T3 Code.
+  `/groundworks-nudge` is the trigger in every runtime.
 - [SUPPORT.md](SUPPORT.md) — where to get help.
 - Agent setup also copies the Skill into `~/.grok/skills`, so Grok Build (CLI
   or via T3 Code) finds `/groundworks-nudge` without a separate plugin.

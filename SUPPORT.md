@@ -6,7 +6,7 @@ Nudge is a local developer tool. There is no hosted service and no account.
 - **How it is supposed to work:** [README.md](README.md)
 - **Bugs and ideas:** open a GitHub issue. Include the output of
   `groundworks-nudge status` (strip anything private), your Chrome version,
-  the agent runtime (Claude Code / Codex / T3 Code / other), and the colour
+  the agent runtime (Claude Code / Codex / Zed / T3 Code / other), and the colour
   of the toolbar status dot.
 - **Security:** [SECURITY.md](SECURITY.md). Do not file vulnerabilities as
   public issues.

@@ -15,8 +15,10 @@ You are not meant to work in this checkout. Nudge is a user-level install.
 /groundworks-nudge
 ```
 
-In T3 Code: open a thread on that project, pick Claude Code, Codex or Grok,
-then type `/groundworks-nudge` or choose it from `$`. There is no T3 plugin.
+Tested in the terminal, in Zed, and in T3 Code. In Zed: type
+`/groundworks-nudge` in the agent panel on that project. In T3 Code: open a
+thread on that project, pick Claude Code, Codex or Grok, then type
+`/groundworks-nudge` or choose it from `$`. There is no extra plugin.
 
 Without that Skill the toolbar stores prompts and waits. The Skill is the
 trigger, every runtime, every time. Details: [agent/NUDGE-SKILL.md](agent/NUDGE-SKILL.md).

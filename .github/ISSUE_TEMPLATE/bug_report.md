@@ -20,7 +20,7 @@ What you expected instead.
 - OS and Chrome version:
 - Node version (`node -v`):
 - Extension version (chrome://extensions → Roots Nudge):
-- Agent runtime (Claude Code / Codex / T3 Code / other, with version):
+- Agent runtime (Claude Code / Codex / Zed / T3 Code / other, with version):
 - Output of `groundworks-nudge status` (remove anything private):
 
 **Feed chips / status dot**

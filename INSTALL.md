@@ -13,9 +13,10 @@ console. When it is done it reports back into the browser. Nudge works on any
   request is welcome.
 - **Google Chrome** (or Chromium).
 - **Node.js 22 or newer.** `node -v` must print a version.
-- **A local coding agent.** Claude Code and Codex are detected natively. T3 Code
-  and similar GUIs work through the CLI they drive — there is no separate T3
-  plugin. Any other agent can use the `groundworks-nudge` command directly.
+- **A local coding agent.** Claude Code and Codex are detected natively. Tested
+  in the terminal, in **Zed**, and in **T3 Code**. Zed and T3 Code work through
+  the CLI they drive — there is no separate plugin. Any other agent can use the
+  `groundworks-nudge` command directly.
 - This repository cloned locally:
   ```sh
   git clone https://github.com/gstangl/nudge-extension.git
@@ -80,7 +81,8 @@ This installs, for the current user only:
   script is idempotent and can be re-run at any time.
 
 Pass `claude-code` or `codex` as the only argument to set up just one runtime.
-T3 Code needs no extra step: it surfaces the Skill of the CLI it is driving.
+Zed and T3 Code need no extra step: they surface the Skill of the CLI they
+are driving.
 
 `~/.local/bin` must be on your `PATH` for the command to resolve. Most shells
 add it by default; if `groundworks-nudge help` prints "command not found", add
@@ -98,6 +100,7 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
    repository. The Skill is user-level; after step 4 it is available
    everywhere.
    - **Terminal (Claude Code or Codex):** type `/groundworks-nudge`.
+   - **Zed:** in the agent panel on that project, type `/groundworks-nudge`.
    - **T3 Code:** open a thread on that project, choose Claude Code, Codex or
      Grok as the provider, then type `/groundworks-nudge` or pick
      `groundworks-nudge` from the `$` skill picker.
@@ -167,8 +170,8 @@ start it again with the new code.
    from the folder the extension was loaded from, and that `node` is on your
    `PATH`.
 2. **Dot stays amber.** No agent is armed. In the session that owns the page,
-   type `/groundworks-nudge` again. In T3 Code this has to be a thread on
-   **your app**, not on this repository.
+   type `/groundworks-nudge` again. In Zed or T3 Code this has to be a thread
+   on **your app**, not on this repository.
 3. **Prompts do not reach the agent.** In the agent, type `/groundworks-nudge`
    again. The first line is always the connection report and the agent repairs
    itself from there. `groundworks-nudge status` in a terminal shows the same

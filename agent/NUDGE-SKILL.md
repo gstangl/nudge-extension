@@ -41,7 +41,8 @@ Use `push` only when this runtime can surface watcher output as a new agent turn
 Use `pull` otherwise. Missing or invalid capability is always `pull`.
 
 What decides this is the tool that starts the watcher, never the editor around it
-(T3 Code, Cursor, and similar GUIs are the editor, not the runtime):
+(Zed, T3 Code, Cursor, and similar GUIs are the editor, not the runtime).
+Zed is a tested surface: Claude Code in Zed uses Monitor, so arm with `--wake push`.
 
 - **Claude Code** — start it with the persistent `Monitor` tool and pass
   `--wake push`. Monitor's stdout re-enters the conversation, and that is the

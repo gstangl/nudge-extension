@@ -133,9 +133,9 @@ these.
 5. Fill in the PR template. CI must be green.
 
 Where to start: `test/scenarios.md` has a backlog of edge cases worth
-automating, Windows support for the native host installer is open, and every
-"T3 Code" or "other agent" report in the issues helps us verify the pull path.
-Good first issues are labelled `good first issue` when they exist.
+automating, and Windows support for the native host installer is open. The
+terminal, Zed and T3 Code are tested; reports from other agent surfaces still
+help. Good first issues are labelled `good first issue` when they exist.
 
 ## Reporting bugs and security issues
 

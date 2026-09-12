@@ -10,9 +10,9 @@ into the page.
 [![Test](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml/badge.svg)](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Works with **Claude Code** and **Codex** out of the box, with GUIs such as
-**T3 Code** that drive those CLIs, and with any local agent that can run a
-shell command.
+Works with **Claude Code** and **Codex** out of the box. Tested in the
+**terminal**, in **Zed**, and in **T3 Code**. Any other local agent that can
+run a shell command uses the same CLI.
 
 **New here?** [Install once](#install) (Chrome + Skill). Then, in the project
 you want to change, arm the agent with `/groundworks-nudge`. That Skill is the
@@ -31,6 +31,7 @@ invoking the Skill:
 | You are in | How to invoke it |
 |---|---|
 | Terminal (Claude Code or Codex) | type `/groundworks-nudge` |
+| Zed | in the agent panel on **your app**, type `/groundworks-nudge` |
 | T3 Code | open a thread on **your app**, pick Claude Code, Codex or Grok, then type `/groundworks-nudge` or choose it from the `$` skill picker |
 
 That single command arms the session: it starts a watcher, tells the toolbar
@@ -75,7 +76,7 @@ Chrome (localhost tab)            bridge (Node, port 4700)          agent sessio
 | OS | macOS or Linux. Windows is not supported yet (see [INSTALL.md](INSTALL.md)). |
 | Browser | Google Chrome or Chromium with Developer mode. |
 | Node.js | 22 or newer. |
-| Agent | Claude Code, Codex, T3 Code driving either of them, or any local agent that can run shell commands. |
+| Agent | Claude Code, Codex, Zed, T3 Code, or any local agent that can run shell commands. Tested in the terminal, Zed and T3 Code. |
 
 The only runtime dependency is `ws`. Playwright, Vitest and Python 3 are
 needed for the test suites only.
@@ -104,8 +105,8 @@ cd nudge-extension/bridge && npm install && cd ..
    ```sh
    ./agent/setup-agent.sh
    ```
-   T3 Code has no separate plugin. It picks up the same user-level Skill from
-   the CLI it drives.
+   Zed and T3 Code have no separate plugin. They pick up the same user-level
+   Skill from the CLI they drive.
 4. **Try it.** Open `http://localhost:4700/demo` in Chrome. In an agent session
    **on any project of yours**, invoke `/groundworks-nudge`, wait for the green
    dot, click **Pick**, click a card, type a prompt, press Enter.
@@ -140,10 +141,11 @@ prompt can wake the agent by itself (`push`) or is read with the next message
 
 | Runtime | Skill location | Wake | Notes |
 |---|---|---|---|
-| Claude Code (terminal) | `~/.claude/skills/groundworks-nudge` | push | The watcher runs under the `Monitor` tool. A prompt wakes the session in about a second. |
+| Claude Code (terminal) | `~/.claude/skills/groundworks-nudge` | push | Tested. The watcher runs under the `Monitor` tool. A prompt wakes the session in about a second. |
+| Zed | same user-level Skill as the CLI it drives | push | Tested. Invoke `/groundworks-nudge` in the agent panel on **your app**. Claude Code in Zed uses Monitor, so a prompt wakes the session. |
 | Codex CLI | `~/.agents/skills/groundworks-nudge` | pull | Prompts arrive with your next message. The `UserPromptSubmit` hook injects the current mark and the open queue. |
 | Grok Build | `~/.grok/skills/groundworks-nudge` (also sees the Claude/Codex homes) | pull | Same Skill; start the watcher as a long-running child process. |
-| T3 Code | through the Claude Code, Codex or Grok CLI it drives | pull | No extra install. Open a thread on **your app**, then `/groundworks-nudge` or `$`. A *Pull* tag on the green dot means send a chat message after you prompt from the page. |
+| T3 Code | through the Claude Code, Codex or Grok CLI it drives | pull | Tested. No extra install. Open a thread on **your app**, then `/groundworks-nudge` or `$`. A *Pull* tag on the green dot means send a chat message after you prompt from the page. |
 | Other local agents | none needed | pull | Run `groundworks-nudge watch --label "<name>" --wake pull` as a long-running child process, then use `groundworks-nudge context`, `show` and `resolve`. |
 
 Parallel projects: each localhost port is owned by one session. With several

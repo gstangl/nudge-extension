@@ -119,4 +119,5 @@ echo
 echo "Next: in an agent session on the project you want to change, invoke:"
 echo "  /groundworks-nudge"
 echo "Then open http://localhost:4700/demo in Chrome and wait for the green status dot."
+echo "Zed: in the agent panel on that project, type /groundworks-nudge."
 echo "T3 Code: open a thread on that project and type /groundworks-nudge (or pick it from \$)."
