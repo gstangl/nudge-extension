@@ -12,7 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const STORE = '/tmp/nudge-uxsuite-store'
 const PORT = 4785, PAGE = 5196
 fs.rmSync(STORE, { recursive: true, force: true })

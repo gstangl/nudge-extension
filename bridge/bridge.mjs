@@ -15,12 +15,21 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
+import crypto from 'node:crypto'
 import * as store from './store.mjs'
+import { acquireStoreLease } from './lease.mjs'
 
-const VERSION = '0.17.0'
+const VERSION = '0.18.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
+let lease
+try { lease = acquireStoreLease(store.STORE_DIR) } catch (error) {
+  log(`refusing to start without the canonical store lease: ${error.message}`)
+  process.exit(2)
+}
+process.on('exit', () => lease.release())
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { lease.release(); process.exit(0) })
 
 // ---------- HTTP surface (extension side) ----------
 // CORS: localhost origins ONLY. A wildcard here would let EVERY visited website
@@ -28,6 +37,13 @@ const log = (...a) => console.error('[nudge-bridge]', ...a)
 // /shots/* — Chrome's Private Network Access mitigates that, Firefox/Safari
 // don't. No Origin header (curl, same-origin) needs no CORS at all.
 const ORIGIN_OK = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+const opaqueToken = (value) => /^[A-Za-z0-9_-]{1,128}$/.test(String(value || '')) ? String(value) : null
+function sanitizeBrowserSource(source) {
+  if (!source || typeof source !== 'object') return null
+  const browser = String(source.browser || '').slice(0, 32) || null
+  const session = opaqueToken(source.session), tab = opaqueToken(source.tab), document = opaqueToken(source.document)
+  return (browser || session || tab || document) ? { browser, session, tab, document } : null
+}
 function corsFor(req) {
   const origin = req.headers.origin
   if (!origin || !ORIGIN_OK.test(origin)) return {}
@@ -69,6 +85,7 @@ const httpServer = http.createServer((req, res) => {
 function handle(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`)
   res.cors = corsFor(req)
+  if (req.headers.origin && !ORIGIN_OK.test(req.headers.origin)) return json(res, 403, { error: 'foreign origin rejected' })
   if (req.method === 'OPTIONS') { res.writeHead(204, res.cors); return res.end() }
   if (req.method === 'GET' && url.pathname === '/.identity') {
     // global view for tooling/hooks: the DEFAULT owner (per-host owners live in
@@ -85,7 +102,7 @@ function handle(req, res) {
     const pickAlive = (h) => { const k = chosenByHost.get(h) || chosenByHost.get('*'); return !!k && fresh.some(a => agentKey(a) === k) }
     const tabHosts = [...new Set([...wss.clients].map(c => hostOf(c.meta?.url || '')).filter(Boolean))]
     const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session, wake: o.wake } : null, viaFallback: !pickAlive(h) } })
-    return json(res, 200, { app: 'groundworks-nudge', version: VERSION, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
+    return json(res, 200, { app: 'groundworks-nudge', version: VERSION, capabilities: { sourceBoundEvidence: 1, submissionIdempotency: 1, lifecycleIdentity: 1 }, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
   }
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
   // what lets the extension show the HONEST green ("a prompt gets acted on now")
@@ -161,6 +178,12 @@ function handle(req, res) {
       // owner is decided server-side by the nudge's HOST (its localhost:port =
       // which agent owns that dev server) — a client-sent payload.owner is never
       // read, so provenance can't be spoofed
+      if (payload?.submissionId && payload?.submissionCreatedAt) {
+        const result = store.submitPin(payload, ownerStamp(hostOf(payload.url)))
+        if (result.error) return json(res, result.error === 'submission_conflict' ? 409 : 400, { error: result.error })
+        if (!result.replay) log(`stored ${result.id}: "${result.pin.text.slice(0, 60)}" @ ${result.pin.target?.selector || result.pin.url}${result.pin.owner ? ` [${result.pin.owner.label}]` : ''}`)
+        return json(res, result.replay ? 200 : 201, { id: result.id, replay: result.replay, withdrawn: result.withdrawn })
+      }
       const pin = store.addPin(payload, ownerStamp(hostOf(payload.url)))
       log(`stored ${pin.id}: "${pin.text.slice(0, 60)}" @ ${pin.target?.selector || pin.url}${pin.owner ? ` [${pin.owner.label}]` : ''}`)
       json(res, 201, { id: pin.id })
@@ -195,10 +218,23 @@ function handle(req, res) {
   }
   const ma = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/after$/)
   if (req.method === 'POST' && ma)
-    return readBody(req, res, ({ screenshot }) => {
-      const pin = store.attachAfterShot(ma[1], screenshot)
-      if (pin) log(`evidence captured for ${pin.id}`)
-      pin ? json(res, 200, { ok: true }) : json(res, 404, { error: 'not found' })
+    return readBody(req, res, ({ screenshot, requestId, browserSource }) => {
+      const legacyPin = store.getPin(ma[1])
+      if (legacyPin && !legacyPin.browserSource) {
+        const legacy = store.attachAfterShot(ma[1], screenshot)
+        if (legacy.error) return json(res, 409, { error: legacy.error })
+        return json(res, 200, { ok: true, duplicate: legacy.duplicate })
+      }
+      const request = pendingCaptures.get(requestId)
+      const completed = completedCaptures.get(requestId)
+      if (completed && completed.id === ma[1] && sameSource(completed.browserSource, sanitizeBrowserSource(browserSource))) return json(res, 200, { ok: true, duplicate: true })
+      if (!request || request.id !== ma[1] || request.expiresAt < Date.now() || !sameSource(request.browserSource, sanitizeBrowserSource(browserSource))) return json(res, 409, { error: 'capture_request_conflict' })
+      const pin = store.attachAfterShot(ma[1], screenshot, { browserSource })
+      if (pin.error) return json(res, 409, { error: pin.error })
+      pendingCaptures.delete(requestId)
+      completedCaptures.set(requestId, { ...request, expiresAt: Date.now() + 30_000 })
+      log(`evidence captured for ${pin.pin.id}`)
+      json(res, 200, { ok: true, duplicate: pin.duplicate })
     })
   const ms = url.pathname.match(/^\/shots\/([\w.-]+\.(?:png|jpg))$/)
   if (req.method === 'GET' && ms) {
@@ -215,17 +251,16 @@ httpServer.on('error', (e) => {
     // revival races are normal (test Chrome + real Chrome + session hook can all
     // ensure at once) — the loser has no job left, exit instead of lingering
     log(`port ${PORT} taken - another bridge is already serving; exiting`)
-    process.exit(0)
+    lease.release(); process.exit(0)
   } else log('http error', e)
 })
-httpServer.listen(PORT, '127.0.0.1', () => log(`http://localhost:${PORT} (demo: /demo) - store: ${store.STORE_DIR}`))
-
-// housekeeping: resolved prompts older than 7 days leave the store (files incl.) —
-// unbounded growth would bloat every write and every WS broadcast
-const pruned = store.pruneResolved()
-if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
-const prunedW = store.pruneWithdrawn()
-if (prunedW) log(`pruned ${prunedW} withdrawal markers (>24h) from the inbox`)
+httpServer.listen(PORT, '127.0.0.1', () => {
+  log(`http://localhost:${PORT} (demo: /demo) - store: ${store.STORE_DIR}`)
+  const pruned = store.pruneResolved()
+  if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
+  const prunedW = store.pruneWithdrawn()
+  if (prunedW) log(`pruned ${prunedW} withdrawal markers (>24h) from the inbox`)
+})
 
 // ---------- agent roster + ORIGIN-AWARE ownership ----------
 // A nudge belongs to the agent that owns ITS HOST (localhost:5186 = worktree B).
@@ -276,7 +311,28 @@ setInterval(() => { // an owner dying / a session leaving / ownership change -> 
 }, 5000)
 
 // ---------- WebSocket surface (live sync to the extension) ----------
-const wss = new WebSocketServer({ server: httpServer })
+const wss = new WebSocketServer({
+  server: httpServer,
+  verifyClient: ({ origin }) => !origin || ORIGIN_OK.test(origin),
+})
+const pendingCaptures = new Map()
+const completedCaptures = new Map()
+const sameSource = (expected, actual) => !!expected && !!actual && ['browser', 'session', 'tab', 'document'].every(k => !expected[k] || expected[k] === actual[k])
+function requestPendingEvidence(ws) {
+  const source = ws.meta?.browserSource
+  if (!source) return
+  for (const pin of store.getPins()) {
+    if (pin.status !== 'resolved' || !pin.screenshot || pin.screenshotAfter || !sameSource(pin.browserSource, source)) continue
+    const requestId = crypto.randomBytes(24).toString('base64url')
+    pendingCaptures.set(requestId, { id: pin.id, browserSource: source, expiresAt: Date.now() + 30_000 })
+    ws.send(JSON.stringify({ type: 'capture-after-v2', id: pin.id, requestId, browserSource: source }))
+  }
+}
+setInterval(() => {
+  const now = Date.now()
+  for (const [id, request] of pendingCaptures) if (request.expiresAt < now) pendingCaptures.delete(id)
+  for (const [id, request] of completedCaptures) if (request.expiresAt < now) completedCaptures.delete(id)
+}, 5_000)
 // EADDRINUSE propagates from the http server to the wss too — without a handler
 // it kills the MCP-only fallback process (found by the e2e colliding with a live bridge)
 wss.on('error', () => { /* logged by the http handler */ })
@@ -304,14 +360,17 @@ setInterval(() => {
 wss.on('connection', (ws) => {
   ws.isAlive = true
   ws.on('pong', () => { ws.isAlive = true })
-  ws.send(JSON.stringify(snapshotFor(''))) // immediate default snapshot (any client, even pre-hello)
+  ws.send(JSON.stringify(snapshotFor(''))) // preserve the legacy pre-hello snapshot contract
   // once the tab says its url we send a snapshot scoped to THAT host's owner —
   // the ~ms between connect and hello converges, the tab ends on the right owner
   ws.on('message', (m) => {
     try {
       const h = JSON.parse(m)
       if (h.type === 'hello') {
-        if (h.role !== 'agent') ws.meta = { url: String(h.url || '').slice(0, 120) }
+        if (h.role !== 'agent') {
+          ws.meta = { url: String(h.url || '').slice(0, 120), browserSource: sanitizeBrowserSource(h.browserSource) }
+          requestPendingEvidence(ws)
+        }
         ws.send(JSON.stringify(snapshotFor(hostOf(ws.meta?.url || '')))) // agents: default owner
       }
     } catch { /* ignore */ }
@@ -323,10 +382,13 @@ wss.on('connection', (ws) => {
 store.onChange((kind, pin) => {
   if (kind === 'selection') return // picks are hover-frequency; tabs render nothing from it
   pushSnapshot() // keeps lastBroadcastSig fresh too, so roster pushes don't double-fire
-  // after-shot evidence only for pins that HAD a before-shot (lasso) —
-  // element pins are DOM-only by design, nothing to compare against
-  if (kind === 'resolved' && pin.screenshot && !pin.screenshotAfter)
-    broadcast({ type: 'capture-after', pin: store.pinForClient(pin) })
+  // Source-aware clients receive an opaque, short-lived request individually;
+  // snapshots never contain it. Legacy pins retain their old broadcast only.
+  if (kind === 'resolved' && pin.screenshot && !pin.screenshotAfter) {
+    if (pin.browserSource) {
+      for (const client of wss.clients) requestPendingEvidence(client)
+    } else broadcast({ type: 'capture-after', pin: store.pinForClient(pin) })
+  }
   // WITHDRAWAL — the only push that says "stop working". A deleted pin is simply
   // ABSENT from the snapshot, and absence is not an event: the watcher's scanPins
   // emits for new OPEN pins only, so before this frame existed a discarded nudge

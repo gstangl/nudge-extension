@@ -15,7 +15,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const STORE = '/tmp/nudge-offsuite-store'
 const PORT = 4786, PAGE = 5201
 fs.rmSync(STORE, { recursive: true, force: true })

@@ -9,8 +9,8 @@
 LAUNCHER="$HOME/.local/bin/groundworks-nudge"
 [ -x "$LAUNCHER" ] || exit 0
 
-if ! lsof -tnP -iTCP:4700 -sTCP:LISTEN >/dev/null 2>&1; then
-  (nohup "$LAUNCHER" bridge >/tmp/nudge-bridge.log 2>&1 &)
-fi
+# A listener is not necessarily a compatible Groundworks Nudge bridge. The
+# shared lifecycle check verifies identity and canonical store before reuse.
+(nohup "$LAUNCHER" ensure-bridge >/tmp/nudge-bridge.log 2>&1 &)
 
 exit 0

@@ -10,6 +10,12 @@
 // styles, console + network errors, dual screenshots, author.
 ;(() => {
   if (window.top !== window) return // top frame only
+  const NUDGE_PLATFORM = globalThis.__nudgePlatform || { bridgePort: null }
+  const documentToken = crypto.randomUUID().replaceAll('-', '')
+  let browserSource = null
+  const sourceReady = Promise.resolve(chrome.runtime.sendMessage({ type: 'nudge-source-register', document: documentToken }))
+    .then(result => { browserSource = result?.ok ? result.source : null; return browserSource })
+    .catch(() => null)
   // Bridge endpoints. TEST SUITES may re-point them via
   // chrome.storage.local.nudgePort (set through the extension's service worker
   // BEFORE pages load) — real Chrome never sets it and stays on 4700. Root
@@ -221,27 +227,42 @@
     if (nudgePillPos) requestAnimationFrame(() => placePill(nudgePillPos.x, nudgePillPos.y))
   })
   let dragOff = null
-  grip.addEventListener('pointerdown', (e) => {
+  let dragPointerId = null
+  // Safari can decline pointer capture for a shadow-DOM handle. Keep the drag
+  // listener on the window while a pointer is active; capture below is merely
+  // an optimisation, not the delivery mechanism.
+  const movePill = (e) => {
+    if (!dragOff || e.pointerId !== dragPointerId) return
     e.preventDefault()
-    const r = pill.getBoundingClientRect()
-    dragOff = { x: e.clientX - r.left, y: e.clientY - r.top }
-    grip.classList.add('dragging')
-    try { grip.setPointerCapture(e.pointerId) } catch { /* synthetic events */ }
-  })
-  grip.addEventListener('pointermove', (e) => {
-    if (!dragOff) return
     placePill(e.clientX - dragOff.x, e.clientY - dragOff.y)
-  })
-  grip.addEventListener('pointerup', () => {
-    if (!dragOff) return
+  }
+  const endPillDrag = (e) => {
+    if (!dragOff || (e && e.pointerId !== dragPointerId)) return
+    try { if (grip.hasPointerCapture?.(dragPointerId)) grip.releasePointerCapture(dragPointerId) } catch { /* capture was unavailable */ }
     dragOff = null
+    dragPointerId = null
     grip.classList.remove('dragging')
+    window.removeEventListener('pointermove', movePill, true)
+    window.removeEventListener('pointerup', endPillDrag, true)
+    window.removeEventListener('pointercancel', endPillDrag, true)
     // the drop point as SEEN, not the raw pointer (which may have left the window
     // mid-drag) — that is what "back to where I put it" has to mean
     const r = pill.getBoundingClientRect()
     pillWant = { x: r.left, y: r.top }
     chrome.storage.local.set({ nudgePillPos: pillWant })
     saveSnap() // same position on the next load, WITHOUT waiting for storage
+  }
+  grip.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary || e.button !== 0) return
+    e.preventDefault()
+    const r = pill.getBoundingClientRect()
+    dragOff = { x: e.clientX - r.left, y: e.clientY - r.top }
+    dragPointerId = e.pointerId
+    grip.classList.add('dragging')
+    window.addEventListener('pointermove', movePill, true)
+    window.addEventListener('pointerup', endPillDrag, true)
+    window.addEventListener('pointercancel', endPillDrag, true)
+    try { grip.setPointerCapture(e.pointerId) } catch { /* synthetic events */ }
   })
   // every signal that the viewport changed shape: a docked DevTools panel and a
   // resized window both land here, browser zoom does too
@@ -509,6 +530,7 @@
         viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
         screenshot: shot?.dataUrl || undefined,
         screenshotFull: shot?.fullDataUrl || undefined,
+        browserSource,
         keepShot,
       }),
     }).catch(() => { /* bridge down — icon shows it */ })
@@ -663,6 +685,14 @@
       w: Math.min(window.innerWidth, rect.width + 2 * PAD),
       h: Math.min(window.innerHeight, rect.height + 2 * PAD),
     }
+    // Do identity and active-tab admission while the overlay is still visible.
+    // The subsequent 350 ms hide window is reserved for pixels, not worker wake.
+    if (browserSource) {
+      try {
+        const ready = await chrome.runtime.sendMessage({ type: 'nudge-capture-ready', browserSource })
+        if (!ready?.ok) return null
+      } catch { return null }
+    }
     const composerWas = composer.style.display
     composer.style.display = 'none'
     const pillWas = pill.style.display
@@ -723,7 +753,7 @@
       // hidden, composer never opened, and an EMPTY console to debug it with.
       // A shot is a nice-to-have; the chrome the user works with is not.
       const res = await Promise.race([
-        chrome.runtime.sendMessage({ type: 'nudge-capture', token, rect: crop, vw: window.innerWidth, vh: window.innerHeight, dpr: window.devicePixelRatio }),
+        chrome.runtime.sendMessage({ type: 'nudge-capture', token, rect: crop, vw: window.innerWidth, vh: window.innerHeight, dpr: window.devicePixelRatio, browserSource }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('capture timed out (debugger attached?)')), CAPTURE_TIMEOUT)),
       ])
       if (res?.ok) out = res
@@ -749,18 +779,16 @@
     const resp = await fetch(HTTP + '/comments', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     })
-    return (await resp.json()).id
+    const body = await resp.json().catch(() => ({}))
+    if (!resp.ok || typeof body.id !== 'string') throw new Error(body.error || `bridge returned ${resp.status}`)
+    return body.id
   }
-  function enqueue(payload) {
-    if (!alive()) return // orphan window — the fresh script owns the queue
-    chrome.storage.local.get({ nudgeQueue: [] }, ({ nudgeQueue }) => {
-      nudgeQueue.push(payload)
-      if (nudgeQueue.length > 25) {
-        nudgeQueue.splice(0, nudgeQueue.length - 25)
-        notify('alert', 'Queue full — oldest dropped')
-      }
-      chrome.storage.local.set({ nudgeQueue })
-    })
+  async function enqueue(payload) {
+    if (!alive()) return false // orphan window — the fresh script owns the queue
+    const { nudgeQueue = [] } = await chrome.storage.local.get({ nudgeQueue: [] })
+    if (nudgeQueue.length >= 25) return false
+    await chrome.storage.local.set({ nudgeQueue: [...nudgeQueue, payload] })
+    return true
   }
   // the 5s orphan check leaves a WINDOW: an event can fire on a freshly
   // invalidated context before `dead` flips (bit us 2026-07-05:
@@ -783,6 +811,10 @@
 
   async function send() {
     if (!picked) return
+    // A new submission must not race initial privileged identity registration.
+    // If registration failed it remains explicitly legacy rather than inventing
+    // a page-controlled tab token.
+    await sourceReady
     // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
     // the nudge's number is the referent for chat — the user marks fast in the
     // browser, then prompts in the owning Agent session. The watcher wake
@@ -827,6 +859,9 @@
       console: await getConsole(),
       screenshot: res?.dataUrl || null,
       screenshotFull: res?.fullDataUrl || null,
+      browserSource,
+      submissionId: crypto.randomUUID().replaceAll('-', ''),
+      submissionCreatedAt: new Date().toISOString(),
     }
     try {
       const id = await postPin(payload)
@@ -846,8 +881,8 @@
         })
       }
     } catch {
-      enqueue(payload)
-      notify('alert', 'Bridge offline — queued')
+      if (await enqueue(payload)) notify('alert', 'Bridge offline — queued')
+      else { notify('alert', 'Queue full — prompt kept'); btn.disabled = false; return }
     }
     btn.disabled = false
     setMode('idle')
@@ -877,7 +912,7 @@
 
   // ---------- resolve-with-proof: after-screenshot on request ----------
   const afterAttempted = new Set()
-  async function captureAfter(pin) {
+  async function captureAfter(pin, requestId = null) {
     if (afterAttempted.has(pin.id) || !samePage(pin.url)) return
     afterAttempted.add(pin.id)
     let rect = null
@@ -890,7 +925,7 @@
     try {
       await fetch(`${HTTP}/comments/${pin.id}/after`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ screenshot: res.dataUrl }),
+        body: JSON.stringify({ screenshot: res.dataUrl, requestId, browserSource }),
       })
     } catch { /* bridge gone mid-flight */ }
   }
@@ -931,7 +966,7 @@
       knownStatus.set(p.id, p.status)
       // evidence backlog: resolved LASSO prompts on this page that still lack
       // their after-shot (elements are DOM-only — no before, no after)
-      if (p.status === 'resolved' && p.screenshot && !p.screenshotAfter && samePage(p.url)) captureAfter(p)
+      if (!p.browserSource && p.status === 'resolved' && p.screenshot && !p.screenshotAfter && samePage(p.url)) captureAfter(p)
     }
     statusSeeded = true
   }
@@ -1292,7 +1327,7 @@
     clearTimeout(retryTimer)
     try { sock = new WebSocket(WS) } catch { return scheduleRetry() }
     sock.onopen = () => {
-      try { sock.send(JSON.stringify({ type: 'hello', url: location.href })) } catch { /* racing close */ }
+      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })) } catch { /* racing close */ }
       if (hadOutage) { notify('check', 'Bridge reconnected'); hadOutage = false }
       wsOk = true; retryDelay = 3000; updatePill(); flushQueue()
     }
@@ -1310,7 +1345,8 @@
           acceptPins(msg.pins)
         }
         if (msg.type === 'capture-after') captureAfter(msg.pin)
-        if (msg.type === 'reload') chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
+        if (msg.type === 'capture-after-v2') captureAfter({ id: msg.id, target: allPins.find(p => p.id === msg.id)?.target, url: location.href }, msg.requestId)
+        if (msg.type === 'reload' && NUDGE_PLATFORM.developmentReload) chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
       } catch { /* ignore malformed frames */ }
     }
     sock.onclose = () => {
@@ -1723,9 +1759,10 @@
   try {
     chrome.storage.local.get('nudgePort')
       .then(({ nudgePort }) => {
-        if (nudgePort) { HTTP = `http://localhost:${nudgePort}`; WS = `ws://localhost:${nudgePort}` }
-        connect()
+        const endpointPort = NUDGE_PLATFORM.bridgePort || nudgePort
+        if (endpointPort) { HTTP = `http://localhost:${endpointPort}`; WS = `ws://localhost:${endpointPort}` }
+        sourceReady.finally(connect)
       })
-      .catch(() => connect())
-  } catch { connect() }
+      .catch(() => sourceReady.finally(connect))
+  } catch { sourceReady.finally(connect) }
 })()

@@ -3,14 +3,20 @@
 // cancel), report completeness (selector/xpath/innerText/styles/console/shots),
 // fire-and-forget badge, invisible evidence loop + feed chips, lasso, SPA refilter.
 import { chromium } from 'playwright'
-import { spawn, execSync } from 'node:child_process'
+import { spawn, execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension') // override = bisect against a copy
+const EXT = process.env.NUDGE_EXT || (() => {
+  // The background worker starts before this suite can set nudgePort. Stage an
+  // isolated manifest first, so native messaging cannot touch a live host.
+  const out = path.join(HERE, '../artifacts/safari/chromium-suite-a')
+  execFileSync(process.execPath, ['scripts/package-safari.mjs', '--mode', 'test', '--bridge-port', '4720', '--out', 'artifacts/safari/chromium-suite-a'], { cwd: path.join(HERE, '..'), stdio: 'inherit' })
+  return out
+})()
 const STORE = '/tmp/pin-e2e-store'
 fs.rmSync(STORE, { recursive: true, force: true })
 

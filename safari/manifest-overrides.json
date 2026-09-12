@@ -1,0 +1,16 @@
+{
+  "description": "Safari resource staging differences. The native lifecycle is supplied by the containing app, never Chrome native messaging.",
+  "removePermissions": ["nativeMessaging"],
+  "prependContentScripts": ["platform.js"],
+  "backgroundPlatform": "platform.js",
+  "release": {
+    "nativeAutostart": false,
+    "developmentReload": false,
+    "browser": "safari"
+  },
+  "test": {
+    "nativeAutostart": false,
+    "developmentReload": false,
+    "browser": "safari-test"
+  }
+}

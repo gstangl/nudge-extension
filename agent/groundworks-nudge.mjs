@@ -10,6 +10,7 @@ import {
   resolveStoreDir,
   resolveWake,
 } from './runtime.mjs'
+import { ensureBridge } from '../bridge/lifecycle.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.dirname(HERE)
@@ -165,6 +166,7 @@ function usage() {
   selection
   resolve <#label|nudge_id> [--wait-evidence <ms>]
   bridge
+  ensure-bridge
   store-path`)
 }
 
@@ -175,6 +177,9 @@ if (command === 'help' || command === '--help' || command === '-h') {
   usage()
 } else if (command === 'bridge') {
   await import(path.join(ROOT, 'bridge', 'bridge.mjs'))
+} else if (command === 'ensure-bridge') {
+  const result = await ensureBridge({ port: PORT, store: resolveStoreDir(), bridge: path.join(ROOT, 'bridge', 'bridge.mjs') })
+  print({ state: result.state, bridge: result.identity })
 } else if (command === 'watch') {
   const label = String(options.label || positionals.join(' ')).trim()
   if (!label) die('watch requires --label <name>')

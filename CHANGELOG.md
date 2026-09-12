@@ -7,6 +7,17 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.32.3 — 2026-09-13 (Safari toolbar drag)
+
+### Fixed
+- Track an active toolbar drag at window scope instead of relying exclusively on
+  pointer capture from the small grip. This keeps the toolbar movable in Safari
+  when pointer capture is unavailable for the shadow-DOM handle.
+- Preserve the initial WebSocket snapshot for existing clients; Suite W checks
+  wake-mode propagation through both the initial and host-scoped snapshots.
+- Allow an isolated protocol-test port and avoid waiting for an already exited
+  bridge during cleanup. Toolbar and toggle suites accept staged test resources.
+
 ## 0.32.2 — 2026-09-13 (Astra wake compatibility clarification)
 
 ### Changed
@@ -22,6 +33,24 @@ The changelog is English throughout.
 - Replaced the generic status dot and thumbtack identity with the Lucide
   Crosshair icon. Its grey, red, amber and green states retain their existing
   connection-status meanings.
+
+## 0.32.0 · Bridge 0.18.0 — 2026-09-12 (Safari port foundations)
+
+### Added
+- Deterministic Safari resource staging with separate test and release modes,
+  manifest overlays and resource digests.
+- Additive source-bound evidence and idempotent submission contracts, with
+  focused browser-protocol and bridge-lifecycle test runners.
+- A store writer lease and bridge identity capability check for native/helper
+  lifecycle integration.
+
+### Changed
+- Suite A now stages an isolated test extension before its background worker
+  starts, so it cannot invoke the user's native Chrome host.
+
+### Not yet released
+- Real Safari extension behavior, containing-app/helper lifecycle, signing,
+  notarization and distribution remain unverified external gates.
 
 ## 0.31.1 — 2026-09-12 (Docs for coding agents)
 

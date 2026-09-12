@@ -1,5 +1,48 @@
 // Nudge service worker: one viewport capture -> dpr-correct crop (PNG) +
 // downscaled full-viewport overview (JPEG). The content script does the posting.
+importScripts('platform.js')
+const NUDGE_PLATFORM = globalThis.__nudgePlatform
+const randomToken = () => crypto.randomUUID().replaceAll('-', '')
+const sourceStore = chrome.storage.session || chrome.storage.local
+let browserSession = null
+const tabTokens = new Map()
+const activeTabsByWindow = new Map()
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => activeTabsByWindow.set(windowId, tabId))
+async function sourceFor(sender, documentToken) {
+  if (!sender.tab?.id || !documentToken) throw new Error('missing tab or document identity')
+  if (browserSession && tabTokens.has(sender.tab.id))
+    return { browser: NUDGE_PLATFORM.browser, session: browserSession, tab: tabTokens.get(sender.tab.id), document: documentToken }
+  const { nudgeBrowserSession, nudgeTabTokens = {} } = await sourceStore.get({ nudgeBrowserSession: null, nudgeTabTokens: {} })
+  const session = nudgeBrowserSession || randomToken()
+  const tab = nudgeTabTokens[sender.tab.id] || randomToken()
+  if (!nudgeBrowserSession || !nudgeTabTokens[sender.tab.id]) await sourceStore.set({ nudgeBrowserSession: session, nudgeTabTokens: { ...nudgeTabTokens, [sender.tab.id]: tab } })
+  browserSession = session
+  tabTokens.set(sender.tab.id, tab)
+  return { browser: NUDGE_PLATFORM.browser, session, tab, document: documentToken }
+}
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== 'nudge-source-register') return
+  sourceFor(sender, msg.document).then(async source => {
+    const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
+    if (active?.id) activeTabsByWindow.set(sender.tab.windowId, active.id)
+    sendResponse({ ok: true, source })
+  }).catch(error => sendResponse({ ok: false, error: String(error) }))
+  return true
+})
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type !== 'nudge-capture-ready') return
+  ;(async () => {
+    try {
+      const source = await sourceFor(sender, msg.browserSource?.document)
+      if (['session', 'tab', 'document'].some(k => source[k] !== msg.browserSource?.[k])) throw new Error('capture source identity changed')
+      const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
+      if (!active || active.id !== sender.tab.id) throw new Error('capture deferred: source tab is inactive')
+      activeTabsByWindow.set(sender.tab.windowId, active.id)
+      sendResponse({ ok: true })
+    } catch (error) { sendResponse({ ok: false, error: String(error) }) }
+  })()
+  return true
+})
 
 const toDataUrl = (blob) => new Promise((res, rej) => {
   const r = new FileReader()
@@ -12,6 +55,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'nudge-capture') return
   ;(async () => {
     try {
+      const source = await sourceFor(sender, msg.browserSource?.document)
+      if (['session', 'tab', 'document'].some(k => source[k] !== msg.browserSource?.[k])) throw new Error('capture source identity changed')
+      let activeId = activeTabsByWindow.get(sender.tab.windowId)
+      if (activeId === undefined) {
+        const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
+        activeId = active?.id
+        if (activeId) activeTabsByWindow.set(sender.tab.windowId, activeId)
+      }
+      if (activeId !== sender.tab.id) throw new Error('capture deferred: source tab is inactive')
       const dataUrl = await chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'png' })
       // The pixels are in hand — the page may show its chrome again RIGHT NOW.
       // Everything below (decode, crop, scale, encode) is the slow part and does
@@ -22,6 +74,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // after-shot can land inside a lasso capture), and one grab must not clear
       // the other's overlay bookkeeping
       chrome.tabs.sendMessage(sender.tab.id, { type: 'nudge-grabbed', token: msg.token }).catch(() => { /* tab navigated away */ })
+      const [activeAfter] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
+      if (!activeAfter || activeAfter.id !== sender.tab.id) throw new Error('capture rejected: source tab changed during capture')
       const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob())
       // Don't trust the page's devicePixelRatio: emulation/zoom can make the captured
       // bitmap scale differ. Derive the real scale from bitmap vs viewport size.
@@ -59,6 +113,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // extension. (Defence in depth: an orphaned script now also self-detaches.)
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type !== 'nudge-dev-reload') return
+  if (!NUDGE_PLATFORM.developmentReload) return
   chrome.tabs.query({ url: ['http://localhost/*', 'http://127.0.0.1/*'] }, async (tabs) => {
     await Promise.all(tabs.map((t) => chrome.tabs.reload(t.id).catch(() => {})))
     chrome.runtime.reload()
@@ -128,9 +183,9 @@ function ensureBridge() {
     port.onDisconnect.addListener(() => { /* host exits, bridge lives on */ })
   } catch { /* native host not installed */ }
 }
-ensureBridge() // SW start (browser start, extension reload, SW wake)
+if (NUDGE_PLATFORM.nativeAutostart) ensureBridge() // never reaches a Safari test/release package
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'nudge-bridge-down') ensureBridge()
+  if (msg.type === 'nudge-bridge-down' && NUDGE_PLATFORM.nativeAutostart) ensureBridge()
 })
 
 async function toggle(tabId) {

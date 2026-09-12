@@ -26,3 +26,6 @@ jobs:
         working-directory: test
       - run: npm run test:ci
         working-directory: test
+      - run: node test/browser-protocol.mjs
+      - run: node test/bridge-lifecycle.mjs
+      - run: node test/safari-e2e.mjs --smoke

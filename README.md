@@ -25,6 +25,10 @@ run a shell command uses the same CLI.
 > A green connection indicator does **not** mean the agent wakes automatically.
 > See [wake modes and verification limits](#agents-and-wake-modes).
 
+Safari resource staging is available for development, but a loaded Safari
+extension, native containing app and distribution are not yet supported claims.
+See [the Safari build and verification guide](docs/SAFARI.md).
+
 **New here?** [Install once](#install) (Chrome + Skill). Then, in the project
 you want to change, arm the agent with `/groundworks-nudge`. That Skill is the
 trigger. The extension does not watch the browser on its own.
@@ -182,10 +186,10 @@ queued into a live session during this review.
 
 Verification: `cd test && npm run test:ci` exercises a real isolated bridge,
 watcher, scoped queue, directly invoked context hook, and resolution.
-The CI command passed on the review date. `node test/wake-mode.mjs` passed
-the roster and per-host wake checks, then failed with `no scoped snapshot` at
-the WebSocket check in the current working tree. Neither runner launches a
-model session or proves native hook execution inside Codex.
+The CI command and `node test/wake-mode.mjs` passed on the review date. The
+wake suite initially exposed a missing legacy pre-hello WebSocket snapshot;
+restoring that compatibility contract made all five checks pass. Neither runner
+launches a model session or proves native hook execution inside Codex.
 `node test/e2e.mjs` (Suite A) also passed with the version bump; its agent
 heartbeat is simulated, so it proves extension behavior rather than model wake.
 **An idle Astra session waking from a browser prompt without another chat

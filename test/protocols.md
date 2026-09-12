@@ -8,6 +8,14 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
   fresh `/tmp` store, demo page; the test browser's extension is re-pointed via
   `chrome.storage.local.nudgePort`. Run after ANY extension/bridge change.
   All-or-nothing (first FAIL exits).
+- `node test/browser-protocol.mjs` — source-bound evidence, foreign-origin
+  rejection, idempotent submission and withdrawal-replay protocol coverage on
+  side port 4821. No browser is claimed by this runner.
+- `node test/bridge-lifecycle.mjs` — bridge identity capabilities and one-writer
+  store lease coverage on side ports 4822--4823.
+- `node test/safari-e2e.mjs --smoke` — deterministic Safari-resource staging
+  only. `--real` is intentionally blocked until Safari has an enabled temporary
+  or packaged extension; it is not a substitute for Safari behavior evidence.
 - `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
   prompts against md-pdf, estimate (ProseMirror) and media, started from this
   worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.

@@ -12,6 +12,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { resolveStoreDir } from '../agent/runtime.mjs'
 
 // GLOBAL, one truth for every agent runtime and every project. Existing
@@ -41,8 +42,11 @@ function load() {
     if (reason == null && !usable(parsed)) reason = 'wrong shape'
     if (reason == null) {
       cache = parsed
+      // Additive schema: a legacy store is valid and gains receipts only on its
+      // next mutation. Receipts deliberately contain no prompt content.
+      if (!Array.isArray(cache.receipts)) cache.receipts = []
     } else {
-      cache = { seq: seqFloorFromInbox(), pins: [] }
+      cache = { seq: seqFloorFromInbox(), pins: [], receipts: [] }
       // NEVER silently wipe: an unusable store gets backed up, and the seq floor
       // from the inbox mirrors prevents id reuse for everything ever issued
       if (fs.existsSync(STORE_FILE)) {
@@ -105,6 +109,18 @@ export function labelOf(id) {
 // pays for it forever (brutal-suite finding, 2026-07-05).
 const cap = (v, n) => { const s = String(v ?? ''); return s ? s.slice(0, n) : '' }
 const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
+const token = (v) => /^[A-Za-z0-9_-]{1,128}$/.test(String(v || '')) ? String(v) : null
+function sanitizeBrowserSource(source) {
+  if (!source || typeof source !== 'object') return null
+  const browser = cap(source.browser, 32)
+  const session = token(source.session), tab = token(source.tab), document = token(source.document)
+  return (browser || session || tab || document) ? { browser: browser || null, session, tab, document } : null
+}
+const payloadSignature = (payload) => crypto.createHash('sha256').update(JSON.stringify({
+  text: cap(payload?.text, 4000), url: cap(payload?.url, 2000), author: cap(payload?.author, 80),
+  target: sanitizeTarget(payload?.target), targets: sanitizeTargets(payload?.targets),
+  browserSource: sanitizeBrowserSource(payload?.browserSource), submissionCreatedAt: payload?.submissionCreatedAt || null,
+})).digest('hex')
 // owner provenance stamp: { label, session } of the agent that owned the channel
 const sanitizeOwner = (o) => (o && typeof o === 'object' && (o.label || o.session))
   ? { label: cap(o.label, 60) || null, session: o.session ? cap(o.session, 128) : null }
@@ -164,6 +180,8 @@ export function setSelection(payload) {
     rect: payload.target?.rect || payload.rect || null,
     viewport: payload.viewport || null,
     targets: sanitizeTargets(payload.targets),
+    browserSource: sanitizeBrowserSource(payload.browserSource),
+    selectionGeneration: token(payload.selectionGeneration),
   }
   fs.mkdirSync(STORE_DIR, { recursive: true })
   if (payload.screenshot) sel.screenshot = saveImage('selection', '', payload.screenshot)
@@ -219,6 +237,8 @@ export function addPin(payload, owner) {
     // Immutable: a later owner switch never relabels an existing nudge —
     // provenance stays put (2026-07-05: "so that it is preserved").
     owner: sanitizeOwner(owner),
+    browserSource: sanitizeBrowserSource(payload.browserSource),
+    selectionGeneration: token(payload.selectionGeneration),
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
@@ -232,6 +252,28 @@ export function addPin(payload, owner) {
   emit('added', pin) // wake FIRST — the inbox mirror is a convenience artifact
   writeInboxMirror(pin)
   return pin
+}
+
+// Exactly-once delivery for modern browser queues. The receipt's signature is
+// enough to distinguish a harmless retry from a caller reusing an id for a
+// different prompt; it intentionally never retains prompt text.
+export function submitPin(payload, owner, now = Date.now()) {
+  const submissionId = token(payload?.submissionId)
+  if (!submissionId) return { error: 'invalid_submission_id' }
+  const createdAt = Date.parse(payload?.submissionCreatedAt || '')
+  if (!Number.isFinite(createdAt) || createdAt > now + 5 * 60_000 || createdAt < now - 7 * 24 * 3600e3) return { error: 'invalid_submission_time' }
+  const s = load(), signature = payloadSignature(payload)
+  const prior = s.receipts.find(r => r.submissionId === submissionId)
+  if (prior) {
+    if (prior.signature !== signature) return { error: 'submission_conflict' }
+    return { pin: getPin(prior.id) || null, id: prior.id, replay: true, withdrawn: !!prior.withdrawn }
+  }
+  const pin = addPin(payload, owner)
+  // addPin persisted the pin. Persist its accompanying receipt atomically before
+  // we acknowledge the submission, so a post-commit network loss remains safe.
+  s.receipts.push({ submissionId, signature, id: pin.id, createdAt: payload.submissionCreatedAt, withdrawn: false })
+  persist()
+  return { pin, id: pin.id, replay: false, withdrawn: false }
 }
 
 export function resolvePin(id, ownerFallback) {
@@ -284,6 +326,7 @@ export function deletePin(id) {
   const i = s.pins.findIndex(p => p.id === id)
   if (i < 0) return null
   const [pin] = s.pins.splice(i, 1)
+  for (const receipt of s.receipts || []) if (receipt.id === id) receipt.withdrawn = true
   persist()
   for (const f of [`${id}.png`, `${id}_full.jpg`, `${id}_after.png`]) {
     try { fs.unlinkSync(path.join(SHOTS_DIR, f)) } catch { /* not there */ }
@@ -313,14 +356,23 @@ function writeWithdrawnMarker(pin) {
   } catch { /* readonly fs — the WS frame still carries the withdrawal */ }
 }
 
-export function attachAfterShot(id, screenshot) {
+export function attachAfterShot(id, screenshot, provenance = null) {
   const pin = getPin(id)
-  if (!pin) return null
-  pin.screenshotAfter = saveImage(id, '_after', screenshot)
+  if (!pin || pin.status !== 'resolved' || !pin.screenshot) return { error: 'not_eligible' }
+  if (pin.screenshotAfter) return { pin, duplicate: true }
+  if (pin.browserSource) {
+    const got = sanitizeBrowserSource(provenance?.browserSource)
+    const expected = pin.browserSource
+    if (!got || ['browser', 'session', 'tab', 'document'].some(k => expected[k] && expected[k] !== got[k])) return { error: 'provenance_conflict' }
+  }
+  const saved = saveImage(id, '_after', screenshot)
+  if (!saved) return { error: 'invalid_image' }
+  pin.screenshotAfter = saved
+  if (pin.browserSource) pin.afterBrowserSource = sanitizeBrowserSource(provenance?.browserSource)
   persist()
   writeInboxMirror(pin)
   emit('evidence', pin)
-  return pin
+  return { pin, duplicate: false }
 }
 
 // housekeeping: drop resolved pins past their useful life, evidence files incl.
@@ -389,6 +441,7 @@ export function pinForClient(p) {
     id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner || null, text: p.text, url: p.url, createdAt: p.createdAt, resolvedAt: p.resolvedAt,
     amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // the user's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
+    browserSource: p.browserSource || undefined,
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
       innerText: (p.target?.innerText || '').slice(0, 80) || undefined, // speaking queue label

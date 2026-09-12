@@ -112,6 +112,14 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
 
 ## Daily use
 
+## Safari development resources
+
+Safari is not part of the standard installation above. Developers can stage
+isolated Safari Web Extension resources with the commands in
+[docs/SAFARI.md](docs/SAFARI.md). Full Xcode, an enabled Safari extension and
+native lifecycle evidence are required before it can be offered as an install
+path; this guide does not claim those prerequisites have been met.
+
 | Action | How |
 |---|---|
 | Toolbar on/off | `Alt+C`, or click the Nudge icon in Chrome's toolbar. Off is browser-wide and stays off until you switch it on again |
