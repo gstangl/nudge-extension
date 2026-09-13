@@ -17,6 +17,26 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 0.33.4 · Bridge 0.19.2 — 2026-09-13 (Toolbar activation and active-tool dragging)
+
+### Fixed
+- Keep the toolbar above the Freeform drawing surface so its handle and tool
+  buttons remain usable while drawing mode is active, in both browser packages.
+- Register native action/shortcut handlers before secondary worker setup and
+  contain startup icon failures so decorative rendering cannot disable controls.
+
+### Changed
+- Label the shortcut as show/hide, not an unspecified toggle. Document Option+C
+  on macOS and that visibility never switches the handle into a locked mode.
+
+### Added
+- Shared real-input coverage for dragging in Pick/Freeform mode, preserving the
+  selected tool, releasing the grip and cancelling through the active button.
+- Worker startup regressions for unavailable icon rendering and callback-style
+  icon APIs, plus a distinct native icon/shortcut acceptance row.
+
+Native-app/distribution and full independent Safari acceptance remain separate.
+
 ## 0.33.3 · Bridge 0.19.2 — 2026-09-13 (Toolbar status load fix)
 
 ### Fixed

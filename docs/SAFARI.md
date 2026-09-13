@@ -52,6 +52,11 @@ one bridge/store; their agent selection is currently shared per website.
 
 ## Updates and removal
 
+**Option+C shows or hides the toolbar; it does not lock its position.** Whenever
+the toolbar is visible, its six-dot handle remains draggable, including while
+Pick or Freeform is selected. Safari may show a second, unassigned shortcut row
+for its native toolbar button; it invokes the same show/hide action.
+
 Follow the shared [update/restart instructions](../INSTALL.md#updating), rerun
 the packaging command into the same `project-extension` folder, then use
 **Settings > Extensions > Groundworks Nudge > Reload**. Preserve unsent drafts

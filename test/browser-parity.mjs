@@ -182,6 +182,34 @@ try {
     const before = await inspect('.pill'); await driver.reload()
     await until(async () => { const restored = await inspect('.pill'); return restored && Math.abs(restored.x - before.x) < 3 && Math.abs(restored.y - before.y) < 3 }, 'both position coordinates restored')
   })
+  await check('grip and tool buttons remain usable during Pick and Freeform', async () => {
+    const initial = await settledToolbar()
+    for (const button of ['.btn-pick', '.btn-draw']) {
+      await click(button)
+      await until(async () => (await inspect(button))?.cls.split(/\s+/).includes('active'), `${button} is active`)
+      const { g, p } = await settledToolbar()
+      await driver.drag([[g.x + g.w / 2, g.y + g.h / 2], [g.x + g.w / 2 + 80, g.y + g.h / 2 + 60]])
+      await until(async () => {
+        const after = await inspect('.pill')
+        return Math.abs(after.x - p.x - 80) < 3 && Math.abs(after.y - p.y - 60) < 3
+      }, `${button}: active tool must not intercept the handle`)
+      assert((await inspect(button)).cls.split(/\s+/).includes('active'), 'dragging must preserve the selected tool')
+      assert(!(await inspect('.composer')).visible, 'grabbing the toolbar must not create a page mark')
+      const dropped = await inspect('.pill')
+      await driver.movePointer(40, 40)
+      const released = await inspect('.pill')
+      assert(Math.abs(released.x - dropped.x) < 3 && Math.abs(released.y - dropped.y) < 3)
+      assert(!(await inspect('.grip')).cls.includes('dragging'))
+      await click(button)
+      await until(async () => !(await inspect(button))?.cls.split(/\s+/).includes('active'), 'active tool button remains clickable')
+    }
+    const { g } = await settledToolbar()
+    await driver.drag([[g.x + g.w / 2, g.y + g.h / 2], [initial.g.x + initial.g.w / 2, initial.g.y + initial.g.h / 2]])
+    await until(async () => {
+      const restored = await inspect('.pill')
+      return Math.abs(restored.x - initial.p.x) < 3 && Math.abs(restored.y - initial.p.y) < 3
+    }, 'restore toolbar after active-tool checks')
+  })
   await check('toolbar remains reachable at all viewport corners and after window resize', async () => {
     const edgePin = await post('/comments', { text: '[TEST-parity] Edge menu control', url: `http://localhost:${PAGE}/`, target: { selector: '#target' } })
     await until(async () => (await inspect('.count'))?.cls.includes('show'), 'edge queue badge')

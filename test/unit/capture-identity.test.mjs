@@ -25,7 +25,7 @@ function harness({ session = {}, local = {}, sessionAvailable = true, windowsAva
   }
   const windows = { onFocusChanged: event(), async get() { return { focused: state.focused } } }
   const localStorage = {async get(key) {return key === null ? structuredClone(local) : {[key]:structuredClone(local[key])}},async remove(keys){for(const key of Array.isArray(keys)?keys:[keys])delete local[key]}}
-  const api = { runtime: { id: 'extension-test', onMessage: event() }, storage: { session: sessionAvailable ? storage : undefined, local:localStorage }, tabs, windows: windowsAvailable ? windows : undefined }
+  const api = { runtime: { id: 'extension-test', onMessage: event() }, action: { onClicked: event() }, commands: { onCommand: event() }, storage: { session: sessionAvailable ? storage : undefined, local:localStorage }, tabs, windows: windowsAvailable ? windows : undefined }
   class Canvas {
     getContext() { return { drawImage() {} } }
     async convertToBlob() { await state.encodeHook?.(); return {} }

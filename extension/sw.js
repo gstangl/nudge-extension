@@ -2,6 +2,17 @@
 // downscaled full-viewport overview (JPEG). The content script does the posting.
 importScripts('platform.js')
 const NUDGE_PLATFORM = globalThis.__nudgePlatform
+// Register native activation before queue setup and decorative icon work.
+// A secondary initialization failure must not leave a visible, untoggleable UI.
+async function toggle(tabId) {
+  try { await chrome.tabs.sendMessage(tabId, { type: 'nudge-toggle' }) } catch { /* no content script on this tab */ }
+}
+chrome.action.onClicked.addListener((tab) => tab?.id && toggle(tab.id))
+chrome.commands.onCommand.addListener(async (cmd) => {
+  if (cmd !== 'toggle-nudge') return
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (tab?.id) toggle(tab.id)
+})
 importScripts('queue.js')
 NudgeQueue.install(chrome, NUDGE_PLATFORM)
 const randomToken = () => crypto.randomUUID().replaceAll('-', '')
@@ -244,7 +255,13 @@ function iconImages(color) {
 }
 const tabActionStates = new Map()
 const GREEN = '#3fa34d', AMBER = '#d9a441', RED = '#d0342c', GREY = '#9a948b' // green/amber match the pill's dot
-chrome.action.setIcon({ imageData: iconImages(GREY) }).catch(() => {}) // global default: grey (SW start)
+try {
+  Promise.resolve(chrome.action.setIcon({ imageData: iconImages(GREY) })).catch(() => {})
+} catch (error) {
+  // The manifest's static icon remains available if worker canvas/API setup
+  // fails. Native activation and the bridge lifecycle must still initialize.
+  console.warn('[groundworks-nudge] initial toolbar icon unavailable', error)
+}
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type !== 'nudge-state' || !sender.tab?.id) return
   const tabId = sender.tab.id
@@ -302,14 +319,4 @@ function ensureBridge() {
 if (NUDGE_PLATFORM.nativeAutostart) ensureBridge() // never reaches a Safari test/release package
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'nudge-bridge-down' && NUDGE_PLATFORM.nativeAutostart) ensureBridge()
-})
-
-async function toggle(tabId) {
-  try { await chrome.tabs.sendMessage(tabId, { type: 'nudge-toggle' }) } catch { /* no content script on this tab */ }
-}
-chrome.action.onClicked.addListener((tab) => tab?.id && toggle(tab.id))
-chrome.commands.onCommand.addListener(async (cmd) => {
-  if (cmd !== 'toggle-nudge') return
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-  if (tab?.id) toggle(tab.id)
 })

@@ -12,12 +12,13 @@ Chromium. A Chromium result cannot close the Safari column.
 
 | Contract | Automated coverage | Additional real-browser acceptance |
 |---|---|---|
-| T01 Grip drag | Shared core: three repeated real pointer drags; both X/Y coordinates and reload persistence | Verify grabbing the small six-dot handle with mouse and trackpad in each browser |
+| T01 Grip drag | Shared core: three repeated real pointer drags; both X/Y coordinates and reload persistence; dragging while Pick and Freeform are active without creating a mark | Verify grabbing the small six-dot handle with mouse and trackpad in each browser |
 | T02 Release and repeat | Shared core: move pointer after release, toolbar stays put and dragging state clears; next drag still works | Leave/re-enter the browser while dragging; switch app/tab mid-drag, release, return and drag again; no stuck capture |
 | T03 Bounds and resizing | Shared core: all four viewport corners, shrink/restore the window, entire toolbar and grip stay reachable | Safari and Chrome zoom, docked DevTools, narrow windows; keep the handle reachable even when the toolbar cannot fully fit |
 | T04 Controls after dragging | Shared core: real Status/Switch session/Queue clicks and Escape at all four corners; bottom menus flip above. Repeated Pick/Cancel, Freeform/send, composer typing and multi-select after repositioning. Suite L: growing queue, real wheel scroll and narrow resize | No accidental drag, page navigation or swallowed input; retain separate Safari runtime results |
 | T05 Page isolation and focus | Shared core outside-click/near-miss test; Suites M/O/P/Q cover page dialogs, Escape, multi-select and reload | Check the actual target app, not only the fixture; no dismissed page dialogs or lost draft/caret |
 | T06 Capture independence | Shared core exact clean pixels; Suite Y bounded capture recovery | Toolbar remains usable during denied/throttled/stalled Safari capture; no toolbar/lasso in submitted evidence |
+| T07 Native visibility toggle | Worker units: early action/command registration and icon-failure isolation | Use the native browser icon and Alt+C (Option+C on macOS) repeatedly: fully hide/show one toolbar, preserve position, then drag again. Repeat after extension + page reload and after background idle; no fixed/unfixed mode |
 
 Commands: `node test/browser-parity.mjs --chromium --headless` for automated
 Chromium implementation verification; `node test/safari-e2e.mjs` for real Safari.

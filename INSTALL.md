@@ -122,7 +122,7 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
 
 | Action | How |
 |---|---|
-| Toolbar on/off | `Alt+C`, or click the Nudge icon in the browser toolbar. Off is local to that browser installation; it does not turn the other browser off |
+| Show/hide toolbar | `Alt+C` (`Option+C` on macOS), or click the Nudge icon in the browser toolbar. This does not lock the drag handle. Off is local to that browser installation; it does not turn the other browser off |
 | Move the toolbar | Drag the six-dot handle. Menus open above it when parked at the bottom; long lists scroll |
 | Prompt on an element | **Pick** → click the element → type → `↩` |
 | Correct the level | after the click, chips show the parent elements (`td → tr → table`). Click the one you meant |

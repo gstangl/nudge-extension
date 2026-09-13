@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Groundworks Nudge",
-  "version": "0.33.3",
+  "version": "0.33.4",
   "web_accessible_resources": [
     {
       "resources": [
@@ -34,7 +34,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "Groundworks Nudge - toggle (Alt+C)",
+    "default_title": "Groundworks Nudge - show or hide toolbar",
     "default_icon": {
       "16": "icons/circle-grey-16.png",
       "32": "icons/circle-grey-32.png",
@@ -76,7 +76,7 @@
       "suggested_key": {
         "default": "Alt+C"
       },
-      "description": "Toggle the Nudge overlay"
+      "description": "Show or hide the Nudge toolbar"
     }
   }
 }

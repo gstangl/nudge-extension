@@ -143,7 +143,7 @@ cd nudge-extension/bridge && npm ci && cd ..
 
 | You want to | Do this |
 |---|---|
-| Toggle the toolbar | `Alt+C`, or click the Nudge icon in the browser toolbar |
+| Show/hide the toolbar | `Alt+C` (`Option+C` on macOS), or click the Nudge icon in the browser toolbar. The visible toolbar is always draggable |
 | Move the toolbar | Drag the six-dot handle; menus open above it near the bottom edge |
 | Choose an agent | Click the status dot → **Switch session**; choose an already armed session |
 | Prompt on an element | **Pick** (or `P`) → click the element → type → `↩` (`⇧↩` for a newline) |

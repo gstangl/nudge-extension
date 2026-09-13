@@ -47,7 +47,8 @@
        drawn at an INLINE left/top so it can be kept fully inside the viewport
        (fitPill) — this rule is the default spot it starts from. */
     .pill {
-      position: fixed; top: 20px; right: 20px;
+      /* Above the full-viewport lasso hit surface; below queue/session menus. */
+      position: fixed; top: 20px; right: 20px; z-index: 1;
       display: none; align-items: center; gap: 2px; pointer-events: auto;
       background: ${MID}; border: 1px solid ${MID_3};
       border-radius: 999px; padding: 4px;
