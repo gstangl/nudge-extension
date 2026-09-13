@@ -1,12 +1,13 @@
 # Groundworks Nudge
 
-**Prompt your coding agent on the pixel.** Groundworks Nudge is a Chrome
-extension, a Safari developer preview and a shared local bridge — the first public piece of the
-Groundworks Framework. You pick an element or circle a region in any `localhost`
-app, type what you want, and the prompt reaches the coding agent that owns the
-codebase, together with the selector, computed styles, console and network
-errors, plus a screenshot for circled regions. The agent fixes it, verifies it, and reports back
-into the page.
+**Prompt your coding agent on the pixel — in Chrome or Safari.** Groundworks
+Nudge is a browser extension backed by one shared local bridge. Chrome loads
+unpacked; Safari is a temporary developer preview on macOS. It is the first
+public piece of the Groundworks Framework. Pick an element or circle a region
+in any `localhost` app, type what you want, and the prompt reaches the coding
+agent that owns the codebase, together with the selector, computed styles,
+console and network errors, plus a screenshot for circled regions. The agent
+fixes it, verifies it, and reports back into the page.
 
 [![Test](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml/badge.svg)](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -50,9 +51,10 @@ invoking the Skill:
 | Zed | in the agent panel on **your app**, type `/groundworks-nudge` |
 | T3 Code | open a thread on **your app**, pick Claude Code, Codex or Grok, then type `/groundworks-nudge` or choose it from the `$` skill picker |
 
-That single command arms the session: it starts a watcher, tells the toolbar
-in Chrome which session owns your localhost (the status dot turns green), and
-from then on every prompt you send from the page lands in that session.
+That command arms the session: it starts a watcher and adds the session to the
+toolbar's agent roster in Chrome and Safari. If several sessions are armed,
+choose the owner for your localhost port in **Switch session**. New prompts
+from that page go to the selected session.
 Without the Skill, prompts are stored and wait. Nothing is lost, but nothing
 happens either.
 
@@ -62,7 +64,7 @@ in every project. You do not open this repository to use Nudge.
 ## How it works
 
 ```
-Chrome (localhost tab)            bridge (Node, port 4700)          agent session
+Chrome / Safari tab              bridge (Node, port 4700)          agent session
 ┌───────────────────────┐  HTTP/WS  ┌─────────────────────┐  watcher  ┌────────────────────┐
 │ Nudge toolbar         │ ────────▶ │ store in ~/.nudge   │ ────────▶ │ /groundworks-nudge │
 │ pick · lasso · send   │ ◀──────── │ roster and routing  │ ◀──────── │ groundworks-nudge  │
@@ -70,16 +72,18 @@ Chrome (localhost tab)            bridge (Node, port 4700)          agent sessio
 └───────────────────────┘           └─────────────────────┘           └────────────────────┘
 ```
 
-- **Extension** (`extension/`): a shadow-DOM overlay on `http://localhost:*`
+- **Shared extension core** (`extension/`): a shadow-DOM overlay on `http://localhost:*`
   and `http://127.0.0.1:*`. Toolbar with Pick and Freeform (lasso), layer
   chips, Shift+click multi-select, number pills for open prompts, feedback
-  chips, and a status dot that never lies (grey off, red no bridge, amber no
-  agent, green agent live).
+  chips, and connection status (grey off, red no bridge, amber no agent,
+  green agent live). Chrome loads this folder directly; Safari stages the same
+  code with browser-specific configuration, not a separate product fork.
 - **Bridge** (`bridge/`): one Node process. HTTP and WebSocket on port 4700, a
   global store in `~/.nudge` (prompts, screenshots, Markdown mirrors of every
-  prompt), a roster of armed agent sessions, per-localhost routing. Chrome
-  starts and heals it through a native messaging host. You never run it by
-  hand.
+  prompt), a roster of armed agent sessions, per-localhost routing. Chrome can
+  start it through its native messaging host. Safari uses
+  `groundworks-nudge ensure-bridge` or the installed agent session hook; it
+  does not require Chrome to be open.
 - **Agent side** (`agent/`): the `groundworks-nudge` CLI (watch, status,
   context, show, resolve) and the `/groundworks-nudge` Skill. Claude Code and
   Codex get native Skill adapters plus optional hooks. Any other agent uses the
@@ -99,9 +103,16 @@ needed for the test suites only.
 
 ## Install
 
-The Chrome quickstart follows. For Safari alone, use the
-[Safari source-install steps](docs/SAFARI.md#install-from-github); skip Chrome's
-native host. The full guide with troubleshooting is [INSTALL.md](INSTALL.md).
+Choose a browser, or install both. Set up the shared bridge and agent Skill
+once; follow each browser's extension steps.
+
+| Browser | Installation | Bridge startup |
+|---|---|---|
+| Chrome / Chromium | [Load unpacked](INSTALL.md#chrome-installation) from `extension/` | Chrome native messaging host |
+| Safari 26+ on macOS | [Temporary source installation](docs/SAFARI.md#install-from-github); no Xcode or signing | CLI or agent session hook; no Safari native autostart |
+
+The Chrome quickstart follows. For Safari alone, use the linked Safari guide
+and skip Chrome's native host. Full troubleshooting is in [INSTALL.md](INSTALL.md).
 
 ```sh
 git clone https://github.com/gstangl/nudge-extension.git
@@ -132,7 +143,9 @@ cd nudge-extension/bridge && npm ci && cd ..
 
 | You want to | Do this |
 |---|---|
-| Toggle the toolbar | `Alt+C`, or click the Nudge icon in Chrome's toolbar |
+| Toggle the toolbar | `Alt+C`, or click the Nudge icon in the browser toolbar |
+| Move the toolbar | Drag the six-dot handle; menus open above it near the bottom edge |
+| Choose an agent | Click the status dot → **Switch session**; choose an already armed session |
 | Prompt on an element | **Pick** (or `P`) → click the element → type → `↩` (`⇧↩` for a newline) |
 | Pick the parent you meant | after the click, use the layer chips (`td → tr → table`) |
 | Several elements, one prompt | `Shift+click` adds or removes elements |
@@ -141,7 +154,7 @@ cd nudge-extension/bridge && npm ci && cd ..
 | Follow up on a sent prompt | open the counter popover → **+ amend** |
 | Take a prompt back | open the counter popover → **×**. The agent is told to stop |
 
-**Status dot** (toolbar and Chrome icon):
+**Status dot** (page toolbar and browser extension icon):
 
 | Colour | Meaning |
 |---|---|
@@ -198,18 +211,33 @@ heartbeat is simulated, so it proves extension behavior rather than model wake.
 message has not been verified.** Keep Astra on pull until that exact live test
 passes; do not treat green connection status or watcher output as proof.
 
-Parallel projects: each localhost port is owned by one session. With several
-dev servers running, pick the owner per port in the toolbar's *Switch session*
-dropdown.
+### Chrome and Safari together
+
+Both installations use one bridge, store and armed-agent roster. Choose a
+session from either browser's **Switch session** menu. The choice is shared
+per website/port, including the `localhost`/`127.0.0.1` alias: changing it in one
+browser also changes the recipient of new prompts on that website in the other.
+Previously sent prompts keep their original owner. With several dev servers,
+choose an owner for each port.
+
+Toolbar on/off, position, author and the offline queue are browser-local.
+Region screenshots stay bound to the originating browser/tab. Choosing an
+agent never arms a chat or turns a pull runtime into push. Current shared-core
+and two-profile Chromium checks cover these contracts; simultaneous real
+Safari/Chrome acceptance is still open. See [Safari validation levels](docs/SAFARI.md#validation-levels).
 
 ## Repository layout
 
 ```
-extension/   Chrome MV3 extension, load unpacked. No build step.
+extension/   Shared plain-JavaScript MV3 core; Chrome loads it unpacked.
              content.js overlay logic · styles.js shadow-DOM CSS · sw.js
              service worker (capture, status icon, bridge lifecycle) ·
              page-hook.js console/network ring buffer · vendor/finder.js
-             (@medv/finder, MIT) · fonts/ (IBM Plex subsets, OFL)
+             (@medv/finder, MIT) · fonts/ (IBM Plex subsets, OFL) ·
+             platform.js browser configuration
+safari/      Safari manifest overlays and platform configuration; no copied core
+scripts/     package-safari.mjs stages temporary Safari resources from extension/
+             package-runtime.mjs stages the relocatable CLI/bridge payload
 bridge/      bridge.mjs HTTP + WebSocket · store.mjs the global store ·
              watch-nudges.mjs the agent watcher · native-host.mjs the
              launcher Chrome spawns · install-native-host.sh · demo.html
@@ -224,6 +252,8 @@ docs/        VISION.md · PRODUCT.md · DECISIONS.md (index: docs/README.md)
 ## Documentation
 
 - [INSTALL.md](INSTALL.md): end-user install, update and troubleshooting.
+- [docs/SAFARI.md](docs/SAFARI.md): temporary Safari installation, shared bridge,
+  browser-specific testing and current acceptance limits.
 - [AGENTS.md](AGENTS.md): start file for coding agents working **on this
   repository** (as opposed to using Nudge in another project).
   [CLAUDE.md](CLAUDE.md) is a one-line pointer at that file.
@@ -249,8 +279,9 @@ docs/        VISION.md · PRODUCT.md · DECISIONS.md (index: docs/README.md)
 - Source hints come from `data-*` attributes where a framework provides them
   (Astro, JSX tooling). Otherwise the agent gets selector, xpath and text and
   maps them to code itself.
-- The bridge lives as long as Chrome or an armed session does. If both are
-  gone nothing runs, by design. No daemon.
+- The bridge runs as a detached local process, started by Chrome's native host
+  or the CLI/session hook. Closing a browser does not stop that shared process;
+  no system daemon is installed. Safari has no native bridge autostart.
 - `chrome://extensions` → Errors lists the page's own console warnings as
   extension errors because the page hook wraps `console.warn` and
   `console.error`. Cosmetic, developer mode only.

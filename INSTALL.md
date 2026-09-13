@@ -1,7 +1,8 @@
 # Installing and using Groundworks Nudge
 
-**Groundworks Nudge lets you prompt your coding agent directly on the running web app.**
-You point at an element or circle a region in your browser, type what you want, and
+**Prompt your coding agent on the running web app, in Chrome or Safari.**
+Chrome installs unpacked; Safari is a temporary macOS developer preview.
+Point at an element or circle a region in your browser, type what you want, and
 the active agent receives the selected element, its styles and the console.
 Circled regions also include a screenshot. When done, the agent reports back into the browser. Nudge works on any
 `localhost` page and with any local agent that can run commands.
@@ -142,7 +143,7 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
   captured only when the original browser/tab is eligible; it can remain pending.
   A resolved prompt is not, by itself, verified pixels.
 
-**The status dot** (toolbar and Chrome icon):
+**The status dot** (page toolbar and browser extension icon):
 
 | Colour | Meaning |
 |---|---|
@@ -175,23 +176,26 @@ cd <path-to>/nudge-extension && git pull
 cd bridge && npm ci
 ```
 
-Then, in `chrome://extensions`, click the reload arrow on the Groundworks Nudge card
-and reload your localhost tab. Re-run `./agent/setup-agent.sh` if the Skill or
-hooks changed (the changelog says so). Preserve unsent work before reloading.
+In Chrome, reload Groundworks Nudge in `chrome://extensions`. In Safari,
+[restage and reload its resource folder](docs/SAFARI.md#updates-and-removal).
+Preserve unsent work, then reload the localhost tab in each browser you use.
+Re-run `./agent/setup-agent.sh` from the repository root if the Skill or hooks
+changed (the changelog says so).
 The bridge picks up new code the next time it starts. To restart it, first
 identify its listener with `lsof -nP -iTCP:4700 -sTCP:LISTEN` and verify its
 command is this checkout's `bridge/bridge.mjs` with `ps -p <pid> -o command=`.
 Stop only that verified bridge process, then run `groundworks-nudge ensure-bridge`
 and check the version with `groundworks-nudge status`. Never kill an unknown
 listener or delete the store. `ensure-bridge` alone does not replace an already
-healthy older bridge. For Safari, also [restage its resources](docs/SAFARI.md#updates-and-removal).
+healthy older bridge.
 
 ## If something is stuck
 
-1. **Dot stays red.** Wait about ten seconds; Chrome repairs the bridge on its
-   own. Still red: reload the tab (`⌘R`). Still red: check that step 3 was run
-   from the folder the extension was loaded from, and that `node` is on your
-   `PATH`.
+1. **Dot stays red.** In Chrome, wait about ten seconds for native-host recovery;
+   check that step 3 was run from the extension's folder and `node` is on your
+   `PATH`. In Safari, run `groundworks-nudge ensure-bridge` and check that the
+   staged resources use the shared bridge, not an isolated test port. See
+   [Safari setup troubleshooting](docs/SAFARI.md#use-with-your-actual-project-and-agent).
 2. **Dot stays amber.** No agent is armed. In the session that owns the page,
    type `/groundworks-nudge` again. In Zed or T3 Code this has to be a thread
    on **your app**, not on this repository.

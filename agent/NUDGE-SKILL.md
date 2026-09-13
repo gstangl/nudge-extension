@@ -12,9 +12,10 @@ argument-hint: "[short session label]"
 # /groundworks-nudge
 
 A Nudge is a browser prompt with captured UI context. Treat its prompt as if it
-had been written in the conversation. The Chrome extension, bridge, store, and
-agent roster are shared across runtimes. `groundworks-nudge` is the only agent
-entry point; do not hardcode a runtime home or read a copied store path.
+had been written in the conversation. The Chrome extension and temporary Safari
+developer preview share one local bridge, store and agent roster across runtimes.
+`groundworks-nudge` is the only agent entry point; do not hardcode a runtime
+home or read a copied store path.
 
 ## Boundary
 
@@ -57,9 +58,10 @@ normalizes Claude Code, Codex, and generic agent identities before joining the
 same roster.
 
 After arming, run `groundworks-nudge status`. Report connection state only when
-the bridge or watcher is unhealthy. If the bridge is down, first let Chrome's
-native host restore it. As a local fallback, keep `groundworks-nudge bridge` in
-a separate managed process.
+the bridge or watcher is unhealthy. If the bridge is down, run
+`groundworks-nudge ensure-bridge`; it verifies the listener before starting or
+reusing the shared bridge. Chrome's native host can also restore it, but Safari
+must not depend on Chrome being open. Never stop an unknown listener.
 
 ## Read context
 

@@ -1,7 +1,9 @@
 # AGENTS.md
 
-This checkout is **Groundworks Nudge**: a Chrome extension, a local Node
-bridge, and the Skill `/groundworks-nudge`. Two jobs. Do not mix them.
+This checkout is **Groundworks Nudge**: a shared Chrome/Safari extension core,
+a local Node bridge, and the Skill `/groundworks-nudge`. Safari is a temporary
+developer preview; its acceptance limits live in [docs/SAFARI.md](docs/SAFARI.md).
+Two jobs. Do not mix them.
 
 ## Using Nudge
 

@@ -9,6 +9,13 @@ The changelog is English throughout.
 
 ## 0.33.2 · Bridge 0.19.2 — 2026-09-13 (Follow-up quality assurance)
 
+### Changed
+- Present Nudge as a Chrome extension and temporary Safari developer preview
+  throughout the GitHub introduction, install/support guides, issue template,
+  agent setup output and Skill. Clarify shared per-website agent choice,
+  browser-local state and CLI-based bridge startup without Chrome. Re-run
+  agent setup to install the updated Skill guidance; no protocol change.
+
 ### Fixed
 - Contain malformed WebSocket frames at the client connection instead of
   crashing the shared bridge; bound inbound hello/identity messages to 64 KiB.
@@ -23,6 +30,9 @@ The changelog is English throughout.
   with the temporary Safari developer profile and redact public diagnostics.
 - Document native-disabled resource staging for individual browser suites and
   identity-checked bridge restarts in the contributor guide.
+- Verify agent wiring against a real disposable installation, not the user's
+  global Skill copies. Missing files now fail on clean CI; stale Skills are
+  replaced and every Skill/hook copy must match the checkout byte for byte.
 
 ### Added
 - Isolated real-socket crash/size-limit and live-roster regressions, included in

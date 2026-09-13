@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Nudge bridge: HTTP and WebSocket transport between the Chrome extension and any local coding agent. Lifecycle owned by Chrome (native host).",
+  "description": "Shared local HTTP and WebSocket bridge for the Nudge Chrome extension, Safari developer preview and local coding agents. Started by Chrome's native host or the CLI/session hook.",
   "engines": {
     "node": ">=22"
   },

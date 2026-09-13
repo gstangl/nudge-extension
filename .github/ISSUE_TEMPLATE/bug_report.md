@@ -17,11 +17,13 @@ A clear description of the bug.
 What you expected instead.
 
 **Environment**
-- OS and Chrome version:
+- OS and browser name/version (Chrome / Chromium / Safari):
+- Installation method (Chrome unpacked / Safari temporary source installation):
 - Node version (`node -v`):
-- Extension version (chrome://extensions → Groundworks Nudge):
+- Extension version (Chrome: chrome://extensions; Safari: Settings → Extensions):
+- Are Chrome and Safari running Nudge at the same time on this website?:
 - Agent runtime (Claude Code / Codex / Zed / T3 Code / other, with version):
-- Output of `groundworks-nudge status` (remove anything private):
+- Output of `groundworks-nudge status` (remove local paths, session IDs and project details):
 
 **Feed chips / status dot**
 What did the toolbar say (colour of the dot, chips top right)?

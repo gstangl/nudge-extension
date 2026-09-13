@@ -23,10 +23,13 @@ try {
       hooks: { PreToolUse: [{ matcher: 'Bash', hooks: [{ type: 'command', command: `echo ${marker}` }] }] },
     }))
   }
-  for (const skillsHome of ['.claude/skills', '.agents/skills']) {
+  for (const skillsHome of ['.claude/skills', '.agents/skills', '.grok/skills']) {
     const alias = path.join(HOME_DIR, skillsHome, 'nudge/SKILL.md')
     fs.mkdirSync(path.dirname(alias), { recursive: true })
     fs.writeFileSync(alias, '---\nname: nudge\ndescription: "Compatibility alias for groundworks-nudge."\n---\n')
+    const stale = path.join(HOME_DIR, skillsHome, 'groundworks-nudge/SKILL.md')
+    fs.mkdirSync(path.dirname(stale), { recursive: true })
+    fs.writeFileSync(stale, '---\nname: groundworks-nudge\ndescription: "Stale installation fixture."\n---\n')
   }
 
   execFileSync('bash', [SETUP, 'all'], { env: ENV, stdio: 'pipe' })
@@ -44,10 +47,10 @@ try {
     path.join(HOME_DIR, '.grok/skills'),
   ]) {
     const main = fs.readFileSync(path.join(home, 'groundworks-nudge/SKILL.md'), 'utf8')
-    if (!main.includes('name: groundworks-nudge')) fail(`missing canonical Skill in ${home}`)
+    if (main !== fs.readFileSync(path.join(HERE, '../agent/NUDGE-SKILL.md'), 'utf8')) fail(`Skill differs from repository source in ${home}`)
     if (fs.existsSync(path.join(home, 'nudge/SKILL.md'))) fail(`legacy alias remains in ${home}`)
   }
-  pass('Claude Code, Codex and Grok receive only the canonical Skill')
+  pass('Claude Code, Codex and Grok replace stale Skills with exact canonical copies')
 
   for (const [runtime, configFile, hooksDir] of [
     ['Claude Code', '.claude/settings.json', '.claude/hooks'],
@@ -63,7 +66,9 @@ try {
       if (commands.filter((command) => command.includes('nudge-')).length !== 1) fail(`${runtime} ${event} hook was duplicated by idempotent setup`)
     }
     for (const filename of ['nudge-context.mjs', 'runtime.mjs', 'nudge-session-start.sh']) {
-      if (!fs.existsSync(path.join(HOME_DIR, hooksDir, filename))) fail(`${runtime} hook is missing ${filename}`)
+      const installed = path.join(HOME_DIR, hooksDir, filename)
+      if (!fs.existsSync(installed)) fail(`${runtime} hook is missing ${filename}`)
+      if (!fs.readFileSync(installed).equals(fs.readFileSync(path.join(HERE, '../agent', filename)))) fail(`${runtime} hook differs from repository source: ${filename}`)
     }
   }
   pass('optional hooks preserve settings and install idempotently for Claude Code and Codex')

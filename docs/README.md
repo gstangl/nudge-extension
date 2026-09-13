@@ -3,6 +3,9 @@
 Canonical product writing. Install and daily use live at the repository root
 ([README.md](../README.md), [INSTALL.md](../INSTALL.md)).
 
+Chrome and Safari use the same extension core and local bridge. The temporary
+Safari installation and its verification limits live in [SAFARI.md](SAFARI.md).
+
 Agents: read **one** of these per task, not all three. Humans: same map.
 
 | File | When | What it is |

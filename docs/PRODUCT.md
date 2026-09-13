@@ -7,7 +7,8 @@ from the roots-apps monorepo — zero code dependencies).
 
 **Mission — see `VISION.md`.** This page is the current embodiment of it: a
 strong, bidirectional, always-honest connection between the active coding Agent
-and Google Chrome, where the rendered UI lives.
+and the browser where the rendered UI lives: Chrome, with Safari available as
+a temporary developer preview from the same extension core.
 Everything below serves that line.
 
 Safari is a **developer preview**, not a supported native-app distribution.
@@ -59,22 +60,24 @@ is everything. Nudge names that job; "Pin" named the mechanism.
 
 ## Core: the connection must be reliable — and visibly so
 
-The bridge between the Chrome extension and the active Agent is the product's
-backbone. It is self-healing (native host + session hooks) AND its state is
-always visible, in both directions:
+The bridge between the browser extension and the active Agent is the product's
+backbone. Chrome's native host and the shared CLI/session hooks provide startup
+and recovery; the temporary Safari extension has no native autostart. Connection
+state is visible in both directions. The shared implementation below is tested
+in Chromium; it is not a blanket Safari acceptance claim:
 
-- [x] **Chrome, standing:** status circle (toolbar icon + pill dot) — grey off /
+- [x] **Browser, standing:** status circle (toolbar icon + pill dot) — grey off /
       red no bridge / amber no agent / **green = agent live**. Green never lies
       (heartbeat-backed). A green pull owner additionally shows a "Pull" tag:
       the Agent is live, but a Nudge arrives with the next prompt rather than by
       itself. Green must not imply autonomous wake.
-- [x] **Chrome, per nudge pill:** shows the nudge NUMBER (the chat referent);
+- [x] **Browser, per nudge pill:** shows the nudge NUMBER (the chat referent);
       amber clock = accepted/stored, sweeping hand = agent live, gone = done
       (history with check marks lives in the queue popover only).
-- [x] **Chrome, per prompt:** feedback the moment you send — "nudge_X — agent
+- [x] **Browser, per prompt:** feedback the moment you send — "nudge_X — agent
       working" (send), "nudge_X saved — no agent" (clock), "Bridge offline —
       queued" (alert), "nudge_X done" (check).
-- [x] **Chrome, feedback feed:** all events listed unobtrusively top right —
+- [x] **Browser, feedback feed:** all events listed unobtrusively top right —
       small chips with Lucide icons, max 4, self-fading. Connection losses and
       recoveries land there too.
 - [x] **Agent, standing:** the CLI reports bridge, roster, current mark and queue;

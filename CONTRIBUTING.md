@@ -28,9 +28,10 @@ resources and do not require installing into your everyday browser. The shared
 extension is plain JavaScript without a bundler; Safari resources are staged
 deterministically. The bridge and CLI are plain ES modules run by Node 22+.
 
-**Dev auto-reload.** While a bridge runs, it watches `extension/`. On any
-change it tells the extension to reload itself and refreshes the localhost
-tabs. You edit, you switch to Chrome, the new code is there. (Under
+**Chrome dev auto-reload.** While a bridge runs, it watches `extension/`. On any
+change it tells Chrome's unpacked extension to reload itself and refreshes the
+localhost tabs. Safari's release-configured temporary resources disable this;
+[restage and reload them](docs/SAFARI.md#updates-and-removal) explicitly. (Under
 Playwright's `--load-extension` the reload kills the extension instead, so
 `test/autoreload-check.mjs` is a manual check.)
 

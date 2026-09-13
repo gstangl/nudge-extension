@@ -5,7 +5,6 @@
 import { chromium } from 'playwright'
 import { spawn, execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
-import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -400,28 +399,10 @@ try {
   await until(async () => (await page.locator('.dot:visible').count()) === 2, 3000, 'dot gone after discard')
   console.log('PASS queue management (label "what is marked", discard ×, dots lifecycle)')
 
-  // --- agent wiring drift: installed copies must equal the repo sources
-  //     (hook + skill exist twice by design; drift was only noticeable manually) ---
-  for (const [repo, installed] of [
-    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.claude/skills/groundworks-nudge/SKILL.md')],
-    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.agents/skills/groundworks-nudge/SKILL.md')],
-    [path.join(HERE, '../agent/NUDGE-SKILL.md'), path.join(os.homedir(), '.grok/skills/groundworks-nudge/SKILL.md')],
-    [path.join(HERE, '../agent/nudge-context.mjs'), path.join(os.homedir(), '.claude/hooks/nudge-context.mjs')],
-    [path.join(HERE, '../agent/runtime.mjs'), path.join(os.homedir(), '.claude/hooks/runtime.mjs')],
-    [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.claude/hooks/nudge-session-start.sh')],
-    [path.join(HERE, '../agent/nudge-context.mjs'), path.join(os.homedir(), '.codex/hooks/nudge-context.mjs')],
-    [path.join(HERE, '../agent/runtime.mjs'), path.join(os.homedir(), '.codex/hooks/runtime.mjs')],
-    [path.join(HERE, '../agent/nudge-session-start.sh'), path.join(os.homedir(), '.codex/hooks/nudge-session-start.sh')],
-  ]) {
-    if (fs.existsSync(installed) && !fs.readFileSync(repo).equals(fs.readFileSync(installed)))
-      fail(`agent wiring drift: ${path.basename(repo)} (repo != installed - run nudge/agent/setup-agent.sh)`)
-  }
-  for (const alias of [
-    path.join(os.homedir(), '.claude/skills/nudge/SKILL.md'),
-    path.join(os.homedir(), '.agents/skills/nudge/SKILL.md'),
-    path.join(os.homedir(), '.grok/skills/nudge/SKILL.md'),
-  ]) if (fs.existsSync(alias)) fail(`legacy alias still installed: ${alias}`)
-  console.log('PASS agent wiring in sync (repo = installed)')
+  // Check real installation in a disposable home, not the developer's global
+  // copies. All copies must exist and match; an empty CI home cannot skip it.
+  execFileSync(process.execPath, [path.join(HERE, 'setup-agent.mjs')], { stdio: 'inherit' })
+  console.log('PASS agent wiring in sync (repo = isolated installation)')
 } catch (e) {
   fail(e.message || String(e))
 } finally {
