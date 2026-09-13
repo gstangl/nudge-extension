@@ -11,6 +11,9 @@ The changelog is English throughout.
 
 - Add a pinned, project-local Archify installation and reproducible, source-linked
   architecture map of the shared Chrome/Safari core and local bridge.
+- Synchronize the toolbar test with label and viewport updates before grabbing
+  the handle; assert a real drag and bottom-edge drop before checking the menu.
+  Keep all menu-flip, scrolling and containment assertions unchanged.
 
 ## 0.33.2 · Bridge 0.19.2 — 2026-09-13 (Follow-up quality assurance)
 

@@ -448,6 +448,8 @@ with port-suffixed labels in the user's style ("Estimate Templates :5175").
 | L5 | `prefers-reduced-motion: reduce` collapses the overlay's transitions (no gliding highlight / spinning clock) | ✅ 2026-07-07 |
 | L6 | An orphaned tab (extension reload) shows the ⌘R hint pill instead of the toolbar vanishing silently; click dismisses (plain DOM — chrome.* is dead there) | ✅ 2026-07-31 |
 | L7 | The toolbar stays completely inside the viewport — when the viewport shrinks under it (docked DevTools) AND when the bar grows on its own with no resize event (longer session label) — and returns to the dropped spot once the room is back | ✅ 2026-07-31 |
+| L8 | Wait for the restored label and resized layout, then require a real grip drag to the bottom edge before asserting queue flip, live growth, real wheel scrolling and narrow-window containment | See retained run evidence; Chromium implementation only |
+| L9 | An already open status explanation updates when the bridge disconnects | See retained run evidence; Chromium implementation only |
 
 ## Suite M — Page inertness (page-inertness.mjs)
 

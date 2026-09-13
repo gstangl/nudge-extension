@@ -194,6 +194,7 @@ try {
       fail(`L7: the remembered spot was lost — dropped at ${dropped.left}/${dropped.top}, back at ${b.left}/${b.top}`)
     A.label = 'Estimate Templates :5175'
     await hb(A)
+    await p.waitForFunction(() => document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill .who-label').textContent === 'Estimate Templates')
     pass('L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot')
   }
 
@@ -201,9 +202,22 @@ try {
   {
     await p.setViewportSize({ width: 600, height: 420 })
     const grip = p.locator('.pill .grip'), queue = p.locator('.queue')
+    // Resizing and the previous label update can move the grip after an eager
+    // boundingBox() read. Require the actual layout and Playwright's stable,
+    // hit-testable handle before starting this coordinate-based drag.
+    await p.waitForFunction(() => {
+      const r = document.getElementById('__groundworks-nudge-host').shadowRoot.querySelector('.pill').getBoundingClientRect()
+      return r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight
+    }, null, { timeout: 3000 })
+    await grip.hover()
     const g = await grip.boundingBox()
     await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2)
-    await p.mouse.down(); await p.mouse.move(595, 415, { steps: 8 }); await p.mouse.up()
+    await p.mouse.down()
+    if (!await grip.evaluate(e => e.classList.contains('dragging'))) throw new Error('L8: pointerdown did not grab the visible handle')
+    await p.mouse.move(595, 415, { steps: 8 }); await p.mouse.up()
+    const dropped = await p.locator('.pill').boundingBox(), viewport = p.viewportSize()
+    if (!dropped || dropped.y + dropped.height > viewport.height || viewport.height - dropped.y - dropped.height > 8)
+      throw new Error(`L8: drag did not reach the bottom edge: ${JSON.stringify({ dropped, viewport })}`)
     await p.locator('.pill .count').click()
     await p.locator('.queue.on.above').waitFor()
     const assertMenu = async () => {
