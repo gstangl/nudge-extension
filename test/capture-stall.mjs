@@ -52,7 +52,7 @@ async function lasso(page, box) {
 
 try {
   ctx = await chromium.launchPersistentContext('', {
-    headless: false,
+    headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium',
     viewport: { width: 1280, height: 900 },
     args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
   })
@@ -117,6 +117,10 @@ try {
   // ---------- Y4: it says so, instead of pretending ----------
   {
     await until(async () => (await page.locator('.feed .item', { hasText: 'No screenshot' }).count()) > 0, 6000, 'the honest toast')
+    // Sending during an already-busy capture now truthfully acknowledges the
+    // shot-free prompt immediately. Its diagnostic still belongs to the real
+    // 3s capture timeout, not to the earlier submission acknowledgement.
+    await until(() => warnings.some(w => w.includes('capture failed') && /timed out/i.test(w)), 3500, 'the actual capture-timeout diagnostic')
     if (!warnings.some(w => w.includes('capture failed') && /timed out/i.test(w)))
       fail(`Y4: the timeout must be logged for diagnosis, got: ${JSON.stringify(warnings)}`)
     pass('Y4 honest about it: toast in the feed + a console warning naming the timeout')

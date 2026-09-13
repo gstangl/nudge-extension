@@ -10,6 +10,14 @@ strong, bidirectional, always-honest connection between the active coding Agent
 and Google Chrome, where the rendered UI lives.
 Everything below serves that line.
 
+Safari is a **developer preview**, not a supported native-app distribution.
+It uses the same prompt/context/ownership contract with browser-local author,
+off-state and unsent queue. Shared changes in 0.33.0 serialize durable retries,
+retain drafts on storage failure, and bind new image evidence to the source
+browser/tab/document/mark. Missing or ineligible image evidence remains pending;
+resolved work is not automatically verified pixels. Installation and current
+verification limits live in [SAFARI.md](SAFARI.md).
+
 ## What Nudge is
 
 **UI prompting for the active coding Agent — built for pixel nudging.** You pick an

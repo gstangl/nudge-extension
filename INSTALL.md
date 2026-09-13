@@ -114,6 +114,11 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
 
 ## Safari development resources
 
+**Developer preview only.** A temporary Safari extension is not a permanent
+macOS app installation. Grant access only to the local development websites you
+use; do not disable origin security or grant all websites. The preview requires
+a separately running bridge and the normal Skill invocation in the project.
+
 Safari is not part of the standard installation above. Developers can stage
 isolated Safari Web Extension resources with the commands in
 [docs/SAFARI.md](docs/SAFARI.md). Full Xcode, an enabled Safari extension and

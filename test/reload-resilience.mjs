@@ -45,7 +45,7 @@ const pass = (m) => console.log('PASS', m)
 
 let ctx
 try {
-  ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
+  ctx = await chromium.launchPersistentContext('', { headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium', viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
   let sw = ctx.serviceWorkers()[0]
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 15000 })
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), DEAD_PORT)
@@ -162,7 +162,16 @@ try {
     await shiftClick('gamma')
     await p.keyboard.type('swap these two')
     await sleep(400)
-    if (await outlines() !== 2) fail('Q7: setup — the multi-selection did not form')
+    if (await outlines() !== 2) {
+      console.error('Q7 diagnostics', await p.evaluate(() => {
+        const r = document.querySelector('#__groundworks-nudge-host').shadowRoot
+        const n = document.getElementById('gamma'), b = n.getBoundingClientRect()
+        return {meta:r.querySelector('.meta').textContent, text:r.querySelector('textarea').value,
+          hit:document.elementFromPoint(b.x+b.width/2,b.y+b.height/2)?.outerHTML.slice(0,400),
+          pill:r.querySelector('.pill').getBoundingClientRect().toJSON(),composer:r.querySelector('.composer').getBoundingClientRect().toJSON()}
+      }))
+      fail('Q7: setup — the multi-selection did not form')
+    }
     await p.reload({ waitUntil: 'domcontentloaded' })
     await ready()
     if (await taVal() !== 'swap these two') fail('Q7: text lost on the multi reload')

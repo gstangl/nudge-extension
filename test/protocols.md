@@ -3,6 +3,31 @@
 Structured testing in three suites. Every entry: what it guards, how it runs,
 last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run.
 
+## Mandatory toolbar interaction parity — Safari and Chrome
+
+The floating **in-page** Nudge toolbar is a release gate, not optional visual
+polish. Its grip moves it within the page viewport; it is not an OS window that
+can be dragged outside the browser. Test the same behavior in real Safari and
+Chromium. A Chromium result cannot close the Safari column.
+
+| Contract | Automated coverage | Additional real-browser acceptance |
+|---|---|---|
+| T01 Grip drag | Shared core: three repeated real pointer drags; both X/Y coordinates and reload persistence | Verify grabbing the small six-dot handle with mouse and trackpad in each browser |
+| T02 Release and repeat | Shared core: move pointer after release, toolbar stays put and dragging state clears; next drag still works | Leave/re-enter the browser while dragging; switch app/tab mid-drag, release, return and drag again; no stuck capture |
+| T03 Bounds and resizing | Shared core: all four viewport corners, shrink/restore the window, entire toolbar and grip stay reachable | Safari and Chrome zoom, docked DevTools, narrow windows; keep the handle reachable even when the toolbar cannot fully fit |
+| T04 Controls after dragging | Shared core: status/Escape, repeated Pick/Cancel, Freeform/send, composer typing and multi-select after repositioning | Click each control at an edge position too; no accidental drag, page navigation or swallowed input |
+| T05 Page isolation and focus | Shared core outside-click/near-miss test; Suites M/O/P/Q cover page dialogs, Escape, multi-select and reload | Check the actual target app, not only the fixture; no dismissed page dialogs or lost draft/caret |
+| T06 Capture independence | Shared core exact clean pixels; Suite Y bounded capture recovery | Toolbar remains usable during denied/throttled/stalled Safari capture; no toolbar/lasso in submitted evidence |
+
+Commands: `node test/browser-parity.mjs --chromium --headless` for automated
+Chromium implementation verification; `node test/safari-e2e.mjs` for real Safari.
+Run visible Chrome as well by omitting `--headless`. Retain separate browser
+versions, resource hashes, assertions and screenshots in the evidence ledger.
+Record unexecuted/manual cases as **not tested**, never as inherited passes.
+The former drag assertion checked only X; the shared test now explicitly checks
+Y and post-release stability too. Native Safari toolbar-icon behavior is a
+separate installation gate, not proven by dragging this in-page toolbar.
+
 **Runners**
 - `node test/e2e.mjs` — **Suite A**, isolated: own bridge on side port 4720 +
   fresh `/tmp` store, demo page; the test browser's extension is re-pointed via
@@ -14,8 +39,36 @@ last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run
 - `node test/bridge-lifecycle.mjs` — bridge identity capabilities and one-writer
   store lease coverage on side ports 4822--4823.
 - `node test/safari-e2e.mjs --smoke` — deterministic Safari-resource staging
-  only. `--real` is intentionally blocked until Safari has an enabled temporary
-  or packaged extension; it is not a substitute for Safari behavior evidence.
+  only, including repeated release-byte equality. Without `--smoke`, the runner
+  installs fresh resources into real Safari and runs the shared input/capture
+  contract. It requires an unlocked GUI, Safari automation and native website
+  permission access; missing access fails, never green-skips. See [Safari guide](../docs/SAFARI.md).
+- `node test/browser-parity.mjs --chromium --headless` — same shared contract in
+  explicitly headless Chromium, side bridge/page ports 4822/5322. Real pointer
+  drag, keyboard, multi-select, draft, amend/withdraw and exact PNG/JPEG pixels.
+  This is implementation verification, not Safari or native-app acceptance.
+- `node test/run-browser-regression.mjs --headless` — serial isolated A/F/L/M/O/P/Q/N/X/Y/Z/I
+  regression with native startup disabled before loading. Omit `--headless` for
+  visible Chromium. Never run browser suites concurrently: focus and ports are
+  shared. Per-suite logs and the exact staged resource digest are retained.
+- `node test/run-portable-regression.mjs` — serial fast gate, protocol, lifecycle,
+  hardening/brutal, ownership/opt-in/wake and resource smoke with retained logs.
+  Do not run alongside browser suites; several side ports overlap.
+- `node test/browser-coexistence.mjs --chromium-only --headless` — eight explicit
+  Chromium-only multi-profile/tab, source-pixel and durable-worker-recovery
+  checks. Missing worker-termination control fails. Two Chromium profiles do not
+  establish Safari/Chrome coexistence.
+- `node test/browser-coexistence.mjs` — real simultaneous Safari/Chromium lane,
+  side ports 4821 (SafariDriver), 4823 (bridge), 5323 (fixture). It installs two
+  separately hashed native-disabled test packages with accurate browser-family
+  provenance. Four same-route tabs exercise distinct identities, shared
+  history/owner choice, bidirectional inactive-source pixel proof and closed-source
+  rejection. Requires an unlocked macOS GUI, Safari Remote Automation and
+  Peekaboo website-permission/focus access. Existing enabled Safari Nudge overlays
+  must be off before this isolated run; the runner does not change their global
+  state. Explicit prerequisites exit 2; implementation/assertion failures exit 1.
+  Current-candidate joint runtime acceptance remains unverified until this lane
+  actually completes; it does not prove the full Safari/native release matrix.
 - `node test/real-apps.mjs` — **Suite E (Real Apps)**, side port 4721: picks and
   prompts against md-pdf, estimate (ProseMirror) and media, started from this
   worktree on ports 5313/5315/5318. The edge cases the demo page cannot show.

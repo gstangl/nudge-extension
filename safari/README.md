@@ -27,3 +27,21 @@ local development signature, enable it in Safari, and prove a cold bridge start
 and `/.identity` status from a Finder launch. Capture the selected service API,
 entitlements, Node discovery result and crash/restart behaviour in the evidence
 ledger before adding an app project to source control.
+
+Current Apple documentation calls the tool `safari-web-extension-packager`
+(formerly `safari-web-extension-converter`). Both `xcrun --find` checks fail in
+the audited Command Line Tools environment. The documented `--copy-resources`
+option is important: generated projects otherwise reference the input files.
+Do not let an Xcode experiment edit the shared Chrome resources.
+See [Apple packaging](https://developer.apple.com/documentation/safariservices/packaging-a-web-extension-for-safari).
+
+`SMAppService` is a candidate for an app-owned helper, not a selected/tested
+architecture: Apple documents registration subject to user approval for helpers
+inside the application bundle. It does not itself establish the durable shared
+runtime/uninstall contract. The helper may disappear with Safari; shared CLI,
+store and Chrome support may not. See [Apple service API](https://developer.apple.com/documentation/servicemanagement/smappservice).
+
+`scripts/package-runtime.mjs` now stages the independently relocatable Node
+runtime, CLI, canonical Skill/setup assets, production dependency and licenses.
+Its isolated relocation proof does not register an app helper or test Finder's
+environment. See [the build guide](../docs/SAFARI.md).

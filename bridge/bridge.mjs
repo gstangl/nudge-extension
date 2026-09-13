@@ -2,8 +2,8 @@
 /**
  * Nudge bridge — entry point. One process, two surfaces over one GLOBAL store:
  *  - HTTP on NUDGE_PORT (default 4700): extension posts prompts/selection,
- *    /.identity pairing, /demo test page. Port taken -> exit is fine, another
- *    bridge is serving (native host + hooks keep exactly one alive).
+ *    /.identity pairing, /demo test page. Store-lease or listen failures stop
+ *    startup; launchers must verify identity instead of trusting an occupied port.
  *  - WebSocket (same port): pushes the pin list + agentLive to connected
  *    extensions on every change (badge, feed, status circle).
  * The agent side uses the runtime-neutral CLI to read the shared store and
@@ -19,7 +19,7 @@ import crypto from 'node:crypto'
 import * as store from './store.mjs'
 import { acquireStoreLease } from './lease.mjs'
 
-const VERSION = '0.18.0'
+const VERSION = '0.19.0'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -37,12 +37,12 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { lease.rel
 // /shots/* — Chrome's Private Network Access mitigates that, Firefox/Safari
 // don't. No Origin header (curl, same-origin) needs no CORS at all.
 const ORIGIN_OK = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
-const opaqueToken = (value) => /^[A-Za-z0-9_-]{1,128}$/.test(String(value || '')) ? String(value) : null
+const opaqueToken = (value) => typeof value === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(value) ? value : null
 function sanitizeBrowserSource(source) {
-  if (!source || typeof source !== 'object') return null
-  const browser = String(source.browser || '').slice(0, 32) || null
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return null
+  const browser = typeof source.browser === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(source.browser) ? source.browser : null
   const session = opaqueToken(source.session), tab = opaqueToken(source.tab), document = opaqueToken(source.document)
-  return (browser || session || tab || document) ? { browser, session, tab, document } : null
+  return browser && session && tab && document ? { browser, session, tab, document } : null
 }
 function corsFor(req) {
   const origin = req.headers.origin
@@ -156,7 +156,7 @@ function handle(req, res) {
       json(res, 200, { ok: true, owner: target.label, host: h })
     })
   if (req.method === 'GET' && url.pathname === '/comments')
-    return json(res, 200, store.getPins().map(store.pinSummary))
+    return json(res, 200, store.getPins().map(pin => ({ ...store.pinSummary(pin), afterEvidence: evidenceFor(pin) })))
   if (req.method === 'GET' && url.pathname === '/demo') {
     try {
       const html = fs.readFileSync(path.join(HERE, 'demo.html'))
@@ -170,21 +170,25 @@ function handle(req, res) {
     return json(res, 200, store.getSelection() || {})
   if (req.method === 'POST' && url.pathname === '/selection')
     return readBody(req, res, (payload) => {
+      if (payload?.browserSource != null && !sanitizeBrowserSource(payload.browserSource)) return json(res, 400, { error: 'invalid_browser_source' })
       const sel = store.setSelection(payload)
+      if (sel.error) return json(res, 409, { error: sel.error })
       json(res, 200, { ok: true, at: sel.at })
     })
   if (req.method === 'POST' && url.pathname === '/comments')
     return readBody(req, res, (payload) => {
+      if (payload?.browserSource != null && !sanitizeBrowserSource(payload.browserSource)) return json(res, 400, { error: 'invalid_browser_source' })
       // owner is decided server-side by the nudge's HOST (its localhost:port =
       // which agent owns that dev server) — a client-sent payload.owner is never
       // read, so provenance can't be spoofed
-      if (payload?.submissionId && payload?.submissionCreatedAt) {
+      if (payload?.submissionId != null || payload?.submissionCreatedAt != null) {
         const result = store.submitPin(payload, ownerStamp(hostOf(payload.url)))
         if (result.error) return json(res, result.error === 'submission_conflict' ? 409 : 400, { error: result.error })
         if (!result.replay) log(`stored ${result.id}: "${result.pin.text.slice(0, 60)}" @ ${result.pin.target?.selector || result.pin.url}${result.pin.owner ? ` [${result.pin.owner.label}]` : ''}`)
         return json(res, result.replay ? 200 : 201, { id: result.id, replay: result.replay, withdrawn: result.withdrawn })
       }
       const pin = store.addPin(payload, ownerStamp(hostOf(payload.url)))
+      if (pin.error) return json(res, 400, { error: pin.error })
       log(`stored ${pin.id}: "${pin.text.slice(0, 60)}" @ ${pin.target?.selector || pin.url}${pin.owner ? ` [${pin.owner.label}]` : ''}`)
       json(res, 201, { id: pin.id })
     })
@@ -227,12 +231,14 @@ function handle(req, res) {
       }
       const request = pendingCaptures.get(requestId)
       const completed = completedCaptures.get(requestId)
-      if (completed && completed.id === ma[1] && sameSource(completed.browserSource, sanitizeBrowserSource(browserSource))) return json(res, 200, { ok: true, duplicate: true })
-      if (!request || request.id !== ma[1] || request.expiresAt < Date.now() || !sameSource(request.browserSource, sanitizeBrowserSource(browserSource))) return json(res, 409, { error: 'capture_request_conflict' })
-      const pin = store.attachAfterShot(ma[1], screenshot, { browserSource })
+      const source = sanitizeBrowserSource(browserSource)
+      const digest = typeof screenshot === 'string' ? crypto.createHash('sha256').update(screenshot).digest('hex') : null
+      if (completed && completed.expiresAt >= Date.now() && completed.id === ma[1] && sameSource(completed.browserSource, source) && completed.digest === digest && legacyPin?.screenshotAfter) return json(res, 200, { ok: true, duplicate: true })
+      if (!request || request.id !== ma[1] || request.expiresAt < Date.now() || !sameSource(request.browserSource, source) || !eligibleClient(request.ws, legacyPin)) return json(res, 409, { error: 'capture_request_conflict' })
+      const pin = store.attachAfterShot(ma[1], screenshot, { browserSource: source, expectedBrowserSource: legacyPin.browserSource })
       if (pin.error) return json(res, 409, { error: pin.error })
       pendingCaptures.delete(requestId)
-      completedCaptures.set(requestId, { ...request, expiresAt: Date.now() + 30_000 })
+      completedCaptures.set(requestId, { id: request.id, browserSource: source, digest, expiresAt: Date.now() + 30_000 })
       log(`evidence captured for ${pin.pin.id}`)
       json(res, 200, { ok: true, duplicate: pin.duplicate })
     })
@@ -248,11 +254,11 @@ function handle(req, res) {
 }
 httpServer.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
-    // revival races are normal (test Chrome + real Chrome + session hook can all
-    // ensure at once) — the loser has no job left, exit instead of lingering
-    log(`port ${PORT} taken - another bridge is already serving; exiting`)
-    lease.release(); process.exit(0)
+    // A listener may be unrelated or incompatible. Only lifecycle identity
+    // verification can establish a healthy bridge; binding failure cannot.
+    log(`port ${PORT} is occupied; bridge startup failed`)
   } else log('http error', e)
+  lease.release(); process.exit(1)
 })
 httpServer.listen(PORT, '127.0.0.1', () => {
   log(`http://localhost:${PORT} (demo: /demo) - store: ${store.STORE_DIR}`)
@@ -260,6 +266,7 @@ httpServer.listen(PORT, '127.0.0.1', () => {
   if (pruned) log(`pruned ${pruned} resolved pins (>7d) from the store`)
   const prunedW = store.pruneWithdrawn()
   if (prunedW) log(`pruned ${prunedW} withdrawal markers (>24h) from the inbox`)
+  store.pruneReceipts()
 })
 
 // ---------- agent roster + ORIGIN-AWARE ownership ----------
@@ -317,14 +324,68 @@ const wss = new WebSocketServer({
 })
 const pendingCaptures = new Map()
 const completedCaptures = new Map()
-const sameSource = (expected, actual) => !!expected && !!actual && ['browser', 'session', 'tab', 'document'].every(k => !expected[k] || expected[k] === actual[k])
+const currentDocuments = new Map()
+const sameSource = (expected, actual) => !!sanitizeBrowserSource(expected) && !!sanitizeBrowserSource(actual) && ['browser', 'session', 'tab', 'document'].every(k => expected[k] === actual[k])
+const sourceTab = source => JSON.stringify([source.browser, source.session, source.tab])
+function routeOf(value) {
+  try {
+    const url = new URL(value)
+    return ORIGIN_OK.test(url.origin) && !url.username && !url.password ? `${url.origin}${url.pathname}${url.hash}` : null
+  } catch { return null }
+}
+function invalidateClientRequests(ws) {
+  for (const [id, request] of pendingCaptures) if (request.ws === ws) pendingCaptures.delete(id)
+}
+function eligibleClient(ws, pin) {
+  const source = ws?.meta?.browserSource
+  if (ws?.readyState !== 1 || !source || !sanitizeBrowserSource(pin?.browserSource)) return false
+  const current = currentDocuments.get(sourceTab(source))
+  return current?.ws === ws && sameSource(current.source, source)
+    && sourceTab(source) === sourceTab(pin.browserSource)
+    && !!routeOf(pin.url) && routeOf(pin.url) === routeOf(ws.meta.url)
+}
+function evidenceFor(pin) {
+  if (!pin.screenshot || pin.status !== 'resolved') return undefined
+  if (pin.screenshotAfter) return { status: 'captured', provenance: pin.afterBrowserSource ? 'source_bound' : 'legacy_unverified' }
+  if (!pin.browserSource) return { status: 'pending', reason: 'legacy_unbound', provenance: 'legacy_unverified' }
+  const source = sanitizeBrowserSource(pin.browserSource)
+  if (!source) return { status: 'pending', reason: 'invalid_source_identity' }
+  const current = currentDocuments.get(sourceTab(source))
+  if (!current?.ws || current.ws.readyState !== 1) return { status: 'pending', reason: 'source_unavailable' }
+  if (!eligibleClient(current.ws, pin)) return { status: 'pending', reason: 'source_route_changed' }
+  // Registration proves continuity, not visibility or capture permission. Only
+  // the privileged browser preflight can establish those remaining conditions.
+  return { status: 'pending', reason: 'awaiting_source_capture' }
+}
+function registerDocument(ws, hello) {
+  invalidateClientRequests(ws)
+  const source = sanitizeBrowserSource(hello.browserSource)
+  const url = typeof hello.url === 'string' && hello.url.length <= 2000 ? hello.url : ''
+  ws.meta = { url, browserSource: null }
+  if (!source || !routeOf(url)) return
+  const key = sourceTab(source)
+  const current = currentDocuments.get(key)
+  if (current?.retired.has(source.document)) return // an old in-flight document cannot reclaim this tab
+  const retired = current?.retired || new Set()
+  if (current) {
+    invalidateClientRequests(current.ws)
+    if (current.source.document !== source.document) retired.add(current.source.document)
+  }
+  ws.meta.browserSource = source
+  currentDocuments.set(key, { source, ws, retired })
+}
 function requestPendingEvidence(ws) {
   const source = ws.meta?.browserSource
   if (!source) return
   for (const pin of store.getPins()) {
-    if (pin.status !== 'resolved' || !pin.screenshot || pin.screenshotAfter || !sameSource(pin.browserSource, source)) continue
+    if (pin.status !== 'resolved' || !pin.screenshot || pin.screenshotAfter || !eligibleClient(ws, pin)) continue
+    // A visibility/focus hello replaces the prior request, allowing a deferred
+    // capture to retry without ever leaving two acceptable response tokens.
+    // Unrelated resolves must not revoke an in-flight capture on this client.
+    if ([...pendingCaptures.values()].some(request => request.id === pin.id && request.ws === ws && request.expiresAt >= Date.now())) continue
+    for (const [id, request] of pendingCaptures) if (request.id === pin.id) pendingCaptures.delete(id)
     const requestId = crypto.randomBytes(24).toString('base64url')
-    pendingCaptures.set(requestId, { id: pin.id, browserSource: source, expiresAt: Date.now() + 30_000 })
+    pendingCaptures.set(requestId, { id: pin.id, browserSource: source, ws, expiresAt: Date.now() + 30_000 })
     ws.send(JSON.stringify({ type: 'capture-after-v2', id: pin.id, requestId, browserSource: source }))
   }
 }
@@ -346,7 +407,7 @@ const snapshotFor = (host) => {
   const all = store.getPins()
   const open = all.filter(p => p.status === 'open')
   const done = all.filter(p => p.status !== 'open').slice(-40)
-  return { type: 'pins', agentLive: !!owner, agentLabel: owner?.label || null, agentWake: owner?.wake || null, agents: agentsForClient(host), pins: [...open, ...done].map(store.pinForClient) }
+  return { type: 'pins', capabilities: { sourceBoundEvidence: 1, submissionIdempotency: 1 }, agentLive: !!owner, agentLabel: owner?.label || null, agentWake: owner?.wake || null, agents: agentsForClient(host), pins: [...open, ...done].map(pin => ({ ...store.pinForClient(pin), afterEvidence: evidenceFor(pin) })) }
 }
 const broadcastSnapshot = () => { for (const c of wss.clients) if (c.readyState === 1) c.send(JSON.stringify(snapshotFor(hostOf(c.meta?.url || '')))) }
 const WS_PING = Number(process.env.NUDGE_WS_PING || 30_000)
@@ -360,6 +421,12 @@ setInterval(() => {
 wss.on('connection', (ws) => {
   ws.isAlive = true
   ws.on('pong', () => { ws.isAlive = true })
+  ws.on('close', () => {
+    invalidateClientRequests(ws)
+    const source = ws.meta?.browserSource
+    const current = source && currentDocuments.get(sourceTab(source))
+    if (current?.ws === ws) { current.ws = null; broadcastSnapshot() }
+  })
   ws.send(JSON.stringify(snapshotFor(''))) // preserve the legacy pre-hello snapshot contract
   // once the tab says its url we send a snapshot scoped to THAT host's owner —
   // the ~ms between connect and hello converges, the tab ends on the right owner
@@ -368,10 +435,10 @@ wss.on('connection', (ws) => {
       const h = JSON.parse(m)
       if (h.type === 'hello') {
         if (h.role !== 'agent') {
-          ws.meta = { url: String(h.url || '').slice(0, 120), browserSource: sanitizeBrowserSource(h.browserSource) }
-          requestPendingEvidence(ws)
+          registerDocument(ws, h)
         }
         ws.send(JSON.stringify(snapshotFor(hostOf(ws.meta?.url || '')))) // agents: default owner
+        if (h.role !== 'agent') requestPendingEvidence(ws)
       }
     } catch { /* ignore */ }
   })

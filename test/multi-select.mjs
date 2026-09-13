@@ -34,7 +34,7 @@ const pass = (m) => console.log('PASS', m)
 
 let ctx
 try {
-  ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
+  ctx = await chromium.launchPersistentContext('', { headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium', viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
   const p = await ctx.newPage()
   await p.goto(`http://localhost:${PAGE}/`, { waitUntil: 'domcontentloaded' })
   await p.locator('.pill').waitFor({ timeout: 15000 })

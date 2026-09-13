@@ -2,42 +2,143 @@
 // downscaled full-viewport overview (JPEG). The content script does the posting.
 importScripts('platform.js')
 const NUDGE_PLATFORM = globalThis.__nudgePlatform
+importScripts('queue.js')
+NudgeQueue.install(chrome, NUDGE_PLATFORM)
 const randomToken = () => crypto.randomUUID().replaceAll('-', '')
-const sourceStore = chrome.storage.session || chrome.storage.local
-let browserSession = null
-const tabTokens = new Map()
-const activeTabsByWindow = new Map()
-chrome.tabs.onActivated.addListener(({ tabId, windowId }) => activeTabsByWindow.set(windowId, tabId))
-async function sourceFor(sender, documentToken) {
-  if (!sender.tab?.id || !documentToken) throw new Error('missing tab or document identity')
-  if (browserSession && tabTokens.has(sender.tab.id))
-    return { browser: NUDGE_PLATFORM.browser, session: browserSession, tab: tabTokens.get(sender.tab.id), document: documentToken }
-  const { nudgeBrowserSession, nudgeTabTokens = {} } = await sourceStore.get({ nudgeBrowserSession: null, nudgeTabTokens: {} })
-  const session = nudgeBrowserSession || randomToken()
-  const tab = nudgeTabTokens[sender.tab.id] || randomToken()
-  if (!nudgeBrowserSession || !nudgeTabTokens[sender.tab.id]) await sourceStore.set({ nudgeBrowserSession: session, nudgeTabTokens: { ...nudgeTabTokens, [sender.tab.id]: tab } })
-  browserSession = session
-  tabTokens.set(sender.tab.id, tab)
-  return { browser: NUDGE_PLATFORM.browser, session, tab, document: documentToken }
+// Session storage survives worker suspension, not browser restart. Without that
+// API use memory only: lost continuity is safer than reusing persistent tab IDs.
+const sourceStore = chrome.storage.session
+let identity = null
+let identityTail = Promise.resolve()
+const tabEpochs = new Map()
+const windowEpochs = new Map()
+let focusEpoch = 0
+const tokenOK = value => typeof value === 'string' && /^[A-Za-z0-9_-]{8,128}$/.test(value)
+const routeOf = value => { const u = new URL(value); return u.origin + u.pathname + u.hash }
+const serializedIdentity = work => {
+  const operation = identityTail.then(work)
+  identityTail = operation.catch(() => {})
+  return operation
+}
+async function readIdentity() {
+  if (identity) return identity
+  const stored = sourceStore ? (await sourceStore.get('nudgeBrowserIdentity')).nudgeBrowserIdentity : null
+  identity = stored?.version === 1 && tokenOK(stored.session) && stored.tabs && typeof stored.tabs === 'object'
+    ? stored : { version: 1, session: randomToken(), tabs: {} }
+  return identity
+}
+async function saveIdentity(next) {
+  if (sourceStore) await sourceStore.set({ nudgeBrowserIdentity: next })
+  identity = next
+}
+function validateSender(sender, documentToken) {
+  if (sender.id !== chrome.runtime.id || !Number.isInteger(sender.tab?.id) || !Number.isInteger(sender.tab?.windowId) || sender.frameId > 0 || !tokenOK(documentToken)) throw new Error('missing or invalid tab/document identity')
+  if (sender.documentLifecycle && sender.documentLifecycle !== 'active') throw new Error('source document is not active')
+  const url = new URL(sender.url || sender.tab.url)
+  if (url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) throw new Error('source is not a local top-level document')
+}
+async function proveCurrentDocument(sender, documentToken) {
+  // `loading` also occurs for same-document SPA/hash navigation. Probe the
+  // current top-level content script rather than mistaking that event for proof
+  // that its document died. Do not target the claimed documentId here: that
+  // could ask a stale document to vouch for itself instead of the current frame.
+  let timer
+  try {
+    const current = await Promise.race([
+      chrome.tabs.sendMessage(sender.tab.id, { type: 'nudge-document-current' }, { frameId: 0 }),
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('current document probe timed out')), 1500) }),
+    ])
+    if (current?.document !== documentToken || routeOf(current.url) !== routeOf(sender.url || sender.tab.url)) throw new Error('source is not the current top-level document')
+  } finally { clearTimeout(timer) }
+}
+function sourceFor(sender, documentToken, register = false) {
+  validateSender(sender, documentToken)
+  const epoch = captureEpoch(sender)
+  return serializedIdentity(async () => {
+    const current = await readIdentity()
+    let record = current.tabs[sender.tab.id]
+    if (register) {
+      if (record?.document && !record.navigationPending && (record.document !== documentToken || (record.runtimeDocument && record.runtimeDocument !== sender.documentId))) throw new Error('source successor requires a navigation boundary')
+      await proveCurrentDocument(sender, documentToken)
+      if (epoch !== captureEpoch(sender)) throw new Error('source changed during document registration')
+      record = { tab: record?.tab || randomToken(), document: documentToken, runtimeDocument: sender.documentId || null, navigationPending: false }
+      await saveIdentity({ ...current, tabs: { ...current.tabs, [sender.tab.id]: record } })
+    }
+    if (!record || record.document !== documentToken || (record.runtimeDocument && record.runtimeDocument !== sender.documentId)) throw new Error('capture source document is no longer registered')
+    if (!register) {
+      await proveCurrentDocument(sender, documentToken)
+      if (epoch !== captureEpoch(sender)) throw new Error('source changed during document verification')
+      if (record.navigationPending) await saveIdentity({ ...current, tabs: { ...current.tabs, [sender.tab.id]: { ...record, navigationPending: false } } })
+    }
+    if (epoch !== captureEpoch(sender)) throw new Error('source changed while persisting document identity')
+    return { browser: NUDGE_PLATFORM.browser, session: current.session, tab: record.tab, document: record.document }
+  })
+}
+chrome.tabs.onActivated.addListener(({ windowId }) => windowEpochs.set(windowId, (windowEpochs.get(windowId) || 0) + 1))
+chrome.windows?.onFocusChanged?.addListener(() => { focusEpoch++ })
+chrome.tabs.onUpdated.addListener((tabId, change) => {
+  if (!change.url && change.status !== 'loading') return
+  tabEpochs.set(tabId, (tabEpochs.get(tabId) || 0) + 1)
+  serializedIdentity(async () => {
+    const current = await readIdentity()
+    if (!current.tabs[tabId]) return
+    await saveIdentity({ ...current, tabs: { ...current.tabs, [tabId]: { ...current.tabs[tabId], navigationPending: true } } })
+  }).catch(error => console.warn('[groundworks-nudge] could not invalidate document identity', error))
+})
+chrome.tabs.onRemoved.addListener(tabId => {
+  tabEpochs.set(tabId, (tabEpochs.get(tabId) || 0) + 1)
+  serializedIdentity(async () => {
+    const current = await readIdentity()
+    const tabs = { ...current.tabs }
+    const closed = tabs[tabId]
+    delete tabs[tabId]
+    await saveIdentity({ ...current, tabs })
+    if (closed) await chrome.storage.local?.remove?.(`nudgeDraftRetry-${closed.tab}`)
+  }).catch(error => console.warn('[groundworks-nudge] could not remove tab identity', error))
+})
+// Private retry payloads are per-tab, not an unbounded second offline queue.
+// Queue entries survive independently. Retain same-session ambiguous retries;
+// collect prior-browser-session leftovers and entries beyond the retry horizon.
+if (chrome.storage.local?.get && chrome.storage.local?.remove) serializedIdentity(async () => {
+  const current = await readIdentity()
+  const stored = await chrome.storage.local.get(null)
+  const keys = Object.keys(stored).filter(key => {
+    if (!key.startsWith('nudgeDraftRetry-')) return false
+    const payload = stored[key]?.payload
+    const at = Date.parse(payload?.submissionCreatedAt || '')
+    return payload?.browserSource?.session !== current.session || (Number.isFinite(at) && Date.now() > at + 7 * 24 * 3600e3 + 5 * 60_000)
+  })
+  if (keys.length) await chrome.storage.local.remove(keys)
+}).catch(error => console.warn('[groundworks-nudge] retry cleanup deferred', error))
+const captureEpoch = sender => `${tabEpochs.get(sender.tab.id) || 0}:${windowEpochs.get(sender.tab.windowId) || 0}:${focusEpoch}`
+async function captureContext(sender, expected) {
+  const epoch = captureEpoch(sender)
+  const source = await sourceFor(sender, expected?.document)
+  if (['session', 'tab', 'document'].some(key => source[key] !== expected?.[key])) throw new Error('capture source identity changed')
+  const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
+  if (!active || active.id !== sender.tab.id) throw new Error('capture deferred: source tab is inactive')
+  if (chrome.windows?.get && !(await chrome.windows.get(sender.tab.windowId)).focused) throw new Error('capture deferred: source window is unfocused')
+  const route = routeOf(sender.url || sender.tab.url)
+  if (routeOf(active.url) !== route) throw new Error('capture rejected: source route changed')
+  if (epoch !== captureEpoch(sender)) throw new Error('capture deferred: source changed during eligibility check')
+  return { epoch, route, source }
+}
+async function validateCapture(sender, expected, before) {
+  const after = await captureContext(sender, expected)
+  if (before.epoch !== after.epoch || before.route !== after.route) throw new Error('capture rejected: navigation, activation or focus changed during capture')
 }
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'nudge-source-register') return
-  sourceFor(sender, msg.document).then(async source => {
-    const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
-    if (active?.id) activeTabsByWindow.set(sender.tab.windowId, active.id)
-    sendResponse({ ok: true, source })
-  }).catch(error => sendResponse({ ok: false, error: String(error) }))
+  Promise.resolve().then(() => sourceFor(sender, msg.document, true))
+    .then(source => sendResponse({ ok: true, source }))
+    .catch(error => sendResponse({ ok: false, error: String(error) }))
   return true
 })
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'nudge-capture-ready') return
   ;(async () => {
     try {
-      const source = await sourceFor(sender, msg.browserSource?.document)
-      if (['session', 'tab', 'document'].some(k => source[k] !== msg.browserSource?.[k])) throw new Error('capture source identity changed')
-      const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
-      if (!active || active.id !== sender.tab.id) throw new Error('capture deferred: source tab is inactive')
-      activeTabsByWindow.set(sender.tab.windowId, active.id)
+      await captureContext(sender, msg.browserSource)
       sendResponse({ ok: true })
     } catch (error) { sendResponse({ ok: false, error: String(error) }) }
   })()
@@ -55,15 +156,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'nudge-capture') return
   ;(async () => {
     try {
-      const source = await sourceFor(sender, msg.browserSource?.document)
-      if (['session', 'tab', 'document'].some(k => source[k] !== msg.browserSource?.[k])) throw new Error('capture source identity changed')
-      let activeId = activeTabsByWindow.get(sender.tab.windowId)
-      if (activeId === undefined) {
-        const [active] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
-        activeId = active?.id
-        if (activeId) activeTabsByWindow.set(sender.tab.windowId, activeId)
-      }
-      if (activeId !== sender.tab.id) throw new Error('capture deferred: source tab is inactive')
+      const before = await captureContext(sender, msg.browserSource)
       const dataUrl = await chrome.tabs.captureVisibleTab(sender.tab.windowId, { format: 'png' })
       // The pixels are in hand — the page may show its chrome again RIGHT NOW.
       // Everything below (decode, crop, scale, encode) is the slow part and does
@@ -74,8 +167,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       // after-shot can land inside a lasso capture), and one grab must not clear
       // the other's overlay bookkeeping
       chrome.tabs.sendMessage(sender.tab.id, { type: 'nudge-grabbed', token: msg.token }).catch(() => { /* tab navigated away */ })
-      const [activeAfter] = await chrome.tabs.query({ active: true, windowId: sender.tab.windowId })
-      if (!activeAfter || activeAfter.id !== sender.tab.id) throw new Error('capture rejected: source tab changed during capture')
+      await validateCapture(sender, msg.browserSource, before)
       const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob())
       // Don't trust the page's devicePixelRatio: emulation/zoom can make the captured
       // bitmap scale differ. Derive the real scale from bitmap vs viewport size.
@@ -93,6 +185,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       const fullCanvas = new OffscreenCanvas(Math.round(bmp.width * fScale), Math.round(bmp.height * fScale))
       fullCanvas.getContext('2d').drawImage(bmp, 0, 0, fullCanvas.width, fullCanvas.height)
       const full = await toDataUrl(await fullCanvas.convertToBlob({ type: 'image/jpeg', quality: 0.72 }))
+      await validateCapture(sender, msg.browserSource, before)
       sendResponse({ ok: true, dataUrl: crop, fullDataUrl: full })
     } catch (e) {
       sendResponse({ ok: false, error: String(e) })

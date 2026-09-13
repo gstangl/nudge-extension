@@ -205,7 +205,7 @@ try {
   // ---------- X12: the real extension — row disappears, toast is honest ----------
   {
     ctx = await chromium.launchPersistentContext('', {
-      headless: false,
+      headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium',
       viewport: { width: 1280, height: 900 },
       args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
     })

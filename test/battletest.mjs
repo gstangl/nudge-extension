@@ -13,7 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const FIXTURES = path.join(HERE, 'fixtures')
 const STORE = '/tmp/nudge-battle-store'
 const PORT = 4793
@@ -47,7 +47,7 @@ await sleep(300)
 
 let ctx
 try {
-  ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1400, height: 900 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
+  ctx = await chromium.launchPersistentContext('', { headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium', viewport: { width: 1400, height: 900 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
   let sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((p) => chrome.storage.local.set({ nudgePort: p }), PORT)
   const page = ctx.pages()[0] || await ctx.newPage()

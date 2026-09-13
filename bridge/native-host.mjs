@@ -26,10 +26,17 @@ async function ensureBridge() {
   const result = await ensureBridgeShared({ port: PORT, store: resolveStoreDir(), bridge: BRIDGE })
   return result.state
 }
+async function reportBridge() {
+  try { send({ ok: true, bridge: await ensureBridge(), port: PORT }) } catch (error) {
+    // Native messaging stdout is always framed JSON, including startup and
+    // retry failures. A listener or spawn failure must never become an
+    // unhandled rejection or a false successful connection state.
+    send({ ok: false, error: error.message || 'bridge startup failed', port: PORT })
+  }
+}
 
 // Ensure on spawn (connectNative), answer any incoming message with status.
-const state = await ensureBridge()
-send({ ok: true, bridge: state, port: PORT })
+await reportBridge()
 
 let buf = Buffer.alloc(0)
 process.stdin.on('data', (chunk) => {
@@ -38,7 +45,7 @@ process.stdin.on('data', (chunk) => {
     const len = buf.readUInt32LE(0)
     if (buf.length < 4 + len) break
     buf = buf.subarray(4 + len) // message content is irrelevant — every ping re-ensures
-    void ensureBridge().then((s) => send({ ok: true, bridge: s, port: PORT }))
+    void reportBridge()
   }
 })
 process.stdin.on('end', () => process.exit(0)) // port closed (SW suspended) — bridge lives on

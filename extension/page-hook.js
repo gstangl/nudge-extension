@@ -8,6 +8,8 @@
 // the alternative (inline page injection) is blocked by CSP on many setups.
 ;(() => {
   if (window.top !== window) return
+  if (globalThis.__nudgeHookInstalled) return
+  globalThis.__nudgeHookInstalled = true
   const buf = []
   const fmt = (a) => {
     if (typeof a === 'string') return a

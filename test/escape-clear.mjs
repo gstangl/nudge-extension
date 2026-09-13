@@ -12,7 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const PAGE = 5194
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -49,7 +49,7 @@ const pass = (m) => console.log('PASS', m)
 
 let ctx
 try {
-  ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
+  ctx = await chromium.launchPersistentContext('', { headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium', viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
   const p = await ctx.newPage()
   await p.goto(`http://localhost:${PAGE}/`, { waitUntil: 'domcontentloaded' })
   await p.locator('.pill').waitFor({ timeout: 15000 })

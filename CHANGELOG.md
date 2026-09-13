@@ -7,6 +7,48 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.33.0 · Bridge 0.19.0 — 2026-09-13 (Safari parity hardening)
+
+### Fixed
+- Prevent duplicate content controllers and console hooks on repeated injection;
+  end toolbar drags on cancellation, window blur and context cleanup.
+- Serialize browser-local queue mutations in the background. Preserve drafts on
+  quota/full-queue errors, retain stable retries, and expose ambiguous legacy or
+  expired queued prompts for review/discard. Keep HTTP in the local content
+  world rather than weakening the bridge's Origin admission.
+- Persist each nudge and idempotency receipt atomically; changed image/context
+  payloads now conflict instead of being treated as identical retries.
+- Preserve legacy receipt replay, invalidate uncommitted cache state after disk
+  errors, and reject malformed modern image submissions before allocation.
+- Recognize identical historical after-image retries without rewriting legacy
+  records or retroactively assigning browser provenance.
+- Keep ambiguous retry payloads in extension-owned storage, never page storage;
+  collect acknowledged/closed-tab/expired leftovers without deleting the queue.
+- Bind captures to session/tab/document and activation/navigation/focus epochs.
+  Route-matched successor documents can provide after-evidence; retired or
+  closed sources cannot. Missing evidence has an explicit pending reason.
+- Keep platform/native configuration out of the page's MAIN world and restrict
+  generated resource replacement to non-symlinked Safari artifact directories.
+- Exclude the entire overlay, including lasso tint, from evidence pixels; retry
+  transient capture throttling within the original source-bound request.
+- Preserve source identity on same-document navigation and prevent P/F shortcuts
+  from consuming text while Shift-collecting inside the shadow-DOM composer.
+- Bind selection images to a mark generation; reject late or foreign images.
+- Verify bridge identity before startup and serialize store-lease recovery;
+  native-host failures now return framed errors instead of claiming success.
+
+### Added
+- Explicit Safari/Chrome toolbar interaction gate: two-axis repeated grip drag,
+  release stability, viewport corners, resize recovery and post-drag controls.
+- Shared real-input SafariDriver/Chromium parity runner with candidate resource
+  hashes and isolated stores. Failed or missing browser checks fail explicitly.
+- Queue, capture-identity and expanded source-protocol regression tests.
+- Bounded PNG decoding/CRC validation for evidence, structural JPEG overview
+  validation, and runtime/resource dependency inventories with bundled licenses.
+
+Safari browser acceptance is still in progress. These changes do not claim a
+tested native app, signed distribution, or full Chrome/Safari parity.
+
 ## 0.32.3 — 2026-09-13 (Safari toolbar drag)
 
 ### Fixed

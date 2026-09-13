@@ -12,7 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
-const EXT = path.join(HERE, '../extension')
+const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const STORE = '/tmp/nudge-amend-store'
 const PORT = 4788, PAGE = 5188
 fs.rmSync(STORE, { recursive: true, force: true })
@@ -97,7 +97,7 @@ try {
   // ---------- N5: the History "+ amend" UI round-trips ----------
   {
     const id = await addNudge('UI nudge to amend.')
-    const ctx = await chromium.launchPersistentContext('', { headless: false, viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
+    const ctx = await chromium.launchPersistentContext('', { headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium', viewport: { width: 1200, height: 800 }, args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`] })
     const sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 10000 })
     await sw.evaluate(p => chrome.storage.local.set({ nudgePort: p }), PORT)
     const p = await ctx.newPage()

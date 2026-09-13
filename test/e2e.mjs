@@ -67,7 +67,7 @@ try {
   console.log('PASS CORS boundary (foreign origin blocked, localhost reflected)')
 
   ctx = await chromium.launchPersistentContext('', {
-    headless: false,
+    headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium',
     viewport: { width: 1280, height: 900 },
     args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
   })

@@ -25,7 +25,7 @@ run a shell command uses the same CLI.
 > A green connection indicator does **not** mean the agent wakes automatically.
 > See [wake modes and verification limits](#agents-and-wake-modes).
 
-Safari resource staging is available for development, but a loaded Safari
+Safari developer-preview resource staging and isolated parity runners are available, but a loaded Safari
 extension, native containing app and distribution are not yet supported claims.
 See [the Safari build and verification guide](docs/SAFARI.md).
 

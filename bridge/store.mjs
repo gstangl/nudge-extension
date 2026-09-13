@@ -1,11 +1,9 @@
 /**
  * Nudge store — single owner of the store directory on disk (store.json + shots/ + inbox/ mirror).
  *
- * Read path is mtime-cached: several bridge processes can share one store (the
- * EADDRINUSE fallback runs a second bridge on the same store), so a plain
- * in-memory cache would go stale. statSync per read is ~µs; full read+parse only
- * when another process actually wrote. Writes are last-writer-wins on the whole
- * file — acceptable at PoC scale, documented in the README.
+ * Reads are mtime-cached for CLI readers. The bridge acquires the canonical
+ * store's single-writer lease before loading or mutating; another listening
+ * port never authorizes a second writer. Failed commits invalidate this cache.
  *
  * Mutations emit change events; the bridge subscribes (WS broadcast, evidence
  * request). The store itself knows nothing about HTTP/WS/MCP.
@@ -13,6 +11,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { validateImage } from './images.mjs'
 import { resolveStoreDir } from '../agent/runtime.mjs'
 
 // GLOBAL, one truth for every agent runtime and every project. Existing
@@ -69,12 +68,19 @@ function seqFloorFromInbox() {
   } catch { return 0 }
 }
 function persist() {
-  fs.mkdirSync(STORE_DIR, { recursive: true })
-  // atomic: write aside, then rename — a crash mid-write leaves the old store intact
-  const tmp = STORE_FILE + '.tmp'
-  fs.writeFileSync(tmp, JSON.stringify(cache, null, 2))
-  fs.renameSync(tmp, STORE_FILE)
-  try { cacheMtime = fs.statSync(STORE_FILE).mtimeMs } catch { /* keep stale mtime */ }
+  try {
+    fs.mkdirSync(STORE_DIR, { recursive: true })
+    // atomic: write aside, then rename — a crash mid-write leaves the old store intact
+    const tmp = STORE_FILE + '.tmp'
+    fs.writeFileSync(tmp, JSON.stringify(cache, null, 2))
+    fs.renameSync(tmp, STORE_FILE)
+    cacheMtime = fs.statSync(STORE_FILE).mtimeMs
+  } catch (error) {
+    // Mutators change the cache before committing. A failed rename must never
+    // let a retry acknowledge an in-memory receipt that did not reach disk.
+    cache = null; cacheMtime = -1
+    throw error
+  }
 }
 
 // ---------- change events ----------
@@ -112,14 +118,31 @@ const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
 const token = (v) => /^[A-Za-z0-9_-]{1,128}$/.test(String(v || '')) ? String(v) : null
 function sanitizeBrowserSource(source) {
   if (!source || typeof source !== 'object') return null
-  const browser = cap(source.browser, 32)
+  if (typeof source.browser !== 'string' || !/^[A-Za-z0-9_-]{1,32}$/.test(source.browser)) return null
+  if (['session', 'tab', 'document'].some(k => typeof source[k] !== 'string' || !token(source[k]))) return null
+  const browser = source.browser
   const session = token(source.session), tab = token(source.tab), document = token(source.document)
-  return (browser || session || tab || document) ? { browser: browser || null, session, tab, document } : null
+  return { browser, session, tab, document }
 }
-const payloadSignature = (payload) => crypto.createHash('sha256').update(JSON.stringify({
+const canonical = value => JSON.stringify(value, (_, item) => item && typeof item === 'object' && !Array.isArray(item)
+  ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)
+const payloadSignature = (payload) => crypto.createHash('sha256').update(canonical({
   text: cap(payload?.text, 4000), url: cap(payload?.url, 2000), author: cap(payload?.author, 80),
   target: sanitizeTarget(payload?.target), targets: sanitizeTargets(payload?.targets),
   browserSource: sanitizeBrowserSource(payload?.browserSource), submissionCreatedAt: payload?.submissionCreatedAt || null,
+  selectionGeneration: token(payload?.selectionGeneration),
+  title: cap(payload?.title, 300), ua: cap(payload?.ua, 300), viewport: sanitizeRect(payload?.viewport),
+  annotations: payload?.annotations || null, console: payload?.console || null,
+  screenshot: payload?.screenshot || null, screenshotFull: payload?.screenshotFull || null,
+})).digest('hex')
+// 0.18 receipts intentionally covered fewer fields and insertion order. Keep
+// their existing no-mutation replay guarantee; never call them v2 image proof.
+const legacyPayloadSignature = payload => crypto.createHash('sha256').update(JSON.stringify({
+  text: cap(payload?.text,4000), url: cap(payload?.url,2000), author: cap(payload?.author,80),
+  target: sanitizeTarget(payload?.target), targets: sanitizeTargets(payload?.targets),
+  browserSource: payload?.browserSource && typeof payload.browserSource === 'object'
+    ? (() => { const s=payload.browserSource; const browser=cap(s.browser,32), session=token(s.session), tab=token(s.tab), document=token(s.document); return browser||session||tab||document ? {browser:browser||null,session,tab,document} : null })() : null,
+  submissionCreatedAt: payload?.submissionCreatedAt || null,
 })).digest('hex')
 // owner provenance stamp: { label, session } of the agent that owned the channel
 const sanitizeOwner = (o) => (o && typeof o === 'object' && (o.label || o.session))
@@ -168,30 +191,52 @@ function sanitizeTargets(targets) {
 // Not a pin: no id, no inbox mirror, no lifecycle.
 const SELECTION_FILE = path.join(STORE_DIR, 'selection.json')
 export function setSelection(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { error: 'selection_conflict' }
+  const browserSource = sanitizeBrowserSource(payload.browserSource)
+  const selectionGeneration = typeof payload.selectionGeneration === 'string' ? token(payload.selectionGeneration) : null
+  const bound = payload.browserSource != null || payload.selectionGeneration != null
+  const route = value => {
+    try { const u = new URL(value); return u.origin + u.pathname + u.hash } catch { return null }
+  }
+  const url = cap(payload.url, 2000)
+  if (bound && (!browserSource || !selectionGeneration || typeof payload.url !== 'string' || payload.url.length > 2000 || !route(url))) return { error: 'selection_conflict' }
+  const prev = getSelection()
+  const priorBound = !!(prev?.browserSource || prev?.selectionGeneration)
+  const sameRoute = !!route(url) && route(url) === route(prev?.url)
+  const sameMark = bound && priorBound && sameRoute && prev.selectionGeneration === selectionGeneration
+    && ['browser', 'session', 'tab', 'document'].every(key => prev.browserSource?.[key] === browserSource[key])
+  // Only an explicit new mark may replace the current generation. Async image
+  // delivery and ancestor retargeting are updates and must still name precisely
+  // the current browser/tab/document/route/generation, before any file is touched.
+  if (payload.keepShot !== false && (bound ? !sameMark : priorBound)) return { error: 'selection_conflict' }
+  const crop = payload.screenshot ? validateImage(payload.screenshot) : null
+  const overview = payload.screenshotFull ? validateImage(payload.screenshotFull) : null
+  if (payload.screenshot != null && payload.screenshot !== '' && (!crop || crop.type !== 'png' || crop.validation !== 'decoded')) return { error: 'invalid_selection_image' }
+  if (payload.screenshotFull != null && payload.screenshotFull !== '' && !overview) return { error: 'invalid_selection_image' }
   const sel = {
     at: new Date().toISOString(),
-    url: payload.url || '', title: payload.title || '',
-    selector: payload.target?.selector || payload.selector || '',
-    source: payload.target?.source || payload.source || null,
-    xpath: payload.target?.xpath || payload.xpath || null,
-    innerText: (payload.target?.innerText || payload.innerText || '').slice(0, 300),
-    outerHTML: (payload.target?.outerHTML || payload.outerHTML || '').slice(0, 1200),
-    styles: payload.target?.styles || payload.styles || null,
-    rect: payload.target?.rect || payload.rect || null,
-    viewport: payload.viewport || null,
+    url, title: cap(payload.title, 300),
+    selector: cap(payload.target?.selector || payload.selector, 500),
+    source: capOrNull(payload.target?.source || payload.source, 500),
+    xpath: capOrNull(payload.target?.xpath || payload.xpath, 500),
+    innerText: cap(payload.target?.innerText || payload.innerText, 300),
+    outerHTML: cap(payload.target?.outerHTML || payload.outerHTML, 1200),
+    styles: sanitizeStyles(payload.target?.styles || payload.styles),
+    rect: sanitizeRect(payload.target?.rect || payload.rect),
+    viewport: sanitizeRect(payload.viewport),
     targets: sanitizeTargets(payload.targets),
-    browserSource: sanitizeBrowserSource(payload.browserSource),
-    selectionGeneration: token(payload.selectionGeneration),
+    browserSource,
+    selectionGeneration,
   }
   fs.mkdirSync(STORE_DIR, { recursive: true })
-  if (payload.screenshot) sel.screenshot = saveImage('selection', '', payload.screenshot)
-  if (payload.screenshotFull) sel.screenshotFull = saveImage('selection', '_full', payload.screenshotFull)
+  if (payload.screenshot) sel.screenshot = saveImage('selection', '', payload.screenshot, crop)
+  if (payload.screenshotFull) sel.screenshotFull = saveImage('selection', '_full', payload.screenshotFull, overview)
   // Two-phase publish: a fresh pick posts data-only with keepShot:false (old
   // screenshots are STALE, the new shot lands moments later); chip retargets
   // post keepShot:true and inherit the pick-time crop (padding covers ancestors).
-  if (!sel.screenshot && payload.keepShot !== false) {
-    const prev = getSelection()
-    if (prev?.screenshot) { sel.screenshot = prev.screenshot; sel.screenshotFull = prev.screenshotFull }
+  if (payload.keepShot !== false && (sameMark || (!bound && !priorBound && sameRoute))) {
+    if (!sel.screenshot && prev?.screenshot) sel.screenshot = prev.screenshot
+    if (!sel.screenshotFull && prev?.screenshotFull) sel.screenshotFull = prev.screenshotFull
   }
   const selTmp = SELECTION_FILE + '.tmp'
   fs.writeFileSync(selTmp, JSON.stringify(sel, null, 2))
@@ -200,23 +245,35 @@ export function setSelection(payload) {
   return sel
 }
 export function getSelection() {
-  try { return JSON.parse(fs.readFileSync(SELECTION_FILE, 'utf8')) } catch { return null }
+  try {
+    const value = JSON.parse(fs.readFileSync(SELECTION_FILE, 'utf8'))
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : null
+  } catch { return null }
 }
 
 // ---------- mutations ----------
-function saveImage(id, suffix, dataUrl) {
-  const m = String(dataUrl).match(/^data:image\/(png|jpeg);base64,(.+)$/s)
-  if (!m) return null
+function saveImage(id, suffix, dataUrl, validated = null) {
+  const image = validated || validateImage(dataUrl)
+  // Region crops/after-evidence must be decoded PNG. JPEG is accepted only as
+  // the auxiliary full-viewport overview, with structural validation alone.
+  // Legacy malformed image payloads keep their prompt, but gain no image proof.
+  if (!image || (suffix !== '_full' && (image.type !== 'png' || image.validation !== 'decoded'))) return null
   fs.mkdirSync(SHOTS_DIR, { recursive: true })
-  const file = `${id}${suffix}.${m[1] === 'jpeg' ? 'jpg' : 'png'}`
-  fs.writeFileSync(path.join(SHOTS_DIR, file), Buffer.from(m[2], 'base64'))
+  const file = `${id}${suffix}.${image.type === 'jpeg' ? 'jpg' : 'png'}`
+  fs.writeFileSync(path.join(SHOTS_DIR, file), image.bytes)
   return `shots/${file}`
 }
 
 // `owner` is a SEPARATE arg, never read from payload: the bridge passes the
 // server-decided owner stamp so a client can NEVER inject or spoof provenance
 // (bulletproof binding — 2026-07-05: "not hijacked").
-export function addPin(payload, owner) {
+export function addPin(payload, owner, receipt = null) {
+  const crop = payload.screenshot ? validateImage(payload.screenshot) : null
+  const overview = payload.screenshotFull ? validateImage(payload.screenshotFull) : null
+  if ((receipt || payload.browserSource) && (
+    (payload.screenshot != null && (!crop || crop.type !== 'png' || crop.validation !== 'decoded')) ||
+    (payload.screenshotFull != null && !overview)
+  )) return { error: 'invalid_submission_image' }
   const s = load()
   // ids must NEVER be reused (watchers dedup by id; a recycled id is silently
   // swallowed — happened live 2026-07-04 after a manual seq reset). Guard against
@@ -239,15 +296,21 @@ export function addPin(payload, owner) {
     owner: sanitizeOwner(owner),
     browserSource: sanitizeBrowserSource(payload.browserSource),
     selectionGeneration: token(payload.selectionGeneration),
+    submissionId: token(payload.submissionId),
+    submissionCreatedAt: token(payload.submissionId) ? capOrNull(payload.submissionCreatedAt, 40) : null,
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
     annotations: (() => { try { return payload.annotations && JSON.stringify(payload.annotations).length <= 100_000 ? payload.annotations : null } catch { return null } })(),
     console: Array.isArray(payload.console) ? payload.console.slice(-20).map(l => cap(l, 500)) : null,
   }
-  if (payload.screenshot) pin.screenshot = saveImage(id, '', payload.screenshot)
-  if (payload.screenshotFull) pin.screenshotFull = saveImage(id, '_full', payload.screenshotFull)
+  if (payload.screenshot) pin.screenshot = saveImage(id, '', payload.screenshot, crop)
+  if (payload.screenshotFull) pin.screenshotFull = saveImage(id, '_full', payload.screenshotFull, overview)
   s.pins.push(pin)
+  // The pin and its idempotency receipt must reach disk in the SAME rename.
+  // A crash between two writes otherwise leaves delivered work without its
+  // receipt and a retry creates a second pin.
+  if (receipt) s.receipts.push({ ...receipt, id: pin.id })
   persist()
   emit('added', pin) // wake FIRST — the inbox mirror is a convenience artifact
   writeInboxMirror(pin)
@@ -258,6 +321,8 @@ export function addPin(payload, owner) {
 // enough to distinguish a harmless retry from a caller reusing an id for a
 // different prompt; it intentionally never retains prompt text.
 export function submitPin(payload, owner, now = Date.now()) {
+  if (typeof payload?.submissionId !== 'string') return { error: 'invalid_submission_id' }
+  if (typeof payload?.submissionCreatedAt !== 'string' || payload.submissionCreatedAt.length > 40) return { error: 'invalid_submission_time' }
   const submissionId = token(payload?.submissionId)
   if (!submissionId) return { error: 'invalid_submission_id' }
   const createdAt = Date.parse(payload?.submissionCreatedAt || '')
@@ -265,14 +330,12 @@ export function submitPin(payload, owner, now = Date.now()) {
   const s = load(), signature = payloadSignature(payload)
   const prior = s.receipts.find(r => r.submissionId === submissionId)
   if (prior) {
-    if (prior.signature !== signature) return { error: 'submission_conflict' }
+    const expected = prior.signatureVersion === 2 ? signature : legacyPayloadSignature(payload)
+    if (prior.signature !== expected) return { error: 'submission_conflict' }
     return { pin: getPin(prior.id) || null, id: prior.id, replay: true, withdrawn: !!prior.withdrawn }
   }
-  const pin = addPin(payload, owner)
-  // addPin persisted the pin. Persist its accompanying receipt atomically before
-  // we acknowledge the submission, so a post-commit network loss remains safe.
-  s.receipts.push({ submissionId, signature, id: pin.id, createdAt: payload.submissionCreatedAt, withdrawn: false })
-  persist()
+  const pin = addPin(payload, owner, { submissionId, signature, signatureVersion: 2, createdAt: payload.submissionCreatedAt, withdrawn: false })
+  if (pin.error) return pin
   return { pin, id: pin.id, replay: false, withdrawn: false }
 }
 
@@ -359,15 +422,34 @@ function writeWithdrawnMarker(pin) {
 export function attachAfterShot(id, screenshot, provenance = null) {
   const pin = getPin(id)
   if (!pin || pin.status !== 'resolved' || !pin.screenshot) return { error: 'not_eligible' }
-  if (pin.screenshotAfter) return { pin, duplicate: true }
   if (pin.browserSource) {
     const got = sanitizeBrowserSource(provenance?.browserSource)
     const expected = pin.browserSource
-    if (!got || ['browser', 'session', 'tab', 'document'].some(k => expected[k] && expected[k] !== got[k])) return { error: 'provenance_conflict' }
+    const original = sanitizeBrowserSource(provenance?.expectedBrowserSource)
+    const successor = original && ['browser', 'session', 'tab', 'document'].every(k => original[k] === expected[k])
+    if (!got || (successor ? ['browser', 'session', 'tab'] : ['browser', 'session', 'tab', 'document']).some(k => expected[k] !== got[k])) return { error: 'provenance_conflict' }
   }
-  const saved = saveImage(id, '_after', screenshot)
+  const image = validateImage(screenshot)
+  if (!image || image.type !== 'png' || image.validation !== 'decoded') return { error: 'invalid_image' }
+  const imageHash = crypto.createHash('sha256').update(String(screenshot)).digest('hex')
+  if (pin.screenshotAfter) {
+    if (pin.afterImageHash === imageHash) return { pin, duplicate: true }
+    // Historical legacy records have no hash. Compare only their canonical
+    // stored file, without rewriting the record or inventing source evidence.
+    if (!pin.browserSource && !pin.afterImageHash && /^(?:pin|nudge)_\d+$/.test(pin.id)
+      && pin.screenshotAfter === `shots/${pin.id}_after.png`) {
+      try {
+        const file = path.join(SHOTS_DIR, `${pin.id}_after.png`)
+        if (fs.statSync(file).size === image.bytes.length && fs.readFileSync(file).equals(image.bytes))
+          return { pin, duplicate: true }
+      } catch { /* Missing evidence remains a conflict, not a new capture. */ }
+    }
+    return { error: 'evidence_conflict' }
+  }
+  const saved = saveImage(id, '_after', screenshot, image)
   if (!saved) return { error: 'invalid_image' }
   pin.screenshotAfter = saved
+  pin.afterImageHash = imageHash
   if (pin.browserSource) pin.afterBrowserSource = sanitizeBrowserSource(provenance?.browserSource)
   persist()
   writeInboxMirror(pin)
@@ -393,6 +475,20 @@ export function pruneResolved(maxAgeMs = 7 * 24 * 3600e3) {
   return drop.length
 }
 
+// Keep non-content receipts through the complete retry horizon plus clock
+// allowance. Delayed original requests remain expired after their receipt goes.
+// Unknown timestamps fail closed: do not discard a receipt we cannot age.
+export function pruneReceipts(now = Date.now()) {
+  const s = load()
+  const keep = s.receipts.filter(receipt => {
+    const at = Date.parse(receipt.createdAt || '')
+    return !Number.isFinite(at) || now <= at + 7 * 24 * 3600e3 + 5 * 60_000
+  })
+  const removed = s.receipts.length - keep.length
+  if (removed) { s.receipts = keep; persist() }
+  return removed
+}
+
 // Withdrawal markers are orphan files (their pin is gone), so pruneResolved can
 // never reach them. They exist to be read once, on the agent's next prompt —
 // past a day they are noise, and the hook that reads them runs on EVERY prompt
@@ -413,7 +509,7 @@ export function pruneWithdrawn(maxAgeMs = 24 * 3600e3) {
 // ---------- projections (one per consumer, together on purpose) ----------
 /** HTTP GET /comments — structured summary for scripts/tools. */
 export function pinSummary(p) {
-  return { id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt }
+  return { id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt, browserSource: p.browserSource || undefined, afterBrowserSource: p.afterBrowserSource || undefined }
 }
 // speaking label for text-less prompts — same wording as the extension queue
 // (label parity: browser and agent describe a mark identically)
@@ -442,6 +538,7 @@ export function pinForClient(p) {
     amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // the user's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     browserSource: p.browserSource || undefined,
+    isRegion: p.annotations?.some(a => a.type === 'lasso') || false,
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
       innerText: (p.target?.innerText || '').slice(0, 80) || undefined, // speaking queue label
@@ -457,6 +554,8 @@ function writeInboxMirror(pin) {
   const who = pin.author ? `\n- author: ${pin.author}` : ''
   // provenance in the file an agent reads: WHICH session this nudge belongs to
   const owns = pin.owner?.label ? `\n- agent: ${pin.owner.label}` : ''
+  const provenance = pin.browserSource ? `\n- browser provenance: \`${JSON.stringify(pin.browserSource)}\`` : '\n- browser provenance: legacy / unverified'
+  const afterProvenance = pin.afterBrowserSource ? `\n- after provenance: \`${JSON.stringify(pin.afterBrowserSource)}\`` : ''
   const con = pin.console?.length ? `\n\n## Console\n\`\`\`\n${pin.console.join('\n')}\n\`\`\`\n` : ''
   const many = pin.targets?.length
     ? `\n\n## Elements (${pin.targets.length})\n${pin.targets.map((t, i) => `${i + 1}. \`${t.selector}\`${t.source ? ` — \`${t.source}\`` : ''}`).join('\n')}\n`
@@ -470,5 +569,5 @@ function writeInboxMirror(pin) {
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
     // heading carries BOTH: the id (this file's name, what commits cite) and the
     // label the user saw on the pill — so "Nudge 47" is greppable back to nudge_1047
-    `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
+    `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}${provenance}${afterProvenance}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
 }

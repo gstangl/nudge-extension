@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Groundworks Nudge",
-  "version": "0.32.3",
+  "version": "0.33.0",
   "web_accessible_resources": [
     {
       "resources": [
@@ -52,7 +52,6 @@
         "http://127.0.0.1/*"
       ],
       "js": [
-        "platform.js",
         "page-hook.js"
       ],
       "run_at": "document_start",

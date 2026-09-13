@@ -1,0 +1,42 @@
+name: Safari core interactions (provisioned GUI runner required)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safari:
+    # This label is an explicit provisioning requirement, not a claim that a
+    # hosted macOS VM supports Safari extension permission automation. No green
+    # skip: absent hardware leaves this required release evidence unavailable.
+    runs-on: [self-hosted, macOS, nudge-safari]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report toolchain and require native UI automation
+        run: |
+          sw_vers
+          safaridriver --version
+          xcode-select -p
+          xcodebuild -version
+          node --version
+          command -v peekaboo
+          peekaboo permissions --json
+      - run: npm ci
+        working-directory: bridge
+      - run: npm ci
+        working-directory: test
+      - run: npx playwright install chromium
+        working-directory: test
+      - run: npm run test:ci
+        working-directory: test
+      - run: node test/safari-e2e.mjs
+      - name: Preserve candidate-specific browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-acceptance
+          path: artifacts/safari/
+          if-no-files-found: error

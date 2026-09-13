@@ -9,26 +9,31 @@ import { fileURLToPath } from 'node:url'
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const source = path.join(ROOT, 'extension')
 const overlay = JSON.parse(fs.readFileSync(path.join(ROOT, 'safari/manifest-overrides.json'), 'utf8'))
-const usage = 'Usage: node scripts/package-safari.mjs --mode test|release --out <directory> [--bridge-port <port>]'
+const usage = 'Usage: node scripts/package-safari.mjs --mode test|release --out artifacts/safari/<directory> [--bridge-port <port> | --use-storage-port]'
 const args = process.argv.slice(2)
 const value = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1] }
 const mode = value('--mode')
 const outArg = value('--out')
 const port = value('--bridge-port')
+const storagePort = args.includes('--use-storage-port')
 if (!['test', 'release'].includes(mode) || !outArg || (port !== null && (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535))) {
   console.error(usage); process.exit(2)
 }
-if (mode === 'release' && port !== null) {
+if ((mode === 'release' && (port !== null || storagePort)) || (storagePort && port !== null)) {
   console.error('Release resources cannot contain a test bridge port.'); process.exit(2)
 }
 const out = path.resolve(ROOT, outArg)
-if (out === source || !out.startsWith(ROOT + path.sep)) throw new Error('Output must be a subdirectory of this repository and not extension/.')
+const artifactRoot = path.join(ROOT, 'artifacts', 'safari')
+if (!out.startsWith(artifactRoot + path.sep)) throw new Error('Output must be a child of artifacts/safari/.')
+for (let dir = out; dir !== ROOT; dir = path.dirname(dir)) {
+  if (fs.existsSync(dir) && fs.lstatSync(dir).isSymbolicLink()) throw new Error('Output must not traverse symlinks.')
+}
 fs.rmSync(out, { recursive: true, force: true })
 fs.mkdirSync(out, { recursive: true })
 
 const files = [
-  'manifest.json', 'platform.js', 'sw.js', 'content.js', 'page-hook.js', 'styles.js', 'options.html', 'options.js',
-  'vendor/finder.js', 'fonts/rn-sans.woff2', 'fonts/rn-sans-italic.woff2', 'fonts/rn-mono.woff2',
+  'manifest.json', 'platform.js', 'sw.js', 'queue.js', 'content.js', 'page-hook.js', 'styles.js', 'options.html', 'options.js',
+  'vendor/finder.js', 'vendor/finder-LICENSE.txt', 'vendor/lucide-LICENSE.txt', 'fonts/rn-sans.woff2', 'fonts/rn-sans-italic.woff2', 'fonts/rn-mono.woff2',
   'fonts/README.md', 'fonts/OFL-IBMPlexSans.txt',
   'icons/icon-16.png', 'icons/icon-32.png', 'icons/icon-48.png', 'icons/icon-128.png',
   'icons/circle-grey-16.png', 'icons/circle-grey-32.png', 'icons/circle-grey-48.png', 'icons/circle-grey-128.png',
@@ -42,11 +47,13 @@ for (const file of files) {
 }
 const manifest = JSON.parse(fs.readFileSync(path.join(out, 'manifest.json'), 'utf8'))
 manifest.permissions = (manifest.permissions || []).filter(p => !overlay.removePermissions.includes(p))
-for (const script of manifest.content_scripts || []) script.js = [...new Set([...overlay.prependContentScripts, ...script.js])]
+for (const script of manifest.content_scripts || []) {
+  if (script.world !== 'MAIN') script.js = [...new Set([...overlay.prependContentScripts, ...script.js])]
+}
 // importScripts executes the capability surface before service-worker startup;
 // this is what prevents a test package from calling Chrome native messaging.
 manifest.background = { service_worker: 'safari-sw.js' }
-const cfg = { ...overlay[mode], bridgePort: mode === 'test' ? Number(port || 4820) : null }
+const cfg = { ...overlay[mode], bridgePort: mode === 'test' && !storagePort ? Number(port || 4820) : null }
 const platform = `globalThis.__nudgePlatform = ${JSON.stringify(cfg)}\n` + fs.readFileSync(path.join(source, 'platform.js'), 'utf8')
 fs.writeFileSync(path.join(out, 'platform.js'), platform)
 fs.writeFileSync(path.join(out, 'safari-sw.js'), `importScripts('platform.js', 'sw.js')\n`)

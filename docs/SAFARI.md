@@ -32,7 +32,7 @@ This is the only supported installation path until the packaged macOS app has
 its own acceptance evidence. It is for a developer's own local test only; Safari
 removes the extension after 24 hours or when Safari quits.
 
-1. Install the bridge dependencies once: `cd bridge && npm ci`.
+1. From the repository root, install bridge dependencies once: `(cd bridge && npm ci)`.
 2. Stage a separate test resource directory and start a separately scoped
    bridge/store:
 
@@ -44,15 +44,31 @@ removes the extension after 24 hours or when Safari quits.
 3. In Safari, open **Safari > Settings > Developer**. Enable unsigned extensions
    if Safari asks, click **Add Temporary Extension…**, and select
    `artifacts/safari/temporary-extension`.
-4. Open **Safari > Settings > Extensions**, select Groundworks Nudge, enable
-   it, and grant it **Website Access: All Websites** for developer testing. A
-   toolbar entry alone does not prove that Safari may inject the page UI.
+4. Open **Safari > Settings > Extensions**, select Groundworks Nudge and enable
+   it. On the local test page, click Nudge's Safari toolbar icon and grant access
+   to **this website**. Repeat for `localhost` and `127.0.0.1` if you use both.
+   Do not grant all websites or disable origin/file security restrictions.
+   A toolbar entry alone does not prove that Safari may inject the page UI.
 5. When the staged directory changes, reload Groundworks Nudge from that pane
    if Safari offers a reload control; otherwise remove and add the same
    temporary-extension directory again. Reload the test tab afterwards.
 6. Open `http://localhost:4820/demo`. Test Pick, Freeform, a sent prompt and a
    resolve/after-image cycle. The test resource's worker does not launch a
    native host; the separately started bridge is expected.
+
+The isolated port/store above is a test environment. It does not arm your normal
+agent session or use its production inbox. An amber status means the bridge is
+reachable but no agent is listening; it is not evidence of broken installation.
+For real project work, use the normal shared bridge installed by [INSTALL.md](../INSTALL.md)
+and release resources (port 4700, no native autostart), then invoke the Skill in
+the project session. That temporary Safari path still requires the bridge to be
+running; automatic native startup is not implemented.
+
+The icon is Lucide **Crosshair**. Grey means off, red means bridge unreachable,
+amber means no active agent, and green means an active agent. The badge is the
+open-prompt count. `Pull` means the agent receives the prompt with your next chat
+message; it does not start a new turn by itself. Drag the six-dot handle in the
+page toolbar, not the Safari address-bar icon.
 
 Safari may require the Developer tab to be enabled first in its settings. Do
 not tell end users to use this path: it is intentionally temporary and does not
@@ -79,6 +95,79 @@ end-user installation.**
 | Level | Current evidence |
 |---|---|
 | Resource staging | Tested by `node test/safari-e2e.mjs --smoke` |
-| Safari extension behavior | Toolbar entry observed; page injection and functional behavior remain unverified |
+| Shared browser implementation | Chromium regression and real-input contract; not Safari acceptance |
+| Safari extension behavior | Temporary installation and some transport/UI observed; full current-candidate parity remains unverified |
 | Native app/helper lifecycle | Not implemented or tested |
 | Signed distribution | Not prepared or tested |
+
+PNG evidence is validated with bounded decoding and CRC checks (noninterlaced,
+up to 64 MiB decoded data). Unsupported/oversized modern images are rejected,
+not silently removed from an acknowledged prompt. JPEG overview admission checks
+structure, not entropy-decoded pixels; the real browser pixel test separately
+decodes the generated overview. Missing Safari quota/zoom/permission-revocation
+and background-suspension tests remain acceptance gaps even if the core runner
+passes. Same-route two-profile Chromium tests are not simultaneous Safari/Chrome
+proof. The joint runner is implemented, but its current-candidate Safari runtime
+acceptance remains unverified while the GUI prerequisites are unavailable.
+
+## Reproducible implementation checks
+
+```sh
+(cd test && npm run test:ci)
+node test/safari-e2e.mjs --smoke
+node test/browser-protocol.mjs
+node test/bridge-lifecycle.mjs
+node test/run-browser-regression.mjs --headless
+node test/browser-parity.mjs --chromium --headless
+node test/browser-coexistence.mjs --chromium-only --headless
+```
+
+`--headless` explicitly means Chromium implementation verification, not a visible
+Safari session. Resource hashes and per-run reports live under `artifacts/safari/`.
+The resource smoke compares repeated release output and rejects test settings in
+release packages; it does not invoke an Apple packager.
+
+Run `node test/safari-e2e.mjs` for the real Safari contract. It requires Safari
+26+, Remote Automation enabled, an unlocked GUI session, and Peekaboo with Screen
+Recording/Accessibility permission for the website-access prompt. It installs
+its own temporary resources and uses separate local ports/store. Permission
+automation remains a candidate-specific test requirement, not a guarantee that
+all Safari permission dialogs are automated. A locked screen or unavailable
+permission fails the run; it is never counted as a pass. Do not manually operate
+Safari's automation window during a run; Safari may pause it behind a modal.
+
+Run `node test/browser-coexistence.mjs` for the simultaneous Safari/Chromium
+contract. It checks four same-route tabs, shared history/ownership and actual
+source-bound before/after pixels in both directions. It owns its temporary
+Safari extension identifier, automation session, Chromium profile and isolated
+bridge/store. Existing Safari Nudge installations are not globally toggled;
+turn a conflicting enabled overlay off before this isolated run. Only this
+website is granted access. Cleanup targets the owned resources, and cleanup
+failure cannot produce a passing report. A locked GUI is detected before any
+browser launch and produces a blocked, nonzero result. `--headless` is rejected
+for this joint lane; use `--chromium-only --headless` for the separate subset.
+Both runners record final installed resource hashes and accurate `safari-test`
+or `chromium-test` provenance; a test package never invokes native autostart.
+
+The manually triggered Safari CI workflow requires a deliberately provisioned
+`nudge-safari` self-hosted macOS GUI runner. Such a runner has not been verified
+for this candidate. An unprovisioned/queued workflow provides no release evidence.
+
+## Durable runtime packaging input
+
+```sh
+node scripts/package-runtime.mjs --out artifacts/safari/shared-runtime
+```
+
+Use a fresh output directory; existing output is preserved and rejected. The
+script stages an explicit dependency/setup inventory, installs locked production
+dependencies without lifecycle scripts, includes licenses and writes hashes.
+It does not run setup or install a service. `--dependencies locked` produces
+source/lock input only and explicitly does not claim a runnable installation.
+Portable CLI relocation has an isolated implementation test; it is not proof of
+native app uninstall, Finder launch, existing Chrome registration or signed
+distribution. No Xcode scheme/archive command is claimed until an actual full
+Xcode build has succeeded.
+
+Apple references: [temporary extension installation](https://developer.apple.com/documentation/safariservices/running-your-safari-web-extension)
+and [Safari 26 WebDriver extension automation](https://webkit.org/blog/17333/webkit-features-in-safari-26-0/).

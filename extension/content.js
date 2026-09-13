@@ -10,6 +10,11 @@
 // styles, console + network errors, dual screenshots, author.
 ;(() => {
   if (window.top !== window) return // top frame only
+  // Safari may reinject scripts when website access is granted. Keep one live
+  // controller per extension world/document: duplicate window listeners make
+  // the toolbar compete with itself for pointer and keyboard events.
+  if (globalThis.__nudgeContentLoaded) return
+  globalThis.__nudgeContentLoaded = true
   const NUDGE_PLATFORM = globalThis.__nudgePlatform || { bridgePort: null }
   const documentToken = crypto.randomUUID().replaceAll('-', '')
   let browserSource = null
@@ -29,6 +34,7 @@
   // ---------- shadow root + styles ----------
   const host = document.createElement('div')
   host.id = '__groundworks-nudge-host'
+  host.dataset.nudgeExtension = chrome.runtime.id
   host.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483647;'
   const root = host.attachShadow({ mode: 'open' })
   document.documentElement.appendChild(host)
@@ -238,20 +244,23 @@
   }
   const endPillDrag = (e) => {
     if (!dragOff || (e && e.pointerId !== dragPointerId)) return
-    try { if (grip.hasPointerCapture?.(dragPointerId)) grip.releasePointerCapture(dragPointerId) } catch { /* capture was unavailable */ }
+    const pointerId = dragPointerId
     dragOff = null
     dragPointerId = null
+    try { if (grip.hasPointerCapture?.(pointerId)) grip.releasePointerCapture(pointerId) } catch { /* capture was unavailable */ }
     grip.classList.remove('dragging')
     window.removeEventListener('pointermove', movePill, true)
     window.removeEventListener('pointerup', endPillDrag, true)
     window.removeEventListener('pointercancel', endPillDrag, true)
+    window.removeEventListener('blur', cancelPillDrag, true)
     // the drop point as SEEN, not the raw pointer (which may have left the window
     // mid-drag) — that is what "back to where I put it" has to mean
     const r = pill.getBoundingClientRect()
     pillWant = { x: r.left, y: r.top }
-    chrome.storage.local.set({ nudgePillPos: pillWant })
+    try { chrome.storage.local.set({ nudgePillPos: pillWant }).catch(() => {}) } catch { /* context ended */ }
     saveSnap() // same position on the next load, WITHOUT waiting for storage
   }
+  const cancelPillDrag = () => endPillDrag()
   grip.addEventListener('pointerdown', (e) => {
     if (!e.isPrimary || e.button !== 0) return
     e.preventDefault()
@@ -262,6 +271,7 @@
     window.addEventListener('pointermove', movePill, true)
     window.addEventListener('pointerup', endPillDrag, true)
     window.addEventListener('pointercancel', endPillDrag, true)
+    window.addEventListener('blur', cancelPillDrag, true)
     try { grip.setPointerCapture(e.pointerId) } catch { /* synthetic events */ }
   })
   // every signal that the viewport changed shape: a docked DevTools panel and a
@@ -462,11 +472,14 @@
       // head of the set can be an element the app never rendered again — keep the
       // restored mark as the anchor then instead of dereferencing a null.
       const lead = multi.find(m => m.el)
-      if (lead) picked = { el: lead.el, rect: lead.el.getBoundingClientRect(), selector: lead.selector, source: lead.source, frozen: lead.frozen }
+      if (lead) picked = { el: lead.el, rect: lead.el.getBoundingClientRect(), selector: lead.selector, source: lead.source, frozen: lead.frozen, generation: crypto.randomUUID().replaceAll('-', '') }
       postSelection(null, { keepShot: false })
       if (composer.style.display !== 'block') openComposer(picked.rect)
       multiMeta()
       mode = 'picking' // keep collecting despite the open composer
+      // A real Shift-click may move focus to the page. Return typing to the
+      // retained draft so p/f in the next word cannot become tool shortcuts.
+      ta.focus({ preventScroll: true })
       saveSnap()
       return
     }
@@ -483,6 +496,7 @@
     const fromChip = !!picked && !chain
     const selector = cssPath(node), source = sourceHint(node)
     picked = {
+      generation: fromChip ? picked.generation : crypto.randomUUID().replaceAll('-', ''),
       el: node, chain: chain || picked?.chain,
       rect: node.getBoundingClientRect(), selector, source,
       // context FROZEN at pick time: the mark survives a page reload even when
@@ -516,13 +530,12 @@
   const contextOf = (t) => (t.el ? elementContext(t.el, t.selector, t.source) : (t.frozen || { selector: t.selector, source: t.source }))
   const multiTargets = () => multi.length > 1 ? multi.map(contextOf) : undefined
 
+  let selectionTail = Promise.resolve()
   function postSelection(shot, { keepShot = true } = {}) {
     const t = picked
     if (!t) return
     const r = t.rect
-    void fetch(HTTP + '/selection', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const payload = {
         url: location.href, title: document.title,
         ...contextOf(t),
         targets: multiTargets(),
@@ -530,9 +543,18 @@
         viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
         screenshot: shot?.dataUrl || undefined,
         screenshotFull: shot?.fullDataUrl || undefined,
-        browserSource,
+        selectionGeneration: t.generation,
         keepShot,
-      }),
+    }
+    // Keep the initial generation announcement ahead of its asynchronous image.
+    // Snapshot the selected target now; a later capture never borrows a new mark.
+    selectionTail = selectionTail.catch(() => {}).then(async () => {
+      await sourceReady
+      if (picked !== t || !browserSource) return
+      await fetch(HTTP + '/selection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, browserSource }), signal: AbortSignal.timeout(3000),
+      })
     }).catch(() => { /* bridge down — icon shows it */ })
   }
   function renderLayerChips() {
@@ -584,12 +606,14 @@
     const centerEl = elAt(cx, cy) || document.body
     const selector = cssPath(centerEl), source = sourceHint(centerEl)
     picked = {
+      generation: crypto.randomUUID().replaceAll('-', ''),
       el: centerEl, rect: bbox, selector, source,
       frozen: elementContext(centerEl, selector, source),
       stroke: strokePts.map(([x, y]) => [Math.round(x), Math.round(y)]),
     }
     // the circled region is the mark, send stays optional (same as element picks)
     postSelection(null, { keepShot: false })
+    const selected = picked
     // The composer used to open only AFTER the screenshot came back — so a capture
     // that never settles (debugger attached, 2026-07-29) cost the user the input
     // field entirely, with the toolbar hidden on top. Now the shot and the field
@@ -597,11 +621,12 @@
     // the field appears once, with its picture already attached; a stuck capture
     // costs a blink, not the nudge.
     let opened = false
-    const open = () => { if (!opened) { opened = true; openComposer(bbox) } }
+    const open = () => { if (!opened && picked === selected) { opened = true; openComposer(bbox) } }
     const grace = setTimeout(open, COMPOSER_GRACE)
     void (async () => {
       const shot = await captureRegion(bbox)
       clearTimeout(grace)
+      if (picked !== selected) return
       open()
       if (shot) postSelection(shot)
       else notify('alert', 'No screenshot — nudge ships with the mark only')
@@ -677,7 +702,9 @@
   const CAPTURE_GRACE = 350 // longest the overlay may stay hidden waiting for pixels
   let captureSeq = 0 // correlates each grab signal with the capture that asked for it
   const COMPOSER_GRACE = 350 // typing must not wait on a screenshot beyond one blink
+  let captureBusy = false
   async function captureRegion(rect, { withHighlight = false } = {}) {
+    if (captureBusy) return null // independent captures cannot share hide/restore ownership
     const PAD = 24
     const crop = {
       x: Math.max(0, rect.left - PAD),
@@ -690,9 +717,15 @@
     if (browserSource) {
       try {
         const ready = await chrome.runtime.sendMessage({ type: 'nudge-capture-ready', browserSource })
-        if (!ready?.ok) return null
+        if (!ready?.ok) { console.warn('[groundworks-nudge] capture deferred:', ready?.error || 'source unavailable'); return null }
       } catch { return null }
     }
+    if (captureBusy) return null // admission awaited the worker; another caller may have won
+    captureBusy = true
+    const focusWas = root.activeElement
+    const caretWas = focusWas?.tagName === 'TEXTAREA' ? [focusWas.selectionStart, focusWas.selectionEnd] : null
+    const hostVisibility = host.style.visibility
+    host.style.visibility = 'hidden' // includes lasso tint, feed and open popovers
     const composerWas = composer.style.display
     composer.style.display = 'none'
     const pillWas = pill.style.display
@@ -701,8 +734,6 @@
     dots.style.display = 'none' // status dots don't belong in evidence shots
     // hiding the composer BLURS the textarea; the evidence loop can fire
     // mid-sentence, so remember the caret and put it back with the field
-    const focusWas = root.activeElement
-    const caretWas = focusWas?.tagName === 'TEXTAREA' ? [focusWas.selectionStart, focusWas.selectionEnd] : null
     hl.classList.add('instant') // transitions off: the box must be fully painted in the shot
     if (withHighlight) { highlight(rect); hl.querySelector('.chip').textContent = '' }
     else hl.classList.remove('on')
@@ -719,6 +750,7 @@
     const restore = () => {
       if (restored) return
       restored = true
+      host.style.visibility = hostVisibility
       hl.classList.remove('on')
       hl.classList.remove('instant')
       pill.style.display = pillWas
@@ -738,7 +770,7 @@
       }
       if (mode === 'composing' && picked && !picked.stroke) highlight(picked.el?.getBoundingClientRect() || picked.rect)
     }
-    const token = `cap_${++captureSeq}`
+    const token = `cap_${documentToken}_${++captureSeq}`
     const onGrabbed = (msg) => { if (msg?.type === 'nudge-grabbed' && msg.token === token) { grabbedClean = !restored; restore() } }
     chrome.runtime.onMessage.addListener(onGrabbed)
     const graceTimer = setTimeout(restore, CAPTURE_GRACE)
@@ -763,6 +795,7 @@
       clearTimeout(graceTimer)
       chrome.runtime.onMessage.removeListener(onGrabbed)
       restore()
+      captureBusy = false
     }
     // A grab that landed after the chrome was already back has the toolbar in
     // frame. Evidence with our own UI baked into it is worse than no evidence —
@@ -775,52 +808,68 @@
   }
 
   // ---------- send (with offline queue) ----------
-  async function postPin(payload) {
-    const resp = await fetch(HTTP + '/comments', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-    })
-    const body = await resp.json().catch(() => ({}))
-    if (!resp.ok || typeof body.id !== 'string') throw new Error(body.error || `bridge returned ${resp.status}`)
-    return body.id
-  }
-  async function enqueue(payload) {
-    if (!alive()) return false // orphan window — the fresh script owns the queue
-    const { nudgeQueue = [] } = await chrome.storage.local.get({ nudgeQueue: [] })
-    if (nudgeQueue.length >= 25) return false
-    await chrome.storage.local.set({ nudgeQueue: [...nudgeQueue, payload] })
+  const queueRequest = (action, fields = {}) => chrome.runtime.sendMessage({ type: 'nudge-queue', action, ...fields })
+  // The background owns ordering/storage, but sends through a local page's
+  // content world so the bridge retains its exact loopback Origin boundary.
+  // In particular this is not an arbitrary privileged HTTP proxy.
+  chrome.runtime.onMessage.addListener((message, sender, reply) => {
+    if (message?.type !== 'nudge-queue-http') return
+    if (sender.id !== chrome.runtime.id || ![
+      `${HTTP}/.identity`, `${HTTP}/comments`,
+    ].includes(message.url) || !(
+      message.url === `${HTTP}/.identity` && message.method === 'GET' ||
+      message.url === `${HTTP}/comments` && message.method === 'POST'
+    )) { reply({ ok: false, status: 403, body: { error: 'queue_transport_rejected' } }); return }
+    fetch(message.url, {
+      method: message.method, headers: message.method === 'POST' ? { 'Content-Type': 'application/json' } : {},
+      ...(message.method === 'POST' ? { body: message.body } : {}), signal: AbortSignal.timeout(8000),
+    }).then(async response => reply({ ok: response.ok, status: response.status, body: await response.json().catch(() => null) }))
+      .catch(() => reply({ ok: false, status: 0, body: { error: 'bridge_offline' } }))
     return true
-  }
+  })
+  const queueReason = reason => ({
+    bridge_offline: 'Bridge offline', idempotency_unavailable: 'Bridge upgrade required for safe delivery',
+    legacy_delivery_unknown: 'Older queued prompt needs review; prior delivery is unknown',
+    retry_expired: 'Queued prompt expired; review before sending again',
+    storage_unavailable: 'Queue storage unavailable', queue_full: 'Queue full',
+  })[reason] || `Delivery pending: ${reason || 'connection unavailable'}`
+  let pendingSubmission = null
+  let pendingRestore = null
+  const retryStorageKey = () => browserSource ? `nudgeDraftRetry-${browserSource.tab}` : null
   // the 5s orphan check leaves a WINDOW: an event can fire on a freshly
   // invalidated context before `dead` flips (bit us 2026-07-05:
   // "Uncaught: Extension context invalidated at flushQueue/onVisibility")
   const alive = () => { try { chrome.runtime.getURL(''); return true } catch { return false } }
-  function flushQueue() {
-    // only the VISIBLE tab flushes — two open tabs racing the same
-    // chrome.storage queue would double-send every queued nudge
+  async function flushQueue() {
+    // Visibility avoids redundant requests, not races: the background owns ALL
+    // queue mutations and serializes requests from multiple visible windows.
     if (dead || document.hidden || !alive()) return
-    chrome.storage.local.get({ nudgeQueue: [] }, async ({ nudgeQueue }) => {
-      if (!nudgeQueue.length) return
-      let sent = 0
-      for (const p of [...nudgeQueue]) {
-        try { await postPin(p); nudgeQueue.shift(); sent++ } catch { break }
-      }
-      chrome.storage.local.set({ nudgeQueue })
+    try {
+      const result = await queueRequest('flush')
+      const sent = result?.delivered?.filter(item => !item.withdrawn).length || 0
       if (sent) notify('check', `${sent} queued nudge${sent > 1 ? 's' : ''} sent`)
-    })
+      if (result?.reason && result.entries?.length) notify('alert', queueReason(result.reason))
+    } catch { /* context ended; durable background queue remains */ }
   }
 
   async function send() {
-    if (!picked) return
+    if (!picked || composer.querySelector('.send').disabled) return
+    const btn = composer.querySelector('.send')
+    btn.disabled = true // acquire before any await; double-click is one submission
     // A new submission must not race initial privileged identity registration.
     // If registration failed it remains explicitly legacy rather than inventing
     // a page-controlled tab token.
     await sourceReady
+    if (pendingRestore?.target === picked && !await pendingRestore.ready) {
+      notify('alert', 'Previous delivery state unavailable — review History before creating a new prompt')
+      btn.disabled = false
+      return
+    }
+    if (!picked) { btn.disabled = false; return }
     // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
     // the nudge's number is the referent for chat — the user marks fast in the
     // browser, then prompts in the owning Agent session. The watcher wake
     // line flags it as reference-only, the skill does not work it unprompted.
-    const btn = composer.querySelector('.send')
-    btn.disabled = true
     const target = picked
     let r
     if (target.stroke) {
@@ -843,7 +892,7 @@
     // Screenshot ONLY for the Freeform (lasso) tool (region = pixels). Element nudges
     // ship DOM context only — faster, lighter, no overlay flicker.
     const res = target.stroke ? await captureRegion(rect, { withHighlight: false }) : null
-    const payload = {
+    let payload = {
       text: ta.value.trim(),
       author,
       url: location.href,
@@ -860,18 +909,45 @@
       screenshot: res?.dataUrl || null,
       screenshotFull: res?.fullDataUrl || null,
       browserSource,
+      selectionGeneration: target.generation,
       submissionId: crypto.randomUUID().replaceAll('-', ''),
       submissionCreatedAt: new Date().toISOString(),
     }
+    // A lost RPC acknowledgement is ambiguous. Retrying unchanged work must
+    // retain its entire payload (including captured pixels), not mint a token.
+    if (pendingSubmission?.target === target && pendingSubmission.payload.text === payload.text)
+      payload = pendingSubmission.payload
+    else pendingSubmission = { target, payload, ref: crypto.randomUUID().replaceAll('-', '') }
+    // Preserve the exact retry before crossing the RPC boundary. A reload after
+    // server commit but before acknowledgement must not mint a second logical
+    // submission. Quota failure is visible and never consumes the draft.
     try {
-      const id = await postPin(payload)
+      const key = retryStorageKey()
+      if (!key) throw new Error('Source identity unavailable')
+      await chrome.storage.local.set({ [key]: { ref: pendingSubmission.ref, payload } })
+      if (!saveSnapNow()) throw new Error('Draft reference unavailable')
+    } catch {
+      notify('alert', 'Retry storage unavailable — prompt kept; nothing sent')
+      btn.disabled = false; return
+    }
+    try {
+      const result = await queueRequest('submit', { payload })
+      if (!result?.ok) {
+        notify('alert', `${queueReason(result?.error)} — prompt kept`)
+        btn.disabled = false; return
+      }
+      pendingSubmission = null
+      const id = result.id
       // the moment of truth: tell the user what actually happens to this prompt.
       // A pull owner (CLI) is live but won't START on its own — say so, or the
       // green icon's "agent working" would be a lie (user feedback: nudges "don't arrive").
-      if (!payload.text) notify('check', `${id} marked`)
+      if (result.queued) notify('alert', `${queueReason(result.reason)} — queued; see status`)
+      else if (result.withdrawn) notify('clock', `${id} was already withdrawn`)
+      else if (!payload.text) notify('check', `${id} marked`)
       else if (agentLive && agentWake === 'pull') notify('clock', `${id} received · arrives with the next message`)
       else if (agentLive) notify('send', `${id} — agent working`)
       else notify('clock', `${id} saved — no agent`)
+      if (target.stroke && !payload.screenshot) notify('alert', 'No screenshot — nudge ships with the mark only')
       // team rollout: anonymous nudges are useless in a shared store — hint ONCE
       if (!author) {
         chrome.storage.local.get('nudgeAuthorHinted', (v) => {
@@ -881,11 +957,17 @@
         })
       }
     } catch {
-      if (await enqueue(payload)) notify('alert', 'Bridge offline — queued')
-      else { notify('alert', 'Queue full — prompt kept'); btn.disabled = false; return }
+      notify('alert', 'Delivery not acknowledged — prompt kept; retry safely')
+      btn.disabled = false; return
     }
     btn.disabled = false
-    setMode('idle')
+    if (picked === target) setMode('idle')
+    // Clear the acknowledged draft reference durably BEFORE removing its
+    // private retry payload. A reload can now neither duplicate the send nor
+    // restore a reference whose only copy was prematurely discarded.
+    if (saveSnapNow()) {
+      try { await chrome.storage.local.remove(retryStorageKey()) } catch { /* bounded worker cleanup retries later */ }
+    }
   }
 
   // feedback feed: small chips top right, Lucide icons, fade out on their own.
@@ -912,22 +994,52 @@
 
   // ---------- resolve-with-proof: after-screenshot on request ----------
   const afterAttempted = new Set()
-  async function captureAfter(pin, requestId = null) {
-    if (afterAttempted.has(pin.id) || !samePage(pin.url)) return
-    afterAttempted.add(pin.id)
+  const afterInFlight = new Set()
+  const afterRetryTimers = new Map()
+  const latestAfterRequests = new Map()
+  async function captureAfter(pin, requestId = null, attempt = 0, registerRequest = true) {
+    if (dead || !pin || afterAttempted.has(pin.id)) return
+    if (pin.browserSource && (!requestId || bridgeCapabilities.sourceBoundEvidence !== 1)) return
+    // A focus/route hello replaces the bridge's private token. Preserve that
+    // newest request even when its predecessor is still capturing pixels;
+    // dropping it here would retry only a permanently invalid token forever.
+    if (requestId && attempt === 0 && registerRequest) latestAfterRequests.set(pin.id, { pin, requestId })
+    if (requestId && latestAfterRequests.get(pin.id)?.requestId !== requestId) return
+    if (afterInFlight.has(pin.id) || document.hidden || !samePage(pin.url)) return
+    clearTimeout(afterRetryTimers.get(pin.id)); afterRetryTimers.delete(pin.id)
+    afterInFlight.add(pin.id)
+    try {
     let rect = null
-    try { const n = document.querySelector(pin.target?.selector || ''); if (n) { n.scrollIntoView({ block: 'center' }); await new Promise(r => setTimeout(r, 250)); rect = n.getBoundingClientRect() } } catch { /* bad selector */ }
+    try { const n = !pin.isRegion && document.querySelector(pin.target?.selector || ''); if (n) { n.scrollIntoView({ block: 'center' }); await new Promise(r => setTimeout(r, 250)); rect = n.getBoundingClientRect() } } catch { /* bad selector */ }
     if ((!rect || (rect.width < 2 && rect.height < 2)) && pin.target?.rect)
       rect = { left: pin.target.rect.x, top: pin.target.rect.y, width: pin.target.rect.w, height: pin.target.rect.h }
     if (!rect || (rect.width < 2 && rect.height < 2)) return
     const res = await captureRegion(rect)
     if (!res?.dataUrl) return
+    if (requestId && latestAfterRequests.get(pin.id)?.requestId !== requestId) return
     try {
-      await fetch(`${HTTP}/comments/${pin.id}/after`, {
+      const response = await fetch(`${HTTP}/comments/${pin.id}/after`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ screenshot: res.dataUrl, requestId, browserSource }),
       })
+      if (response.ok && (await response.json()).ok) afterAttempted.add(pin.id)
     } catch { /* bridge gone mid-flight */ }
+    } finally {
+      afterInFlight.delete(pin.id)
+      const latest = latestAfterRequests.get(pin.id)
+      if (afterAttempted.has(pin.id)) latestAfterRequests.delete(pin.id)
+      // Coalesce any number of superseding hellos into exactly one next
+      // capture. Never post pixels under an obsolete request/document token.
+      if (!dead && latest && latest.requestId !== requestId && !afterAttempted.has(pin.id) && !document.hidden && samePage(latest.pin.url)) {
+        afterRetryTimers.set(pin.id, setTimeout(() => captureAfter(latest.pin, latest.requestId, 0, false), 0))
+        return
+      }
+      // Chrome rate-limits visible-tab capture; the lasso preview and Send may
+      // consume that budget immediately before resolve. Retry the SAME private
+      // request, bounded below its 30s lease, with the UI fully restored.
+      if (!dead && requestId && !afterAttempted.has(pin.id) && !document.hidden && attempt < 3)
+        afterRetryTimers.set(pin.id, setTimeout(() => captureAfter(pin, requestId, attempt + 1), 1000))
+    }
   }
 
   // ---------- prompt tracking ----------
@@ -948,7 +1060,7 @@
   let statusSeeded = false
   // screenshots are data-URLs of megabyte size — the session snapshot keeps the
   // list WITHOUT them (it only feeds badge, dots and History until the WS answers)
-  const stripShots = ({ screenshot, screenshotAfter, ...p }) => p
+  const stripShots = ({ screenshot, screenshotAfter, browserSource, afterBrowserSource, ...p }) => p
   function acceptPins(all) {
     allPins = all
     pinCache = all.slice(-150).map(stripShots)
@@ -1042,7 +1154,9 @@
     const name = agentLabel ? splitLabel(agentLabel).name : '?'
     if (!wsOk) {
       head.textContent = 'Bridge unreachable'
-      body.innerHTML = 'No connection to the bridge. Focus Chrome or run <b>/groundworks-nudge</b> in the agent session.'
+      body.innerHTML = NUDGE_PLATFORM.nativeAutostart
+        ? 'No connection to the bridge. Focus the browser or run <b>/groundworks-nudge</b> in the agent session.'
+        : 'No connection to the bridge. Start the local bridge, then run <b>/groundworks-nudge</b> in the agent session.'
     } else if (!agentLive) {
       head.textContent = 'No agent active'
       body.innerHTML = 'Nudges are stored, but no agent session is responding. Run <b>/groundworks-nudge</b> in the session that should take them.'
@@ -1053,6 +1167,21 @@
       head.textContent = `Agent active: ${name}`
       body.innerHTML = 'Live: new nudges wake the agent automatically.'
     }
+    queueRequest('status').then(result => {
+      if (!result?.ok || !result.entries.length || !body.isConnected) return
+      for (const entry of result.entries) {
+        const row = document.createElement('p')
+        row.textContent = `${entry.text || 'Mark'} — ${queueReason(entry.pending)} `
+        const discard = document.createElement('button')
+        discard.textContent = 'Discard queued prompt'
+        discard.addEventListener('click', async () => {
+          const result = await queueRequest('discard', { submissionId: entry.submissionId })
+          if (result?.ok) { row.remove(); flushQueue() }
+          else notify('alert', 'Could not discard queued prompt')
+        })
+        row.appendChild(discard); body.appendChild(row)
+      }
+    }).catch(() => {})
   }
   pill.querySelector('.status').addEventListener('click', (e) => {
     e.stopPropagation()
@@ -1069,6 +1198,7 @@
   let agentLabel = null // which session owns the wake channel (bridge arbiter)
   let agentWake = null // 'push' = owner auto-wakes · 'pull' = surfaces on next prompt
   let agents = [] // full roster incl. standby sessions (toolbar dropdown) // a watcher heartbeats the bridge -> prompts get acted on NOW
+  let bridgeCapabilities = {}
   // ---------- queue popover (badge click) ----------
   const Q_CLOCK = '<span class="q-dot q-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><g class="q-hand"><path d="M12 6v6l4 2"/></g></svg></span>'
   const ageOf = (iso) => {
@@ -1320,14 +1450,14 @@
     // bridge) / amber (bridge, no agent listening) / green (agent live)
     try { chrome.runtime.sendMessage({ type: 'nudge-state', active: mode !== 'off', bridgeOk: wsOk, agentLive, open: openCount }) } catch { /* extension reloading */ }
   }
-  let sock, retryTimer, retryDelay = 3000, hadOutage = false
+  let sock, retryTimer, retryDelay = 3000, hadOutage = false, lastHelloUrl = null
   let dead = false // set by the orphan cleanup: NOTHING may reconnect afterwards
   function connect() {
     if (dead) return
     clearTimeout(retryTimer)
     try { sock = new WebSocket(WS) } catch { return scheduleRetry() }
     sock.onopen = () => {
-      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })) } catch { /* racing close */ }
+      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
       if (hadOutage) { notify('check', 'Bridge reconnected'); hadOutage = false }
       wsOk = true; retryDelay = 3000; updatePill(); flushQueue()
     }
@@ -1335,6 +1465,7 @@
       try {
         const msg = JSON.parse(e.data)
         if (msg.type === 'pins') {
+          bridgeCapabilities = msg.capabilities || {}
           agentLive = !!msg.agentLive
           if (agentLive && msg.agentLabel && msg.agentLabel !== agentLabel) { const s = splitLabel(msg.agentLabel); notify('check', `Agent: ${s.name}`, s.port ? `localhost:${s.port}` : '') }
           agentLabel = agentLive ? msg.agentLabel || null : null
@@ -1344,8 +1475,9 @@
           if (statusMenu.classList.contains('on')) renderStatusMenu() // live refresh: arm/disarm reflects at once
           acceptPins(msg.pins)
         }
-        if (msg.type === 'capture-after') captureAfter(msg.pin)
-        if (msg.type === 'capture-after-v2') captureAfter({ id: msg.id, target: allPins.find(p => p.id === msg.id)?.target, url: location.href }, msg.requestId)
+        if (msg.type === 'capture-after' && !msg.pin?.browserSource) captureAfter(msg.pin)
+        if (msg.type === 'capture-after-v2' && bridgeCapabilities.sourceBoundEvidence === 1)
+          captureAfter(allPins.find(p => p.id === msg.id), msg.requestId)
         if (msg.type === 'reload' && NUDGE_PLATFORM.developmentReload) chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
       } catch { /* ignore malformed frames */ }
     }
@@ -1369,8 +1501,12 @@
   const onVisibility = () => {
     if (dead || document.hidden) return
     if (!wsOk) { retryDelay = 3000; connect() }
-    else flushQueue() // hidden tabs skip the flush - catch up now
+    else {
+      flushQueue()
+      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* connection changed */ }
+    }
   }
+  window.addEventListener('focus', onVisibility)
   document.addEventListener('visibilitychange', onVisibility)
 
   // ---------- global listeners ----------
@@ -1385,7 +1521,9 @@
     // composing, no modifier, focus not in any editable field, no popover open.
     if (mode === 'off' || mode === 'composing') return
     if (e.metaKey || e.ctrlKey || e.altKey) return
-    if (isEditable(e.target) || isEditable(document.activeElement)) return
+    // Window capture sees the shadow host as target/activeElement. Inspect the
+    // composed path as well, including the textarea while Shift-collecting.
+    if (e.composedPath().some(isEditable) || isEditable(document.activeElement) || isEditable(root.activeElement)) return
     if (whoMenu.classList.contains('on') || queue.classList.contains('on') || statusMenu.classList.contains('on')) return
     const k = e.key.toLowerCase()
     if (k === 'p') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'picking' ? 'idle' : 'picking') }
@@ -1469,7 +1607,11 @@
   const CHROME_POINTER_EVENTS = ['pointerdown', 'mousedown']
   for (const t of CHROME_POINTER_EVENTS) window.addEventListener(t, swallowChromePointer, true)
 
-  chrome.runtime.onMessage.addListener((msg) => {
+  chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+    if (msg.type === 'nudge-document-current' && sender.id === chrome.runtime.id) {
+      reply({ document: documentToken, url: location.href })
+      return
+    }
     if (msg.type === 'nudge-toggle') {
       const off = mode !== 'off'
       persistOff(off) // remember first, then switch — the other tabs follow via onChanged
@@ -1477,7 +1619,12 @@
     }
     // Chrome drops a tab's icon AND badge on every navigation, including the
     // pure history navigation of an SPA router. The SW asks for them afterwards.
-    if (msg.type === 'nudge-state-req') updatePill()
+    if (msg.type === 'nudge-state-req') {
+      acceptPins(allPins)
+      // Icon refreshes at navigation completion can duplicate the earlier URL
+      // update. Refresh bridge routing only when the URL really changed.
+      if (lastHelloUrl !== location.href) onVisibility()
+    }
   })
   // A toggle applies everywhere at once: the tab that was clicked has already
   // switched — all others (and other localhost ports) listen here.
@@ -1507,6 +1654,10 @@
     try { chrome.runtime.getURL('') } catch {
       clearInterval(orphanCheck)
       dead = true
+      cancelPillDrag()
+      for (const timer of afterRetryTimers.values()) clearTimeout(timer)
+      latestAfterRequests.clear()
+      window.removeEventListener('focus', onVisibility)
       clearTimeout(retryTimer)
       try { if (sock) { sock.onclose = null; sock.onerror = null; sock.close() } } catch { /* already dead */ }
       document.removeEventListener('visibilitychange', onVisibility)
@@ -1572,6 +1723,8 @@
       ctx: picked.frozen || contextOf(picked),
       stroke: picked.stroke || null,
       multi: multi.map(m => ({ ctx: m.frozen || contextOf(m) })),
+      retryRef: pendingSubmission?.target === picked && pendingSubmission.payload.text === ta.value.trim()
+        ? pendingSubmission.ref : null,
     } : null
     try {
       sessionStorage.setItem(SNAP_KEY, JSON.stringify({
@@ -1582,7 +1735,8 @@
         queue: { open: queue.classList.contains('on'), expanded: [...qExpanded], amend: [...qAmendDraft] },
         pins: pinCache, agent: { live: agentLive, label: agentLabel, wake: agentWake, list: agents },
       }))
-    } catch { /* storage blocked or full — then the draft simply does not survive */ }
+      return true
+    } catch { return false } // caller must not send without durable retry state
   }
   addEventListener('pagehide', saveSnapNow) // the last word before the tab goes
 
@@ -1685,7 +1839,7 @@
     draw.appendChild(strokePath)
   }
   function restoreComposer(c) {
-    picked = { el: null, rect: c.rect, selector: c.ctx?.selector, source: c.ctx?.source, frozen: c.ctx, stroke: c.stroke || null }
+    picked = { el: null, rect: c.rect, selector: c.ctx?.selector, source: c.ctx?.source, frozen: c.ctx, stroke: c.stroke || null, generation: crypto.randomUUID().replaceAll('-', '') }
     multi = (c.multi || []).map(m => ({ el: null, selector: m.ctx?.selector, source: m.ctx?.source, frozen: m.ctx, outline: null }))
     if (multi.length) trackMulti()
     mode = 'composing'
@@ -1696,6 +1850,17 @@
     placeComposer(picked.rect)
     if (c.stroke) redrawStroke(c.stroke)
     ta.value = c.text || ''
+    if (/^[A-Za-z0-9_-]{8,128}$/.test(c.retryRef || '')) {
+      const target = picked
+      pendingRestore = { target, ready: sourceReady.then(async () => {
+        const key = retryStorageKey()
+        if (!key) return false
+        const entry = (await chrome.storage.local.get(key))[key]
+        if (!entry || entry.ref !== c.retryRef || entry.payload?.text !== (c.text || '').trim()) return false
+        if (picked === target) pendingSubmission = {target, payload:entry.payload, ref:entry.ref}
+        return true
+      }).catch(() => false) }
+    }
     autoGrow()
     // only steal the focus back if the composer HAD it — otherwise the page's own
     // autofocus (search fields, editors) wins, exactly as without Nudge
