@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process'
 import net from 'node:net'
 import fs from 'node:fs'
 import path from 'node:path'
+import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import WebSocket from '../bridge/node_modules/ws/index.js'
 
@@ -375,22 +376,32 @@ try {
 
   // ---------- D13: bind surface — localhost only ----------
   {
-    let lanIp = null
-    try { lanIp = (await new Promise((r, j) => { import('node:child_process').then(cp => cp.exec('ipconfig getifaddr en0', (e, out) => e ? j(e) : r(out.trim()))) })) } catch { /* offline */ }
-    if (lanIp) {
+    const lanIps = [...new Set(Object.values(networkInterfaces()).flat()
+      .filter(info => info && !info.internal && info.family === 'IPv4')
+      .map(info => info.address))]
+    if (!lanIps.length) fail('D13 blocked: no non-loopback IPv4 interface; LAN bind isolation cannot be checked')
+    for (const lanIp of lanIps) {
       const refused = await fetch(`http://${lanIp}:${PORT}/.identity`, { signal: AbortSignal.timeout(1500) }).then(() => false).catch(() => true)
       if (!refused) fail(`D13: bridge answers on LAN ip ${lanIp} — must bind 127.0.0.1 only`)
-      pass(`D13 bind surface (LAN ${lanIp}:${PORT} refused, 127.0.0.1 only)`)
-    } else pass('D13 bind surface (SKIPPED: no LAN ip — offline)')
+    }
+    pass(`D13 bind surface (${lanIps.length} non-loopback IPv4 interfaces refused, 127.0.0.1 only)`)
   }
 
   // ---------- D14: watcher resilience — armed before the bridge exists ----------
   {
     bridge.kill(); await sleep(200)
-    const w = spawn('node', [WATCHER], {
-      env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_AGENT_LABEL: 'early-bird' },
-      stdio: 'ignore',
+    const w = spawn(process.execPath, [WATCHER], {
+      env: {
+        ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT),
+        // This fixture must work outside an agent session, including clean CI.
+        CODEX_THREAD_ID: '', CODEX_SESSION_ID: '', CLAUDE_CODE_SESSION_ID: '',
+        NUDGE_AGENT_ID: 'brutal_early_bird', NUDGE_AGENT_LABEL: 'early-bird',
+        NUDGE_AGENT_RUNTIME: 'Test', NUDGE_AGENT_SURFACE: 'CLI', NUDGE_WAKE: 'pull',
+      },
+      stdio: ['ignore', 'ignore', 'pipe'],
     })
+    let watcherError = ''
+    w.stderr.on('data', data => { watcherError += data })
     await sleep(2500) // watcher beats into the void
     startBridge()
     if (!await up()) fail('D14: bridge restart failed')
@@ -398,10 +409,11 @@ try {
     for (let i = 0; i < 20 && !seen; i++) {
       await sleep(400)
       const idn = await (await fetch(`${B}/.identity`)).json()
-      seen = idn.agents.some(a => a.label === 'early-bird')
+      seen = idn.agents.some(a => a.label === 'early-bird' && a.session === 'brutal_early_bird' && a.wake === 'pull')
+      if (w.exitCode !== null) break
     }
     w.kill()
-    if (!seen) fail('D14: watcher armed before bridge never registered')
+    if (!seen) fail(`D14: watcher armed before bridge never registered (exit ${w.exitCode ?? 'pending'}): ${watcherError.trim()}`)
     pass('D14 watcher resilience (armed into the void -> registers once the bridge exists)')
   }
 

@@ -33,6 +33,10 @@ The changelog is English throughout.
 - Verify agent wiring against a real disposable installation, not the user's
   global Skill copies. Missing files now fail on clean CI; stale Skills are
   replaced and every Skill/hook copy must match the checkout byte for byte.
+- Give the early-watcher resilience test its own identity instead of inheriting
+  an agent session from the developer's shell. Check LAN bind isolation through
+  portable network-interface discovery; an unavailable interface blocks that
+  check instead of producing a passing skip on Linux.
 
 ### Added
 - Isolated real-socket crash/size-limit and live-roster regressions, included in

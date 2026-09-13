@@ -115,6 +115,11 @@ External tools the test layer needs: Node 22+, Playwright's Chromium
 serve static fixtures with `http.server`. The product itself needs none of
 these.
 
+Suite D's LAN-bind check also requires a non-loopback IPv4 interface. Without
+one it reports a blocked check and exits nonzero; it cannot prove LAN isolation
+on an offline loopback-only machine. Watcher fixtures use their own identities,
+so tests do not require running inside a coding-agent session.
+
 ## Versioning and changelog
 
 - The extension version in `extension/manifest.json` is the product version.
