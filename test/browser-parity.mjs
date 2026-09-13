@@ -55,6 +55,22 @@ const inspect = (selector, page = false) => driver.evaluate(({ selector, page, o
   return { x: r.x, y: r.y, w: r.width, h: r.height, text: e.textContent, value: e.value,
     cls: e.className?.baseVal ?? e.className, visible: r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden' }
 }, { selector, page, ownedId: extensionId ? decodeURIComponent(extensionId) : null })
+async function settledToolbar() {
+  let previous = null
+  return until(async () => {
+    const g = await inspect('.grip'), p = await inspect('.pill')
+    const viewport = await driver.evaluate(() => ({ w: document.documentElement.clientWidth, h: document.documentElement.clientHeight, fonts: document.fonts.status }))
+    if (!g?.visible || !p?.visible) return false
+    const geometry = JSON.stringify([g.x, g.y, g.w, g.h, p.x, p.y, p.w, p.h, viewport.w, viewport.h])
+    const stable = previous === geometry
+    previous = geometry
+    // A wake-tag/font update changes width before ResizeObserver repositions
+    // the bar. Coordinates sampled in that interval miss the real grip. Require
+    // two identical, fitted layouts; the drag's own X/Y assertions stay strict.
+    return stable && viewport.fonts === 'loaded' && p.x >= 0 && p.y >= 0 && p.x + p.w <= viewport.w && p.y + p.h <= viewport.h
+      ? { g, p } : false
+  }, 'stable fitted toolbar geometry')
+}
 const click = async (selector, page = false) => {
   const r = await until(async () => { const r = await inspect(selector, page); return r?.visible && r }, `visible ${selector}`)
   await driver.click(r.x + r.w / 2, r.y + r.h / 2)
@@ -153,7 +169,7 @@ try {
   await check('repeated real grip drag and persisted position', async () => {
     report.drags = []
     for (const [x, y] of [[470, 140], [610, 180], [470, 140]]) {
-      const g = await inspect('.grip'), p = await inspect('.pill')
+      const { g, p } = await settledToolbar()
       await driver.drag([[g.x + g.w / 2, g.y + g.h / 2], [x, y]])
       report.drags.push({g, p, x, y, after: await inspect('.pill'), gripAfter: await inspect('.grip')})
       await until(async () => { const a = await inspect('.pill'); return Math.abs(a.x - (x - (g.x + g.w / 2 - p.x))) < 3 && Math.abs(a.y - (y - (g.y + g.h / 2 - p.y))) < 3 }, 'both drag coordinates reached')
@@ -180,7 +196,7 @@ try {
     const originalViewport = await inside()
     try {
       for (const [right, bottom] of [[false,false],[true,false],[true,true],[false,true]]) {
-        const v = await inside(), g = await inspect('.grip')
+        const { g } = await settledToolbar(), v = await inside()
         await driver.drag([[g.x + g.w / 2, g.y + g.h / 2], [right ? v.w - 2 : 2, bottom ? v.h - 2 : 2]])
         await inside()
         const corner = await inspect('.pill')
@@ -214,7 +230,7 @@ try {
     const restoredViewport = await inside(), restoredPill = await inspect('.pill'), dropped = report.toolbarBounds.at(-1)
     assert(Math.abs(restoredViewport.w - originalViewport.w) < 2 && Math.abs(restoredViewport.h - originalViewport.h) < 2, 'original viewport must be restored')
     assert(Math.abs(restoredPill.x - dropped.x) < 3 && Math.abs(restoredPill.y - dropped.y) < 3, 'resize must preserve the dropped position')
-    const g = await inspect('.grip')
+    const { g } = await settledToolbar()
     await driver.drag([[g.x + g.w / 2, g.y + g.h / 2], [470,140]])
     await inside() // following core cases exercise controls after all these drags
   })

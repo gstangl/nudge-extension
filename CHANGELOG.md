@@ -14,6 +14,23 @@ The changelog is English throughout.
 - Synchronize the toolbar test with label and viewport updates before grabbing
   the handle; assert a real drag and bottom-edge drop before checking the menu.
   Keep all menu-flip, scrolling and containment assertions unchanged.
+- Wait for fitted, stable toolbar geometry in the shared browser parity runner
+  before sampling drag coordinates after wake-tag and font changes.
+
+## 0.33.3 · Bridge 0.19.2 — 2026-09-13 (Toolbar status load fix)
+
+### Fixed
+- Cache the four toolbar icon colors and skip identical per-tab action updates.
+  Repeated roster changes no longer trigger redundant bitmap work that delays
+  new submissions in the background worker. Changed counts and connection
+  states still render immediately; navigation and closed tabs invalidate the
+  per-tab cache, and failed action writes remain retryable.
+
+### Added
+- Worker action regressions for status storms, changed counts/colors, tab
+  isolation, navigation resets and synchronous/asynchronous API failures.
+
+Real Safari behavior and final independent acceptance remain separate gates.
 
 ## 0.33.2 · Bridge 0.19.2 — 2026-09-13 (Follow-up quality assurance)
 

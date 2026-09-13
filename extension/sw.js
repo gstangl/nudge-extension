@@ -234,16 +234,37 @@ function drawCrosshairIcon(size, color) {
   ctx.stroke(arms)
   return ctx.getImageData(0, 0, size, size)
 }
-function iconImages(color) { return { 16: drawCrosshairIcon(16, color), 32: drawCrosshairIcon(32, color), 48: drawCrosshairIcon(48, color) } }
+// Roster updates can report the same visible state hundreds of times. Keep the
+// four color variants and skip identical per-tab action writes, so status work
+// cannot starve the worker's submission/capture messages.
+const iconCache = new Map()
+function iconImages(color) {
+  if (!iconCache.has(color)) iconCache.set(color, { 16: drawCrosshairIcon(16, color), 32: drawCrosshairIcon(32, color), 48: drawCrosshairIcon(48, color) })
+  return iconCache.get(color)
+}
+const tabActionStates = new Map()
 const GREEN = '#3fa34d', AMBER = '#d9a441', RED = '#d0342c', GREY = '#9a948b' // green/amber match the pill's dot
-chrome.action.setIcon({ imageData: iconImages(GREY) }) // global default: grey (SW start)
+chrome.action.setIcon({ imageData: iconImages(GREY) }).catch(() => {}) // global default: grey (SW start)
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type !== 'nudge-state' || !sender.tab?.id) return
   const tabId = sender.tab.id
   const color = !msg.active ? GREY : !msg.bridgeOk ? RED : !msg.agentLive ? AMBER : GREEN
-  chrome.action.setIcon({ tabId, imageData: iconImages(color) })
-  chrome.action.setBadgeBackgroundColor({ tabId, color })
-  chrome.action.setBadgeText({ tabId, text: msg.active && msg.open > 0 ? String(msg.open) : '' })
+  const text = msg.active && msg.open > 0 ? String(msg.open) : ''
+  const previous = tabActionStates.get(tabId)
+  if (previous?.color === color && previous.text === text) return
+  const state = { color, text }
+  tabActionStates.set(tabId, state)
+  const retry = () => {
+    // A late rejection from an older update must not invalidate a newer one.
+    if (tabActionStates.get(tabId) === state) tabActionStates.delete(tabId)
+  }
+  try {
+    Promise.all([
+      chrome.action.setIcon({ tabId, imageData: iconImages(color) }),
+      chrome.action.setBadgeBackgroundColor({ tabId, color }),
+      chrome.action.setBadgeText({ tabId, text }),
+    ]).catch(retry)
+  } catch { retry() }
 })
 // Chrome resets a tab's icon AND badge to the default on EVERY navigation —
 // and the default is grey, i.e. "not active". That includes the pure history
@@ -254,10 +275,12 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 // So re-fetch the state after every navigation; the tab knows it.
 const LOCAL_TAB = /^http:\/\/(localhost|127\.0\.0\.1)([:/]|$)/
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (info.url || info.status === 'loading' || info.status === 'complete') tabActionStates.delete(tabId)
   if (!info.url && info.status !== 'complete') return // title, favicon and audio updates are none of our business
   if (!LOCAL_TAB.test(tab?.url || '')) return
   chrome.tabs.sendMessage(tabId, { type: 'nudge-state-req' }).catch(() => { /* no content script (yet) */ })
 })
+chrome.tabs.onRemoved.addListener(tabId => tabActionStates.delete(tabId))
 
 // ---------- bridge lifecycle via native messaging ----------
 // Chrome spawns the registered native host (a thin launcher) which starts the
