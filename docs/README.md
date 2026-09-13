@@ -19,5 +19,8 @@ Do not copy intent between them.
 
 Working notes and porting plans are not in this repository.
 
+The [architecture map](architecture/README.md) visualizes the shared extension
+core, browser-specific packaging and local bridge, with revision-bound sources.
+
 Changing this repository: [../AGENTS.md](../AGENTS.md). Pull requests:
 [../CONTRIBUTING.md](../CONTRIBUTING.md).

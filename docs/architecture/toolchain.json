@@ -1,0 +1,10 @@
+{
+  "name": "archify",
+  "version": "2.16.0",
+  "repository": "https://github.com/tt-a1i/archify",
+  "revision": "c826e6c3a7abad19c0f3cd1ca57207d54b1ad8de",
+  "skillPath": "archify",
+  "installation": ".agents/skills/archify",
+  "license": "MIT",
+  "updateChecks": "disabled for local rendering"
+}

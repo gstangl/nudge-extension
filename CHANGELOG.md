@@ -7,6 +7,11 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## Unreleased
+
+- Add a pinned, project-local Archify installation and reproducible, source-linked
+  architecture map of the shared Chrome/Safari core and local bridge.
+
 ## 0.33.2 · Bridge 0.19.2 — 2026-09-13 (Follow-up quality assurance)
 
 ### Changed
@@ -15,6 +20,9 @@ The changelog is English throughout.
   agent setup output and Skill. Clarify shared per-website agent choice,
   browser-local state and CLI-based bridge startup without Chrome. Re-run
   agent setup to install the updated Skill guidance; no protocol change.
+- Clarify temporary Safari installation for actual project work: use the shared
+  bridge and release-configured resources; preserve isolated test stores and
+  unsent work when reloading an existing installation.
 
 ### Fixed
 - Contain malformed WebSocket frames at the client connection instead of

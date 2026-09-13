@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Nudge: one core, two browsers, one bridge",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "repository": { "url": "https://github.com/gstangl/nudge-extension", "revision": "d2fc35c3d2b997836c7a5476090ccb9e26c08091" },
+    "viewBox": [1360, 650]
+  },
+  "components": [
+    { "id": "shared-core", "type": "backend", "label": "Shared extension source", "sublabel": "Toolbar, capture, queue and worker", "tag": "extension/ · plain JavaScript", "pos": [50, 280], "size": [240, 84], "sources": [{"path":"extension/content.js"},{"path":"extension/sw.js"},{"path":"extension/queue.js"}] },
+    { "id": "chrome", "type": "frontend", "label": "Chrome extension", "sublabel": "Load extension/ unpacked", "tag": "Native bridge startup enabled", "pos": [430, 90], "size": [240, 84], "sources": [{"path":"extension/manifest.json"},{"path":"extension/platform.js"},{"path":"bridge/native-host.mjs"}] },
+    { "id": "safari-package", "type": "backend", "label": "Safari packaging", "sublabel": "Manifest + capability overrides", "tag": "Deterministic resource staging", "pos": [50, 480], "size": [240, 84], "sources": [{"path":"scripts/package-safari.mjs"},{"path":"safari/manifest-overrides.json"}] },
+    { "id": "safari", "type": "frontend", "label": "Safari extension", "sublabel": "Same core, generated resources", "tag": "Preview · no native autostart", "pos": [430, 480], "size": [240, 84], "sources": [{"path":"scripts/package-safari.mjs"},{"path":"safari/manifest-overrides.json"},{"path":"docs/SAFARI.md"}] },
+    { "id": "bridge", "type": "messagebus", "label": "Shared local bridge", "sublabel": "HTTP + WebSocket · localhost:4700", "tag": "One process · browser-aware routing", "pos": [780, 280], "size": [240, 84], "sources": [{"path":"bridge/bridge.mjs"},{"path":"bridge/lifecycle.mjs"}] },
+    { "id": "agents", "type": "external", "label": "Armed agent sessions", "sublabel": "Claude Code · Codex · other runtimes", "tag": "Skill opt-in · push or pull", "pos": [1120, 280], "size": [220, 84], "sources": [{"path":"agent/groundworks-nudge.mjs"},{"path":"agent/runtime.mjs"},{"path":"agent/NUDGE-SKILL.md"}] },
+    { "id": "store", "type": "database", "label": "Shared durable store", "sublabel": "Prompts, history and image evidence", "tag": "One inbox · idempotent submissions", "pos": [780, 480], "size": [240, 84], "sources": [{"path":"bridge/store.mjs"}] }
+  ],
+  "connections": [
+    {"id":"core-chrome","from":"shared-core","to":"chrome","label":"load source","variant":"dashed"},
+    {"id":"core-package","from":"shared-core","to":"safari-package","label":"stage source","variant":"dashed","labelAt":[170,378]},
+    {"id":"package-safari","from":"safari-package","to":"safari","label":"release files","variant":"dashed"},
+    {"id":"chrome-bridge","from":"chrome","to":"bridge","label":"HTTP / WS","variant":"emphasis"},
+    {"id":"safari-bridge","from":"safari","to":"bridge","label":"HTTP / WS","variant":"emphasis"},
+    {"id":"bridge-agents","from":"bridge","to":"agents","label":"CLI / watcher","variant":"emphasis"},
+    {"id":"bridge-store","from":"bridge","to":"store","label":"atomic writes","labelAt":[900,378]}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"Shared by design","items":["One maintained UI and protocol implementation, not two forks.","Dashed arrows are build/load paths; solid arrows are runtime links."]},
+    {"dot":"emerald","title":"Separated where required","items":["Each browser keeps its own author, off-state and unsent queue.","Source identities bind screenshots to the right browser, tab and document."]},
+    {"dot":"amber","title":"Evidence boundary","items":["Source map at d2fc35c; not a live connection monitor.","Full Safari parity, native app and signed distribution remain unaccepted."]}
+  ]
+}

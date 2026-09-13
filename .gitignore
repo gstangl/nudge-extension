@@ -7,3 +7,11 @@ artifacts/safari/
 
 # Personal implementation and porting drafts. Not public product docs.
 docs/plans/
+
+# Project-local architecture tooling and generated visual evidence.
+.agents/skills/archify/
+docs/architecture/*.html
+docs/architecture/*.png
+docs/architecture/*.delivery.json
+docs/architecture/*.visual-check.json
+docs/architecture/verification.local.json
