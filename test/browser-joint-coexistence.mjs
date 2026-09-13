@@ -220,7 +220,7 @@ export async function runJointCoexistence() {
       for (const pin of dom) assert.equal(pin.owner.session, owners[0].session)
       report.sources = dom.map(pin => ({ browserSource: pin.browserSource, ua: pin.ua }))
     })
-    await check('shared history and Safari owner selection are visible in Chromium', async () => {
+    await check('shared history and agent selection work from Safari and Chromium in both directions', async () => {
       for (const page of [s1, c1]) {
         await page.activate(); await click(page, '.count')
         for (const pin of dom) assert((await inspect(page, '.queue .q-list')).text.includes(pin.text))
@@ -233,6 +233,12 @@ export async function runJointCoexistence() {
       await until(async () => (await inspect(c1, '.who')).text.includes(owners[1].label), 'Chromium owner switched')
       const next = await prompt(c1, '[TEST-joint] reassigned owner')
       assert.equal(next.owner.session, owners[1].session); assert.equal(storedPin(dom[0].id).owner.session, owners[0].session)
+      await c1.activate(); await click(c1, '.who'); await click(c1, '.w-row', { text: owners[0].label })
+      await until(async () => (await inspect(c1, '.who')).text.includes(owners[0].label), 'Chromium reverse owner switched')
+      await until(async () => (await inspect(s1, '.who')).text.includes(owners[0].label), 'Safari reverse owner switched')
+      const reverse = await prompt(s1, '[TEST-joint] chosen from Chromium')
+      assert.equal(reverse.owner.session, owners[0].session)
+      assert.equal(storedPin(next.id).owner.session, owners[1].session)
     })
     for (const [source, sibling, other, label] of [[s1, s2, c1, 'Safari'], [c1, c2, s1, 'Chromium']]) {
       await check(`${label} inactive source defers across same-route tabs and the other browser; return captures exact source pixels`, async () => {

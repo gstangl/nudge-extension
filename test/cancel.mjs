@@ -222,6 +222,10 @@ try {
     const keep = (await (await post('/comments', { text: 'This one stays.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
     const id = (await (await post('/comments', { text: 'Away with it.', url: `${B}/demo`, target: { selector: 'h1' } })).json()).id
     await until(() => A.lines.some(l => l.includes(id) && l.includes('New nudge')), 5000, 'wake line for the browser nudge')
+    const replacement = watcher('Replacement pull agent', 'replacement_session', { NUDGE_WAKE: 'pull' })
+    await until(async () => (await (await fetch(`${B}/.identity`)).json()).agents.some(a => a.session === 'replacement_session'), 8000, 'replacement live')
+    await post('/agent/owner', { session: 'replacement_session', host: `localhost:${PORT}` })
+    await until(async () => (await page.locator('.pill .who').textContent()).includes('Replacement pull agent'), 5000, 'new host owner visible')
     await page.locator('.pill .count').click()
     const row = page.locator('.q-row', { hasText: id })
     await row.waitFor({ timeout: 5000 })
@@ -233,8 +237,10 @@ try {
     const toast = (await page.locator('.feed .item .feed-text').last().textContent()) || ''
     if (!/withdrawn/i.test(toast)) fail(`X12: toast must say the nudge was withdrawn, got "${toast}"`)
     if (!toast.includes('Agent A')) fail(`X12: toast must name the notified agent, got "${toast}"`)
+    if (!toast.includes('notified') || toast.includes('next message')) fail('X12: original push wake must survive a switch to a pull owner')
     await until(() => stopLine(A, id), 5000, 'stop line from a REAL × click')
-    pass('X12 real × click: row leaves the list, neighbours untouched, toast names the informed agent, agent stops')
+    if (stopLine(replacement, id)) fail('X12: replacement must never receive the original withdrawal')
+    pass('X12 real × click after owner switch: row leaves, neighbours stay, original push recipient is named and stops')
 
     // and the last one out closes the popover — 0 open nudges, nothing to show.
     // Closed = the `on` class gone: the popover fades via opacity, which

@@ -138,9 +138,19 @@ function ownsOwnerless(url, agentId, live) {
   return !!live?.agents?.find((item) => item.session === agentId && item.owner)
 }
 
+function matchesPort(value, port) {
+  const expected = String(port).replace(/^:/, '')
+  if (!/^\d+$/.test(expected) || Number(expected) < 1 || Number(expected) > 65535) return false
+  try {
+    const url = new URL(value)
+    const actual = url.port || (url.protocol === 'http:' ? '80' : url.protocol === 'https:' ? '443' : '')
+    return actual !== '' && Number(actual) === Number(expected)
+  } catch { return false }
+}
+
 function scopedPins(pins, { agentId, port, all, live }) {
   return pins.filter((pin) => {
-    if (port && !String(pin.url || '').includes(`:${String(port).replace(/^:/, '')}`)) return false
+    if (port && !matchesPort(pin.url, port)) return false
     if (all || !agentId) return true
     return pin.owner?.session === agentId || (!pin.owner?.session && ownsOwnerless(pin.url, agentId, live))
   })
@@ -149,7 +159,7 @@ function scopedPins(pins, { agentId, port, all, live }) {
 function scopedWithdrawn(items, { agentId, port, all, live }) {
   return items.filter((item) => {
     if (item.withdrawnAt && Date.now() - Date.parse(item.withdrawnAt) > 30 * 60_000) return false
-    if (port && !String(item.url || '').includes(`:${String(port).replace(/^:/, '')}`)) return false
+    if (port && !matchesPort(item.url, port)) return false
     if (all || !agentId) return true
     return item.owner?.session === agentId || (!item.owner?.session && ownsOwnerless(item.url, agentId, live))
   })

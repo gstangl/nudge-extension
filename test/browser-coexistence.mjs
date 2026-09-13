@@ -162,6 +162,11 @@ try {
     const pin = await domPrompt(b, '[TEST-coexistence] owner changed')
     assert.equal(pin.owner.session, agents[1].session)
     assert.equal(after(pinA1.id).owner.session, agents[0].session, 'old owner stamp is immutable')
+    await focus(b); await b.locator('.pill .who').click(); await b.locator('.w-row', { hasText: agents[0].label }).click()
+    for (const page of [a1, a2, b]) await until(async () => (await page.locator('.who').textContent()).includes(agents[0].label), 'reverse-direction owner selection')
+    const reverse = await domPrompt(a2, '[TEST-coexistence] chosen from the other installation')
+    assert.equal(reverse.owner.session, agents[0].session)
+    assert.equal(after(pin.id).owner.session, agents[1].session, 'neither direction relabels existing work')
   })
   await check('overlay off-state is installation-local and propagates only within that profile', async () => {
     await (await worker(A)).evaluate(() => chrome.storage.local.set({ nudgeOff: true }))

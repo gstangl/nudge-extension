@@ -1,4 +1,72 @@
-# Safari port: build and verification guide
+# Safari developer preview: install and verify
+
+This GitHub source-install profile uses a temporary Safari Web Extension plus
+the same local Node bridge as Chrome. A native containing app, signed installer,
+notarization and App Store publication are deferred, not launch requirements
+for this developer preview. Full current-candidate Safari feature parity is
+still unverified; do not advertise this as an accepted stable Safari release.
+
+## Install from GitHub
+
+Requirements: macOS with Safari 26+, Node.js 22+, Git and a local coding agent.
+You do not need Chrome, full Xcode or an Apple Developer account for this path.
+
+```sh
+git clone https://github.com/gstangl/nudge-extension.git
+cd nudge-extension
+(cd bridge && npm ci)
+./agent/setup-agent.sh
+node agent/groundworks-nudge.mjs ensure-bridge
+node agent/groundworks-nudge.mjs status
+node scripts/package-safari.mjs --mode release --out artifacts/safari/project-extension
+```
+
+1. In Safari **Settings > Advanced**, enable **Show features for web developers**
+   if the Developer settings are not visible.
+2. In **Settings > Developer**, click **Add Temporary Extension…** and select
+   `artifacts/safari/project-extension`. Allow unsigned extensions if requested.
+3. In **Settings > Extensions**, enable Groundworks Nudge. Open your localhost
+   app (or `http://localhost:4700/demo`), click Nudge's Safari toolbar icon and
+   grant access to **this website**. Grant `127.0.0.1` separately if needed.
+   Do not disable origin/file security restrictions or grant every website.
+4. In the agent chat for the **project you want to change**, invoke
+   `/groundworks-nudge`. Choose that armed session in Nudge's **Switch session**
+   menu. A green `Pull` status still requires a message in that chat.
+5. Drag the six-dot handle, try Pick and Cancel, then submit a small prompt.
+   Confirm receipt in the intended agent chat, not just a green browser dot.
+
+The CLI is installed in `~/.local/bin`; see [PATH setup](../INSTALL.md#4-set-up-the-agent-side)
+if `groundworks-nudge` is not found. The `node agent/groundworks-nudge.mjs`
+commands above work directly from the checkout as well.
+
+**Temporary means temporary:** Safari removes this installation after 24 hours
+or when Safari quits. Add the same resource folder again. Keep the repository
+in place. Source packaging uses `--mode release` to select the shared port 4700;
+the word "release" does not mean signed or permanent installation.
+[Apple documents the temporary lifetime](https://developer.apple.com/documentation/safariservices/running-your-safari-web-extension).
+
+Safari does not start Chrome's native host. Run `groundworks-nudge ensure-bridge`
+after login if no bridge is running; agent session hooks also attempt startup.
+Do not depend on Chrome being open. Both browsers may run simultaneously with
+one bridge/store; their agent selection is currently shared per website.
+
+## Updates and removal
+
+Follow the shared [update/restart instructions](../INSTALL.md#updating), rerun
+the packaging command into the same `project-extension` folder, then use
+**Settings > Extensions > Groundworks Nudge > Reload**. Preserve unsent drafts
+before reloading the local page too: an extension reload alone can leave an
+old controller in the tab. Do not enable a project package and an isolated test
+package on the same page.
+
+Remove the temporary extension in Safari Settings when finished. Its removal
+does not remove Chrome, the CLI or the shared prompt store. Browser-local
+offline prompts are not in the bridge store until delivered: send or review
+them before removing an installation. See [shared uninstall](../INSTALL.md#uninstall)
+for the remaining components; retain the store unless you deliberately want to
+erase prompt history/evidence.
+
+## Build and verification resources
 
 The Safari resources are staged from the shared extension; they are not copied
 back into `extension/`.
@@ -22,15 +90,46 @@ must use the bridge identity/lifecycle contract and keep shared runtime and
 store data outside the removable app bundle.
 
 This repository does not currently contain a built, signed or notarized Safari
-app. Xcode, an enabled Safari extension, signing and a clean-install machine are
-external acceptance prerequisites. See the evidence ledger for the current
-candidate-specific state.
+app. Full Xcode, signing and clean-machine lifecycle evidence belong to that
+future distribution profile, not the GitHub temporary installation above.
 
 ## Temporary Safari installation (developer testing)
 
-This is the only supported installation path until the packaged macOS app has
-its own acceptance evidence. It is for a developer's own local test only; Safari
-removes the extension after 24 hours or when Safari quits.
+This is the GitHub developer-preview installation path, not a permanent app.
+
+### Use with your actual project and agent
+
+Complete the bridge and agent setup [above](#install-from-github), then use the
+shared bridge and release-configured resources (no Chrome setup is required):
+
+```sh
+groundworks-nudge ensure-bridge
+groundworks-nudge status
+node scripts/package-safari.mjs --mode release --out artifacts/safari/project-extension
+```
+
+Add `artifacts/safari/project-extension` in Safari's Developer settings, enable
+Groundworks Nudge under Extensions, and grant access to your local project
+website. Invoke `/groundworks-nudge` in the agent session working on that
+project. Safari and the CLI must use the same bridge (normally port 4700).
+The toolbar should show that session; green with `Pull` still requires a chat
+message to wake the agent.
+
+If upgrading an already loaded temporary directory, stage into that **same**
+directory, use **Extensions > Groundworks Nudge > Reload**, then reload the
+project tab after preserving any unsent work. Reloading the extension alone can
+leave old in-page controllers behind. Do not keep both the project and isolated
+test installations enabled on the same page.
+
+If the CLI lists your agent but Safari is amber with no session, check the
+staged `platform.js`: a fixed test port such as 4820 connects to a different
+bridge/inbox. Restage that installation in release mode and reload both the
+extension and tab. Keep the test store; switching endpoints does not migrate
+its prompts into the shared inbox.
+
+### Isolated compatibility testing
+
+The following setup deliberately does **not** connect to your normal agent.
 
 1. From the repository root, install bridge dependencies once: `(cd bridge && npm ci)`.
 2. Stage a separate test resource directory and start a separately scoped
@@ -70,15 +169,14 @@ open-prompt count. `Pull` means the agent receives the prompt with your next cha
 message; it does not start a new turn by itself. Drag the six-dot handle in the
 page toolbar, not the Safari address-bar icon.
 
-Safari may require the Developer tab to be enabled first in its settings. Do
-not tell end users to use this path: it is intentionally temporary and does not
-provide native lifecycle, signed updates or distribution.
+The developer path is intentionally temporary and provides neither native app
+lifecycle nor signed updates. Those limits must accompany GitHub instructions.
 
-## Intended user installation
+## Deferred permanent installation
 
-Do not publish user-facing Safari installation instructions until there is a
-signed containing app and the acceptance ledger records native startup,
-update/uninstall and clean-machine evidence. The future instructions should be:
+Do not publish permanent-app instructions until there is a signed containing
+app and native startup/update/uninstall/clean-machine evidence. A future path
+may look like this; it is not the current GitHub installation:
 
 1. Download and move the signed Groundworks Nudge app to Applications.
 2. Open it once; the app reports extension/setup state truthfully.
@@ -87,8 +185,8 @@ update/uninstall and clean-machine evidence. The future instructions should be:
 4. Start or verify the bridge from the app, then use `/groundworks-nudge` in
    the chosen agent session.
 
-Until those gates pass, say plainly: **Safari developer preview, not a supported
-end-user installation.**
+For the current profile, say plainly: **Safari developer preview, temporary
+source installation; full Safari parity not yet accepted.**
 
 ## Validation levels
 
@@ -135,6 +233,9 @@ automation remains a candidate-specific test requirement, not a guarantee that
 all Safari permission dialogs are automated. A locked screen or unavailable
 permission fails the run; it is never counted as a pass. Do not manually operate
 Safari's automation window during a run; Safari may pause it behind a modal.
+An existing enabled Nudge overlay blocks the isolated core lane; it will not
+switch off a user's other installation browser-wide. Use an isolated test
+account/session, or preserve pending work before deliberately turning it off.
 
 Run `node test/browser-coexistence.mjs` for the simultaneous Safari/Chromium
 contract. It checks four same-route tabs, shared history/ownership and actual

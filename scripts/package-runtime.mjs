@@ -19,7 +19,7 @@ export const RUNTIME_FILES = Object.freeze([
   'agent/groundworks-nudge.mjs', 'agent/runtime.mjs', 'agent/nudge-context.mjs',
   'agent/nudge-session-start.sh', 'agent/NUDGE-SKILL.md', 'agent/setup-agent.sh',
   'bridge/bridge.mjs', 'bridge/store.mjs', 'bridge/images.mjs', 'bridge/watch-nudges.mjs',
-  'bridge/lease.mjs', 'bridge/lifecycle.mjs', 'bridge/native-host.mjs',
+  'bridge/lease.mjs', 'bridge/lifecycle.mjs', 'bridge/native-host.mjs', 'bridge/http-boundary.mjs',
   'bridge/demo.html', 'bridge/install-native-host.sh',
   'bridge/package.json', 'bridge/package-lock.json',
   'extension/manifest.json', 'extension/platform.js', 'extension/sw.js',

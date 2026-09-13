@@ -48,7 +48,7 @@ const until = async (fn, ms, what) => {
 // session happens to run a watcher (bit us 2026-07-05 after the Nudge rename).
 // host:'Zed'+wake:'push' → this simulated agent is a live AUTO-waker ("wakes
 // automatically"), the common case; the pull-owner status is asserted in Suite W
-const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', pid: process.pid, since: Date.now(), host: 'Zed', wake: 'push' }) }
+const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ label: 'suite-a', session: 'suite_a', pid: process.pid, since: Date.now(), host: 'Zed', wake: 'push' }) }
 const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
 await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
 // identity: the owner label is visible to agents (hook) and the extension

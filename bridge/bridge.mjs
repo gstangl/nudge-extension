@@ -18,8 +18,9 @@ import { WebSocketServer } from 'ws'
 import crypto from 'node:crypto'
 import * as store from './store.mjs'
 import { acquireStoreLease } from './lease.mjs'
+import { ORIGIN_OK, admissionError, readJsonBody } from './http-boundary.mjs'
 
-const VERSION = '0.19.0'
+const VERSION = '0.19.2'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -34,9 +35,8 @@ for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => { lease.rel
 // ---------- HTTP surface (extension side) ----------
 // CORS: localhost origins ONLY. A wildcard here would let EVERY visited website
 // read /selection (DOM excerpts + screenshots of the open app), /comments and
-// /shots/* — Chrome's Private Network Access mitigates that, Firefox/Safari
-// don't. No Origin header (curl, same-origin) needs no CORS at all.
-const ORIGIN_OK = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+// /shots/*. Do not depend on browser-specific private-network protections.
+// No Origin header (curl, same-origin) needs no CORS; Host is still validated.
 const opaqueToken = (value) => typeof value === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(value) ? value : null
 function sanitizeBrowserSource(source) {
   if (!source || typeof source !== 'object' || Array.isArray(source)) return null
@@ -60,21 +60,7 @@ function json(res, code, obj) {
 }
 const MAX_BODY = Number(process.env.NUDGE_MAX_BODY || 40e6)
 function readBody(req, res, onJson) {
-  let body = ''
-  let refused = false
-  req.on('data', c => {
-    if (refused) return
-    body += c
-    if (body.length > MAX_BODY) {
-      refused = true
-      json(res, 413, { error: 'body too large' }) // answer, THEN drop — no hanging socket
-      res.socket?.end()
-    }
-  })
-  req.on('end', () => {
-    if (refused) return
-    try { onJson(JSON.parse(body)) } catch (e) { json(res, 400, { error: String(e) }) }
-  })
+  readJsonBody(req, res, MAX_BODY, json, onJson)
 }
 const httpServer = http.createServer((req, res) => {
   try { handle(req, res) } catch (e) {
@@ -83,9 +69,10 @@ const httpServer = http.createServer((req, res) => {
   }
 })
 function handle(req, res) {
-  const url = new URL(req.url, `http://localhost:${PORT}`)
+  const rejected = admissionError(req)
+  if (rejected) return json(res, 403, { error: rejected })
   res.cors = corsFor(req)
-  if (req.headers.origin && !ORIGIN_OK.test(req.headers.origin)) return json(res, 403, { error: 'foreign origin rejected' })
+  const url = new URL(req.url, `http://localhost:${PORT}`)
   if (req.method === 'OPTIONS') { res.writeHead(204, res.cors); return res.end() }
   if (req.method === 'GET' && url.pathname === '/.identity') {
     // global view for tooling/hooks: the DEFAULT owner (per-host owners live in
@@ -212,12 +199,15 @@ function handle(req, res) {
   const md = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)$/)
   if (req.method === 'DELETE' && md) {
     const target = store.getPin(md[1])
-    const owner = target ? ownerForHost(hostOf(target.url)) : null
+    // Withdrawal follows the original session, not today's host selection.
+    // Legacy ownerless work has no unique recipient: its event/marker is still
+    // delivered, but an acknowledgement must not invent one from the roster.
+    const owner = target?.owner?.session ? freshAgents().find(a => a.session === target.owner.session) : null
     const pin = store.deletePin(md[1])
     if (!pin) return json(res, 404, { error: 'not found' })
     // only an open nudge can be in flight; a resolved one is nobody's work
     const notified = !!owner && pin.status === 'open'
-    log(`discarded ${pin.id}${notified ? ` — withdrawal sent to ${owner.label}` : ' — no agent on channel'}`)
+    log(`discarded ${pin.id}${notified ? ` — withdrawal sent to ${owner.label}` : ' — no live recipient confirmed'}`)
     return json(res, 200, { ok: true, notified, agent: notified ? owner.label : null, wake: notified ? owner.wake : null })
   }
   const ma = url.pathname.match(/^\/comments\/((?:pin|nudge)_\d+)\/after$/)
@@ -287,7 +277,12 @@ const hostOf = (u) => { try { return normHost(new URL(u).host) } catch { return 
 // stable signature of the VISIBLE session list AND the ownership map — changes
 // iff a session joins/leaves/renames OR a per-host owner changes; drives prompt
 // dropdown updates without spamming on plain heartbeats
-const rosterSig = () => freshAgents().map(a => `${a.pid}:${a.label}`).sort().join('|') + '#' + [...chosenByHost].sort().join(',')
+// Freshness-only heartbeats are silent, but every visible identity/capability
+// field (especially push -> pull) must reach already connected toolbars.
+const rosterSig = () => JSON.stringify([
+  freshAgents().map(({ lastSeen, ...agent }) => [agentKey(agent), agent]).sort(([a], [b]) => a.localeCompare(b)),
+  [...chosenByHost].sort(([a], [b]) => a.localeCompare(b)),
+])
 // the agent that owns a given host: per-host pick → '*' default → newest fresh
 function ownerForHost(host) {
   const f = freshAgents()
@@ -320,7 +315,10 @@ setInterval(() => { // an owner dying / a session leaving / ownership change -> 
 // ---------- WebSocket surface (live sync to the extension) ----------
 const wss = new WebSocketServer({
   server: httpServer,
-  verifyClient: ({ origin }) => !origin || ORIGIN_OK.test(origin),
+  // Clients send only small hello/identity frames. Images and prompts use the
+  // separately bounded HTTP surface; they never need a large inbound WS frame.
+  maxPayload: 64 * 1024,
+  verifyClient: ({ req }) => !admissionError(req),
 })
 const pendingCaptures = new Map()
 const completedCaptures = new Map()
@@ -419,6 +417,9 @@ setInterval(() => {
   }
 }, WS_PING)
 wss.on('connection', (ws) => {
+  // Protocol/transport errors belong to this client. Without this listener an
+  // invalid UTF-8 frame raises an unhandled error and kills the shared bridge.
+  ws.on('error', error => log('client WebSocket error', error.code || 'transport_error'))
   ws.isAlive = true
   ws.on('pong', () => { ws.isAlive = true })
   ws.on('close', () => {

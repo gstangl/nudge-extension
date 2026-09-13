@@ -197,8 +197,57 @@ try {
     pass('L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot')
   }
 
-  // ---------- L6: an orphaned tab tells the user to ⌘R instead of dying silently ----------
-  // (runs LAST: chrome.runtime.reload() kills the SW handle for good)
+  // ---------- L8: growing menus stay usable at the bottom, including narrow windows ----------
+  {
+    await p.setViewportSize({ width: 600, height: 420 })
+    const grip = p.locator('.pill .grip'), queue = p.locator('.queue')
+    const g = await grip.boundingBox()
+    await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2)
+    await p.mouse.down(); await p.mouse.move(595, 415, { steps: 8 }); await p.mouse.up()
+    await p.locator('.pill .count').click()
+    await p.locator('.queue.on.above').waitFor()
+    const assertMenu = async () => {
+      await p.waitForTimeout(200)
+      const r = await queue.boundingBox(), v = p.viewportSize()
+      if (!r || r.x < 0 || r.y < 0 || r.x + r.width > v.width || r.y + r.height > v.height) fail(`L8: offscreen queue ${JSON.stringify(r)}`)
+    }
+    await assertMenu()
+    // Grow an already open menu using real server updates, not injected DOM.
+    for (let i = 0; i < 16; i++) await fetch(`${B}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: `[TEST] scrollable queue ${i}`, url: `http://localhost:${PAGE}/` }) })
+    await p.waitForTimeout(300)
+    await assertMenu()
+    const scrollState = () => p.locator('.q-list').evaluate(e => ({ top: e.scrollTop, content: e.scrollHeight, height: e.clientHeight, overflow: getComputedStyle(e).overflowY }))
+    const before = await scrollState()
+    if (before.content <= before.height || before.overflow !== 'auto') fail('L8: long queue must have a real scrollable body')
+    await p.locator('.q-list').hover(); await p.mouse.wheel(0, 600); await p.waitForTimeout(250)
+    if ((await scrollState()).top <= before.top) fail('L8: wheel must actually scroll the queue')
+    // Resizing while open must clamp the width as well as its height.
+    await p.setViewportSize({ width: 390, height: 340 }); await assertMenu()
+    await p.keyboard.press('Escape')
+    await p.setViewportSize({ width: 1400, height: 900 })
+    pass('L8 bottom-edge queue grows, flips, scrolls with real wheel input and stays inside a narrow viewport')
+  }
+
+  // ---------- L9: a visible state explanation cannot outlive its connection ----------
+  // Runs immediately before orphaning; no further bridge operation is needed.
+  {
+    await p.locator('.pill .status').click()
+    await p.locator('.status-menu.on').waitFor()
+    const text = await p.locator('.status-menu .q-head').textContent()
+    if (!text.includes('Agent active:')) fail('L9: begin with a genuinely live status menu')
+    clearInterval(beat)
+    bridge.kill()
+    await p.waitForFunction(() => {
+      const root = document.getElementById('__groundworks-nudge-host').shadowRoot
+      return root.querySelector('.pill .status').title === 'Bridge unreachable'
+    })
+    const head = await p.locator('.status-menu .q-head').textContent()
+    if (head !== 'Bridge unreachable') fail(`L9: open status menu contradicts the disconnected toolbar: ${head}`)
+    await p.keyboard.press('Escape')
+    pass('L9 an already open status menu reflects bridge loss immediately')
+  }
+
+  // ---------- L6: orphan lifecycle (last; bridge is intentionally offline) ----------
   {
     await sw.evaluate(() => chrome.runtime.reload()).catch(() => {}) // handle dies mid-call — expected
     let hint = null

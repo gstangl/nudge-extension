@@ -1,11 +1,11 @@
 # Groundworks Nudge
 
 **Prompt your coding agent on the pixel.** Groundworks Nudge is a Chrome
-extension plus a small local bridge — the first public piece of the
+extension, a Safari developer preview and a shared local bridge — the first public piece of the
 Groundworks Framework. You pick an element or circle a region in any `localhost`
 app, type what you want, and the prompt reaches the coding agent that owns the
 codebase, together with the selector, computed styles, console and network
-errors, and a screenshot. The agent fixes it, verifies it, and reports back
+errors, plus a screenshot for circled regions. The agent fixes it, verifies it, and reports back
 into the page.
 
 [![Test](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml/badge.svg)](https://github.com/gstangl/nudge-extension/actions/workflows/test.yml)
@@ -25,11 +25,12 @@ run a shell command uses the same CLI.
 > A green connection indicator does **not** mean the agent wakes automatically.
 > See [wake modes and verification limits](#agents-and-wake-modes).
 
-Safari developer-preview resource staging and isolated parity runners are available, but a loaded Safari
-extension, native containing app and distribution are not yet supported claims.
-See [the Safari build and verification guide](docs/SAFARI.md).
+Safari is available as a [temporary GitHub source installation](docs/SAFARI.md#install-from-github)
+on macOS, without Xcode, signing or App Store setup. It uses the same core and
+bridge as Chrome; both may be open at once. Full real-Safari feature parity is
+not yet accepted. Temporary installations expire after Safari quits or 24 hours.
 
-**New here?** [Install once](#install) (Chrome + Skill). Then, in the project
+**New here?** [Install](INSTALL.md) for Chrome or Safari, plus the Skill. Then, in the project
 you want to change, arm the agent with `/groundworks-nudge`. That Skill is the
 trigger. The extension does not watch the browser on its own.
 
@@ -89,7 +90,7 @@ Chrome (localhost tab)            bridge (Node, port 4700)          agent sessio
 | | |
 |---|---|
 | OS | macOS or Linux. Windows is not supported yet (see [INSTALL.md](INSTALL.md)). |
-| Browser | Google Chrome or Chromium with Developer mode. |
+| Browser | Google Chrome/Chromium with Developer mode, or Safari 26+ on macOS (temporary developer preview). |
 | Node.js | 22 or newer. |
 | Agent | Claude Code, Codex, Zed, T3 Code, or any local agent that can run shell commands. Tested in the terminal, Zed and T3 Code. |
 
@@ -98,12 +99,13 @@ needed for the test suites only.
 
 ## Install
 
-Takes about five minutes. The full guide with troubleshooting is
-[INSTALL.md](INSTALL.md).
+The Chrome quickstart follows. For Safari alone, use the
+[Safari source-install steps](docs/SAFARI.md#install-from-github); skip Chrome's
+native host. The full guide with troubleshooting is [INSTALL.md](INSTALL.md).
 
 ```sh
 git clone https://github.com/gstangl/nudge-extension.git
-cd nudge-extension/bridge && npm install && cd ..
+cd nudge-extension/bridge && npm ci && cd ..
 ```
 
 1. **Load the extension.** Chrome → `chrome://extensions` → switch on
@@ -252,7 +254,9 @@ docs/        VISION.md · PRODUCT.md · DECISIONS.md (index: docs/README.md)
 - `chrome://extensions` → Errors lists the page's own console warnings as
   extension errors because the page hook wraps `console.warn` and
   `console.error`. Cosmetic, developer mode only.
-- Chrome or Chromium only. macOS and Linux only.
+- Chrome/Chromium on macOS and Linux; Safari temporary developer preview on
+  macOS. Safari has no native bridge autostart and full runtime parity is not
+  yet accepted. No Windows or iOS installation is provided.
 
 ## Security
 

@@ -15,7 +15,7 @@ Chromium. A Chromium result cannot close the Safari column.
 | T01 Grip drag | Shared core: three repeated real pointer drags; both X/Y coordinates and reload persistence | Verify grabbing the small six-dot handle with mouse and trackpad in each browser |
 | T02 Release and repeat | Shared core: move pointer after release, toolbar stays put and dragging state clears; next drag still works | Leave/re-enter the browser while dragging; switch app/tab mid-drag, release, return and drag again; no stuck capture |
 | T03 Bounds and resizing | Shared core: all four viewport corners, shrink/restore the window, entire toolbar and grip stay reachable | Safari and Chrome zoom, docked DevTools, narrow windows; keep the handle reachable even when the toolbar cannot fully fit |
-| T04 Controls after dragging | Shared core: status/Escape, repeated Pick/Cancel, Freeform/send, composer typing and multi-select after repositioning | Click each control at an edge position too; no accidental drag, page navigation or swallowed input |
+| T04 Controls after dragging | Shared core: real Status/Switch session/Queue clicks and Escape at all four corners; bottom menus flip above. Repeated Pick/Cancel, Freeform/send, composer typing and multi-select after repositioning. Suite L: growing queue, real wheel scroll and narrow resize | No accidental drag, page navigation or swallowed input; retain separate Safari runtime results |
 | T05 Page isolation and focus | Shared core outside-click/near-miss test; Suites M/O/P/Q cover page dialogs, Escape, multi-select and reload | Check the actual target app, not only the fixture; no dismissed page dialogs or lost draft/caret |
 | T06 Capture independence | Shared core exact clean pixels; Suite Y bounded capture recovery | Toolbar remains usable during denied/throttled/stalled Safari capture; no toolbar/lasso in submitted evidence |
 
@@ -36,13 +36,24 @@ separate installation gate, not proven by dragging this in-page toolbar.
 - `node test/browser-protocol.mjs` — source-bound evidence, foreign-origin
   rejection, idempotent submission and withdrawal-replay protocol coverage on
   side port 4821. No browser is claimed by this runner.
+- `node test/bridge-boundary.mjs` — random side port and fresh retained store:
+  independent Host/Origin HTTP and WS matrix, malformed/oversized annotations,
+  historical-record restart, split UTF-8 and original-recipient withdrawals.
+  Run after any HTTP, store or withdrawal change. Not browser acceptance.
+- `node test/bridge-realtime.mjs` — fresh bridge/store per case on random side
+  ports: invalid UTF-8 and oversized WS frames close only the offending client;
+  healthy peers still receive updates. Live agent metadata/wake changes reach
+  connected clients without broadcasting on freshness-only heartbeats. Run
+  after any WS admission, error handling or roster change. Not browser acceptance.
 - `node test/bridge-lifecycle.mjs` — bridge identity capabilities and one-writer
   store lease coverage on side ports 4822--4823.
 - `node test/safari-e2e.mjs --smoke` — deterministic Safari-resource staging
   only, including repeated release-byte equality. Without `--smoke`, the runner
   installs fresh resources into real Safari and runs the shared input/capture
   contract. It requires an unlocked GUI, Safari automation and native website
-  permission access; missing access fails, never green-skips. See [Safari guide](../docs/SAFARI.md).
+  permission access; an existing enabled Nudge overlay blocks isolation rather
+  than being switched off globally. Missing access fails, never green-skips.
+  See [Safari guide](../docs/SAFARI.md).
 - `node test/browser-parity.mjs --chromium --headless` — same shared contract in
   explicitly headless Chromium, side bridge/page ports 4822/5322. Real pointer
   drag, keyboard, multi-select, draft, amend/withdraw and exact PNG/JPEG pixels.

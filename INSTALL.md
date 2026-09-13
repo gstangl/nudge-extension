@@ -1,9 +1,9 @@
 # Installing and using Groundworks Nudge
 
 **Groundworks Nudge lets you prompt your coding agent directly on the running web app.**
-You point at an element or circle a region in Chrome, type what you want, and
-the active agent receives the screenshot, the element, its styles and the
-console. When it is done it reports back into the browser. Nudge works on any
+You point at an element or circle a region in your browser, type what you want, and
+the active agent receives the selected element, its styles and the console.
+Circled regions also include a screenshot. When done, the agent reports back into the browser. Nudge works on any
 `localhost` page and with any local agent that can run commands.
 
 ## Requirements
@@ -11,7 +11,8 @@ console. When it is done it reports back into the browser. Nudge works on any
 - **macOS or Linux.** Windows is not supported yet: Chrome's native messaging
   needs a registry entry there, and nobody has written that installer. A pull
   request is welcome.
-- **Google Chrome** (or Chromium).
+- **Google Chrome** (or Chromium), or **Safari 26+ on macOS** for the temporary
+  developer preview. Both can use the same bridge at the same time.
 - **Node.js 22 or newer.** `node -v` must print a version.
 - **A local coding agent.** Claude Code and Codex are detected natively. Tested
   in the terminal, in **Zed**, and in **T3 Code**. Zed and T3 Code work through
@@ -22,13 +23,19 @@ console. When it is done it reports back into the browser. Nudge works on any
   git clone https://github.com/gstangl/nudge-extension.git
   ```
 
-## Install (once per machine, about five minutes)
+Choose the [Chrome installation below](#chrome-installation) or the
+[Safari developer installation](docs/SAFARI.md#install-from-github).
+Safari does not require Chrome, Xcode, an Apple Developer account or a signed
+app for this temporary source-install path. It expires after Safari quits or
+24 hours; re-add the resource folder. Full Safari parity is not yet accepted.
+
+## Chrome installation
 
 ### 1. Install the bridge dependency
 
 ```sh
 cd <path-to>/nudge-extension/bridge
-npm install
+npm ci
 ```
 
 ### 2. Load the extension into Chrome
@@ -112,27 +119,15 @@ add it by default; if `groundworks-nudge help` prints "command not found", add
 
 ## Daily use
 
-## Safari development resources
-
-**Developer preview only.** A temporary Safari extension is not a permanent
-macOS app installation. Grant access only to the local development websites you
-use; do not disable origin security or grant all websites. The preview requires
-a separately running bridge and the normal Skill invocation in the project.
-
-Safari is not part of the standard installation above. Developers can stage
-isolated Safari Web Extension resources with the commands in
-[docs/SAFARI.md](docs/SAFARI.md). Full Xcode, an enabled Safari extension and
-native lifecycle evidence are required before it can be offered as an install
-path; this guide does not claim those prerequisites have been met.
-
 | Action | How |
 |---|---|
-| Toolbar on/off | `Alt+C`, or click the Nudge icon in Chrome's toolbar. Off is browser-wide and stays off until you switch it on again |
+| Toolbar on/off | `Alt+C`, or click the Nudge icon in the browser toolbar. Off is local to that browser installation; it does not turn the other browser off |
+| Move the toolbar | Drag the six-dot handle. Menus open above it when parked at the bottom; long lists scroll |
 | Prompt on an element | **Pick** → click the element → type → `↩` |
 | Correct the level | after the click, chips show the parent elements (`td → tr → table`). Click the one you meant |
 | Several elements | `Shift+click` collects elements into one prompt ("swap these two"). Shift+click again removes one. A plain click starts over with one element |
 | Prompt on a region | **Freeform** → circle it with the mouse held down → type → `↩` |
-| Mark only | click an element → send empty (or Esc). Then write "make *this* larger" in the agent session |
+| Mark only | click an element → send empty. Then write "make *this* larger" in the agent session. Esc clears the current mark |
 | Many changes, fast | send them one after another. The agent works through them strictly in order. The counter in the toolbar shows how many are open |
 | Add a thought to a sent prompt | click the counter → **+ amend** on the row |
 | Take a prompt back | click the counter → **×** on the row. The agent that has it is told to stop |
@@ -143,7 +138,9 @@ path; this guide does not claim those prerequisites have been met.
 - 🕐 **nudge_X saved — no agent**: stored, runs when an agent arms
 - 🕐 **nudge_X received · arrives with the next message**: a pull agent has it and reads it on your next message
 - ⚠ **Bridge offline — queued**: re-sent automatically when the bridge is back
-- ✓ **nudge_X done**: the agent finished (with a before/after screenshot for region prompts)
+- ✓ **nudge_X done**: the agent resolved the prompt. Region after-evidence is
+  captured only when the original browser/tab is eligible; it can remain pending.
+  A resolved prompt is not, by itself, verified pixels.
 
 **The status dot** (toolbar and Chrome icon):
 
@@ -163,18 +160,31 @@ Each localhost port is owned by one agent session. When two dev servers run
 pick the owner per port in the toolbar's **Switch session** dropdown. A prompt
 on one port never wakes the other project's agent.
 
+Chrome and Safari connect to the same local bridge and agent roster. Choose an
+already armed agent from either browser. Currently that choice is shared per
+website/port (including the `localhost`/`127.0.0.1` alias), not independent per
+browser. Previously sent prompts keep their original owner. Browser on/off,
+toolbar position, author and offline queue are separate; region evidence stays
+bound to the originating browser/tab. Browser selection never arms a chat or
+changes a pull runtime into an automatic push runtime.
+
 ## Updating
 
 ```sh
 cd <path-to>/nudge-extension && git pull
-cd bridge && npm install
+cd bridge && npm ci
 ```
 
 Then, in `chrome://extensions`, click the reload arrow on the Groundworks Nudge card
 and reload your localhost tab. Re-run `./agent/setup-agent.sh` if the Skill or
-hooks changed (the changelog says so). The bridge picks up new code the next
-time it starts; to force it, stop the process on port 4700 and Chrome will
-start it again with the new code.
+hooks changed (the changelog says so). Preserve unsent work before reloading.
+The bridge picks up new code the next time it starts. To restart it, first
+identify its listener with `lsof -nP -iTCP:4700 -sTCP:LISTEN` and verify its
+command is this checkout's `bridge/bridge.mjs` with `ps -p <pid> -o command=`.
+Stop only that verified bridge process, then run `groundworks-nudge ensure-bridge`
+and check the version with `groundworks-nudge status`. Never kill an unknown
+listener or delete the store. `ensure-bridge` alone does not replace an already
+healthy older bridge. For Safari, also [restage its resources](docs/SAFARI.md#updates-and-removal).
 
 ## If something is stuck
 
@@ -193,11 +203,15 @@ start it again with the new code.
 4. **Toolbar vanished after a code update.** A small pill says "Nudge updated
    — press ⌘R to reload the toolbar". Do that.
 5. **Everything else:** open an issue with the output of
-   `groundworks-nudge status` and the Chrome version.
+   `groundworks-nudge status` and the browser/version. Redact local paths,
+   session IDs and project details before posting publicly.
 
 ## Uninstall
 
 - Chrome: remove the extension in `chrome://extensions`.
+- Safari: remove the temporary extension in Safari Settings > Extensions.
+  Removing either browser extension does not remove the other's installation
+  or delete the shared store.
 - Native host: delete `dev.groundworks.nudge.json` (and the older
   `energy.roots.nudge.json`, if present) from
   `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/` (macOS)

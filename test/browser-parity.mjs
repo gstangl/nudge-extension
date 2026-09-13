@@ -7,9 +7,9 @@ import net from 'node:net'
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { SafariDriver } from './safari-driver.mjs'
-import { stageBrowserResources } from './browser-joint-coexistence.mjs'
+import { stageBrowserResources, jointDesktopPreflight } from './browser-joint-coexistence.mjs'
 import { runInteractions } from './parity-interactions.mjs'
-import { existingNudgeActions, pressExtension, grantCurrentSite, setFixtureTitle, openPermissionWindow, closePermissionWindow } from './safari-permissions.mjs'
+import { pressExtension, grantCurrentSite, setFixtureTitle, openPermissionWindow, closePermissionWindow } from './safari-permissions.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -26,8 +26,7 @@ const fixtureTitle = `Nudge browser parity fixture ${path.basename(run)}`
 setFixtureTitle(fixtureTitle + ' permissions')
 const storeDir = path.join(run, 'store'), ext = path.join(run, 'extension')
 const report = { browser: family, headless, scope: 'Core interaction contract, not full A01–A14 acceptance', results: [], limitations: ['Native app and distribution are outside this browser run.', 'This runner does not prove permission revocation, real Safari storage quota, Safari worker suspension, zoom or simultaneous Safari/Chrome coexistence.'] }
-let driver, bridge, server, driverProcess, context, extensionId, heartbeat, bridgeLog = ''
-const restoreActions = []
+let driver, bridge, server, driverProcess, context, extensionId, heartbeat, bridgeLog = '', permissionWindow = false
 const readStore = () => {
   try { return JSON.parse(fs.readFileSync(path.join(storeDir, 'store.json'), 'utf8')) }
   catch (error) { if (error.code === 'ENOENT') return {pins:[], receipts:[]}; throw error }
@@ -77,6 +76,7 @@ async function pixels(relative, type) {
   }, `data:image/${type};base64,${data.toString('base64')}`)
 }
 try {
+  if (!isChrome) report.preflight = jointDesktopPreflight()
   await free(PORT); await free(PAGE)
   report.resources = stageBrowserResources({ out: ext, port: PORT, family: `${family}-test` })
   // The actual staged bytes are installed below for every run.
@@ -92,7 +92,8 @@ try {
     res.setHeader('Content-Type', 'text/html'); res.end(req.url === '/permissions' ? html.replace(fixtureTitle, fixtureTitle + ' permissions') : html)
   })
   await new Promise(resolve => server.listen(PAGE, '0.0.0.0', resolve))
-  const hb = () => post('/agent/heartbeat', { label: 'parity-agent', pid: process.pid, session: 'parity', since: 1, wake: 'pull', host: 'Terminal' })
+  const owner = { label: 'parity-agent', pid: process.pid, session: 'parity', since: 1, wake: 'pull', host: 'Terminal' }
+  const hb = () => post('/agent/heartbeat', owner)
   await hb(); heartbeat = setInterval(() => hb().catch(() => {}), 1000)
   if (isChrome) {
     const { chromium } = await import('playwright')
@@ -110,6 +111,7 @@ try {
     }
   } else {
     openPermissionWindow(`http://localhost:${PAGE}/permissions`)
+    permissionWindow = true
     await free(DRIVER)
     driverProcess = spawn('/usr/bin/safaridriver', ['-p', String(DRIVER)], { stdio: 'ignore' })
     await until(async () => { try { return (await fetch(`http://localhost:${DRIVER}/status`)).ok } catch { return false } }, 'SafariDriver')
@@ -117,10 +119,7 @@ try {
     await driver.start(); report.version = driver.capabilities.browserVersion
     await driver.goto(`http://localhost:${PAGE}/`)
     if ((await inspect('.pill'))?.visible) {
-      const old = existingNudgeActions()
-      assert.equal(old.length, 1, 'Only one pre-existing Nudge installation can be safely suspended')
-      pressExtension(old[0]); restoreActions.push(old[0])
-      await until(async () => !(await inspect('.pill'))?.visible, 'pre-existing overlay temporarily off')
+      throw Object.assign(new Error('An existing Safari Nudge overlay is enabled. This isolated test will not toggle its browser-wide state or disturb unsent work; use a dedicated test browser session.'), { prerequisite: true })
     }
     await driver.evaluate(() => sessionStorage.clear()) // this runner's fixture only
     extensionId = await driver.install(ext)
@@ -133,12 +132,23 @@ try {
     await until(async () => !!await inspect('.pill'), 'fresh content controller')
     if (!(await inspect('.pill')).visible) pressExtension(extensionId)
     closePermissionWindow()
+    permissionWindow = false
   }
   await check('fresh extension / HTTP + WS / green pull owner', async () => {
     await until(async () => (await inspect('.status'))?.cls.includes('ok'), 'green status', 15000)
     await until(async () => (await inspect('.pill'))?.visible, 'own toolbar visible')
     assert((await inspect('.who')).text.includes('parity-agent'))
     assert((await inspect('.who')).text.includes('Pull'))
+  })
+  await check('live push/pull changes update the toolbar and open status menu without reload', async () => {
+    await click('.status')
+    await until(async () => (await inspect('.sm-body'))?.text.includes('next message'), 'initial pull explanation')
+    owner.wake = 'push'; await hb()
+    await until(async () => !(await inspect('.who-wake'))?.visible && (await inspect('.sm-body'))?.text.includes('automatically'), 'push state reaches open controls')
+    owner.wake = 'pull'; await hb()
+    await until(async () => (await inspect('.who-wake'))?.visible && (await inspect('.sm-body'))?.text.includes('next message'), 'pull state reaches open controls')
+    assert((await inspect('.status')).cls.includes('ok'), 'capability update preserves the live connection')
+    await escape()
   })
   await check('repeated real grip drag and persisted position', async () => {
     report.drags = []
@@ -157,6 +167,8 @@ try {
     await until(async () => { const restored = await inspect('.pill'); return restored && Math.abs(restored.x - before.x) < 3 && Math.abs(restored.y - before.y) < 3 }, 'both position coordinates restored')
   })
   await check('toolbar remains reachable at all viewport corners and after window resize', async () => {
+    const edgePin = await post('/comments', { text: '[TEST-parity] Edge menu control', url: `http://localhost:${PAGE}/`, target: { selector: '#target' } })
+    await until(async () => (await inspect('.count'))?.cls.includes('show'), 'edge queue badge')
     const size = await driver.windowSize()
     const inside = async () => {
       const p = await inspect('.pill'), g = await inspect('.grip')
@@ -174,12 +186,30 @@ try {
         const corner = await inspect('.pill')
         assert((right ? v.w - corner.x - corner.w : corner.x) <= 6 && (bottom ? v.h - corner.y - corner.h : corner.y) <= 6, 'real drag must reach the requested corner, not merely remain in bounds')
         report.toolbarBounds.push(corner)
+        for (const [control, menu] of [['.status', '.status-menu'], ['.who', '.who-menu'], ['.count', '.queue']]) {
+          await click(control)
+          await until(async () => (await inspect(menu))?.cls.includes('on'), `${menu} opens at corner`)
+          await sleep(200) // observe the settled animation, not its entrance transform
+          const box = await inspect(menu)
+          assert(box.visible && box.x >= 0 && box.y >= 0 && box.x + box.w <= v.w + 1 && box.y + box.h <= v.h + 1, `${menu} must be fully inside the viewport at ${right ? 'right' : 'left'}/${bottom ? 'bottom' : 'top'}: ${JSON.stringify(box)}`)
+          assert.equal(box.cls.split(/\s+/).includes('above'), bottom, 'bottom menus flip above the toolbar')
+          if (right && bottom && menu === '.queue') {
+            const image = path.join(run, 'bottom-edge-queue.png')
+            if (isChrome) await context.pages()[0].screenshot({ path: image })
+            else fs.writeFileSync(image, Buffer.from(await driver.command('GET', '/screenshot'), 'base64'))
+          }
+          await escape()
+          assert(!(await inspect(menu))?.cls.split(/\s+/).includes('on'), 'Escape closes the edge menu')
+        }
       }
       await driver.resize(720, 620)
       await sleep(250)
       const smaller = await inside()
       assert(smaller.w < originalViewport.w && smaller.h < originalViewport.h, 'window resize must actually shrink both viewport dimensions')
-    } finally { await driver.resize(size.width, size.height) }
+    } finally {
+      await driver.resize(size.width, size.height)
+      assert((await fetch(`${B}/comments/${edgePin.id}`, { method: 'DELETE' })).ok)
+    }
     await sleep(250)
     const restoredViewport = await inside(), restoredPill = await inspect('.pill'), dropped = report.toolbarBounds.at(-1)
     assert(Math.abs(restoredViewport.w - originalViewport.w) < 2 && Math.abs(restoredViewport.h - originalViewport.h) < 2, 'original viewport must be restored')
@@ -276,7 +306,7 @@ try {
   }
   report.verdict = 'passed'
 } catch (error) {
-  report.verdict = 'failed'; report.error = String(error); console.error(error)
+  report.verdict = error.prerequisite ? 'blocked' : 'failed'; report.error = String(error); console.error(error)
   if (driver) {
     try {
       report.feed = await inspect('.feed'); report.composer = await inspect('.composer')
@@ -296,17 +326,13 @@ try {
     try { report.dom = await driver.evaluate(() => ({ title: document.title, url: location.href, platform: globalThis.__nudgePlatform, hosts: [...document.querySelectorAll('#__groundworks-nudge-host')].map(h => ({html:h.outerHTML, status:h.shadowRoot?.querySelector('.status')?.outerHTML, styles:[...h.shadowRoot?.querySelectorAll('style') || []].map(s=>s.textContent.slice(0,1800))})) })) } catch {}
     if (!isChrome) { try { fs.writeFileSync(path.join(run, 'failure.png'), Buffer.from(await driver.command('GET', '/screenshot'), 'base64')) } catch {} }
   }
-  process.exitCode = 1
+  process.exitCode = error.prerequisite ? 2 : 1
 } finally {
   console.log('Cleanup: test resources')
   clearInterval(heartbeat)
-  if (restoreActions.length) {
-    try { openPermissionWindow(`http://localhost:${PAGE}/permissions`); await sleep(350) } catch (e) {report.cleanupError=String(e)}
-  }
-  for (const id of restoreActions) { try { pressExtension(id) } catch (e) { report.cleanupError = String(e); process.exitCode = 1 } }
-  if (!isChrome) { try { closePermissionWindow() } catch (e) {report.cleanupError=String(e)} }
-  if (extensionId) { try { await driver.uninstall(extensionId) } catch {} }
-  if (!isChrome) { try { await driver?.close() } catch {} }
+  if (permissionWindow) { try { closePermissionWindow() } catch (e) {report.cleanupError=String(e)} }
+  if (extensionId) { try { await driver.uninstall(extensionId) } catch (e) {report.cleanupError=String(e)} }
+  if (!isChrome) { try { await driver?.close() } catch (e) {report.cleanupError=String(e)} }
   await context?.close(); driverProcess?.kill(); bridge?.kill()
   if (server) { server.close(); server.closeAllConnections() }
   if (report.cleanupError) { report.verdict = 'failed'; process.exitCode = 1 }

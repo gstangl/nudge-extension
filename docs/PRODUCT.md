@@ -115,12 +115,13 @@ always visible, in both directions:
 
 ## Accepted trade-offs — the price of the USP
 
-- **Chrome-only, manual install** (Load unpacked + one setup script, per person).
-  Price of `captureVisibleTab`-quality screenshots and full generality; a
-  dev-server plugin would be zero-install but framework-bound and screenshot-less.
-- **Bridge lifecycle is owned by Chrome** (native messaging host starts it
-  detached; SessionStart hook remains as fallback). Residual: if Chrome AND all
-  sessions are gone, nothing runs — by design (no daemon).
+- **Manual developer installation.** Chrome uses Load unpacked plus setup;
+  Safari uses the temporary source-install preview described in
+  [SAFARI.md](SAFARI.md), with runtime acceptance tracked separately. The
+  browser extension preserves framework independence and native screenshots.
+- **One externally started bridge.** Chrome's native messaging host can start
+  it detached; Safari's temporary preview relies on the CLI/session hook. Both
+  use the same bridge and store. No always-running system daemon is installed.
 - **Wake capability is declared, never inferred from the editor.** A runtime that
   can start a turn from watcher output declares `push`; every other runtime is
   `pull`. A mid-task prompt waits until the Agent's current step yields.

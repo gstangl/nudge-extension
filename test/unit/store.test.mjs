@@ -15,8 +15,10 @@ const RED_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfF
 
 // Force store.mjs's mtime-cache to reload after we write store.json behind its
 // back: same-millisecond writes could otherwise keep a stale cache and flake.
+let writtenMtime = 0
 function bumpMtime(file) {
-  const future = new Date(Date.now() + 2000)
+  // Several corruption fixtures can be written in the same millisecond.
+  const future = new Date(writtenMtime = Math.max(writtenMtime + 1, Date.now() + 2000))
   fs.utimesSync(file, future, future)
 }
 const storeFile = () => path.join(STORE, 'store.json')
@@ -28,6 +30,28 @@ beforeEach(() => {
 })
 
 describe('store.mjs — nudge lifecycle', () => {
+  it('rejects malformed annotations before creating a pin or receipt', () => {
+    const malformed = [{}, [null], [false], [{ type: 'other', points: [[1, 2]] }], [{ type: 'lasso', points: [[1, '2']] }],
+      [{ type: 'lasso', points: [[1, Infinity]] }], [{ type: 'lasso', points: [] }], [{ type: 'lasso', points: [[1, 2]], extra: 'x'.repeat(100_000) }]]
+    for (const annotations of malformed) {
+      const payload = { text: 'retain only valid submissions', annotations, submissionId: 'annotation_check', submissionCreatedAt: new Date().toISOString() }
+      expect(store.addPin(payload, null).error).toBe('invalid_annotations')
+      expect(store.submitPin(payload, null).error).toBe('invalid_annotations')
+      expect(fs.existsSync(storeFile())).toBe(false)
+    }
+  })
+  it('retains a bounded lasso and projects malformed historical annotations without disk loss', () => {
+    const pin = store.addPin({ text: 'keep this prompt', annotations: [{ type: 'lasso', points: [[1, 2], [3, 4]] }] }, null)
+    expect(store.pinForClient(pin).isRegion).toBe(true)
+    for (const annotations of [{}, [null], false]) {
+      const saved = { seq: 1, pins: [{ ...pin, annotations }] }
+      fs.writeFileSync(storeFile(), JSON.stringify(saved)); bumpMtime(storeFile())
+      const before = fs.readFileSync(storeFile(), 'utf8')
+      expect(store.getPin(pin.id).annotations).toEqual(annotations)
+      expect(store.pinForClient(store.getPin(pin.id))).toMatchObject({ id: pin.id, text: pin.text, isRegion: false })
+      expect(fs.readFileSync(storeFile(), 'utf8')).toBe(before)
+    }
+  })
   it('rejects coerced non-string submission metadata before mutation', () => {
     const at=new Date().toISOString()
     for(const submissionId of [12345678,['token_1234'],{},true])

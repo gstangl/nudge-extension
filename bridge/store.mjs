@@ -115,6 +115,18 @@ export function labelOf(id) {
 // pays for it forever (brutal-suite finding, 2026-07-05).
 const cap = (v, n) => { const s = String(v ?? ''); return s ? s.slice(0, n) : '' }
 const capOrNull = (v, n) => (v == null ? null : cap(v, n) || null)
+// Only the shipped Freeform stroke schema is accepted. Unknown annotation
+// objects must not enter the store and crash a later browser snapshot.
+function validAnnotations(value) {
+  if (value == null) return true
+  if (!Array.isArray(value) || value.length > 16) return false
+  try {
+    return JSON.stringify(value).length <= 100_000 && value.every(a =>
+      a && typeof a === 'object' && !Array.isArray(a) && a.type === 'lasso' &&
+      Array.isArray(a.points) && a.points.length > 0 && a.points.length <= 10_000 &&
+      a.points.every(p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite)))
+  } catch { return false }
+}
 const token = (v) => /^[A-Za-z0-9_-]{1,128}$/.test(String(v || '')) ? String(v) : null
 function sanitizeBrowserSource(source) {
   if (!source || typeof source !== 'object') return null
@@ -268,6 +280,8 @@ function saveImage(id, suffix, dataUrl, validated = null) {
 // server-decided owner stamp so a client can NEVER inject or spoof provenance
 // (bulletproof binding — 2026-07-05: "not hijacked").
 export function addPin(payload, owner, receipt = null) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return { error: 'invalid_submission' }
+  if (!validAnnotations(payload.annotations)) return { error: 'invalid_annotations' }
   const crop = payload.screenshot ? validateImage(payload.screenshot) : null
   const overview = payload.screenshotFull ? validateImage(payload.screenshotFull) : null
   if ((receipt || payload.browserSource) && (
@@ -301,7 +315,7 @@ export function addPin(payload, owner, receipt = null) {
     viewport: sanitizeRect(payload.viewport),
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
-    annotations: (() => { try { return payload.annotations && JSON.stringify(payload.annotations).length <= 100_000 ? payload.annotations : null } catch { return null } })(),
+    annotations: payload.annotations?.map(a => ({ type: 'lasso', points: a.points.map(p => [...p]) })) || null,
     console: Array.isArray(payload.console) ? payload.console.slice(-20).map(l => cap(l, 500)) : null,
   }
   if (payload.screenshot) pin.screenshot = saveImage(id, '', payload.screenshot, crop)
@@ -538,7 +552,9 @@ export function pinForClient(p) {
     amendments: p.amendments?.map(a => ({ text: a.text, at: a.at })) || undefined, // the user's follow-ups on this nudge
     screenshot: p.screenshot, screenshotAfter: p.screenshotAfter,
     browserSource: p.browserSource || undefined,
-    isRegion: p.annotations?.some(a => a.type === 'lasso') || false,
+    // Legacy stores can contain invalid annotations. Preserve their text and
+    // identity without rewriting the disk or calling methods on untrusted data.
+    isRegion: Array.isArray(p.annotations) && p.annotations.some(a => a?.type === 'lasso'),
     target: {
       selector: p.target?.selector, rect: p.target?.rect,
       innerText: (p.target?.innerText || '').slice(0, 80) || undefined, // speaking queue label

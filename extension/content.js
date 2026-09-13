@@ -206,28 +206,48 @@
     if (!feed.children.length) return
     const f = feed.getBoundingClientRect()
     if (f.width && f.right > viewW() - EDGE) feed.style.left = Math.max(EDGE, viewW() - f.width - EDGE) + 'px'
+    if (f.bottom > viewH() - EDGE) feed.style.top = Math.max(EDGE, r.top - f.height - 8) + 'px'
   }
-  // OPEN: position the popover under the pill, caret pointing at its anchor
-  // (badge / session label), clamped to the viewport — and REMEMBER the offset
-  // to the pill so a later drag translates the whole thing RIGIDLY.
+  // Menus follow the toolbar, flip above at the bottom edge, and scroll their
+  // contents when neither side has enough room. Keep the caret on its control.
   function anchorPopover(popover, anchorEl, W) {
-    const pillR = pill.getBoundingClientRect()
-    const a = anchorEl.getBoundingClientRect()
-    const caretX = a.left + a.width / 2
-    const left = Math.max(8, Math.min(caretX - 32, viewW() - W - 8))
-    const caret = Math.max(16, Math.min(caretX - left, W - 16))
-    Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px', right: 'auto' })
-    popover.style.setProperty('--caret-x', caret + 'px')
-    popover._dx = left - pillR.left // offset from the pill; keep it constant on drag
+    popover._anchor = anchorEl
     popover._w = W
+    trackPopover(popover)
   }
-  // DRAG: move the OPEN popover by the SAME delta as the pill — window + caret
-  // travel together as one unit (the popover belongs to the toolbar). No caret
-  // recompute → it never slides while the window stays put (2026-07-06).
   function trackPopover(popover) {
+    if (!popover._anchor) return
     const pillR = pill.getBoundingClientRect()
-    const left = Math.max(8, Math.min(pillR.left + (popover._dx || 0), viewW() - (popover._w || 340) - 8))
-    Object.assign(popover.style, { top: pillR.bottom + 10 + 'px', left: left + 'px' })
+    const a = popover._anchor.getBoundingClientRect()
+    const width = Math.min(popover._w, Math.max(0, viewW() - 16))
+    popover.style.width = width + 'px'
+    const caretX = a.left + a.width / 2
+    const left = Math.max(8, Math.min(caretX - 32, viewW() - width - 8))
+    const body = popover.lastElementChild
+    const naturalHeight = popover.firstElementChild.offsetHeight + body.scrollHeight + 2
+    const below = Math.max(0, viewH() - pillR.bottom - 18)
+    const above = Math.max(0, pillR.top - 18)
+    const flipped = naturalHeight > below && above > below
+    const room = flipped ? above : below
+    popover.style.maxHeight = room + 'px'
+    const height = popover.offsetHeight
+    const top = flipped ? pillR.top - 10 - height : pillR.bottom + 10
+    Object.assign(popover.style, { top: Math.max(8, Math.min(top, viewH() - height - 8)) + 'px', left: left + 'px', right: 'auto' })
+    popover.classList.toggle('above', flipped)
+    popover.style.setProperty('--caret-x', Math.max(16, Math.min(caretX - left, width - 16)) + 'px')
+  }
+  // Content can grow after opening (agent roster, queue, amendment textarea,
+  // asynchronous offline status). Observe child changes without a layout loop.
+  const popoverObserver = new MutationObserver(() => {
+    for (const popover of [queue, whoMenu, statusMenu]) if (popover.classList.contains('on')) trackPopover(popover)
+  })
+  const popoverResizeObservers = []
+  for (const popover of [queue, whoMenu, statusMenu]) {
+    popoverObserver.observe(popover, { childList: true, subtree: true, characterData: true })
+    try {
+      const observer = new ResizeObserver(() => { if (popover.classList.contains('on')) trackPopover(popover) })
+      observer.observe(popover.lastElementChild); popoverResizeObservers.push(observer)
+    } catch { /* viewport resize remains available */ }
   }
   chrome.storage.local.get('nudgePillPos', ({ nudgePillPos }) => {
     if (nudgePillPos) requestAnimationFrame(() => placePill(nudgePillPos.x, nudgePillPos.y))
@@ -1317,7 +1337,7 @@
           // so this is normally a withdrawal of running work, not a tidy-up. Say
           // what really happened instead of a hopeful "dismissed" (2026-07-29).
           const { notified, agent, wake } = await r.json().catch(() => ({}))
-          if (!notified) notify('check', `#${numOf(p)} discarded — no agent on the channel`)
+          if (!notified) notify('check', `#${numOf(p)} discarded — no live recipient confirmed`)
           else if (wake === 'pull') notify('check', `#${numOf(p)} withdrawn — ${agent} learns on its next prompt`)
           else notify('check', `#${numOf(p)} withdrawn — ${agent} notified`)
         } catch { notify('alert', 'Bridge offline — not dismissed') }
@@ -1484,6 +1504,7 @@
     sock.onclose = () => {
       if (wsOk && !hadOutage) { notify('alert', 'Bridge disconnected'); hadOutage = true }
       wsOk = false; agentLive = false; updatePill(); scheduleRetry()
+      if (statusMenu.classList.contains('on')) renderStatusMenu()
       // ask the SW to (re)start the bridge via the native host — Chrome heals itself
       try { chrome.runtime.sendMessage({ type: 'nudge-bridge-down' }) } catch { /* orphan */ }
     }
@@ -1655,6 +1676,8 @@
       clearInterval(orphanCheck)
       dead = true
       cancelPillDrag()
+      popoverObserver.disconnect()
+      for (const observer of popoverResizeObservers) observer.disconnect()
       for (const timer of afterRetryTimers.values()) clearTimeout(timer)
       latestAfterRequests.clear()
       window.removeEventListener('focus', onVisibility)

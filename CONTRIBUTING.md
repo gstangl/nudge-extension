@@ -17,15 +17,16 @@ of them will not be merged however good the code is.
 ```sh
 git clone https://github.com/gstangl/nudge-extension.git
 cd nudge-extension
-(cd bridge && npm install)        # runtime dependency: ws
-(cd test && npm install)          # vitest + playwright
+(cd bridge && npm ci)             # locked runtime dependency: ws
+(cd test && npm ci)               # locked vitest + playwright
 (cd test && npx playwright install chromium)   # browser for the e2e suites
 ```
 
-Then follow [INSTALL.md](INSTALL.md) once so that Chrome, the native host and
-your agent are wired to your checkout. There is no build step anywhere: the
-extension is plain JavaScript loaded unpacked, the bridge and the CLI are
-plain ES modules run by Node 22+.
+For actual project use, follow [INSTALL.md](INSTALL.md) for Chrome or the
+[temporary Safari guide](docs/SAFARI.md). Browser tests below stage isolated
+resources and do not require installing into your everyday browser. The shared
+extension is plain JavaScript without a bundler; Safari resources are staged
+deterministically. The bridge and CLI are plain ES modules run by Node 22+.
 
 **Dev auto-reload.** While a bridge runs, it watches `extension/`. On any
 change it tells the extension to reload itself and refreshes the localhost
@@ -33,8 +34,9 @@ tabs. You edit, you switch to Chrome, the new code is there. (Under
 Playwright's `--load-extension` the reload kills the extension instead, so
 `test/autoreload-check.mjs` is a manual check.)
 
-**Bridge changes.** Stop the process on port 4700; Chrome starts it again with
-the new code the next time the extension needs it.
+**Bridge changes.** Follow the identity-checked
+[restart instructions](INSTALL.md#updating). Never stop an unknown listener or
+the live shared bridge to run tests; test bridges use separate ports and stores.
 
 ## Tests
 
@@ -52,7 +54,28 @@ suites when you touch the extension or the bridge.
 2. **Playwright suites**, each a standalone script with its own bridge on a
    side port and a throwaway store. The contract, the legs and the last
    results are in [test/protocols.md](test/protocols.md). The ones every
-   contributor can run:
+   contributor can run are listed below. Prefer the serial isolated runners:
+
+   ```sh
+   node test/run-portable-regression.mjs
+   node test/run-browser-regression.mjs --headless
+   node test/browser-parity.mjs --chromium --headless
+   node test/browser-coexistence.mjs --chromium-only --headless
+   ```
+
+   Do not run them concurrently. For an individual browser suite, stage a
+   native-disabled test package **before** loading its worker. Setting only
+   `nudgePort` after startup is too late to prevent native autostart:
+
+   ```sh
+   node scripts/package-safari.mjs --mode test --use-storage-port --out artifacts/safari/manual-test-extension
+   export NUDGE_EXT="$PWD/artifacts/safari/manual-test-extension"
+   export NUDGE_NO_RELOAD=1
+   ```
+
+   This package is only for tests, never the Safari project installation.
+   Individual suites (from the repository root, with that test environment):
+
    ```sh
    node test/e2e.mjs               # Suite A: the core end-to-end run
    node test/bridge-brutal.mjs     # Suite D: adversarial bridge (about 90 s)
@@ -83,7 +106,8 @@ suites when you touch the extension or the bridge.
 Standing rules: tests never touch port 4700 or the live store; every suite
 uses its own side port. If an interrupted run leaves a bridge or watcher
 behind, kill it by its side port, never by process name (a `watch-nudges`
-process is usually somebody's real armed session).
+process is usually somebody's real armed session). Verify the listener belongs
+to the exact test before stopping it; an occupied side port may be unrelated.
 
 External tools the test layer needs: Node 22+, Playwright's Chromium
 (`npx playwright install chromium`), and `python3` for the two suites that

@@ -83,6 +83,28 @@ try {
   if (saved.status !== 'resolved') fail('resolved state was not persisted')
   pass('resolve persists completion and reports the correct evidence requirement')
 
+  const portPins = []
+  for (const url of ['http://localhost:5175/exact', 'http://localhost:51750/prefix', 'http://localhost:5199/?from=:5175', 'http://localhost:80/explicit', 'http://localhost/implicit', 'http://localhost:8000/prefix']) {
+    const response = await fetch(`${BASE}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '[TEST] exact port scope', url }) })
+    if (!response.ok) fail(`port fixture rejected: ${response.status}`)
+    portPins.push((await response.json()).id)
+  }
+  for (const port of ['5175', ':5175']) {
+    const list = JSON.parse(run(['list', '--all', '--port', port]))
+    if (list.open.length !== 1 || list.open[0].id !== portPins[0]) fail(`port ${port} matched a different port or URL text: ${JSON.stringify(list.open.map(pin => pin.url))}`)
+  }
+  for (const port of ['80', ':80']) {
+    const list = JSON.parse(run(['list', '--all', '--port', port]))
+    if (list.open.length !== 2 || list.open.some(pin => !portPins.slice(3, 5).includes(pin.id))) fail('explicit and implicit default ports must have identical scope')
+  }
+  for (const id of portPins) {
+    const response = await fetch(`${BASE}/comments/${id}`, { method: 'DELETE' })
+    if (!response.ok) fail(`port fixture withdrawal failed: ${response.status}`)
+  }
+  const withdrawals = JSON.parse(run(['context', '--all', '--port', '5175'])).withdrawn
+  if (withdrawals.length !== 1 || withdrawals[0].id !== portPins[0]) fail('withdrawal context crossed the exact port boundary')
+  pass('CLI queue and withdrawals use exact URL ports, not port prefixes or query text')
+
   console.log('\nRuntime-neutral Nudge integration: ALL PASS')
 } finally {
   for (const child of children.reverse()) { try { child.kill() } catch { /* already gone */ } }

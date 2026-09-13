@@ -12,7 +12,7 @@ const out=fs.mkdtempSync(path.join(base,'portable-'))
 const report={scope:'portable Node contracts only; no Safari/native/distribution claim',results:[]}
 const cases=[
   ['fast-gate','npm',['run','test:ci'],'test',[4817]],
-  ...Object.entries({'browser-protocol':[4821],'bridge-lifecycle':[4822,4823],'bridge-hardening':[4799],
+  ...Object.entries({'bridge-boundary':[],'bridge-realtime':[],'browser-protocol':[4821],'bridge-lifecycle':[4822,4823],'bridge-hardening':[4799],
     'bridge-brutal':[4798],'origin-routing':[4783],'provenance':[4794],'hook-optin':[4797],'wake-mode':[4788]})
     .map(([name,ports])=>[name,process.execPath,[`test/${name}.mjs`],'.',ports]),
   ['resource-smoke',process.execPath,['test/safari-e2e.mjs','--smoke'],'.',[]],

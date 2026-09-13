@@ -189,6 +189,11 @@
     }
     .queue::before, .who-menu::before, .status-menu::before { top: -8px; border-bottom: 8px solid ${MID_3}; }
     .queue::after, .who-menu::after, .status-menu::after { top: -6.5px; border-left-width: 7px; border-right-width: 7px; border-bottom: 7px solid ${MID_DEEP}; }
+    .queue, .who-menu, .status-menu { display: flex; flex-direction: column; box-sizing: border-box; }
+    .queue > .q-head, .who-menu > .q-head, .status-menu > .q-head { flex: none; }
+    .q-list, .w-list, .sm-body { min-height: 0; overflow: auto; overscroll-behavior: contain; border-radius: 0 0 11px 11px; }
+    .queue.above::before, .who-menu.above::before, .status-menu.above::before { top: auto; bottom: -8px; border-bottom: 0; border-top: 8px solid ${MID_3}; }
+    .queue.above::after, .who-menu.above::after, .status-menu.above::after { top: auto; bottom: -6.5px; border-bottom: 0; border-top: 7px solid ${MID}; }
     /* status hint popover — same midnight family as the queue/switcher */
     .status-menu {
       position: fixed; width: 300px; pointer-events: auto; z-index: 3;

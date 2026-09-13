@@ -10,7 +10,7 @@ permissions:
 jobs:
   nudge:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,8 +24,16 @@ jobs:
         working-directory: bridge
       - run: npm ci
         working-directory: test
-      - run: npm run test:ci
+      - run: npx playwright install --with-deps chromium
         working-directory: test
-      - run: node test/browser-protocol.mjs
-      - run: node test/bridge-lifecycle.mjs
-      - run: node test/safari-e2e.mjs --smoke
+      - run: node test/run-portable-regression.mjs
+      - run: node test/run-browser-regression.mjs --headless
+      - run: node test/browser-parity.mjs --chromium --headless
+      - run: node test/browser-coexistence.mjs --chromium-only --headless
+      - name: Retain implementation evidence (not Safari acceptance)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: developer-preview-verification
+          path: artifacts/safari/
+          if-no-files-found: error

@@ -7,6 +7,63 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## 0.33.2 · Bridge 0.19.2 — 2026-09-13 (Follow-up quality assurance)
+
+### Fixed
+- Contain malformed WebSocket frames at the client connection instead of
+  crashing the shared bridge; bound inbound hello/identity messages to 64 KiB.
+- Broadcast live roster capability and metadata changes, including push/pull
+  transitions, without broadcasting freshness-only heartbeats.
+- Refresh an already open status menu when the bridge disconnects, so it cannot
+  keep claiming an active agent while the toolbar reports an offline bridge.
+- Scope CLI prompts and withdrawals by the parsed URL port, not a substring
+  that also matches a longer port or text in the query string.
+- Correct the install guide: Escape clears marks; resolution does not guarantee
+  captured after-evidence. Align the product installation/lifecycle description
+  with the temporary Safari developer profile and redact public diagnostics.
+- Document native-disabled resource staging for individual browser suites and
+  identity-checked bridge restarts in the contributor guide.
+
+### Added
+- Isolated real-socket crash/size-limit and live-roster regressions, included in
+  the portable gate. Healthy clients must stay connected after invalid frames.
+- Shared real-input live wake-status checks, an open-menu disconnect regression,
+  and exact/default-port CLI integration cases.
+
+These are implementation QA fixes; real Safari and fresh independent acceptance
+remain separate gates. No native-app or signed-distribution completion is claimed.
+
+## 0.33.1 · Bridge 0.19.1 — 2026-09-13 (Developer-preview review fixes)
+
+### Fixed
+- Reject malformed or oversized annotation arrays before allocating a prompt;
+  retain readable historical prompts whose annotations have an invalid shape.
+- Validate local Host and Origin independently on HTTP and WebSocket requests,
+  and reject absolute/proxy request targets before routing.
+- Decode bounded HTTP request bytes once, preserving umlauts and emoji across
+  network chunk boundaries; reject malformed UTF-8 rather than corrupting text.
+- Acknowledge withdrawals against the immutable original session and its actual
+  wake mode. Offline or ownerless work no longer names a replacement recipient.
+- Flip toolbar menus above the bottom edge, constrain their width/height, scroll
+  long contents and follow resizing/content growth; keep feedback chips visible.
+- Isolated Safari tests no longer toggle an existing installation browser-wide;
+  missing isolation is a blocked result and cleanup failures cannot pass.
+
+### Added
+- Real HTTP/WS boundary/restart regressions and all-byte-split Unicode units.
+- Real-input menu checks at every corner in the shared Safari/Chromium runner;
+  growing, scrolling and narrow-viewport queue regression in Suite L.
+- GitHub instructions for temporary Safari source installation without Chrome,
+  full Xcode or signing, with explicit lifetime and shared-bridge limits.
+- Serial portable, Chromium interaction/parity and multi-profile gates in CI,
+  with retained evidence; the separate manual Safari lane also runs coexistence.
+- Bidirectional agent-selection checks in the multi-profile and real joint
+  browser lanes; existing per-website selection remains shared between browsers.
+
+Native app/notarization/App Store work is deferred for the GitHub developer
+profile, not completed. Chromium verification and workflow definitions do not
+establish Safari parity, a successful remote CI run or independent acceptance.
+
 ## 0.33.0 · Bridge 0.19.0 — 2026-09-13 (Safari parity hardening)
 
 ### Fixed
