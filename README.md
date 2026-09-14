@@ -2,8 +2,9 @@
 
 **Prompt your coding agent on the pixel — in Chrome or Safari.** Groundworks
 Nudge is a browser extension backed by one shared local bridge. Chrome loads
-unpacked; Safari is a temporary developer preview on macOS. It is the first
-public piece of the Groundworks Framework. Pick an element or circle a region
+unpacked; Safari is a temporary developer preview on macOS. Nudge is an independent,
+optional companion to Groundworks and works without adopting the Framework.
+Pick an element or circle a region
 in any `localhost` app, type what you want, and the prompt reaches the coding
 agent that owns the codebase, together with the selector, computed styles,
 console and network errors, plus a screenshot for circled regions. The agent
@@ -60,6 +61,12 @@ happens either.
 
 The Skill is user-level (`./agent/setup-agent.sh`). After that, it is available
 in every project. You do not open this repository to use Nudge.
+
+Groundworks may offer **Use or set up Nudge (optional)** in its capability menu.
+The entry follows Nudge's [guided setup](INSTALL.md#guided-setup-for-agents);
+the extension, CLI and canonical Skill stay here and update together.
+`groundworks-nudge status --check` reports local readiness without connecting a session
+or installing anything. A browser that is not connected may simply be closed.
 
 ## How it works
 

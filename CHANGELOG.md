@@ -17,6 +17,45 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 0.34.0 · Bridge 0.19.2 — 2026-09-14 (Optional guided setup)
+
+### Added
+- Extend `groundworks-nudge status --check` with read-only, versioned checks for
+  local prerequisites, the installed Skill, bridge identity, the chosen browser
+  and the current session's page ownership. A missing browser connection never
+  asserts a missing browser installation; connection checks do not prove wake.
+- Provide one guided setup procedure for the Nudge Skill and optional external
+  entry points, using the public GitHub repository and one chosen browser.
+
+### Changed
+- Describe Nudge as an independent optional companion to Groundworks. Keep its
+  Skill, CLI, installation and updates in this repository.
+- Check readiness before arming; reuse installation consent and existing setup,
+  preserve changed Skills, and keep pending browser activation distinct from
+  the current session's permission to connect. `status` remains compatible.
+- Include the diagnostic and its installation guide in portable runtime payloads.
+
+### Removed
+- Remove the undocumented `doctor` alias. Setup uses the existing `status`
+  command instead of introducing a separate diagnostic concept or entry point.
+
+### Verification
+- `cd test && npm run test:ci`: 194 unit checks, the real bridge/watcher CLI
+  integration and isolated installation for Claude Code, Codex and Grok pass.
+- Suite A's real-extension status check passes in visible Chromium. The earlier
+  optional-entry candidate passed the full visible suite, including region
+  before/after evidence and page ownership. Its private test package uses
+  the actual Chromium identity while retaining disabled native autostart. A
+  subsequent selection uses exposed card padding, with a hit-test precondition,
+  instead of a center covered by existing feedback; all assertions remain.
+- Two current visible runs failed the screenshot assertion after the source
+  window lost focus. An attempted focus precondition did not resolve that and
+  was not retained. The full current browser run is not passing.
+- Two headless macOS attempts failed the existing region-screenshot assertion
+  when capture arrived after the overlay restoration window. The assertion and
+  production timing remain unchanged. This is not a headless or Safari pass;
+  automatic model wake and a fresh-machine browser installation remain unverified.
+
 ## 0.33.4 · Bridge 0.19.2 — 2026-09-13 (Toolbar activation and active-tool dragging)
 
 ### Fixed

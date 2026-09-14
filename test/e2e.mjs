@@ -5,6 +5,7 @@
 import { chromium } from 'playwright'
 import { spawn, execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -16,6 +17,19 @@ const EXT = process.env.NUDGE_EXT || (() => {
   execFileSync(process.execPath, ['scripts/package-safari.mjs', '--mode', 'test', '--bridge-port', '4720', '--out', 'artifacts/safari/chromium-suite-a'], { cwd: path.join(HERE, '..'), stdio: 'inherit' })
   return out
 })()
+// The shared test package identifies itself as safari-test. This suite runs
+// Chromium: give only its private resource copy the actual browser identity,
+// retaining the package's native-start and reload isolation.
+const TEST_EXT = fs.mkdtempSync(path.join(os.tmpdir(), 'nudge-chromium-e2e-'))
+fs.cpSync(EXT, TEST_EXT, { recursive: true })
+const platformPath = path.join(TEST_EXT, 'platform.js')
+const platformSource = fs.readFileSync(platformPath, 'utf8')
+const preset = /^globalThis\.__nudgePlatform = (\{[^\n]+\})\n/.exec(platformSource)
+if (!preset) throw new Error('Suite A requires a staged test package')
+const config = JSON.parse(preset[1])
+if (config.nativeAutostart !== false || config.developmentReload !== false) throw new Error('Suite A requires native-start and reload isolation')
+config.browser = 'chromium'
+fs.writeFileSync(platformPath, platformSource.replace(preset[0], `globalThis.__nudgePlatform = ${JSON.stringify(config)}\n`))
 const STORE = '/tmp/pin-e2e-store'
 fs.rmSync(STORE, { recursive: true, force: true })
 
@@ -68,7 +82,7 @@ try {
   ctx = await chromium.launchPersistentContext('', {
     headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium',
     viewport: { width: 1280, height: 900 },
-    args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
+    args: [`--disable-extensions-except=${TEST_EXT}`, `--load-extension=${TEST_EXT}`],
   })
   // re-point THIS browser's extension at the test bridge before any page loads
   let sw = ctx.serviceWorkers()[0]
@@ -84,6 +98,13 @@ try {
   await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   await until(async () => ((await page.locator('.pill .status').getAttribute('title')) || '').includes('suite-a'), 5000, 'owner label in the status tooltip')
   await until(async () => ((await page.locator('.pill .who').textContent()) || '').includes('suite-a'), 5000, 'session label visible in the toolbar')
+  const readiness = JSON.parse(execFileSync(process.execPath, [path.join(HERE, '../agent/groundworks-nudge.mjs'),
+    'status', '--check', '--browser', 'chrome', '--port', String(TESTPORT), '--runtime', 'Agent', '--agent-id', 'suite_a'], {
+    env: { ...process.env, NUDGE_PORT: String(TESTPORT), NUDGE_STORE: STORE }, encoding: 'utf8', timeout: 5000,
+  }))
+  if (readiness.state !== 'ready' || readiness.checks.browser.state !== 'connected'
+      || readiness.checks.session.state !== 'connected') fail(`status check did not recognize the real Chromium connection: ${JSON.stringify(readiness)}`)
+  console.log('PASS status check (real extension handshake and current page owner; simulated agent)')
   // session dropdown: roster row with identity, owner marked
   await page.locator('.pill .who').click()
   await page.locator('.who-menu.on .w-row.is-owner', { hasText: 'suite-a' }).waitFor({ timeout: 3000 })
@@ -357,7 +378,15 @@ try {
   // --- click convention (0.10.0): plain click RESETS an active multi-selection
   //     to a single pick (Finder/Figma: click = one, Shift = collect) ---
   await page.locator('.pill .btn-pick').click()
-  await page.locator('#card-conversion').click({ modifiers: ['Shift'] })
+  // Existing feedback can cover the card's center. Select its exposed padding,
+  // just as the following banner and source-card clicks do; never force through
+  // the overlay or relax the two-selection/reset assertions.
+  const cardPaddingExposed = await page.locator('#card-conversion').evaluate(el => {
+    const r = el.getBoundingClientRect()
+    return el.contains(document.elementFromPoint(r.left + 10, r.top + 10))
+  })
+  if (!cardPaddingExposed) fail('card padding must be exposed for the next multi-selection')
+  await page.locator('#card-conversion').click({ modifiers: ['Shift'], position: { x: 10, y: 10 } })
   await ta.waitFor({ timeout: 3000 })
   await page.locator('.banner').click({ modifiers: ['Shift'], position: { x: 10, y: 10 } })
   await until(async () => (await page.locator('.hl-multi').count()) === 2, 3000, 'two multi outlines')
@@ -409,4 +438,5 @@ try {
   clearInterval(heartbeat)
   await ctx?.close()
   bridge.kill()
+  fs.rmSync(TEST_EXT, { recursive: true, force: true })
 }

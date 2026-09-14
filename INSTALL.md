@@ -30,6 +30,74 @@ Safari does not require Chrome, Xcode, an Apple Developer account or a signed
 app for this temporary source-install path. It expires after Safari quits or
 24 hours; re-add the resource folder. Full Safari parity is not yet accepted.
 
+## Guided setup for agents
+
+This is the canonical setup procedure for Nudge's Skill and external entry
+points such as Groundworks. Nudge is optional and independent of Groundworks.
+One browser is enough; use the User's existing Chrome or Safari preference.
+An explicit request to use Nudge authorizes connecting the current session.
+Installing components requires an explicit setup request or one confirmation
+at first use. Reuse permission already given in the conversation. A decline or
+an unanswered question installs nothing and leaves ordinary work available.
+
+1. Locate `groundworks-nudge` with `command -v groundworks-nudge`. If it exists,
+   run `groundworks-nudge status --check`, with `--browser chrome|safari` and
+   `--port <app-port>` only when the intended browser and app port are known.
+   Pass `--runtime codex|claude-code|grok` when automatic detection cannot
+   identify the current runtime. The report has
+   `kind: groundworks-nudge-readiness` and `schemaVersion: 1`. An older
+   CLI may return only bridge identity; that is not a readiness report.
+   Reuse an existing checkout or installation; an unavailable command may be a
+   PATH problem. Inspect its launcher before proposing another clone.
+2. If local components are missing, explain what will be installed and ask
+   once whether to set up Nudge, unless that setup is already authorized.
+   Use this public repository's browser-specific installation instructions.
+   Clone into a stable user-selected tools location, outside the application
+   repository; retain the resolved Git Commit as the installation basis.
+   Keep existing installations and prompt stores. A `different` Skill means
+   its bytes differ from the current Nudge source, not necessarily that it is
+   safe to overwrite: inspect the diff, preserve local edits and refresh a
+   confirmed older official copy using `./agent/setup-agent.sh`. Install the
+   Skill once per active runtime; never add a second Project-owned copy or
+   replace another capability with the same name. Nudge owns its updates.
+3. Interpret the observed checks using the table below. The status check performs no
+   repair. On an explicit Nudge-use request, the shared bridge may be recovered
+   with `groundworks-nudge ensure-bridge`; that command validates the listener
+   before reuse or startup. Never kill or replace an unknown listener.
+4. Follow [Chrome installation](#chrome-installation) or the public
+   [Safari guide](https://github.com/gstangl/nudge-extension/blob/main/docs/SAFARI.md#install-from-github)
+   for the chosen browser only. Explain the remaining browser clicks and site
+   access. An absent connection does not establish that the extension is absent.
+   Safari's temporary-installation and acceptance limits still apply.
+5. Once local prerequisites and bridge compatibility are resolved, load the
+   canonical Skill at `source.skill` and arm the explicitly requested current
+   session. If this guide was entered from that Skill, continue its arming
+   steps using the checks already performed. Browser activation may still be
+   pending; do not require an armed session before allowing the Skill to arm.
+   Check again after arming, with its returned agent id and the intended app
+   port. A missing or stale native Skill entry may require a fresh agent
+   session; do not claim runtime discovery from a copied file alone.
+6. Finish with one deliberately submitted test prompt on the intended app.
+   Confirm receipt in the selected session and preserve the existing queue's
+   ownership. A `ready` report proves observed connections only. It does not
+   prove prompt delivery, automatic wake or a verified visual change. A pull
+   session still needs another chat message. Every Nudge follows the receiving
+   Project's existing work authority, intake and verification rules.
+
+| Observed check | Next action |
+|---|---|
+| Node unsupported, dependency missing, or Skill missing/different | Complete only the missing setup or inspect the Skill difference |
+| Bridge unreachable | Recover the shared bridge; do not infer a missing extension |
+| Bridge incompatible, unverified, or store conflict | Inspect the exact conflict; preserve the listener and all stores |
+| Browser not connected or unverified | Open the intended localhost app, enable the toolbar/site access, then check again |
+| Current session not armed or its identity unknown | Arm this explicitly requested session through the canonical Skill |
+| Another session owns the page | Select the intended session in the toolbar; do not take its queued work |
+| Connections ready | Check an explicit test prompt; report push or pull separately |
+
+`status --check` exits zero when it produced a diagnostic report, even when setup is
+incomplete. Invalid arguments exit nonzero. Read its fields, not just the exit
+code. `status` without `--check` retains its existing bridge-identity response.
+
 ## Chrome installation
 
 ### 1. Install the bridge dependency

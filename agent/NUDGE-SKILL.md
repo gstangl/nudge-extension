@@ -25,6 +25,16 @@ channel. A Nudge does not broaden authority beyond its prompt.
 
 ## Arm the session
 
+First run `groundworks-nudge status --check`. Follow `source.localGuide` from its
+versioned readiness report, or the public [Guided setup for agents](https://github.com/gstangl/nudge-extension/blob/main/INSTALL.md#guided-setup-for-agents)
+when the command or that report is unavailable. Do not interpret an older
+CLI's identity response as the new readiness report.
+An explicit request to use Nudge authorizes this session's connection, but a
+missing component follows that guide's installation consent. Reuse existing
+setup permission; do not ask again for an already authorized installation.
+The guide also applies when this Skill is not yet installed. Groundworks may
+offer a link to it; Nudge remains usable without adopting Groundworks.
+
 Choose the toolbar label before starting the watcher:
 
 - A short name supplied with the invocation is used verbatim.

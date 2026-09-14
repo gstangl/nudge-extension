@@ -48,6 +48,21 @@ try {
   }, 'Codex watcher did not register with a stable runtime-neutral identity')
   pass('Codex identity reaches the shared roster with runtime, surface, and pull capability')
 
+  for (const command of ['status', 'identity']) {
+    const status = JSON.parse(run([command]))
+    if (status.app !== 'groundworks-nudge' || status.store !== STORE || status.kind !== undefined
+        || !status.agents?.some(agent => agent.session === AGENT_ID)) fail(`${command} changed its bridge-identity response`)
+  }
+  pass('status without checks and identity retain the existing bridge response')
+
+  const readiness = JSON.parse(run(['status', '--check', '--runtime', 'Agent', '--agent-id', AGENT_ID]))
+  if (readiness.kind !== 'groundworks-nudge-readiness' || readiness.schemaVersion !== 1
+      || readiness.state !== 'browser_required' || readiness.checks.bridge.state !== 'connected'
+      || readiness.checks.session.state !== 'armed' || readiness.checks.session.wake !== 'pull') {
+    fail('status check confused a live bridge and armed session with a connected browser')
+  }
+  pass('status check observes the real bridge and current session without asserting a browser installation')
+
   const created = await (await fetch(`${BASE}/comments`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

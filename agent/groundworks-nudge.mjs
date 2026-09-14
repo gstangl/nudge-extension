@@ -169,7 +169,7 @@ function usage() {
   console.log(`groundworks-nudge <command>
 
   watch --label <name> [--agent-id <id>] [--runtime <name>] [--surface <name>] [--wake push|pull]
-  status
+  status [--check [--browser chrome|safari] [--port <app-port>] [--runtime <name>] [--agent-id <id>]]
   context [--agent-id <id>] [--port <port>] [--all]
   list [--agent-id <id>] [--port <port>] [--all]
   show <#label|nudge_id>
@@ -208,7 +208,18 @@ if (command === 'help' || command === '--help' || command === '-h') {
     wake: process.env.NUDGE_WAKE === 'push' ? 'push' : 'pull',
   })
   await import(path.join(ROOT, 'bridge', 'watch-nudges.mjs'))
-} else if (command === 'status' || command === 'identity' || command === 'doctor') {
+} else if (command === 'status' && options.check !== undefined) {
+  const { checkStatus } = await import('./status-check.mjs')
+  try {
+    if (options.check !== true) throw new Error('status --check is a flag and takes no value')
+    print(await checkStatus({
+      browser: options.browser ?? null,
+      appPort: options.port === undefined ? null : Number(options.port),
+      runtime: options.runtime === undefined ? resolveAgentRuntime() : String(options.runtime),
+      agentId: options['agent-id'] === undefined ? resolveAgentId() : String(options['agent-id']),
+    }))
+  } catch (error) { die(error.message, 2) }
+} else if (command === 'status' || command === 'identity') {
   print(await identity())
 } else if (command === 'store-path') {
   console.log(await storeDir())
