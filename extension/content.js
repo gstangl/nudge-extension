@@ -1703,17 +1703,21 @@
     try { chrome.runtime.sendMessage({ type: 'nudge-state', active: mode !== 'off', bridgeOk: wsOk, agentLive, open: openCount }) } catch { /* extension reloading */ }
   }
   let sock, retryTimer, retryDelay = 3000, hadOutage = false, lastHelloUrl = null
+  let endpointReady = false
   let dead = false // set by the orphan cleanup: NOTHING may reconnect afterwards
   function connect() {
-    if (dead) return
+    if (dead || !endpointReady || (sock && [0, 1].includes(sock.readyState))) return
     clearTimeout(retryTimer)
-    try { sock = new WebSocket(WS) } catch { return scheduleRetry() }
-    sock.onopen = () => {
-      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
+    let current
+    try { current = new WebSocket(WS); sock = current } catch { return scheduleRetry() }
+    current.onopen = () => {
+      if (dead || sock !== current) return
+      try { current.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
       if (hadOutage) { notify('check', 'Bridge reconnected'); hadOutage = false }
       wsOk = true; retryDelay = 3000; updatePill(); flushQueue()
     }
-    sock.onmessage = (e) => {
+    current.onmessage = (e) => {
+      if (dead || sock !== current) return
       try {
         const msg = JSON.parse(e.data)
         if (msg.type === 'pins') {
@@ -1733,14 +1737,15 @@
         if (msg.type === 'reload' && NUDGE_PLATFORM.developmentReload) chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
       } catch { /* ignore malformed frames */ }
     }
-    sock.onclose = () => {
+    current.onclose = () => {
+      if (dead || sock !== current) return
       if (wsOk && !hadOutage) { notify('alert', 'Bridge disconnected'); hadOutage = true }
       wsOk = false; agentLive = false; updatePill(); scheduleRetry()
       if (statusMenu.classList.contains('on')) renderStatusMenu()
       // ask the SW to (re)start the bridge via the native host — Chrome heals itself
       try { chrome.runtime.sendMessage({ type: 'nudge-bridge-down' }) } catch { /* orphan */ }
     }
-    sock.onerror = () => { try { sock.close() } catch { /* already closed */ } }
+    current.onerror = () => { if (dead || sock !== current) return; try { current.close() } catch { /* already closed */ } }
   }
   // exponential backoff, capped LOW (browser-tools-mcp reconnects at a fixed 5s —
   // a tab must not be blind for half a minute after a bridge restart), plus an
@@ -1752,7 +1757,7 @@
     retryDelay = Math.min(8000, retryDelay * 1.5)
   }
   const onVisibility = () => {
-    if (dead || document.hidden) return
+    if (dead || !endpointReady || document.hidden) return
     if (!wsOk) { retryDelay = 3000; connect() }
     else {
       flushQueue()
@@ -2186,13 +2191,14 @@
   } catch { /* extension reloading */ }
 
   // resolve the (test-only) port override, THEN open the connection
+  const startConnection = () => sourceReady.finally(() => { endpointReady = true; connect() })
   try {
     chrome.storage.local.get('nudgePort')
       .then(({ nudgePort }) => {
         const endpointPort = NUDGE_PLATFORM.bridgePort || nudgePort
         if (endpointPort) { HTTP = `http://localhost:${endpointPort}`; WS = `ws://localhost:${endpointPort}` }
-        sourceReady.finally(connect)
+        startConnection()
       })
-      .catch(() => sourceReady.finally(connect))
-  } catch { sourceReady.finally(connect) }
+      .catch(startConnection)
+  } catch { startConnection() }
 })()

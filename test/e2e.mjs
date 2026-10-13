@@ -95,6 +95,12 @@ try {
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), TESTPORT)
   const page = ctx.pages()[0] || await ctx.newPage()
+  // Real focus events can arrive while endpoint storage and source identity
+  // are still loading. Startup must keep one socket on the configured bridge.
+  await page.addInitScript(() => {
+    const timer = setInterval(() => window.dispatchEvent(new Event('focus')), 10)
+    setTimeout(() => clearInterval(timer), 800)
+  })
   page.on('console', m => { if (['warning', 'error'].includes(m.type())) console.error('  [browser]', m.text()) })
   page.on('pageerror', error => console.error('  [page error]', error.message))
   // A real loopback page server gives Chromium the correct local address space;
@@ -118,10 +124,12 @@ try {
   await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   await until(async () => ((await page.locator('.pill .status').getAttribute('title')) || '').includes('suite-a'), 5000, 'owner label in the status tooltip')
   await until(async () => ((await page.locator('.pill .who').textContent()) || '').includes('suite-a'), 5000, 'session label visible in the toolbar')
-  const readiness = JSON.parse(execFileSync(process.execPath, [path.join(HERE, '../agent/groundworks-nudge.mjs'),
+  const readReadiness = () => JSON.parse(execFileSync(process.execPath, [path.join(HERE, '../agent/groundworks-nudge.mjs'),
     'status', '--check', '--browser', 'chrome', '--port', String(APP_PORT), '--runtime', 'Agent', '--agent-id', 'suite_a'], {
     env: { ...process.env, NUDGE_PORT: String(TESTPORT), NUDGE_STORE: STORE }, encoding: 'utf8', timeout: 5000,
   }))
+  let readiness
+  await until(() => { readiness = readReadiness(); return readiness.state === 'ready' }, 2000, 'configured bridge source handshake after focus events')
   if (readiness.state !== 'ready' || readiness.checks.browser.state !== 'connected'
       || readiness.checks.session.state !== 'connected') fail(`status check did not recognize the real Chromium connection: ${JSON.stringify(readiness)}`)
   console.log('PASS status check (real extension handshake and current page owner; simulated agent)')

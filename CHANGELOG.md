@@ -44,6 +44,10 @@ The changelog is English throughout.
   runtime regression includes a real delayed HTTP identity response.
 - Intentional bridge-loss tests tolerate rejected fixture heartbeats while
   continuing to assert the visible offline state.
+- Connection startup waits for the configured bridge endpoint and coalesces
+  focus events while opening. Retired sockets cannot send through, close or
+  overwrite the state of their replacement. Regression covers early focus,
+  old callbacks, reconnect and orphan shutdown.
 
 ### Beta scope
 - Chrome/Chromium is the verified browser lane. Safari remains a temporary
