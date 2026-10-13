@@ -33,7 +33,9 @@ const hb = o => fetch(`${B}/agent/heartbeat`, { method: 'POST', headers: { 'Cont
 // two sessions labelled the way a user would, with the :PORT suffix in the name
 const A = { label: 'Estimate Templates :5175', pid: 701, session: 'estT', since: now - 5 * 60000, project: 'roots-apps', branch: 'feat/x', host: 'Zed' }
 const M = { label: 'Maps-Refactor :5276', pid: 702, session: 'mapR', since: now - 3 * 60000, project: 'roots-apps', branch: 'feat/y', host: 'Zed' }
-const beat = setInterval(() => { hb(A); hb(M) }, 1000)
+// L9 deliberately stops the bridge. An expected heartbeat rejection must not
+// terminate the harness before it can assert the visible offline state.
+const beat = setInterval(() => { hb(A).catch(() => {}); hb(M).catch(() => {}) }, 1000)
 await hb(A); await hb(M); await sleep(200)
 await fetch(`${B}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: A.pid, session: A.session, host: `localhost:${PAGE}` }) })
 await sleep(300)

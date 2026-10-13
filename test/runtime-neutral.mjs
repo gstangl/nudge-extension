@@ -92,6 +92,27 @@ try {
   if (!hookContext.includes('REFERENCED nudge_1') || !hookContext.includes(STORE)) fail('armed Codex hook did not receive the referenced shared context')
   pass('hook opt-in stays silent for foreign Codex sessions and works for the armed one')
 
+  const slowIdentity = await (await fetch(`${BASE}/.identity`)).json()
+  const relay = spawn(process.execPath, ['--input-type=module', '-e', `
+    import http from 'node:http'
+    const server = http.createServer((req,res) => setTimeout(() => {
+      res.writeHead(200, {'Content-Type':'application/json'})
+      res.end(process.env.NUDGE_FIXTURE_IDENTITY)
+    },600))
+    server.listen(0,'127.0.0.1',()=>console.log(server.address().port))
+  `], { env: { ...ENV, NUDGE_FIXTURE_IDENTITY: JSON.stringify(slowIdentity) }, stdio: ['ignore', 'pipe', 'inherit'] })
+  children.push(relay)
+  const relayPort = await new Promise((resolve,reject) => {
+    relay.once('error',reject)
+    relay.stdout.once('data',data => resolve(Number(String(data).trim())))
+  })
+  const delayedHook = execFileSync(process.execPath, [HOOK], {
+    env: { ...ENV, NUDGE_PORT: String(relayPort), CODEX_THREAD_ID: AGENT_ID },
+    input: JSON.stringify({ prompt: 'Nudge 1' }), encoding: 'utf8', timeout: 5000,
+  }).trim()
+  if (!JSON.parse(delayedHook || '{}').hookSpecificOutput?.additionalContext?.includes('REFERENCED nudge_1')) fail('healthy delayed identity lost the native hook context')
+  pass('native hook retains opted-in context with a healthy delayed bridge identity')
+
   const resolved = JSON.parse(run(['resolve', created.id, '--wait-evidence', '0']))
   if (!resolved.resolved || resolved.evidence !== 'not_required') fail('element nudge resolve result is dishonest')
   const saved = JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')).pins[0]

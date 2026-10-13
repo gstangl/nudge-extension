@@ -39,6 +39,11 @@ The changelog is English throughout.
 - Browser regression allocates free IPv4/IPv6 page ports for fixture,
   cancellation and visibility suites. Healthy capture tests foreground their
   source tab before asserting screenshot success.
+- Native context hooks retain opted-in context when a healthy bridge identity
+  briefly takes more than 400 ms. The lookup remains bounded at one second;
+  runtime regression includes a real delayed HTTP identity response.
+- Intentional bridge-loss tests tolerate rejected fixture heartbeats while
+  continuing to assert the visible offline state.
 
 ### Beta scope
 - Chrome/Chromium is the verified browser lane. Safari remains a temporary

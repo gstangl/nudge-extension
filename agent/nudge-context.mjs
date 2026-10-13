@@ -34,7 +34,9 @@ const mySession = resolveAgentId()
 const hostOf = (u) => { try { return new URL(u).host.replace(/^127\.0\.0\.1(?=:|$)/, 'localhost') } catch { return '' } }
 let status, identity
 try {
-  const res = await fetch(`http://127.0.0.1:${PORT}/.identity`, { signal: AbortSignal.timeout(400) })
+  // A healthy bridge can briefly exceed 400 ms under local process load. Keep
+  // the lookup bounded without dropping opted-in context on that first spike.
+  const res = await fetch(`http://127.0.0.1:${PORT}/.identity`, { signal: AbortSignal.timeout(1000) })
   identity = await res.json()
   const armed = mySession && (identity.agents || []).some(a => a.session === mySession)
   if (!armed) process.exit(0) // this session does not participate in Nudge — say nothing
