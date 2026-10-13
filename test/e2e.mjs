@@ -258,7 +258,7 @@ try {
   await page.waitForTimeout(250)
   if (!(await page.locator('.composer').isVisible())) fail('Shift+Enter must not send')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_2' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_2 — agent working' }).waitFor({ timeout: 8000 })
   // the feedback chips sit directly UNDER the toolbar, left-aligned to it (not
   // floating in the screen corner) — placeFeed tracks the movable pill
   {
@@ -345,7 +345,7 @@ try {
   }, 5000, 'initial lasso capture completed')
   await ta.fill('This banner looks lost - wider and with more presence.')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_3' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_3 — agent working' }).waitFor({ timeout: 8000 })
   // history: with the lasso nudge open, the badge exists — the popover lists
   // the resolved nudge_2 under "Done" with a check icon
   await page.locator('.pill .count').click()
@@ -392,7 +392,7 @@ try {
   if (await page.locator('.hl-multi').count() !== 2) fail('expected one outline per collected element')
   await ta.fill('Swap these two elements.')
   await page.locator('.composer .send').click()
-  await page.locator('.feed .item', { hasText: 'nudge_4' }).waitFor({ timeout: 8000 })
+  await page.locator('.feed .item', { hasText: 'nudge_4 — agent working' }).waitFor({ timeout: 8000 })
   const multiPin = store().pins[2]
   if (multiPin.targets?.length !== 2) fail(`multi nudge targets: ${JSON.stringify(multiPin.targets?.map(t => t.selector))}`)
   if (!multiPin.targets.every(t => t.selector && t.xpath)) fail('each target needs selector + xpath')

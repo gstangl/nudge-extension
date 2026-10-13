@@ -32,6 +32,8 @@ The changelog is English throughout.
   delivery when the background worker does not acknowledge a submission.
 - Draggable prompt windows and viewport-fitted arrows, plus isolated browser
   tests covering toolbar interaction, cancellation and agent routing.
+- Browser tests identify the expected working acknowledgement even when direct
+  fallback and background delivery both produce separate feed notifications.
 
 ### Beta scope
 - Chrome/Chromium is the verified browser lane. Safari remains a temporary
