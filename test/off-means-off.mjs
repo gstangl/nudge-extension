@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const STORE = '/tmp/nudge-offsuite-store'
-const PORT = 4786, PAGE = 5201
+const PORT = 4786, PAGE = Number(process.env.NUDGE_TEST_PAGE_PORT || 5201)
 fs.rmSync(STORE, { recursive: true, force: true })
 const B = `http://localhost:${PORT}`
 const sleep = ms => new Promise(r => setTimeout(r, ms))

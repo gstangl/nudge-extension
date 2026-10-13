@@ -36,6 +36,9 @@ The changelog is English throughout.
   fallback and background delivery both produce separate feed notifications.
 - Third-party fixture tests bind to explicit IPv4 loopback, so an unrelated
   IPv6-only localhost server cannot replace the intended test page.
+- Browser regression allocates free IPv4/IPv6 page ports for fixture,
+  cancellation and visibility suites. Healthy capture tests foreground their
+  source tab before asserting screenshot success.
 
 ### Beta scope
 - Chrome/Chromium is the verified browser lane. Safari remains a temporary

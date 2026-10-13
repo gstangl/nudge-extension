@@ -15,7 +15,7 @@ const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const FIXTURES = path.join(HERE, 'fixtures')
 const STORE = '/tmp/nudge-gauntlet-store'
 const TESTPORT = 4722
-const PAGEPORT = 5320
+const PAGEPORT = Number(process.env.NUDGE_TEST_PAGE_PORT || 5320)
 fs.rmSync(STORE, { recursive: true, force: true })
 
 const statics = spawn('python3', ['-m', 'http.server', String(PAGEPORT), '--bind', '127.0.0.1', '-d', FIXTURES], { stdio: 'ignore' })

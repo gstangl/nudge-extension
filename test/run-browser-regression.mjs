@@ -13,23 +13,48 @@ const extension = path.join(out,'extension')
 const report = {headless:process.argv.includes('--headless'),results:[]}
 report.resources = JSON.parse(execFileSync(process.execPath,['scripts/package-safari.mjs','--mode','test','--use-storage-port','--out',path.relative(root,extension)],{cwd:root,encoding:'utf8'}))
 const suites = {
-  'e2e':[4720], 'fixture-gauntlet':[4722,5320], 'toolbar-ux':[4785,5196],
+  'e2e':[4720], 'fixture-gauntlet':[4722], 'toolbar-ux':[4785,5196],
   'page-inertness':[5192], 'escape-clear':[5194], 'multi-select':[5195],
-  'reload-resilience':[5196,4799], 'amend':[4788,5188], 'cancel':[4791,5191,5192],
-  'capture-stall':[4795], 'off-means-off':[4786,5201],
-  'battletest':[4793,5321],
+  'reload-resilience':[5196,4799], 'amend':[4788,5188], 'cancel':[4791],
+  'capture-stall':[4795], 'off-means-off':[4786],
+  'battletest':[4793],
 }
 async function free(port) {
   const server=net.createServer()
   await new Promise((resolve,reject)=>server.once('error',reject).listen(port,'127.0.0.1',resolve))
   await new Promise(resolve=>server.close(resolve))
 }
+async function pagePort() {
+  for (let attempt=0;attempt<10;attempt++) {
+    const server=net.createServer()
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
+    const port=server.address().port
+    const ipv6=net.createServer()
+    try {
+      await new Promise((resolve,reject)=>ipv6.once('error',reject).listen({port,host:'::1',ipv6Only:true},resolve))
+      await new Promise(resolve=>ipv6.close(resolve))
+      await new Promise(resolve=>server.close(resolve))
+      return port
+    } catch(error) {
+      await new Promise(resolve=>server.close(resolve))
+      if (['EAFNOSUPPORT','EADDRNOTAVAIL'].includes(error.code)) return port
+      if (error.code!=='EADDRINUSE') throw error
+    }
+  }
+  throw new Error('No isolated page port available')
+}
 for (const [suite,ports] of Object.entries(suites)) {
   const result={suite}
   try {
     for (const port of ports) await free(port)
+    const pageEnv={}
+    if (['fixture-gauntlet','battletest','cancel','off-means-off'].includes(suite)) {
+      pageEnv.NUDGE_TEST_PAGE_PORT=String(await pagePort())
+      if (suite==='cancel') pageEnv.NUDGE_TEST_SECOND_PAGE_PORT=String(await pagePort())
+      result.pagePorts=Object.values(pageEnv).map(Number)
+    }
     console.log(`RUN ${suite} (${report.headless?'headless Chromium':'visible Chromium'})`)
-    const child=spawn(process.execPath,[`test/${suite}.mjs`],{cwd:root,env:{...process.env,NUDGE_EXT:extension,NUDGE_HEADLESS:report.headless?'1':'0',NUDGE_NO_RELOAD:'1'},stdio:['ignore','pipe','pipe']})
+    const child=spawn(process.execPath,[`test/${suite}.mjs`],{cwd:root,env:{...process.env,...pageEnv,NUDGE_EXT:extension,NUDGE_HEADLESS:report.headless?'1':'0',NUDGE_NO_RELOAD:'1'},stdio:['ignore','pipe','pipe']})
     let output=''
     child.stdout.on('data',b=>{output+=b;process.stdout.write(b)})
     child.stderr.on('data',b=>{output+=b;process.stderr.write(b)})

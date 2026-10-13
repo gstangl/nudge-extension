@@ -27,8 +27,9 @@ async function up() { for (let i = 0; i < 40; i++) { await sleep(150); try { if 
 if (!await up()) { console.error('FAIL: bridge did not start'); process.exit(1) }
 
 let ctx = null
+const warnings = []
 const cleanup = () => { try { bridge.kill() } catch { } try { ctx?.close() } catch { } }
-const fail = (m) => { console.error('FAIL:', m); cleanup(); process.exit(1) }
+const fail = (m) => { console.error('FAIL:', m); console.error('Capture diagnostics:', warnings); cleanup(); process.exit(1) }
 const pass = (m) => console.log('PASS', m)
 const until = async (fn, ms, what) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return true; await sleep(120) } fail(`timeout waiting for ${what}`) }
 const store = () => { try { return JSON.parse(fs.readFileSync(path.join(STORE, 'store.json'), 'utf8')) } catch { return { pins: [] } } }
@@ -60,9 +61,9 @@ try {
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), PORT)
   const page = ctx.pages()[0] || await ctx.newPage()
-  const warnings = []
   page.on('console', m => { if (m.type() === 'warning') warnings.push(m.text()) })
   await page.goto(`${B}/demo`)
+  await page.bringToFront()
   await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   const ta = page.locator('.composer textarea')
 
