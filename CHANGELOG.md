@@ -7,6 +7,18 @@ bump lands here in the same change — no silent releases.
 
 The changelog is English throughout.
 
+## Unreleased — Safari verification
+
+- Added real Safari page transport coverage for two fresh Portless worktrees:
+  HTTP/WebSocket ownership, POST delivery, URL-scoped context and reload, with
+  direct-loopback and named-host proof kept separate. Missing system DNS is a
+  nonzero prerequisite result; test proxies do not edit the hosts file.
+- Isolated the shared browser parity fixture on a fresh dual-stack port so an
+  unrelated IPv6 development server cannot receive its localhost navigation.
+- Documented Beta 1 Safari installation/transport results and the outstanding
+  native permission automation and Portless DNS prerequisites. Runtime and
+  published Beta 1 versions remain unchanged.
+
 ## Unreleased
 
 - Add a pinned, project-local Archify installation and reproducible, source-linked
