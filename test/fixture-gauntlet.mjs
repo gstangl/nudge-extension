@@ -18,7 +18,7 @@ const TESTPORT = 4722
 const PAGEPORT = 5320
 fs.rmSync(STORE, { recursive: true, force: true })
 
-const statics = spawn('python3', ['-m', 'http.server', String(PAGEPORT), '-d', FIXTURES], { stdio: 'ignore' })
+const statics = spawn('python3', ['-m', 'http.server', String(PAGEPORT), '--bind', '127.0.0.1', '-d', FIXTURES], { stdio: 'ignore' })
 const bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
   env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(TESTPORT) }, stdio: ['ignore', 'ignore', 'inherit'],
 })
@@ -43,7 +43,7 @@ const HB = { method: 'POST', headers: { 'Content-Type': 'application/json' }, bo
 const heartbeat = setInterval(() => { fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {}) }, 2000)
 await fetch(`http://localhost:${TESTPORT}/agent/heartbeat`, HB).catch(() => {})
 
-let ctx
+let ctx, page
 try {
   ctx = await chromium.launchPersistentContext('', {
     headless: process.env.NUDGE_HEADLESS === '1', channel: 'chromium',
@@ -53,9 +53,10 @@ try {
   let sw = ctx.serviceWorkers()[0]
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), TESTPORT)
-  const page = ctx.pages()[0] || await ctx.newPage()
+  page = ctx.pages()[0] || await ctx.newPage()
   const boot = async (p) => {
-    await page.goto(`http://localhost:${PAGEPORT}/${p}`, { waitUntil: 'domcontentloaded' })
+    const response = await page.goto(`http://127.0.0.1:${PAGEPORT}/${p}`, { waitUntil: 'domcontentloaded' })
+    if (!response.ok()) throw new Error(`Fixture HTTP ${response.status()} for ${p}`)
     await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   }
   const pick = async (locator) => {
@@ -207,6 +208,15 @@ try {
   }
 
   console.log('\nSuite F — Fixture Gauntlet: ALL PASS')
+} catch (error) {
+  const out = path.join(HERE, '../artifacts/safari')
+  fs.mkdirSync(out, { recursive: true })
+  if (page) {
+    console.error('Fixture failure URL:', page.url())
+    fs.writeFileSync(path.join(out, 'fixture-gauntlet-failure.html'), await page.content().catch(() => ''))
+    await page.screenshot({ path: path.join(out, 'fixture-gauntlet-failure.png') }).catch(() => {})
+  }
+  throw error
 } finally {
   clearInterval(heartbeat)
   try { await ctx?.close() } catch { /* gone */ }

@@ -34,6 +34,8 @@ The changelog is English throughout.
   tests covering toolbar interaction, cancellation and agent routing.
 - Browser tests identify the expected working acknowledgement even when direct
   fallback and background delivery both produce separate feed notifications.
+- Third-party fixture tests bind to explicit IPv4 loopback, so an unrelated
+  IPv6-only localhost server cannot replace the intended test page.
 
 ### Beta scope
 - Chrome/Chromium is the verified browser lane. Safari remains a temporary
