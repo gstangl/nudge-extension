@@ -50,6 +50,24 @@ after login if no bridge is running; agent session hooks also attempt startup.
 Do not depend on Chrome being open. Both browsers may run simultaneously with
 one bridge/store; their agent selection is currently shared per website.
 
+## Portless worktrees and Safari DNS
+
+Chrome resolving a named `.localhost` URL does not prove that Safari can open it.
+Safari uses the system resolver. Before diagnosing the bridge, verify that the
+actual worktree URL opens in Safari and run `portless doctor` against the same
+proxy state used by the development server.
+
+Portless normally synchronizes its registered hostnames with `/etc/hosts`. If
+that synchronization cannot write the file, each new worktree hostname may be
+unreachable in Safari even while its server, proxy and Nudge watcher are healthy.
+Run `portless hosts sync` for the intended proxy state; macOS may require an
+administrator password. Preserve any custom `PORTLESS_STATE_DIR`. Recheck the
+new worktree URL after synchronization; do not substitute the shared proxy port
+for the full hostname when binding the agent. This is machine DNS setup, not
+an extension permission or a bridge protocol change.
+
+See [Portless Safari/DNS guidance](https://github.com/vercel-labs/portless#safari--dns).
+
 ## Updates and removal
 
 **Option+C shows or hides the toolbar; it does not lock its position.** Whenever
@@ -258,6 +276,34 @@ or `chromium-test` provenance; a test package never invokes native autostart.
 The manually triggered Safari CI workflow requires a deliberately provisioned
 `nudge-safari` self-hosted macOS GUI runner. Such a runner has not been verified
 for this candidate. An unprovisioned/queued workflow provides no release evidence.
+
+### Beta 1 verification on Safari 26.6.1
+
+The `v1.0.0-beta.1` resource smoke passed, and the exact shared extension resources
+were installed and removed through SafariDriver. The first installation attempt
+failed; subsequent isolated installation checks succeeded, including the
+four-component numeric browser version. This does not establish permanent
+installation or complete extension behavior.
+
+Real Safari page HTTP/WebSocket transport and POST delivery passed against two
+fresh worktrees' distinct loopback server ports. Explicit test owner selection
+kept watcher delivery and URL-scoped context separate; reload retained the
+correct transport owner. This is page transport proof, not extension injection,
+source-bound screenshot or native toolbar proof.
+
+The full extension interaction runner stopped before its UI assertions: native
+website permission automation failed while enumerating Safari. The named
+Portless lane also remains blocked on this machine: Safari displayed its error
+page for a newly registered hostname, and system DNS could not resolve it.
+Portless could not update the root-owned hosts file. Neither blocked lane is
+counted as passing. Existing browser settings and the shared bridge/store were
+preserved.
+
+`test/safari-portless-transport.mjs` retains these separate outcomes. Its default
+lane requires system DNS for both test worktree names and exits nonzero when
+that prerequisite is missing. `--direct-only` explicitly limits the proof to
+loopback page transport. It uses its own proxy, servers, watchers and store and
+disables test proxy writes to `/etc/hosts`.
 
 ## Durable runtime packaging input
 

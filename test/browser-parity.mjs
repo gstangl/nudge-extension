@@ -13,7 +13,8 @@ import { pressExtension, grantCurrentSite, setFixtureTitle, openPermissionWindow
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
-const PORT = 4822, PAGE = 5322, DRIVER = 4821
+const PORT = 4822, DRIVER = 4821
+let PAGE = Number(process.env.NUDGE_TEST_PAGE_PORT || 0)
 const B = `http://localhost:${PORT}`
 const isChrome = process.argv.includes('--chromium')
 const headless = process.argv.includes('--headless')
@@ -93,7 +94,7 @@ async function pixels(relative, type) {
 }
 try {
   if (!isChrome) report.preflight = jointDesktopPreflight()
-  await free(PORT); await free(PAGE)
+  await free(PORT)
   report.resources = stageBrowserResources({ out: ext, port: PORT, family: `${family}-test` })
   // The actual staged bytes are installed below for every run.
   bridge = spawn(process.execPath, ['bridge/bridge.mjs'], { cwd: ROOT, env: { ...process.env, NUDGE_PORT: String(PORT), NUDGE_STORE: storeDir, NUDGE_NO_RELOAD: '1' }, stdio: ['ignore', 'pipe', 'pipe'] })
@@ -107,7 +108,11 @@ try {
     if (req.url === '/strict') res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'")
     res.setHeader('Content-Type', 'text/html'); res.end(req.url === '/permissions' ? html.replace(fixtureTitle, fixtureTitle + ' permissions') : html)
   })
-  await new Promise(resolve => server.listen(PAGE, '0.0.0.0', resolve))
+  // Use one fresh dual-stack fixture: localhost must not reach an unrelated
+  // IPv6 development server while our fixture listens only on IPv4.
+  await new Promise((resolve, reject) => server.once('error', reject).listen({ port: PAGE, host: '::', ipv6Only: false }, resolve))
+  PAGE = server.address().port
+  report.fixturePort = PAGE
   const owner = { label: 'parity-agent', pid: process.pid, session: 'parity', since: 1, wake: 'pull', host: 'Terminal' }
   const hb = () => post('/agent/heartbeat', owner)
   await hb(); heartbeat = setInterval(() => hb().catch(() => {}), 1000)

@@ -30,6 +30,16 @@ Y and post-release stability too. Native Safari toolbar-icon behavior is a
 separate installation gate, not proven by dragging this in-page toolbar.
 
 **Runners**
+- `NUDGE_PORTLESS_BIN=<installed-cli-file> node test/safari-portless-transport.mjs` —
+  real Safari page HTTP/WS and POST delivery against two new Portless worktrees,
+  isolated proxy/bridge/store and distinct internal server ports. Requires
+  macOS, Safari 26+, Remote Automation and Node 24+ with Portless installed.
+  Checks direct-loopback transport with explicit test owner selection first,
+  then named-host transport with automatic worktree binding. System DNS must
+  resolve `task-a.app.localhost` and `task-b.app.localhost` to loopback for the
+  named lane. The test never updates `/etc/hosts`; missing DNS exits nonzero.
+  `--direct-only` is an explicitly separate transport subset. Neither mode
+  establishes extension UI, native permissions, screenshots or idle-model wake.
 - `NUDGE_PORTLESS_BIN=<installed-cli-file> node test/portless-worktrees.mjs` —
   real Git worktrees, an isolated real Portless proxy on a random side port,
   two real servers/watchers and Chromium extension delivery. Requires Node 24+
@@ -66,7 +76,8 @@ separate installation gate, not proven by dragging this in-page toolbar.
   than being switched off globally. Missing access fails, never green-skips.
   See [Safari guide](../docs/SAFARI.md).
 - `node test/browser-parity.mjs --chromium --headless` — same shared contract in
-  explicitly headless Chromium, side bridge/page ports 4822/5322. Real pointer
+  explicitly headless Chromium, side bridge 4822 and a fresh dual-stack page port.
+  `NUDGE_TEST_PAGE_PORT` optionally selects a fixed fixture port. Real pointer
   drag, keyboard, multi-select, draft, amend/withdraw and exact PNG/JPEG pixels.
   This is implementation verification, not Safari or native-app acceptance.
 - `node test/run-browser-regression.mjs --headless` — serial isolated A/F/L/M/O/P/Q/N/X/Y/Z/I
