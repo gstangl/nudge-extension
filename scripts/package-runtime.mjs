@@ -16,7 +16,7 @@ const ARTIFACT_ROOT = path.join(ROOT, 'artifacts/safari')
 // and native-host manifests are deliberately absent.
 export const RUNTIME_FILES = Object.freeze([
   'LICENSE', 'INSTALL.md',
-  'agent/groundworks-nudge.mjs', 'agent/status-check.mjs', 'agent/runtime.mjs', 'agent/nudge-context.mjs',
+  'agent/groundworks-nudge.mjs', 'agent/status-check.mjs', 'agent/runtime.mjs', 'agent/nudge-context.mjs', 'agent/preview-hosts.mjs',
   'agent/nudge-session-start.sh', 'agent/NUDGE-SKILL.md', 'agent/setup-agent.sh',
   'bridge/bridge.mjs', 'bridge/store.mjs', 'bridge/images.mjs', 'bridge/watch-nudges.mjs',
   'bridge/lease.mjs', 'bridge/lifecycle.mjs', 'bridge/native-host.mjs', 'bridge/http-boundary.mjs',

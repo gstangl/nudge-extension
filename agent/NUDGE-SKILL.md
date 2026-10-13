@@ -40,12 +40,14 @@ Choose the toolbar label before starting the watcher:
 - A short name supplied with the invocation is used verbatim.
 - Without a name, derive a two-to-four-word label from the conversation topic.
 - A number, Nudge reference, or work instruction is not a label.
-- When this session owns one localhost port, append `:<port>` to the label.
+- When this session owns one direct localhost port, append `:<port>` to the label.
+  With Portless, use the worktree/app name; the shared proxy port is not a
+  session identity.
 
 Run the watcher as a managed long-running child process:
 
 ```sh
-groundworks-nudge watch --label "<label>" --wake <push|pull>
+groundworks-nudge watch --label "<label>" --project "$PWD" --wake <push|pull>
 ```
 
 Use `push` only when this runtime can surface watcher output as a new agent turn.
@@ -67,6 +69,32 @@ Keep the `agentId` printed by the command for later scoped reads. The command
 normalizes Claude Code, Codex, and generic agent identities before joining the
 same roster.
 
+## Preview binding and connection proof
+
+Run `groundworks-nudge previews --project "$PWD"` in the worktree being edited.
+Portless discovery verifies the serving process's directory against this Git
+worktree, including app subdirectories. The project-scoped watcher refreshes
+these host claims on each heartbeat, so previews started after arming are bound
+automatically. Sibling worktrees are excluded. Never guess ownership from a
+hostname prefix, branch label or port alone.
+
+For a direct localhost app, or a preview not discoverable through Portless,
+pass its verified browser URL with `watch --url <preview-url>` instead of
+`--project`. An empty discovery result means no verified preview yet; it is
+not permission to claim other tabs. Restart the watcher with the explicit URL
+if the preview uses a different state directory or is not discoverable.
+
+Portless has two ports: each dev server's internal port and the browser proxy
+port. Different worktree hostnames can share the proxy port. Use the full
+browser URL for scope; do not use an internal server port with `context --port`.
+After arming, compare `status` routes with the verified preview: the route's
+owner must be this `agentId`, with `via: worktree` or an explicit selection.
+Verify the toolbar is visible and connected on that exact page. A live bridge,
+armed watcher or hidden toolbar does not prove usable browser interaction.
+If browser tools are available, refresh the intended tab and test the actual
+connection yourself. Preserve drafts and avoid submitting invented work to an
+existing agent. A readiness report alone is not a delivery test.
+
 After arming, run `groundworks-nudge status`. Report connection state only when
 the bridge or watcher is unhealthy. If the bridge is down, run
 `groundworks-nudge ensure-bridge`; it verifies the listener before starting or
@@ -78,7 +106,7 @@ must not depend on Chrome being open. Never stop an unknown listener.
 Use the CLI in every runtime:
 
 ```sh
-groundworks-nudge context --agent-id <agentId> [--port <port>]
+groundworks-nudge context --agent-id <agentId> [--url <preview-url>]
 groundworks-nudge show <#pill-or-nudge_id>
 groundworks-nudge selection
 ```
@@ -106,7 +134,8 @@ Then process one prompt at a time.
 4. A new Nudge never interrupts work already in flight. Finish the current
    bounded task, then pull it.
 5. An amendment belongs to the same work order. Re-read it before resolving.
-6. With a port scope, never edit or resolve a Nudge from another port.
+6. With URL scope, never edit or resolve a Nudge from another hostname and
+   port. Port-only scope is suitable only for direct localhost apps.
 7. A Nudge owned by another live agent stays with that agent. Take it over only
    when the user reassigns it, and say so when you do.
 

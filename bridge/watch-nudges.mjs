@@ -9,6 +9,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
 import WebSocket from 'ws' // resolves via bridge/node_modules (this file lives in bridge/)
+import { discoverPreviews, previewHost } from '../agent/preview-hosts.mjs'
 import {
   resolveAgentId,
   resolveAgentRuntime,
@@ -20,6 +21,9 @@ import {
 const STORE_DIR = resolveStoreDir()
 const PORT = Number(process.env.NUDGE_PORT || 4700) // the bridge is port-configurable — its clients must be too
 const STORE = path.join(STORE_DIR, 'store.json')
+const scopedProject = process.env.NUDGE_PROJECT || null
+const explicitHost = process.env.NUDGE_PREVIEW_URL ? previewHost(process.env.NUDGE_PREVIEW_URL) : null
+let previewHosts = null
 const seen = new Set()
 const seenId = new Set() // ids ever woken for — a later key on a known id = an amendment
 let first = true
@@ -45,7 +49,7 @@ function announceWithdrawn({ id, label, url, owner, at }) {
   // is told to stop. Ownerless (offline arrival) falls back to the global gate.
   const mine = !!(owner?.session && MY_SESSION && owner.session === MY_SESSION)
   const ownerless = !owner?.session
-  if (first || !(mine || (ownerless && isOwner !== false))) return
+  if (first || !(mine || (ownerless && isOwner !== false && ownsPreview(url)))) return
   // only meaningful for a nudge THIS watcher actually woke for — otherwise the
   // agent never had it and a "stop" line would be noise about unknown work
   if (!seenId.has(id)) return
@@ -75,6 +79,10 @@ function scanWithdrawn() {
 // session-level owner (offline arrival, pid-keyed agent) falls back to the old
 // global gate (the owner watcher wakes). 2026-07-07.
 const MY_SESSION = resolveAgentId()
+function ownsPreview(url) {
+  if (previewHosts === null) return true
+  try { return previewHosts.includes(previewHost(url)) } catch { return false }
+}
 function scanPins(pins) {
   for (const p of pins) {
     // a fresh nudge AND every amendment must wake: fold the latest amendment's
@@ -87,7 +95,7 @@ function scanPins(pins) {
     seen.add(key); seenId.add(p.id)
     const mine = !!(p.owner?.session && MY_SESSION && p.owner.session === MY_SESSION)
     const ownerless = !p.owner?.session // no session-level owner -> use the global gate
-    if (!first && (mine || (ownerless && isOwner !== false))) {
+    if (!first && (mine || (ownerless && isOwner !== false && ownsPreview(p.url)))) {
       if (isAmendWake && lastAmend) {
         console.log(`Nudge ${p.id} amended: ${lastAmend.text.slice(0, 120)} — ${p.url}`)
       } else {
@@ -183,6 +191,10 @@ setInterval(() => {
   }
 }, 5000)
 function heartbeat() {
+  if (scopedProject || explicitHost) {
+    previewHosts = explicitHost ? [explicitHost] : discoverPreviews({ cwd: scopedProject }).previews.map(preview => preview.host)
+    IDENTITY.hosts = previewHosts
+  }
   fetch(`http://127.0.0.1:${PORT}/agent/heartbeat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

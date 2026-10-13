@@ -241,7 +241,17 @@
        so expanding only reveals more wrapped lines BELOW. Toggling used to swap
        align-items + margins + line-height at once, jittering the icon and text
        on every open/close (2026-07-05). */
-    .queue .q-row.open .q-text { white-space: normal; overflow: visible; text-overflow: clip; }
+    .queue .q-row.open .q-text { visibility: hidden; }
+    .queue .q-detail {
+      flex: 0 0 100%; min-width: 0; display: grid; grid-template-rows: 0fr;
+      opacity: 0; margin-top: -8px;
+      transition: grid-template-rows .18s ease, opacity .18s ease, margin-top .18s ease;
+    }
+    .queue .q-row.open .q-detail { grid-template-rows: 1fr; opacity: 1; margin-top: 0; }
+    .queue .q-detail-text {
+      min-height: 0; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere;
+      font-size: 13px; line-height: 1.6; user-select: text;
+    }
     .queue .q-dot {
       flex: none; width: 18px; height: 18px; border-radius: 50%;
       background: ${MID_DEEP}; border: 2px solid ${PAPER};
@@ -370,7 +380,7 @@
                   height .1s ease-out, opacity .12s ease-out;
     }
     .hl.on { opacity: 1; }
-    .hl.instant { transition: none; } /* screenshot capture: box must be fully there NOW */
+    .hl.instant, .hl.anchored { transition: none; } /* capture and scrolling must not lag behind the target */
     .hl .chip {
       position: absolute; top: -26px; left: -2px; white-space: nowrap;
       max-width: 60ch; overflow: hidden; text-overflow: ellipsis;
@@ -394,13 +404,14 @@
 
     /* ---------- composer: monochrome midnight popover with anchor tip ---------- */
     .composer {
-      position: fixed; display: none; width: 340px; pointer-events: auto;
+      position: fixed; display: none; width: 340px; max-width: calc(100vw - 16px); pointer-events: auto;
       background: ${MID}; border: 1px solid ${MID_3}; border-radius: 12px;
       box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(14,19,24,.45), 0 28px 72px rgba(14,19,24,.38);
       animation: nudge-fade .16s ease-out; /* re-runs on each display:none -> block */
     }
     @keyframes nudge-fade { from { opacity: 0; transform: translateY(4px) scale(.985) } to { opacity: 1; transform: none } }
-    .composer .inner { border-radius: 11px; overflow: hidden; }
+    .composer .inner { border-radius: 11px; max-height: calc(100vh - 16px); overflow: auto; }
+    .composer.moved .tip { display: none; }
     /* tip: a bordered diamond pointing back at the marked element */
     .composer .tip {
       position: absolute; width: 12px; height: 12px; top: var(--tip-y, 18px);
@@ -417,6 +428,8 @@
     .composer .layers button:hover { color: ${PAPER}; border-color: rgba(242,239,234,.4); }
     .composer .layers button.active { background: ${PAPER}; border-color: ${PAPER}; color: ${MID_DEEP}; }
     .composer .meta {
+      cursor: grab; touch-action: none; user-select: none;
+      position: sticky; top: 0; z-index: 1;
       padding: 9px 14px; background: ${MID_DEEP}; border-bottom: 1px solid ${MID_2};
       font-size: 10px; line-height: 12px; font-family: ${MONO}; color: rgba(242,239,234,.45);
       letter-spacing: .02em;
@@ -424,6 +437,7 @@
     }
     /* the marked element did not come back after a page reload — the nudge keeps
        its frozen context, the meta line says so. Status colour, nothing else. */
+    .composer .meta.dragging { cursor: grabbing; }
     .composer .meta.lost { color: ${AMBER}; }
     .composer textarea {
       width: 100%; border: 0; outline: 0; resize: none; padding: 13px 14px;

@@ -30,10 +30,20 @@ Y and post-release stability too. Native Safari toolbar-icon behavior is a
 separate installation gate, not proven by dragging this in-page toolbar.
 
 **Runners**
+- `NUDGE_PORTLESS_BIN=<installed-cli-file> node test/portless-worktrees.mjs` —
+  real Git worktrees, an isolated real Portless proxy on a random side port,
+  two real servers/watchers and Chromium extension delivery. Requires Node 24+
+  and an installed Portless CLI; never reuses the live proxy or prompt store.
+  Guards automatic late-start binding, full-host ownership, distinct internal
+  ports, no cross-wake, URL-scoped CLI, native hooks, older watcher pairing
+  and reload. Run after preview-discovery, host-claim or Skill binding changes.
 - `node test/e2e.mjs` — **Suite A**, isolated: own bridge on side port 4720 +
   fresh `/tmp` store, demo page; the test browser's extension is re-pointed via
   `chrome.storage.local.nudgePort`. Run after ANY extension/bridge change.
   All-or-nothing (first FAIL exits).
+  Also run `NUDGE_APP_HOST=task-a.app.localhost NUDGE_HEADLESS=1 node test/e2e.mjs`
+  after local-host admission changes: the real extension runs on a nested named
+  origin while its bridge endpoint retains direct-loopback Host validation.
 - `node test/browser-protocol.mjs` — source-bound evidence, foreign-origin
   rejection, idempotent submission and withdrawal-replay protocol coverage on
   side port 4821. No browser is claimed by this runner.
@@ -248,6 +258,9 @@ the backlog for new legs lives there (section "Building new legs").
 | A11 | **Hardening 0.10.0 / Composer submit 0.20.0**: CORS boundary (foreign origin → no CORS headers, localhost reflected); empty send = NUMBERED MARK (pin without text, "nudge_X marked" chip, number pill on the element — reverses the 0.10.0 rule); Enter sends / Shift+Enter = newline (does NOT send); click convention (a plain click resets multi to single, only ⇧ collects); real isolated agent setup as the closing leg: all Skill/hook copies must exist and match the checkout exactly | ✅ 2026-07-09; isolated setup expanded 2026-09-13 |
 | A13 | **Status hint 0.21.3**: clicking the status dot opens a state popover (green push owner → "Agent active"), caret aligned to the dot, closes on Escape — the dot explains itself but does NOT arm/wake from the browser | ✅ 2026-07-21 |
 
+| A14 | **Slow delivery acceptance**: block the actual content-script POST, accept two prompts durably before server commit with bounded composer feedback, then verify exact-once FIFO delivery and removal from the durable queue | ✅ 2026-10-03; headless Chromium |
+| A15 | **Silent queue worker**: the submit RPC never answers; the composer posts the same idempotent payload to the bridge after 5 s, closes, and exactly one nudge is stored | ✅ 2026-10-03; headless Chromium |
+
 **Toolbar chrome geometry (2026-07-06):** Suite A also locks in the popover
 carets (queue → badge, Switch-session → its label, C-7), the accordion no-jitter
 (C-6) and the feed sitting under the toolbar (C-8, Δleft<3/Δtop 2–20). Full
@@ -419,6 +432,7 @@ owner). Ownership is per-host; nothing assigned = old single-owner behaviour.
 | K4 | **Two REAL watcher processes each wake ONLY for their own host** (A←5185, B←5186, no cross-wake) — the payoff | ✅ 2026-07-07 |
 | K5 | `/.identity.routes` maps every open localhost tab → its owner {label, session} and flags `viaFallback`; `127.0.0.1:X` folds into `localhost:X` (one host, one owner) | ✅ 2026-07-08 |
 | K6 | **`viaFallback` tells the truth when the picked agent dies**: the flag flips the moment the pick leaves the fresh window (derived from actual resolution) — a `has(host)` check lied for up to ~17 s until the sweep | ✅ 2026-07-08 |
+| K7 | Named `.localhost` worktrees sharing one proxy port keep separate owners; two real watchers receive only their own host's prompts | ✅ 2026-10-13 |
 
 ## Suite W — Wake mode: push vs pull (wake-mode.mjs)
 
@@ -451,6 +465,7 @@ with port-suffixed labels in the user's style ("Estimate Templates :5175").
 | L7 | The toolbar stays completely inside the viewport — when the viewport shrinks under it (docked DevTools) AND when the bar grows on its own with no resize event (longer session label) — and returns to the dropped spot once the room is back | ✅ 2026-07-31 |
 | L8 | Wait for the restored label and resized layout, then require a real grip drag to the bottom edge before asserting queue flip, live growth, real wheel scrolling and narrow-window containment | See retained run evidence; Chromium implementation only |
 | L9 | An already open status explanation updates when the bridge disconnects | See retained run evidence; Chromium implementation only |
+| L10 | Expanded prompt spans the row below stable metadata, preserves paragraphs and collapses to its original height | Passed 2026-09-17; headless Chromium |
 
 ## Suite M — Page inertness (page-inertness.mjs)
 
@@ -569,6 +584,16 @@ extension re-pointed to the dead port 4799 (no fetch can reach the live bridge).
 | Q5 | Such a mark still SENDS (frozen context, queued offline, no crash) | ✅ 2026-07-29 |
 | Q6 | Escape before the reload leaves nothing to restore (no zombie draft) | ✅ 2026-07-29 |
 | Q7 | A Shift-collected set of elements survives the reload | ✅ 2026-07-29 |
+| Q8 | Real extension-storage quota failure preserves a sendable draft after quota recovery and reload | ✅ 2026-09-17 |
+| Q9 | Lost queue acknowledgement replays the same submission after reload without a duplicate | ✅ 2026-09-17 |
+| Q10 | Malformed page-console events cannot leave Send disabled or prevent queue submission | ✅ 2026-09-17 |
+| Q11 | Single-element highlight and composer follow real page scrolling; draft, selection, focus and disabled Send state survive | ✅ 2026-10-03 |
+| Q12 | Nested scrolling and responsive viewport changes refresh both anchor positions | ✅ 2026-10-03 |
+| Q13 | Scrolling after element removal hides the stale highlight, preserves the draft and never revives a cancelled composer | ✅ 2026-10-03 |
+| Q15 | Real context-header drags recover clipped region/element composers; release/blur, focus/caret, pending Send, page isolation, scroll/reload position, viewport containment and Send/Cancel remain correct | See composer-drag evidence; headless Chromium only |
+| Q14 | Freeform follows nested/page scrolling; persisted capture rectangle and stroke agree, and reload retains region geometry | ✅ 2026-10-03 |
+| Q17 | Arrow alignment after bottom-edge clamping, growing/shrinking drafts and left/right placement | ✅ 2026-10-03 (headless Chromium; 100px before, 0px after) |
+| Q16 | Changed tab identity and transient retry-storage read failure recover the exact original submission without duplicates | ✅ 2026-10-03 |
 
 Q4 earned its place on the first run: the mark on `#alpha` did not report a lost
 anchor — it had silently re-anchored onto `#beta`, because the structural xpath

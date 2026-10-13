@@ -17,6 +17,287 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 1.0.0-beta.1 · Bridge 0.20.0 — 2026-10-13 (First 1.0 beta)
+
+### Added
+- First public 1.0 beta of Groundworks Nudge, with an unpacked Chrome extension,
+  the shared local bridge and runtime-neutral Skill. The browser build version
+  is `1.0.0.1`; the displayed release version is `1.0.0-beta.1`.
+- Verified Portless worktree binding, late server startup, separate ownership
+  for hosts sharing one proxy port and URL-scoped agent context. The custom
+  session-name input is retained.
+
+### Included fixes
+- Durable prompt retries, source-bound capture, reload recovery and direct
+  delivery when the background worker does not acknowledge a submission.
+- Draggable prompt windows and viewport-fitted arrows, plus isolated browser
+  tests covering toolbar interaction, cancellation and agent routing.
+
+### Beta scope
+- Chrome/Chromium is the verified browser lane. Safari remains a temporary
+  developer preview; full Safari acceptance and native distribution are not
+  claimed. Pull runtimes require a subsequent agent message to receive work.
+- Saved Off remains Off. Starting a watcher does not override the browser's
+  visibility preference. Native editor invocation UI remains a separate check.
+- Bridge versioning remains independent at `0.20.0`; existing stores and
+  additive HTTP/WS contracts remain compatible.
+
+## 0.35.1 · Bridge 0.20.0 — 2026-10-13 (Restore the session-name input)
+
+### Fixed
+- Restore the Skill's trigger and optional session-label argument hint. Skill
+  invocation surfaces can offer the custom name again; supplied names continue
+  to reach the watcher unchanged. Removing runtime-specific frontmatter to fit
+  a generic validator had removed that invocation affordance.
+
+### Verification
+- The isolated installer checks that each installed runtime adapter retains
+  the invocation metadata; runtime integration verifies the supplied label in
+  the live bridge roster. Native editor UI acceptance is separate.
+
+## 0.35.0 · Bridge 0.20.0 — 2026-10-13 (Bind Nudge to verified worktree previews)
+
+### Added
+- `previews --project` verifies Portless routes against the serving process's
+  real directory and the exact Git worktree. Report public browser URLs and
+  internal server ports separately; sibling worktrees are excluded.
+- `watch --project` refreshes its verified host claims on each heartbeat,
+  including previews started after the Skill. `watch --url` binds a direct
+  local preview explicitly. Hosts are additive heartbeat metadata; unscoped
+  older runtimes retain their existing fallback behavior.
+- An older opted-in watcher can acquire verified worktree hosts without
+  replacing its wake process. Discovery runs outside the bridge event loop.
+- `status --check --url`, `context --url` and `list --url` scope to the full
+  browser hostname and port. Native context hooks use the same ownership
+  resolution and exclude sibling-worktree selections and ownerless work.
+
+### Changed
+- The Skill verifies and binds worktree previews, distinguishes server ports
+  from proxy ports, and requires visible browser proof before claiming a
+  usable connection. Standard name/description discovery replaces legacy
+  nonstandard frontmatter fields; the command remains `/groundworks-nudge`.
+
+### Verification
+- `portless-worktrees.mjs` creates two real Git worktrees, an isolated real
+  Portless proxy and dev servers, project-scoped CLI watchers and a real
+  Chromium extension. It checks late startup, automatic ownership, browser
+  submissions, no cross-wake, URL scope, native hook isolation and reload.
+- Unit discovery and readiness regressions accompany the portable runtime,
+  HTTP/WS protocol and existing browser suites. Safari acceptance is separate.
+
+## 0.34.13 · Bridge 0.19.3 — 2026-10-13 (Named local worktree addresses)
+
+### Fixed
+- Activate Nudge on HTTP `.localhost` subdomains used by Portless, including
+  nested worktree/app names. Source registration, queued submission, icon
+  refresh, development reload and readiness checks recognize these addresses.
+- Admit named local page origins on the bridge's HTTP and WebSocket surfaces
+  while retaining the direct-loopback Host fence and rejecting foreign names.
+- Keep ownership scoped to the complete hostname and port, so worktrees sharing
+  a proxy port retain separate agent routing. Pick the owner once per hostname
+  in Switch session, as for existing localhost ports.
+
+### Verification
+- Unit regressions cover named source capture, queue transport, icon refresh,
+  readiness and origin admission; Suite A can run with `NUDGE_APP_HOST` set to
+  a nested `.localhost` name. Suite K7 checks separate real watcher delivery
+  for two named hosts sharing one proxy port. The bridge boundary matrix covers
+  named origins over HTTP and WebSocket. Safari acceptance remains separate.
+
+## 0.34.12 · Bridge 0.19.2 — 2026-10-03 (Send without a responsive worker)
+
+### Fixed
+- When the background queue owner does not answer a submission within 5 s,
+  post the same payload directly to the bridge from the page. The bridge
+  deduplicates by submission ID, so a late queue delivery replays the same
+  receipt instead of creating a second nudge. Older bridges without that
+  capability keep the previous "retry safely" behaviour.
+- Log the actual reason for an unacknowledged delivery in the page console.
+
+### Verification
+- Live evidence: the draft's private retry payload was stored, but the worker
+  never wrote the queue entry and the healthy bridge never received it.
+- Suite A15 makes the submit RPC never answer; the prompt arrives exactly once.
+  Fast gate and Suite A pass. In one Suite A run the real worker exceeded 5 s
+  while a screenshot capture hung; the underlying worker stall is not resolved.
+
+## 0.34.11 · Bridge 0.19.2 — 2026-10-03 (Keep the prompt arrow aligned)
+
+### Fixed
+- Position the prompt arrow after fitting the window into the viewport, using
+  its actual height. Growing drafts near the bottom edge keep pointing at the
+  marked element instead of leaving the arrow above it.
+- Suite Q17 measures arrow alignment for growing and shrinking drafts with the
+  prompt on either side of a short marked element. Headless Chromium measured
+  100px vertical error before the fix and 0px afterward for the long draft.
+
+## 0.34.10 · Bridge 0.19.2 — 2026-10-03 (Restore retry state after restart)
+
+### Fixed
+- Re-read private retry state when Send is pressed instead of permanently caching
+  a failed startup read. A transient restoration failure can recover on retry.
+- Resolve an exact private retry reference across changed browser tab identities,
+  requiring the saved text and route to match and replaying the original payload.
+- Keep prior-session retry payloads until their retry horizon expires; a browser
+  or extension restart must not remove data a restored draft still references.
+  Missing or mismatched payloads remain blocked rather than minting duplicates.
+
+### Verification
+- 216 unit tests plus runtime integration and isolated installation pass.
+- Chromium Suite Q16 exercises changed privileged identity and a failed first
+  storage read, then verifies byte-equivalent replay with one queued submission.
+- Chromium Suites A, L, Q and Y pass. Healthy screenshot legs wait for pick-time
+  capture readiness; stalled-capture legs continue to submit while capture waits.
+- Existing lost retry payloads cannot be recreated automatically. Re-marking and
+  restoring the user's unchanged text successfully delivered the affected draft
+  once. The updated extension still requires activation for live acceptance.
+
+## 0.34.9 · Bridge 0.19.2 — 2026-10-03 (Move the prompt window)
+
+### Fixed
+- Drag the prompt window by its context header to recover a clipped draft or
+  move it out of the way. The window stays within the viewport and retains its
+  dropped position through scrolling and reloads for that draft. New prompts
+  start beside their mark as before.
+- Fit the window to its actual height as text grows; keep its header reachable
+  in small windows. Hide the anchor tip after manual placement.
+
+### Verification
+- Suite Q15 covers real header drags for regions and elements, repeated drags,
+  release, scrolling, reload, narrow viewport containment and Send/Cancel.
+  Safari runtime acceptance remains unverified.
+
+## 0.34.8 · Bridge 0.19.2 — 2026-10-03 (Freeform follows its content)
+
+### Fixed
+- Anchor freeform strokes and their composer to the content beneath the region
+  during page and nested scrolling. Persist the translated stroke and capture
+  rectangle together; restore the region without replacing it with its centroid
+  element's bounds.
+- Freeze annotation coordinates alongside the capture rectangle before awaiting
+  a screenshot, so subsequent scrolling cannot alter an in-flight submission.
+
+### Verification
+- Suite Q exercises real wheel scrolling and draft persistence for freeform
+  regions. Current-version user Chrome delivery and Safari remain unverified.
+
+## 0.34.7 · Bridge 0.19.2 — 2026-10-03 (Prompt acceptance during slow delivery)
+
+### Fixed
+- Separate durable queue mutations from serialized HTTP delivery. A slow earlier
+  request no longer prevents accepting or inspecting another queued prompt.
+- After durable storage succeeds, allow one second for immediate delivery, then
+  confirm "Saved in queue — delivery in progress" and release the composer.
+  This acknowledges local storage, not agent receipt; delivery keeps its original
+  idempotency token and FIFO order. Storage failure still preserves the draft.
+- Follow a queued acknowledgement with a numbered delivery notification in the
+  originating document once the bridge receipt has been validated.
+- Remove delivered entries against the latest stored queue so concurrent prompt
+  acceptance cannot be overwritten. Keep discard ordered after ongoing delivery.
+
+### Verification
+- A failing baseline unit regression reproduces acceptance blocked by an older
+  stalled transport. Queue tests cover prompt acceptance, write failure, ordering,
+  replay and refreshing withdrawn receipts.
+- Headless Chromium Suite A delays real content-script HTTP delivery: two prompts
+  are durably accepted before server commit and later arrive exactly once in
+  order. Suite Q covers reload, quota failure and lost acknowledgements.
+- The exact cause of every observed live messaging timeout is not established;
+  current-version user Chrome and Safari acceptance remain unverified.
+
+## 0.34.6 · Bridge 0.19.2 — 2026-10-03 (Composer follows its element)
+
+### Fixed
+- Keep the single-element highlight and composer attached to their live target
+  during page scrolling, nested scrolling and viewport resizing. Refresh geometry
+  once per animation frame without resetting draft text, caret, focus or Send state.
+- Hide a stale highlight when its element is removed; retain the draft and report
+  the missing element. Freeform regions retain their viewport-based geometry.
+
+### Verification
+- Chromium Suite Q reproduces the previous 120 px highlight offset and stationary
+  composer after a 120 px page scroll. The fix leaves 0 px offset and moves the
+  composer by 120 px; nested scrolling, resizing and removed-target checks pass.
+- Fast gate: 210 unit tests, runtime integration and isolated setup pass.
+  Headless Chromium Suites A, L, P, Q and Y pass.
+- Safari runtime acceptance and the separate delivery-timeout issue remain open.
+
+## 0.34.5 · Bridge 0.19.2 — 2026-09-17 (Registration timeout diagnostics)
+
+### Changed
+- Return the active identity-operation stage when registration exceeds its
+  response deadline. Preserve serialization of unfinished storage operations
+  and ignore late replies. This adds diagnosis for the observed live timeout;
+  it does not claim to resolve its still-unidentified underlying cause.
+
+### Verification
+- Fast gate: 210 unit checks plus runtime and setup pass. Headless Chromium
+  Suites A and Y (5 checks) pass.
+- A stalled startup-storage regression returns the active stage before the
+  content-script deadline and permits registration after storage recovers.
+- The affected live tab still requires extension reload and a fresh send to
+  identify the underlying timeout; live recovery is not yet verified.
+
+## 0.34.4 · Bridge 0.19.2 — 2026-09-17 (Tab registration recovery)
+
+### Fixed
+- Recover tab registration when a worker restart missed navigation: accept a
+  changed browser-issued document ID only after the current top-level receiver
+  proves the matching document and route. Retain the tab identity and reject
+  stale documents, same-document token replacement and unproven successors.
+- Log the actual registration failure in the page's extension console so a
+  generic toolbar notice does not hide the diagnostic cause.
+
+### Verification
+- The missed-navigation worker-restart regression fails before the change and
+  passes afterward, alongside same-document and missing-document-ID guards.
+- Fast gate: 209 unit checks plus runtime and setup pass. Headless Chromium
+  Suites A, Q (10 checks) and Y (5 checks) pass.
+- The affected live Chrome tab was still executing the previous content script
+  after a page reload. Activation of this patch requires an extension reload;
+  the original live registration failure is not yet confirmed resolved.
+
+## 0.34.3 · Bridge 0.19.2 — 2026-09-17 (Send recovery)
+
+### Fixed
+- Always release Send after preparation errors. Bound tab registration, retry
+  storage, restoration and delivery acknowledgements so a missing extension
+  reply cannot disable the composer indefinitely. Ambiguous delivery retains
+  the original submission identity for safe retry.
+- Treat malformed page-console responses as unavailable context instead of
+  leaving the send operation permanently pending.
+
+### Verification
+- Fast gate: 206 unit checks, runtime integration and isolated setup pass.
+- Headless Chromium Suites A, Q (10 checks) and Y (5 checks) pass. Fault tests
+  cover missing storage/registration/queue replies, late acknowledgements,
+  preparation errors and malformed page-console responses.
+
+## 0.34.2 · Bridge 0.19.2 — 2026-09-17 (Readable expanded prompts)
+
+### Fixed
+
+- Expand queue prompts below their stable metadata row using the full available
+  width, preserved paragraphs and comfortable line spacing. Opening and closing
+  animate gently and respect reduced motion; follow-ups stay below the prompt.
+
+## 0.34.1 · Bridge 0.19.2 — 2026-09-17 (Draft retry recovery)
+
+### Fixed
+- Keep a failed retry-storage write from leaving a dangling draft reference
+  that blocks sending after a page reload. Persist retry references only after
+  their private payload has been stored successfully.
+- Retry failed tab registration when sending instead of requiring a page reload.
+- Preserve unresolved delivery references during restoration so subsequent
+  reloads cannot silently bypass duplicate-delivery protection.
+
+### Verification
+- Fast gate: 200 unit checks, runtime integration and isolated setup pass.
+- Headless Chromium Suite A and Suite Q (9 checks) pass, including actual
+  retry-storage quota failure and ambiguous queue acknowledgement across reload.
+- The additional browser-parity run stops at the toolbar corner-menu check
+  (`Timeout: visible .count`); full parity and Safari acceptance remain unverified.
+
 ## 0.34.0 · Bridge 0.19.2 — 2026-09-14 (Optional guided setup)
 
 ### Added

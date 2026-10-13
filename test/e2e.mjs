@@ -7,6 +7,7 @@ import { spawn, execSync, execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import http from 'node:http'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -37,6 +38,11 @@ fs.rmSync(STORE, { recursive: true, force: true })
 // The extension in the TEST browser is re-pointed via chrome.storage.nudgePort
 // (see below); stealing 4700 once showed a test agent in the real toolbar.
 const TESTPORT = 4720
+const APP_HOST = process.env.NUDGE_APP_HOST || 'localhost'
+const APP_PORT = APP_HOST === 'localhost' ? TESTPORT : 4721
+// Named local apps still connect to the bridge's direct loopback endpoint.
+const APP_URL = `http://${APP_HOST}:${APP_PORT}`
+let appServer
 let bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
   env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(TESTPORT) }, stdio: ['ignore', 'ignore', 'inherit'],
 })
@@ -89,8 +95,22 @@ try {
   if (!sw) sw = await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((port) => chrome.storage.local.set({ nudgePort: port }), TESTPORT)
   const page = ctx.pages()[0] || await ctx.newPage()
-  page.on('console', m => { if (m.type() === 'warning') console.error('  [browser]', m.text()) })
-  await page.goto(`http://localhost:${TESTPORT}/demo`)
+  page.on('console', m => { if (['warning', 'error'].includes(m.type())) console.error('  [browser]', m.text()) })
+  page.on('pageerror', error => console.error('  [page error]', error.message))
+  // A real loopback page server gives Chromium the correct local address space;
+  // intercepted navigation responses trigger Local Network Access checks.
+  if (APP_HOST !== 'localhost') {
+    appServer = http.createServer((req, res) => {
+      if (req.url !== '/demo') { res.writeHead(404); res.end(); return }
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end(fs.readFileSync(path.join(HERE, '../bridge/demo.html')))
+    })
+    await new Promise((resolve, reject) => {
+      appServer.once('error', reject)
+      appServer.listen(APP_PORT, '127.0.0.1', resolve)
+    })
+  }
+  await page.goto(`${APP_URL}/demo`)
 
   // --- connection: status dot goes green (WS connected) ---
   // 15 s: this is the COLD-START barrier (extension boot + WS + first snapshot
@@ -99,7 +119,7 @@ try {
   await until(async () => ((await page.locator('.pill .status').getAttribute('title')) || '').includes('suite-a'), 5000, 'owner label in the status tooltip')
   await until(async () => ((await page.locator('.pill .who').textContent()) || '').includes('suite-a'), 5000, 'session label visible in the toolbar')
   const readiness = JSON.parse(execFileSync(process.execPath, [path.join(HERE, '../agent/groundworks-nudge.mjs'),
-    'status', '--check', '--browser', 'chrome', '--port', String(TESTPORT), '--runtime', 'Agent', '--agent-id', 'suite_a'], {
+    'status', '--check', '--browser', 'chrome', '--port', String(APP_PORT), '--runtime', 'Agent', '--agent-id', 'suite_a'], {
     env: { ...process.env, NUDGE_PORT: String(TESTPORT), NUDGE_STORE: STORE }, encoding: 'utf8', timeout: 5000,
   }))
   if (readiness.state !== 'ready' || readiness.checks.browser.state !== 'connected'
@@ -317,6 +337,12 @@ try {
   }
   await page.mouse.up()
   await ta.waitFor({ timeout: 3000 })
+  // The composer deliberately opens before slow capture finishes. This leg
+  // asserts a healthy screenshot; Suite Y covers sending during stalled capture.
+  await until(async () => {
+    const selection = await (await fetch(`http://localhost:${TESTPORT}/selection`)).json()
+    return selection.selector === '.banner' && !!selection.screenshot
+  }, 5000, 'initial lasso capture completed')
   await ta.fill('This banner looks lost - wider and with more presence.')
   await page.locator('.composer .send').click()
   await page.locator('.feed .item', { hasText: 'nudge_3' }).waitFor({ timeout: 8000 })
@@ -428,6 +454,80 @@ try {
   await until(async () => (await page.locator('.dot:visible').count()) === 2, 3000, 'dot gone after discard')
   console.log('PASS queue management (label "what is marked", discard ×, dots lifecycle)')
 
+  // A slow HTTP request must not hold the durable acceptance lock or strand
+  // the composer. Exercise the actual page -> worker -> page transport.
+  await page.keyboard.press('Escape')
+  let releaseDelivery
+  const transportGate = new Promise(resolve => { releaseDelivery = resolve })
+  let delayedPosts = 0
+  await page.route(`http://localhost:${TESTPORT}/comments`, async route => {
+    if (route.request().method() === 'POST' && route.request().postData()?.includes('[TEST] delayed delivery')) {
+      delayedPosts++
+      await transportGate
+    }
+    await route.continue()
+  })
+  const timings = []
+  for (const n of [1, 2]) {
+    await page.locator('.btn-pick').click()
+    await page.locator('#card-source').click({ position: { x: 10, y: 10 } })
+    await ta.fill(`[TEST] delayed delivery ${n}`)
+    const start = Date.now()
+    await page.locator('.composer .send').click()
+    try { await page.locator('.composer').waitFor({ state: 'hidden', timeout: 5000 }) }
+    catch (error) {
+      console.log('Delayed delivery diagnostics:', JSON.stringify({ delayedPosts,
+        feed: await page.locator('.feed').innerText(),
+        queue: await sw.evaluate(async () => (await chrome.storage.local.get('nudgeQueue')).nudgeQueue),
+      }))
+      releaseDelivery()
+      throw error
+    }
+    timings.push(Date.now() - start)
+    await page.locator('.feed .item', { hasText: 'Saved in queue — delivery in progress' }).first().waitFor({ timeout: 1000 })
+  }
+  if (delayedPosts !== 1 || store().pins.some(p => p.text.startsWith('[TEST] delayed delivery'))) fail('slow transport must retain FIFO before server commit')
+  const durable = await sw.evaluate(async () => (await chrome.storage.local.get('nudgeQueue')).nudgeQueue.entries)
+  if (durable.filter(e => e.payload.text.startsWith('[TEST] delayed delivery')).length !== 2) fail('both acknowledged prompts must be durable before HTTP completes')
+  releaseDelivery()
+  await until(() => store().pins.filter(p => p.text.startsWith('[TEST] delayed delivery')).length === 2, 5000, 'both delayed prompts delivered once')
+  await page.locator('.feed .item', { hasText: 'nudge_7 delivered' }).waitFor({ timeout: 3000 })
+  if (JSON.stringify(store().pins.filter(p => p.text.startsWith('[TEST] delayed delivery')).map(p => p.text)) !== JSON.stringify(['[TEST] delayed delivery 1', '[TEST] delayed delivery 2'])) fail('delayed prompts must retain FIFO order')
+  await until(async () => (await sw.evaluate(async () => (await chrome.storage.local.get('nudgeQueue')).nudgeQueue.entries.length)) === 0, 3000, 'delivered queue receipts removed')
+  console.log('PASS delayed transport accepts two durable prompts promptly and delivers exactly once in order:', JSON.stringify(timings))
+
+  // A worker that never answers Send must not strand the prompt: the composer
+  // posts the same idempotent payload to the bridge itself (2026-10-03 live:
+  // "Delivery not acknowledged" while the bridge was healthy).
+  {
+    const session = await ctx.newCDPSession(page)
+    const worlds = []
+    session.on('Runtime.executionContextCreated', ({ context }) => worlds.push(context))
+    await session.send('Runtime.enable')
+    const extensionId = new URL(sw.url()).hostname
+    const world = worlds.find(context => context.origin === `chrome-extension://${extensionId}` || context.name === extensionId)
+    if (!world) fail('extension isolated world missing')
+    await session.send('Runtime.evaluate', { contextId: world.id, expression: `(() => {
+      const send = chrome.runtime.sendMessage.bind(chrome.runtime)
+      chrome.runtime.sendMessage = function (message, ...rest) {
+        if (message?.type === 'nudge-queue' && message.action === 'submit') return new Promise(() => {})
+        return send(message, ...rest)
+      }
+    })()` })
+    await page.locator('.btn-pick').click()
+    await page.locator('#card-source').click({ position: { x: 10, y: 10 } })
+    await ta.fill('[TEST] silent worker')
+    const start = Date.now()
+    await page.locator('.composer .send').click()
+    await page.locator('.composer').waitFor({ state: 'hidden', timeout: 10000 })
+    const elapsed = Date.now() - start
+    const silent = store().pins.filter(p => p.text === '[TEST] silent worker')
+    if (silent.length !== 1) fail(`silent worker: expected one stored prompt, got ${silent.length}`)
+    await page.locator('.feed .item', { hasText: `${silent[0].id} — agent working` }).waitFor({ timeout: 3000 })
+    await session.detach()
+    console.log(`PASS silent queue worker: prompt delivered directly once (${elapsed} ms)`)
+  }
+
   // Check real installation in a disposable home, not the developer's global
   // copies. All copies must exist and match; an empty CI home cannot skip it.
   execFileSync(process.execPath, [path.join(HERE, 'setup-agent.mjs')], { stdio: 'inherit' })
@@ -437,6 +537,7 @@ try {
 } finally {
   clearInterval(heartbeat)
   await ctx?.close()
+  appServer?.close()
   bridge.kill()
   fs.rmSync(TEST_EXT, { recursive: true, force: true })
 }

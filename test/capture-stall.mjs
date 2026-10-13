@@ -71,6 +71,9 @@ try {
     await page.locator('.pill .btn-draw').click()
     await lasso(page, await page.locator('.banner').boundingBox())
     await ta.waitFor({ timeout: 4000 })
+    // Healthy screenshot coverage starts after the pick-time capture finishes;
+    // Y2-Y4 separately exercise sending while that capture is still pending.
+    await until(async () => !!(await (await fetch(`${B}/selection`)).json()).screenshot, 5000, 'healthy pick-time capture')
     await ta.fill('Healthy path — with picture.')
     await page.locator('.composer .send').click()
     await until(() => store().pins.length === 1, 8000, 'the nudge to land')
@@ -130,11 +133,16 @@ try {
   {
     // (a torn-down/restarted SW already has the native one — then there is nothing to put back)
     await sw.evaluate(() => { if (globalThis.__origCapture) chrome.tabs.captureVisibleTab = globalThis.__origCapture })
+    const previousGeneration = (await (await fetch(`${B}/selection`)).json()).selectionGeneration
     await page.reload()
     await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
     await page.locator('.pill .btn-draw').click()
     await lasso(page, await page.locator('.banner').boundingBox())
     await page.locator('.composer textarea').waitFor({ timeout: 4000 })
+    await until(async () => {
+      const selection = await (await fetch(`${B}/selection`)).json()
+      return selection.selectionGeneration !== previousGeneration && !!selection.screenshot
+    }, 5000, 'recovered pick-time capture')
     await page.locator('.composer textarea').fill('Healthy again.')
     await page.locator('.composer .send').click()
     await until(() => store().pins.length === 3, 8000, 'the third nudge')

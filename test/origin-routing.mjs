@@ -136,6 +136,15 @@ try {
     if (!bStr.includes(nB.id)) fail(`K4: Agent-B watcher did NOT wake for its own ${nB.id}`)
     if (bStr.includes(nA.id)) fail(`K4: Agent-B watcher wrongly woke for Agent-A's ${nA.id}`)
     pass('K4 real watchers wake ONLY for their own host (A←5185, B←5186, no cross-wake)')
+    await assign({ session: 'sessAxxx', host: 'task-a.app.localhost:1355' })
+    await assign({ session: 'sessBxxx', host: 'task-b.app.localhost:1355' })
+    const namedA = await mk('http://task-a.app.localhost:1355/only-A')
+    const namedB = await mk('http://task-b.app.localhost:1355/only-B')
+    await sleep(1500)
+    if (await ownerOf(namedA.id) !== 'Agent-A' || await ownerOf(namedB.id) !== 'Agent-B') fail('K7: named hosts on one proxy port lost their separate owners')
+    if (!outA.join('').includes(namedA.id) || outA.join('').includes(namedB.id)) fail('K7: named Agent-A wake routing failed')
+    if (!outB.join('').includes(namedB.id) || outB.join('').includes(namedA.id)) fail('K7: named Agent-B wake routing failed')
+    pass('K7 named worktree hosts sharing port 1355 retain separate ownership and watcher delivery')
   }
 
   console.log('\nSuite K — Origin routing: ALL PASS (parallel localhosts route to their own agents)')
