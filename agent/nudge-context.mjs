@@ -31,7 +31,7 @@ try { promptText = String(JSON.parse(fs.readFileSync(0, 'utf8')).prompt || '') }
 // (A just-invoked groundworks-nudge is not armed YET — context appears on
 // the NEXT prompt. The skill itself surfaces everything on that first run.)
 const mySession = resolveAgentId()
-const hostOf = (u) => { try { return new URL(u).host } catch { return '' } }
+const hostOf = (u) => { try { return new URL(u).host.replace(/^127\.0\.0\.1(?=:|$)/, 'localhost') } catch { return '' } }
 let status, identity
 try {
   const res = await fetch(`http://127.0.0.1:${PORT}/.identity`, { signal: AbortSignal.timeout(400) })
@@ -57,9 +57,14 @@ const myKey = mySession ? `s:${mySession}` : null
 const ownersMap = new Map(identity.owners || [])
 const agentKeyOf = (a) => a.session ? `s:${a.session}` : `p:${a.pid}`
 const ownsHost = (host) => {
+  const route = identity.routes?.find(route => route.host === host)
+  if (route) return route.owner?.session === mySession
+  const agents = identity.agents || []
   const key = ownersMap.get(host) || ownersMap.get('*')
-  if (key) return key === myKey
-  const newest = (identity.agents || []).reduce((a, b) => (!a || b.since >= a.since ? b : a), null)
+  if (key && agents.some(agent => agentKeyOf(agent) === key)) return key === myKey
+  const claimed = agents.filter(agent => agent.hosts?.includes(host))
+  const eligible = claimed.length ? claimed : agents.filter(agent => agent.hosts == null)
+  const newest = eligible.reduce((a, b) => (!a || b.since >= a.since ? b : a), null)
   return !!newest && agentKeyOf(newest) === myKey
 }
 // mine = stamped to me, OR ownerless (offline arrival) but on a host I own

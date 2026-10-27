@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Groundworks Nudge",
-  "version": "0.34.0",
+  "version": "0.35.1",
   "web_accessible_resources": [
     {
       "resources": [
@@ -11,6 +11,7 @@
       ],
       "matches": [
         "http://localhost/*",
+        "http://*.localhost/*",
         "http://127.0.0.1/*"
       ]
     }
@@ -49,6 +50,7 @@
     {
       "matches": [
         "http://localhost/*",
+        "http://*.localhost/*",
         "http://127.0.0.1/*"
       ],
       "js": [
@@ -60,6 +62,7 @@
     {
       "matches": [
         "http://localhost/*",
+        "http://*.localhost/*",
         "http://127.0.0.1/*"
       ],
       "js": [

@@ -11,6 +11,7 @@ import {
   resolveWake,
 } from './runtime.mjs'
 import { ensureBridge } from '../bridge/lifecycle.mjs'
+import { discoverPreviews, previewHost } from './preview-hosts.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.dirname(HERE)
@@ -135,7 +136,13 @@ function ownsOwnerless(url, agentId, live) {
   const host = hostOf(url)
   const route = live?.routes?.find((item) => item.host === host)
   if (route) return route.owner?.session === agentId
-  return !!live?.agents?.find((item) => item.session === agentId && item.owner)
+  const agents = live?.agents || []
+  const key = new Map(live?.owners || []).get(host) || new Map(live?.owners || []).get('*')
+  const picked = key && agents.find(agent => (agent.session ? `s:${agent.session}` : `p:${agent.pid}`) === key)
+  if (picked) return picked.session === agentId
+  const claimed = agents.filter(agent => agent.hosts?.includes(host))
+  const eligible = claimed.length ? claimed : agents.filter(agent => agent.hosts == null)
+  return eligible.reduce((latest, agent) => !latest || agent.since >= latest.since ? agent : latest, null)?.session === agentId
 }
 
 function matchesPort(value, port) {
@@ -148,18 +155,20 @@ function matchesPort(value, port) {
   } catch { return false }
 }
 
-function scopedPins(pins, { agentId, port, all, live }) {
+function scopedPins(pins, { agentId, port, host, all, live }) {
   return pins.filter((pin) => {
     if (port && !matchesPort(pin.url, port)) return false
+    if (host && hostOf(pin.url) !== host) return false
     if (all || !agentId) return true
     return pin.owner?.session === agentId || (!pin.owner?.session && ownsOwnerless(pin.url, agentId, live))
   })
 }
 
-function scopedWithdrawn(items, { agentId, port, all, live }) {
+function scopedWithdrawn(items, { agentId, port, host, all, live }) {
   return items.filter((item) => {
     if (item.withdrawnAt && Date.now() - Date.parse(item.withdrawnAt) > 30 * 60_000) return false
     if (port && !matchesPort(item.url, port)) return false
+    if (host && hostOf(item.url) !== host) return false
     if (all || !agentId) return true
     return item.owner?.session === agentId || (!item.owner?.session && ownsOwnerless(item.url, agentId, live))
   })
@@ -168,10 +177,11 @@ function scopedWithdrawn(items, { agentId, port, all, live }) {
 function usage() {
   console.log(`groundworks-nudge <command>
 
-  watch --label <name> [--agent-id <id>] [--runtime <name>] [--surface <name>] [--wake push|pull]
-  status [--check [--browser chrome|safari] [--port <app-port>] [--runtime <name>] [--agent-id <id>]]
-  context [--agent-id <id>] [--port <port>] [--all]
-  list [--agent-id <id>] [--port <port>] [--all]
+  watch --label <name> [--project <directory> | --url <preview-url>] [--agent-id <id>] [--runtime <name>] [--surface <name>] [--wake push|pull]
+  previews [--project <directory>]
+  status [--check [--browser chrome|safari] [--url <preview-url>] [--port <app-port>] [--runtime <name>] [--agent-id <id>]]
+  context [--agent-id <id>] [--url <preview-url>] [--port <port>] [--all]
+  list [--agent-id <id>] [--url <preview-url>] [--port <port>] [--all]
   show <#label|nudge_id>
   selection
   resolve <#label|nudge_id> [--wait-evidence <ms>]
@@ -193,6 +203,11 @@ if (command === 'help' || command === '--help' || command === '-h') {
 } else if (command === 'watch') {
   const label = String(options.label || positionals.join(' ')).trim()
   if (!label) die('watch requires --label <name>')
+  if (options.url !== undefined) {
+    try { previewHost(String(options.url)) } catch (error) { die(error.message, 2) }
+    process.env.NUDGE_PREVIEW_URL = String(options.url)
+  }
+  if (options.project !== undefined) process.env.NUDGE_PROJECT = fs.realpathSync(String(options.project))
   const agentId = String(options['agent-id'] || resolveAgentId() || `agent-${crypto.randomUUID().slice(0, 12)}`).slice(0, 128)
   process.env.NUDGE_AGENT_ID = agentId
   process.env.NUDGE_AGENT_LABEL = label
@@ -208,6 +223,8 @@ if (command === 'help' || command === '--help' || command === '-h') {
     wake: process.env.NUDGE_WAKE === 'push' ? 'push' : 'pull',
   })
   await import(path.join(ROOT, 'bridge', 'watch-nudges.mjs'))
+} else if (command === 'previews') {
+  print(discoverPreviews({ cwd: options.project === undefined ? process.cwd() : String(options.project) }))
 } else if (command === 'status' && options.check !== undefined) {
   const { checkStatus } = await import('./status-check.mjs')
   try {
@@ -215,6 +232,7 @@ if (command === 'help' || command === '--help' || command === '-h') {
     print(await checkStatus({
       browser: options.browser ?? null,
       appPort: options.port === undefined ? null : Number(options.port),
+      appUrl: options.url === undefined ? null : String(options.url),
       runtime: options.runtime === undefined ? resolveAgentRuntime() : String(options.runtime),
       agentId: options['agent-id'] === undefined ? resolveAgentId() : String(options['agent-id']),
     }))
@@ -230,7 +248,11 @@ if (command === 'help' || command === '--help' || command === '-h') {
   const live = await identity(false)
   const { dir, store, selection, withdrawn } = await readState()
   const agentId = String(options['agent-id'] || resolveAgentId() || '') || null
-  const scope = { agentId, port: options.port, all: !!options.all, live }
+  let host = null
+  if (options.url !== undefined) {
+    try { host = previewHost(String(options.url)) } catch (error) { die(error.message, 2) }
+  }
+  const scope = { agentId, port: options.port, host, all: !!options.all, live }
   const pins = scopedPins(store.pins || [], scope)
     .filter((pin) => pin.status === 'open')
     .sort((a, b) => Number(a.id.match(/\d+$/)?.[0]) - Number(b.id.match(/\d+$/)?.[0]))
@@ -244,7 +266,10 @@ if (command === 'help' || command === '--help' || command === '-h') {
   }
   if (command === 'context') {
     const at = Date.parse(selection?.at || '')
-    output.selection = at && Date.now() - at <= 15 * 60_000 ? selection : null
+    output.selection = at && Date.now() - at <= 15 * 60_000
+      && (!host || hostOf(selection?.url) === host)
+      && (!scope.port || matchesPort(selection?.url, scope.port))
+      && (!agentId || ownsOwnerless(selection?.url, agentId, live)) ? selection : null
   }
   print(output)
 } else if (command === 'show') {

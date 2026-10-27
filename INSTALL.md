@@ -224,7 +224,17 @@ Click the dot for a one-line explanation of the current state.
 
 ## Working with several projects
 
-Each localhost port is owned by one agent session. When two dev servers run
+Each local hostname and port is owned by one agent session. HTTP Portless
+addresses such as `task-a.app.localhost:1355` and `task-b.app.localhost:1355`
+are separate hosts even when they share the same proxy port. The Skill's
+project-scoped watcher verifies Portless's serving processes against its Git
+worktree and binds those hosts automatically, including later server starts.
+Use `groundworks-nudge previews --project <worktree>` to inspect that mapping.
+For another local preview, pass its actual browser address to `watch --url`.
+The toolbar's **Switch session** dropdown remains an explicit override.
+Project-scoped sessions do not claim unrelated hosts. Older unscoped sessions
+retain the existing fallback described in [PRODUCT.md](docs/PRODUCT.md#accepted-trade-offs--the-price-of-the-usp).
+When two dev servers run
 (say `localhost:5173` and `localhost:5174`), arm one session per project and
 pick the owner per port in the toolbar's **Switch session** dropdown. A prompt
 on one port never wakes the other project's agent.

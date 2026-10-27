@@ -8,6 +8,15 @@ const request = (host, origin, url = '/comments') => ({
 })
 
 describe('loopback admission shared by HTTP and WebSocket', () => {
+  it.each(['http://task-a.app.localhost:1355', 'http://task-b.app.localhost:1355', 'https://app.localhost'])('admits named local page origins: %s', origin => {
+    expect(admissionError(request('localhost:4700', origin))).toBeNull()
+  })
+  it.each(['http://app.localhost.evil:1355', 'http://notlocalhost:1355', 'http://.localhost:1355', 'http://app..localhost:1355', 'http://-app.localhost:1355', 'http://app.localhost:1355/path', 'http://app.localhost@evil:1355'])('rejects lookalike or malformed named origins: %s', origin => {
+    expect(admissionError(request('localhost:4700', origin))).toBeTruthy()
+  })
+  it('keeps the bridge endpoint on direct loopback hosts', () => {
+    expect(admissionError(request('task-a.app.localhost:4700'))).toBeTruthy()
+  })
   it.each(['localhost', 'localhost:4700', '127.0.0.1:4799', 'LOCALHOST:4700'])('allows local tools and local pages on %s', host => {
     for (const origin of [undefined, 'http://localhost:4886', 'https://127.0.0.1:443']) expect(admissionError(request(host, origin))).toBeNull()
   })

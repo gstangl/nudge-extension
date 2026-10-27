@@ -13,12 +13,21 @@
   const problem = (code, message = code) => Object.assign(new Error(message), { code })
 
   function create({ storage, fetch: request = globalThis.fetch.bind(globalThis), endpoint,
-    now = Date.now, uuid = () => crypto.randomUUID().replaceAll('-', '') }) {
+    now = Date.now, uuid = () => crypto.randomUUID().replaceAll('-', ''), acknowledgementMs = 1000 }) {
     let tail = Promise.resolve()
+    let deliveryTail = Promise.resolve()
+    const receipts = new Map()
     // A rejected mutation must not poison the owner for later requests.
     const serialize = work => {
       const operation = tail.then(work)
       tail = operation.catch(() => {})
+      return operation
+    }
+    // HTTP must never hold the storage lock: another prompt can be safely
+    // accepted while an older tab's transport is waiting for its deadline.
+    const deliver = work => {
+      const operation = deliveryTail.then(work)
+      deliveryTail = operation.catch(() => {})
       return operation
     }
     const write = async envelope => {
@@ -61,9 +70,10 @@
       if (!response.ok) throw problem(response.status === 409 ? 'submission_conflict' : 'bridge_rejected', body?.error || `HTTP ${response.status}`)
       return body
     }
-    async function flush(envelope, transport) {
+    async function flush(transport, stopAfter) {
       const delivered = []
       let reason = null
+      const envelope = await serialize(read)
       if (!envelope.entries.length) return { delivered, reason }
       let base
       try {
@@ -76,8 +86,9 @@
         if (identity?.app !== 'groundworks-nudge' || !identity.capabilities?.submissionIdempotency) return { delivered, reason: 'idempotency_unavailable' }
       } catch (error) { return { delivered, reason: error.code || 'bridge_offline' } }
       // Strict FIFO: ambiguous/expired work is never silently bypassed.
-      while (envelope.entries.length) {
-        const entry = envelope.entries[0]
+      while (true) {
+        const entry = (await serialize(read)).entries[0]
+        if (!entry) break
         reason = entry.pending || ageReason(entry.payload)
         if (reason) break
         try {
@@ -85,12 +96,17 @@
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry.payload),
           })
           if (!body || typeof body.id !== 'string' || !/^nudge_\d+$/.test(body.id)) throw problem('invalid_response')
-          const next = { ...envelope, entries: envelope.entries.slice(1) }
           // If deletion fails after server commit, keep the original durable
           // payload/token: the next attempt safely obtains the same receipt.
-          await write(next)
-          envelope.entries = next.entries
-          delivered.push({ submissionId: entry.payload.submissionId, id: body.id, withdrawn: body.withdrawn === true })
+          await serialize(async () => {
+            const latest = await read()
+            await write({ ...latest, entries: latest.entries.filter(item => item.payload.submissionId !== entry.payload.submissionId) })
+          })
+          const receipt = { submissionId: entry.payload.submissionId, id: body.id, withdrawn: body.withdrawn === true }
+          receipts.set(receipt.submissionId, receipt)
+          if (receipts.size > CAPACITY * 4) receipts.delete(receipts.keys().next().value)
+          delivered.push(receipt)
+          if (receipt.submissionId === stopAfter) break
         } catch (error) { reason = error.code || 'bridge_offline'; break }
       }
       return { delivered, reason }
@@ -101,33 +117,54 @@
         text: payload.text || '', url: payload.url || '', pending: pending || ageReason(payload),
       }))
     }
-    return { handle: (message, { fetch: transport = request } = {}) => serialize(async () => {
+    return { handle: async (message, { fetch: transport = request, onDelivered = () => {} } = {}) => {
       try {
-        const envelope = await read()
-        if (message.action === 'status') return { ok: true, entries: summary(envelope), capacity: CAPACITY }
-        if (message.action === 'discard') {
+        // Discard retains its old ordering relative to in-flight delivery.
+        if (message.action === 'discard') return await deliver(() => serialize(async () => {
+          const envelope = await read()
           const entries = envelope.entries.filter(entry => entry.payload.submissionId !== message.submissionId)
           await write({ ...envelope, entries })
           return { ok: true, removed: envelope.entries.length - entries.length }
-        }
-        if (!['submit', 'flush'].includes(message.action)) throw problem('unknown_queue_action')
-        if (message.action === 'submit') {
-          const payload = clone(message.payload)
-          if (!token(payload?.submissionId) || ageReason(payload)) throw problem('invalid_submission', 'Submission needs a valid stable token and creation time')
-          const existing = envelope.entries.find(entry => entry.payload.submissionId === payload.submissionId)
-          if (existing && canonical(existing.payload) !== canonical(payload)) throw problem('submission_conflict')
-          if (!existing) {
-            if (envelope.entries.length >= CAPACITY) throw problem('queue_full', 'Queue full — prompt kept')
-            envelope.entries.push({ payload, pending: null })
-            await write(envelope)
+        }))
+        const immediate = await serialize(async () => {
+          const envelope = await read()
+          if (message.action === 'status') return { ok: true, entries: summary(envelope), capacity: CAPACITY }
+          if (!['submit', 'flush'].includes(message.action)) throw problem('unknown_queue_action')
+          if (message.action === 'submit') {
+            const payload = clone(message.payload)
+            if (!token(payload?.submissionId) || ageReason(payload)) throw problem('invalid_submission', 'Submission needs a valid stable token and creation time')
+            receipts.delete(payload.submissionId)
+            const existing = envelope.entries.find(entry => entry.payload.submissionId === payload.submissionId)
+            if (existing && canonical(existing.payload) !== canonical(payload)) throw problem('submission_conflict')
+            if (!existing) {
+              if (envelope.entries.length >= CAPACITY) throw problem('queue_full', 'Queue full — prompt kept')
+              envelope.entries.push({ payload, pending: null })
+              await write(envelope)
+            }
           }
-        }
-        const result = await flush(envelope, transport)
-        const own = result.delivered.find(item => item.submissionId === message.payload?.submissionId)
+        })
+        if (immediate) return immediate
+        const delivery = deliver(() => flush(transport, message.payload?.submissionId))
+        // Return a durable queue receipt promptly; delivery continues with the
+        // same idempotency token. A timeout here is not an ambiguous submission.
+        let timer
+        let result
+        try {
+          result = message.action === 'submit' ? await Promise.race([
+            delivery,
+            new Promise(resolve => { timer = setTimeout(() => resolve({ delivered: [], reason: 'delivery_pending' }), acknowledgementMs) }),
+          ]) : await delivery
+        } finally { clearTimeout(timer) }
+        if (result.reason === 'delivery_pending') delivery.then(() => {
+          const receipt = receipts.get(message.payload?.submissionId)
+          if (receipt) return onDelivered(receipt)
+        }).catch(() => { /* durable queue retains unacknowledged delivery */ })
+        const own = receipts.get(message.payload?.submissionId)
+        const envelope = await serialize(read)
         return { ok: true, queued: message.action === 'submit' && !own, id: own?.id || null,
           withdrawn: own?.withdrawn || false, ...result, entries: summary(envelope) }
       } catch (error) { return { ok: false, error: error.code || 'queue_failed', message: error.message } }
-    }) }
+    } }
   }
 
   function install(api, platform = globalThis.__nudgePlatform || {}) {
@@ -145,7 +182,7 @@
       let local = false
       try {
         const url = new URL(sender.url || sender.tab?.url)
-        local = url.protocol === 'http:' && ['localhost', '127.0.0.1'].includes(url.hostname)
+        local = url.protocol === 'http:' && /^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname) && !url.username && !url.password
       } catch { /* malformed sender URL is rejected below */ }
       if (sender.id !== api.runtime.id || sender.frameId !== 0 || !Number.isInteger(sender.tab?.id) || !local) {
         reply({ ok: false, error: 'queue_sender_rejected' }); return
@@ -169,7 +206,9 @@
           return { ok: result.ok, status: result.status, json: async () => result.body }
         } finally { signal.removeEventListener('abort', onAbort) }
       }
-      owner.handle(message, { fetch: transport }).then(reply)
+      owner.handle(message, { fetch: transport, onDelivered: receipt => api.tabs.sendMessage(tabId, {
+        type: 'nudge-queue-delivered', receipt, hasText: !!message.payload?.text, url: sender.url || sender.tab?.url,
+      }, sender.documentId ? { documentId: sender.documentId } : { frameId: 0 }) }).then(reply)
       return true
     })
     return owner

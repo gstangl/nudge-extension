@@ -1,6 +1,8 @@
 // Shared HTTP and WebSocket admission. Loopback binding does not make a
 // foreign DNS name safe: same-origin requests may omit Origin entirely.
-export const ORIGIN_OK = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+// Named .localhost origins are local apps (including Portless worktrees).
+// Keep the bridge's own Host fence below restricted to direct loopback.
+export const ORIGIN_OK = /^https?:\/\/(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)(:\d+)?$/
 
 export function admissionError(req) {
   const hosts = (req.rawHeaders || []).filter((_, i) => i % 2 === 0 && req.rawHeaders[i].toLowerCase() === 'host')

@@ -33,6 +33,19 @@ function fixture() {
 }
 
 describe('read-only Nudge readiness', () => {
+  it('checks each named local host independently on the same proxy port', async () => {
+    const f = fixture()
+    f.identity.tabs = ['task-a.app.localhost', 'task-b.app.localhost'].map(host => ({ url: `http://${host}:1355/app`, browserSource: { browser: 'chromium' } }))
+    f.identity.routes = [
+      { host: 'task-a.app.localhost:1355', owner: { session: 'current-session' } },
+      { host: 'task-b.app.localhost:1355', owner: { session: 'other-session' } },
+    ]
+    expect((await f.run({ browser: 'chrome', appPort: 1355 })).state).toBe('selection_required')
+    expect((await f.run({ browser: 'chrome', appUrl: 'http://task-a.app.localhost:1355/app' })).state).toBe('ready')
+    expect((await f.run({ browser: 'chrome', appUrl: 'http://task-b.app.localhost:1355/app' })).state).toBe('selection_required')
+    f.identity.tabs.pop()
+    expect((await f.run({ browser: 'chrome', appPort: 1355 })).state).toBe('ready')
+  })
   it('keeps setup checks under status and does not expose a separate retired command', () => {
     const cli = path.join(root, 'agent/groundworks-nudge.mjs')
     const run = args => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8', timeout: 5000 })

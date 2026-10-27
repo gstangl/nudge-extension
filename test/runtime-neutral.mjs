@@ -44,7 +44,7 @@ try {
   await waitFor(async () => {
     const live = await (await fetch(`${BASE}/.identity`)).json()
     const agent = live.agents?.find((item) => item.session === AGENT_ID)
-    return agent?.runtime === 'Codex' && agent?.surface === 'CLI' && agent?.wake === 'pull'
+    return agent?.runtime === 'Codex' && agent?.surface === 'CLI' && agent?.wake === 'pull' && agent?.label === 'Runtime parity'
   }, 'Codex watcher did not register with a stable runtime-neutral identity')
   pass('Codex identity reaches the shared roster with runtime, surface, and pull capability')
 
@@ -59,7 +59,7 @@ try {
   if (readiness.kind !== 'groundworks-nudge-readiness' || readiness.schemaVersion !== 1
       || readiness.state !== 'browser_required' || readiness.checks.bridge.state !== 'connected'
       || readiness.checks.session.state !== 'armed' || readiness.checks.session.wake !== 'pull') {
-    fail('status check confused a live bridge and armed session with a connected browser')
+    fail('status check confused a live bridge and armed session with a connected browser: ' + JSON.stringify(readiness))
   }
   pass('status check observes the real bridge and current session without asserting a browser installation')
 
