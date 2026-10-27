@@ -28,6 +28,11 @@ export function binding() {
   const files = names.sort().map(name => [name, crypto.createHash('sha256').update(fs.readFileSync(path.join(root, name))).digest('hex')])
   return { revision: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(), sha256: crypto.createHash('sha256').update(JSON.stringify(files)).digest('hex'), files }
 }
+export function commandBinding(argv) {
+  const executable = argv[0].includes('/') ? path.resolve(root, argv[0]) : execFileSync('which', [argv[0]], { encoding: 'utf8' }).trim()
+  const paths = [executable, ...argv.slice(1).filter(arg => !arg.startsWith('-') && fs.existsSync(path.resolve(root, arg))).map(arg => path.resolve(root, arg))]
+  return paths.map(file => ({ file, sha256: crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') }))
+}
 export async function stop(child, signal = 'SIGTERM') {
   if (!child || child.exitCode !== null || child.signalCode !== null) return
   const closed = once(child, 'close')
@@ -57,7 +62,7 @@ export async function candidate({ argv, port, fixture, log = () => {} } = {}) {
   const env = isolatedEnv(store, port)
   let child
   const api = {
-    port, home, store, env, argv, get child() { return child },
+    port, home, store, env, argv, build: commandBinding(argv), get child() { return child },
     async start() {
       await freePort(port)
       child = ownedChild(argv, env, log)

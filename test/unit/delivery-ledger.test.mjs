@@ -17,8 +17,13 @@ test('H02/H03/H07 missing attempt, clock, receipt, identity and timing controls'
   expect(() => new DeliveryLedger().reconcile([])).toThrow('empty run')
   const l = fixture(); expect(() => l.attempt(l.attempts[0])).toThrow('duplicate attempt')
   l.attempts[0].observations = []; expect(() => l.reconcile([pin])).toThrow('watcher receipt')
+  const wrongWatcher = fixture(); wrongWatcher.attempts[0].observations[0].session = 'session_beta'
+  expect(() => wrongWatcher.reconcile([pin])).toThrow('wrong watcher session')
   const badClock = fixture(); badClock.attempts[0].observations[0].at = 9
   expect(() => badClock.reconcile([pin])).toThrow('clock')
+  expect(() => summary([{status:'passed',latencyMs:5}], 2)).toThrow('omitted scheduled attempt')
+  const shifted = fixture(); shifted.attempts[0].observations[0].at = 1e12
+  expect(() => shifted.reconcile([pin])).toThrow('deadline exceeded')
   expect(() => summary([])).toThrow('empty timings')
   for (const latencyMs of [0, -1, NaN, Infinity]) expect(() => summary([{status:'passed',latencyMs}])).toThrow('invalid timing')
   expect(summary([{status:'passed',latencyMs:5},{status:'timeout'}])).toMatchObject({attempts:2,successful:1,failed:1,p95:5})

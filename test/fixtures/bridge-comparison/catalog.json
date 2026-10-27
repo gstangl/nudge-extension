@@ -1,0 +1,1776 @@
+{
+  "version": 1,
+  "source_plan_sha256": "5b46ad903a7daf30de93c84f1deb73298a3f1abbc34023c3954cb1ee56961a75",
+  "meaning": "Assertion mapping is not execution or full scenario qualification. Partial and missing scope remains explicit. See source-bound run reports.",
+  "scenarios": [
+    {
+      "id": "U01",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Successful queue enqueue; storage rejects or never answers",
+      "expected": "Persisted acceptance precedes transport; failure preserves the editable draft and returns a bounded outcome",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [
+        "Never-returning storage RPC and editable-draft timeout assertion is not implemented in this queue unit lane."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U02",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Two submits while first delivery hangs",
+      "expected": "Both accepted payloads remain recoverable; acceptance does not wait behind network delivery",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U03",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Concurrent submit/flush/discard calls",
+      "expected": "Defined FIFO, no lost update; discard serializes with in-flight delivery",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [
+        "All discard/receipt-removal completion orderings need a deterministic queue schedule driver."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U04",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "HTTP success with missing/wrong ID, malformed JSON, 409, 500 or timeout",
+      "expected": "Only validated receipt removes an entry; ambiguous outcomes retain original payload",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U05",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Worker restart after queue acceptance or bridge commit",
+      "expected": "Same submission ID, creation time, text and image replay; no new work identity",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U06",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Queue at capacity-1, capacity, capacity+1",
+      "expected": "Existing work retained; overflow refused explicitly; no evicted prompt",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U07",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Receipt/retry horizon and clock allowance: just before, at, just after boundary",
+      "expected": "Frozen policy's exact inclusivity; expired/unknown-age work not silently resent as new",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [
+        "Exact at/before/after every retry and clock-allowance boundary has not been expanded in both languages."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U08",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Unsupported/corrupt queue schema or uncertain legacy payload",
+      "expected": "Original data preserved; explicit pending/error state; later work not silently bypassed",
+      "assertions": [
+        "test/unit/queue.test.mjs: serialized durable browser submission queue"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U09",
+      "requirements": [
+        "BR-03"
+      ],
+      "stimulus": "Same submission ID with equivalent/reordered fields versus changed text/image/console",
+      "expected": "Equivalent replay returns original effect; material changes conflict",
+      "assertions": [
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U10",
+      "requirements": [
+        "BR-01"
+      ],
+      "stimulus": "Store mutation fails at write/rename/sync, followed by retry",
+      "expected": "No success from uncommitted in-memory state; original committed view remains authoritative",
+      "assertions": [
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U11",
+      "requirements": [
+        "BR-01"
+      ],
+      "stimulus": "Sequence after delete/prune/corrupt-store recovery and label wrapping",
+      "expected": "Persistent IDs never reused; UI labels remain display-only",
+      "assertions": [
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U12",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Owner/session changes before/after submit and resolve",
+      "expected": "Server chooses/stamps owner according to the canonical acceptance rule; later actions do not relabel owned work",
+      "assertions": [
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U13",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Foreign/unarmed/malformed session plus bridge unavailable",
+      "expected": "No automatic watcher activation or implicit hook context leakage",
+      "assertions": [
+        "test/hook-optin.mjs: G opt-in assertions",
+        "test/runtime-neutral.mjs: runtime isolation"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U14",
+      "requirements": [
+        "BR-06"
+      ],
+      "stimulus": "Freshness expiration, delayed heartbeat and watcher replacement",
+      "expected": "Correct liveness, stable session identity and no false push capability",
+      "assertions": [
+        "test/bridge-realtime.mjs: roster-updates-without-heartbeat-spam",
+        "test/wake-mode.mjs: W1-W5"
+      ],
+      "missing_prerequisites": [
+        "A deterministic freshness/late-heartbeat/replacement clock adapter is missing for both candidates."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U15",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Retry delay growth/reset/cap; close/error/focus at the same instant",
+      "expected": "One eligible connection attempt; bounded retry; no orphan timer loop",
+      "assertions": [
+        "test/unit/connection-generation.test.mjs: five actual connection callback transitions"
+      ],
+      "missing_prerequisites": [
+        "Complete fake-time retry growth/reset/cap and simultaneous visibility/error schedule driver remains missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U16",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Old socket fires close/error/message after a replacement opens",
+      "expected": "Stale callbacks cannot close or update the current connection",
+      "assertions": [
+        "test/unit/connection-generation.test.mjs: five actual connection callback transitions"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U17",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "Abort fires before/during/after response; late callback arrives",
+      "expected": "One terminal result; no late duplicate mutation or unresolved promise",
+      "assertions": [
+        "test/unit/http-boundary.test.mjs: body completion/rejection boundaries",
+        "test/bridge-boundary.mjs: split multibyte and malformed input"
+      ],
+      "missing_prerequisites": [
+        "Full abort-before/during/after and late callback permutations remain missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U18",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Foreign listener, timeout, malformed identity, wrong store/capability/version",
+      "expected": "Do not kill or replace unknown process; report bounded diagnostic",
+      "assertions": [
+        "test/unit/lifecycle.test.mjs: identified lifecycle and writer lease cases",
+        "test/bridge-lifecycle.mjs: real process ownership"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U19",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Lease holder alive/dead/EPERM/PID reuse/malformed/recovery guard",
+      "expected": "Fail conservatively; release only own lease; never create two writers",
+      "assertions": [
+        "test/unit/lifecycle.test.mjs: identified lifecycle and writer lease cases",
+        "test/bridge-lifecycle.mjs: real process ownership"
+      ],
+      "missing_prerequisites": [
+        "PID reuse/EPERM and recovery-guard schedules need the complete candidate-neutral lease driver."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U20",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Host variants, exact ports, aliases, nested names, invalid credentials and route changes",
+      "expected": "Reviewed route examples select intended host without prefix/query-based matches",
+      "assertions": [
+        "test/unit/preview-hosts.test.mjs: exact local hosts",
+        "test/origin-routing.mjs: K routing assertions"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U21",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "NaN/infinity/wrong types/deep structures/oversized tokens/UTF-8 splits",
+      "expected": "Bounded validation, correct rejection and no partial mutation",
+      "assertions": [
+        "test/unit/http-boundary.test.mjs: body completion/rejection boundaries",
+        "test/bridge-boundary.mjs: split multibyte and malformed input"
+      ],
+      "missing_prerequisites": [
+        "Deep-value and all body/frame/token boundary expansions remain incomplete."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "U22",
+      "requirements": [
+        "BR-09"
+      ],
+      "stimulus": "Navigation, worker restart and late capture from retired document",
+      "expected": "Source/generation checks prevent stale or foreign evidence",
+      "assertions": [
+        "test/unit/capture-identity.test.mjs: document generations",
+        "test/browser-protocol.mjs: stale document and foreign capture token assertions"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "U23",
+      "requirements": [
+        "BR-06"
+      ],
+      "stimulus": "Wall clock jumps forward/backward around liveness/retry/retention",
+      "expected": "Durations use appropriate clocks; no accidental huge retry or premature data removal",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Controllable wall/monotonic clock providers and OS clock-jump isolation are not implemented."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "U24",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Malformed, empty, duplicate or missing benchmark cases; altered normalization",
+      "expected": "Comparison fails explicitly instead of reporting success",
+      "assertions": [
+        "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P01",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Health and identity on startup/restart, including canonical store aliases",
+      "expected": "Correct app/capabilities/store; readiness only after usable state",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P02",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Real HTTP submit/read/resolve/delete; WS hello and snapshots",
+      "expected": "Stable supported response semantics and matching persisted state",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P03",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Drop the HTTP response after commit, then retry after reconnect",
+      "expected": "One persisted effect with original receipt; uncertain attempt remains visible",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P04",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Disconnect before commit; retry same submission",
+      "expected": "Either no initial effect or the original effect; final convergence to one record",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P05",
+      "requirements": [
+        "BR-01"
+      ],
+      "stimulus": "Kill at write-start, partial-write, pre-rename, post-rename, pre-reply and post-reply barriers",
+      "expected": "All confirmed submissions survive; unconfirmed submissions converge on retry",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P06",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Kill during replay/withdrawal/retention, then replay original ID",
+      "expected": "No resurrection, ID reuse or receipt/pin mismatch",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P07",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Many concurrent submits and duplicate-ID races",
+      "expected": "Unique IDs for distinct work; one effect per stable submission ID; defined commit order",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P08",
+      "requirements": [
+        "BR-03"
+      ],
+      "stimulus": "Same ID with changed evidence/payload and JSON field permutations",
+      "expected": "Reviewed equivalence cases replay; conflicting cases fail without mutation",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P09",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "Unsupported methods, malformed/oversized/chunked body, lying content length",
+      "expected": "Bounded errors; healthy parallel request still completes",
+      "assertions": [
+        "test/bridge-retention.mjs: retained open work, old resolved/receipts, sequence and marker collection",
+        "test/unit/store.test.mjs: retry horizon and display labels"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P10",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "Body/header/WS limits at limit-1, limit, limit+1; invalid UTF-8 and binary frames",
+      "expected": "Exact boundary policy; only offending connection closes",
+      "assertions": [
+        "test/bridge-retention.mjs: retained open work, old resolved/receipts, sequence and marker collection",
+        "test/unit/store.test.mjs: retry horizon and display labels"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P11",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Browser retry after bridge restart, worker restart and receipt pruning",
+      "expected": "Retry policy preserved, including legacy receipts and expired IDs",
+      "assertions": [
+        "test/bridge-conformance.mjs: P06-withdrawn-replay",
+        "test/browser-protocol.mjs: restart receipt and capture reconstruction",
+        "test/bridge-withdrawal-fault.mjs: modern/legacy post-commit crash reconstructs original recipient stop marker"
+      ],
+      "missing_prerequisites": [
+        "Full withdrawal/receipt pruning race matrix and additional partial-write/marker boundaries remain unqualified."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "P12",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Historical invalid selection/annotation/store shape",
+      "expected": "Original corruption retained as evidence; explicit recovery/error semantics; no silent destructive rewrite",
+      "assertions": [
+        "test/bridge-boundary.mjs: Host/Origin, invalid annotations and healthy peer",
+        "test/bridge-image-conformance.mjs: valid PNG/JPEG and rejected malformed PNG",
+        "test/bridge-origin-headers.mjs: malformed duplicate and non-UTF8 Origin cannot become missing Origin"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "P13",
+      "requirements": [
+        "BR-01"
+      ],
+      "stimulus": "Filesystem write/rename/sync/permission/ENOSPC errors",
+      "expected": "No false confirmation; healthy recovery after fault removal; inspect committed data",
+      "assertions": [
+        "test/bridge-conformance.mjs: P13-write-failure-recovery",
+        "test/bridge-commit-faults.mjs: four semantic crash barriers"
+      ],
+      "missing_prerequisites": [
+        "Bounded ENOSPC, rename/sync failure and partial-write driver is missing; four process barriers do not cover them."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "P14",
+      "requirements": [
+        "BR-01"
+      ],
+      "stimulus": "Simulated OS crash or lost unsynced writes",
+      "expected": "Meets explicitly chosen durability level; kept separate from process-kill evidence",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No isolated power-loss/reordering fault filesystem or VM is provisioned; common policy claims process crash only."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "P15",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Shared reviewed operation sequences with JS and Rust, including errors",
+      "expected": "Same semantic state and required events after allowed normalization",
+      "assertions": [
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "C01",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Bridge absent when watcher/browser starts; bridge comes up later",
+      "expected": "Automatic eligible registration and recovery, same queued IDs",
+      "assertions": [
+        "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+        "test/unit/connection-generation.test.mjs: current vs retired sockets"
+      ],
+      "missing_prerequisites": [
+        "Browser queue recovery while both watcher and bridge start absent is not candidate-neutral yet."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C02",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "stimulus": "Kill bridge with active tabs and queued submissions",
+      "expected": "Truthful status, bounded restart/reconnect and complete drainage",
+      "assertions": [
+        "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+        "test/unit/connection-generation.test.mjs: current vs retired sockets"
+      ],
+      "missing_prerequisites": [
+        "Actual isolated Chrome native respawn lane is missing; explicit harness restart cannot substitute."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C03",
+      "requirements": [
+        "BR-06",
+        "BR-12"
+      ],
+      "stimulus": "Freeze bridge without closing sockets",
+      "expected": "Detect non-progress; no false healthy state past declared bound; do not spawn a second writer",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Frozen-process/non-progress driver and a truthful status deadline assertion are missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C04",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "stimulus": "Black-hole WS frames while HTTP still works, and vice versa",
+      "expected": "Correct differentiated state and retained work; restored transport converges",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Independent HTTP-only and WS-only black-hole proxy schedules and UI deadlines are missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C05",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "TCP reset, graceful close, half-open request and slow response",
+      "expected": "Healthy peers progress; retries preserve exact identity",
+      "assertions": [
+        "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+        "test/unit/connection-generation.test.mjs: current vs retired sockets"
+      ],
+      "missing_prerequisites": [
+        "Full half-open/slow-body concurrency and response-boundary fault matrix is not implemented."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C06",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "One client never reads snapshots; writer produces updates",
+      "expected": "Bounded buffering/backpressure; other clients remain responsive",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Controlled never-reading WS peer, buffer accounting and healthy-client starvation assertions are missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C07",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "All tabs reconnect together after an outage",
+      "expected": "No duplicate bridge, writer, watcher or reconnect storm; bounded resource use",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Multi-tab simultaneous reconnect storm driver with resource bounds is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C08",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Repeated flap: up/down during hello, snapshot, queue drain and resolve",
+      "expected": "Eventual stable recovery; no old socket callbacks corrupt new state",
+      "assertions": [
+        "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+        "test/unit/connection-generation.test.mjs: current vs retired sockets"
+      ],
+      "missing_prerequisites": [
+        "Complete seeded hello/snapshot/drain/resolve flapping campaign is missing beyond existing individual regressions."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C09",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Disable WS watcher delivery; drop filesystem events; restore each",
+      "expected": "Poll fallback works; deduplication across paths; honest latency labels",
+      "assertions": [
+        "test/latency-bench.mjs: legacy diagnostic only, not accepted comparative evidence"
+      ],
+      "missing_prerequisites": [
+        "Forced missed-fs-event plus WS/watch/poll individual-path observers are missing; legacy benchmark setup is not qualified."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C10",
+      "requirements": [
+        "BR-05",
+        "BR-06"
+      ],
+      "stimulus": "Watcher exits, is replaced in the same session, or stops heartbeating",
+      "expected": "Correct roster/liveness expiration and current eligible ownership",
+      "assertions": [
+        "test/wake-mode.mjs: W1-W5",
+        "test/bridge-realtime.mjs: roster metadata changes"
+      ],
+      "missing_prerequisites": [
+        "Candidate-neutral full replacement/expiration browser matrix remains missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "C11",
+      "requirements": [
+        "BR-06"
+      ],
+      "stimulus": "Bridge up, no agent; agent joins/leaves/is pull-only",
+      "expected": "Reachable, listening and automatic wake remain distinct visible states",
+      "assertions": [
+        "test/wake-mode.mjs: W1-W5",
+        "test/bridge-realtime.mjs: roster metadata changes"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "C12",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Foreground/background/frozen tab then return",
+      "expected": "Work remains; recovery measured from actual reactivation; no idle busy loop",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual background/frozen-tab lifecycle and detached-worker observation driver is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C13",
+      "requirements": [
+        "BR-02",
+        "BR-04"
+      ],
+      "stimulus": "Extension worker terminates during enqueue, POST, receipt removal and notification",
+      "expected": "Recoverable original state; no loss or duplicated stored effect",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Worker termination at each enqueue/commit/removal/notification barrier needs a browser fault driver."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C14",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Browser closes/reopens with pending queue, including offline reopen",
+      "expected": "Queue restored and drains in its defined order without user resubmission",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Persistent browser close/offline-reopen queue test driver is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C15",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "stimulus": "Actual machine sleep/resume with pending and idle work",
+      "expected": "Preserved state, truthful post-resume status and bounded eligible recovery",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No dedicated machine/VM for real OS sleep/resume is provisioned without interrupting everyday use."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "C16",
+      "requirements": [
+        "BR-06",
+        "BR-08"
+      ],
+      "stimulus": "Clock changes and heavy CPU/storage contention during heartbeat/reconnect",
+      "expected": "No false owner reassignment, runaway timer or permanent stall",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Isolated OS clock/CPU/storage contention controls and external recovery observers are missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "R01",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Two projects, two opted-in sessions, many tabs",
+      "expected": "Only intended owner receives each implicit submission",
+      "assertions": [
+        "test/bridge-conformance.mjs: R01-stable-owners",
+        "test/chrome-delivery.mjs: intended watcher receipt and foreign watcher silence"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "R02",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Unarmed session/hook alongside an armed session",
+      "expected": "Unarmed session stays silent; cannot inherit another session's readiness",
+      "assertions": [
+        "test/hook-optin.mjs: G opt-in assertions"
+      ],
+      "missing_prerequisites": [
+        "Actual unarmed host input/context receipt boundary is not instrumented; hook fixture proof is narrower."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "R03",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Owner switch during enqueue, before commit, after commit and during outage",
+      "expected": "Owner follows the canonical acceptance rule; original committed ownership remains immutable",
+      "assertions": [
+        "test/origin-routing.mjs: K host ownership cases",
+        "test/portless-worktrees.mjs: shared proxy host isolation"
+      ],
+      "missing_prerequisites": [
+        "Pre-commit/offline owner-switch product meaning is not settled; only existing commit-time/immutable-owner behavior is retained."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "R04",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Work accepted without a current owner; later owner appears",
+      "expected": "Explicit existing ownerless-work policy; no invented or foreign assignment",
+      "assertions": [
+        "test/origin-routing.mjs: K host ownership cases",
+        "test/portless-worktrees.mjs: shared proxy host isolation"
+      ],
+      "missing_prerequisites": [
+        "Full ownerless/offline browser queue transition driver is missing; no new assignment rule is inferred."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "R05",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Re-arm same session; PID reuse; selected owner dies",
+      "expected": "Stable session selection; no stale identity takeover",
+      "assertions": [
+        "test/origin-routing.mjs: K host ownership cases",
+        "test/portless-worktrees.mjs: shared proxy host isolation"
+      ],
+      "missing_prerequisites": [
+        "PID reuse/re-arm/dead selected-owner browser schedule remains incomplete."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "R06",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Nested named localhost, exact ports, default port and IPv4 alias",
+      "expected": "No host-prefix/query confusion; route claim is correctly scoped",
+      "assertions": [
+        "test/origin-routing.mjs: K host ownership cases",
+        "test/portless-worktrees.mjs: shared proxy host isolation"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "R07",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Portless worktrees start/stop/change ports on a shared proxy",
+      "expected": "Exact full-host binding, no cross-wake; DNS failure distinguished from bridge failure",
+      "assertions": [
+        "test/origin-routing.mjs: K host ownership cases",
+        "test/portless-worktrees.mjs: shared proxy host isolation"
+      ],
+      "missing_prerequisites": [
+        "Portless DNS/process lifecycle test prerequisites are optional and not provisioned as a full paired lane."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "R08",
+      "requirements": [
+        "BR-09"
+      ],
+      "stimulus": "Different Chrome profiles/windows use same route",
+      "expected": "Separate client identity and queues; no accidental source/evidence crossover",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Two real Google Chrome profiles/windows and cross-source capture schedule driver is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "R09",
+      "requirements": [
+        "BR-05"
+      ],
+      "stimulus": "Resolve/delete from non-owner; owner switch after stored work",
+      "expected": "Original owner preserved; withdrawal reaches intended original recipient under existing rules",
+      "assertions": [
+        "test/bridge-boundary.mjs: original withdrawal recipient and ownerless work"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "R10",
+      "requirements": [
+        "BR-09"
+      ],
+      "stimulus": "Reload/navigation/SPA route change while capture is in flight",
+      "expected": "Retired document cannot reclaim registration or replace current pixels",
+      "assertions": [
+        "test/browser-protocol.mjs: private request tokens, retired documents, reload/query/route continuity"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "R11",
+      "requirements": [
+        "BR-09"
+      ],
+      "stimulus": "Foreign browser/tab submits another source's capture token",
+      "expected": "Rejected without changing source-bound evidence",
+      "assertions": [
+        "test/browser-protocol.mjs: private request tokens, retired documents, reload/query/route continuity"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "R12",
+      "requirements": [
+        "BR-09",
+        "BR-10"
+      ],
+      "stimulus": "Chrome and Safari share a bridge during Chrome acceptance",
+      "expected": "Shared protocol/source isolation maintained; Safari UI remains a separately scoped gate",
+      "assertions": [
+        "test/browser-coexistence.mjs: shared protocol/source assertions; Chromium fixture lane only"
+      ],
+      "missing_prerequisites": [
+        "Actual Safari/native UI acceptance is outside the Chromium protocol fixture lane and is not observed."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L01",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Concurrent native/CLI launch requests",
+      "expected": "One healthy writer; all successful callers observe the same compatible identity",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "Concurrent Rust native launcher is not implemented; current Rust binary is bridge-only."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L02",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Requested port owned by foreign/old/hung/malformed listener",
+      "expected": "No killing or takeover; clear error; existing data untouched",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "Rust native/CLI launcher identity handshake is not implemented; shared process adapter refusal is narrower."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L03",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Two ports, same store; canonical symlink aliases",
+      "expected": "Second writer refused; no parallel mutation",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "L04",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Stale/ambiguous lease and interrupted recovery",
+      "expected": "Only provably dead ownership recovered; ambiguous state stays safe and diagnosable",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "Complete Rust recovery-guard failure schedule is not implemented."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L05",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Native host missing, wrong path, denied execution or unexpected stdout",
+      "expected": "Bounded accurate startup failure; framed protocol remains valid",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "Isolated Rust native launcher and test registration are not implemented."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L06",
+      "requirements": [
+        "BR-08",
+        "BR-12"
+      ],
+      "stimulus": "Native input split/coalesced/oversized/truncated; launcher exits",
+      "expected": "Bounded parsing; bridge lifetime follows intended detached lifecycle",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "Rust native input framing/detached launcher is not implemented."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L07",
+      "requirements": [
+        "BR-07"
+      ],
+      "stimulus": "Chrome-only restart without any terminal or session hook assistance",
+      "expected": "Actual native self-heal demonstrated in an isolated real Chrome installation",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No isolated actual Chrome test-native registration/launcher lane is provisioned."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "L08",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Normal termination and forced abort during active requests",
+      "expected": "Owned resources cleaned or safely recoverable; foreign listeners untouched",
+      "assertions": [
+        "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+        "test/bridge-conformance.mjs: L03-single-writer"
+      ],
+      "missing_prerequisites": [
+        "All termination/active-request boundaries plus foreign-listener process-tree verification remain incomplete."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "L09",
+      "requirements": [
+        "BR-08"
+      ],
+      "stimulus": "Loopback/LAN, Host/Origin HTTP/WS admission matrix and traversal attempts",
+      "expected": "Preserve independent boundary restrictions and healthy peer progress",
+      "assertions": [
+        "test/bridge-boundary.mjs: independent Host/Origin HTTP/WS matrix",
+        "test/bridge-brutal.mjs: loopback/LAN boundary"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "L10",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Uninstall/reinstall/relocate packaged candidate in paths containing spaces",
+      "expected": "Data preservation and executable identity checked; no dependency on source checkout",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Relocatable Rust/Node runtime package with independent install/uninstall test environment is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M01",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Supported legacy store/receipt fixtures, new candidate writes, legacy reader reads",
+      "expected": "CLI, hook and watcher keep interpreting data; no schema-only appearance of success",
+      "assertions": [
+        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader"
+      ],
+      "missing_prerequisites": [
+        "Supported historical version range is undeclared; v1 receipt safe refusal is not full historic replay qualification."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "M02",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Existing extension with new bridge and new extension with supported old bridge",
+      "expected": "Capability negotiation or explicit safe refusal, never silent feature misuse",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Explicit old/new supported extension capability/version matrix is not provisioned."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M03",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "JS to Rust to JS using a cloned real-format store and pending queue",
+      "expected": "Submit/retry/resolve/withdraw and after-evidence survive rollback",
+      "assertions": [
+        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader"
+      ],
+      "missing_prerequisites": [
+        "Pending browser queue and image/after-evidence rollback variants remain missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "M04",
+      "requirements": [
+        "BR-10",
+        "BR-12"
+      ],
+      "stimulus": "Interrupt upgrade after staging, lease handoff and before readiness",
+      "expected": "Recoverable prior installation/data; never two writers",
+      "assertions": [],
+      "missing_prerequisites": [
+        "An interruptible Rust installation/lease-handoff packaging driver is not implemented."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M05",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Native Rust launcher starts without Node available to that launcher",
+      "expected": "Bridge launch claim verified; Node-dependent watcher/CLI still reported separately",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Rust native launcher is not implemented; bridge-only executable does not prove native launch without Node."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M06",
+      "requirements": [
+        "BR-10",
+        "BR-12"
+      ],
+      "stimulus": "Intel and Apple Silicon package/runtime checks on supported macOS",
+      "expected": "Actual architecture-specific startup, native messaging, locks and recovery evidence",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No Apple Silicon host or architecture-specific isolated native/browser package lane is available here."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M07",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Existing supported Linux test/runtime lane; Windows status",
+      "expected": "Preserve tested Linux behavior; do not turn currently open Windows support into a claimed acceptance",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Exact-revision Linux CI has not run; Windows support remains open."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "M08",
+      "requirements": [
+        "BR-10"
+      ],
+      "stimulus": "Artifact lacks dependency/resource, is corrupted or incompatible",
+      "expected": "Failure before destructive mutation; actionable bounded diagnosis",
+      "assertions": [
+        "test/safari-e2e.mjs: resource smoke; JavaScript packaging only"
+      ],
+      "missing_prerequisites": [
+        "Corrupt/missing Rust package-resource variants need a real relocatable runtime package."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E01",
+      "requirements": [
+        "BR-01",
+        "BR-11"
+      ],
+      "stimulus": "Real composer Send with text and prepared DOM context",
+      "expected": "T0/TQ/TA/TW recorded; one correct receipt and context",
+      "assertions": [
+        "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger"
+      ],
+      "missing_prerequisites": [
+        "TQ storage acknowledgement is not instrumented; composer disappearance is only a queue UI acknowledgement upper bound."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E02",
+      "requirements": [
+        "BR-09",
+        "BR-11"
+      ],
+      "stimulus": "Ready screenshot, region/freeform/multi-element context",
+      "expected": "Correct payload/evidence delivered; size/capture costs separately labeled",
+      "assertions": [
+        "test/e2e.mjs: Suite A element/region/multi-context",
+        "test/bridge-image-conformance.mjs: PNG/JPEG wire admission"
+      ],
+      "missing_prerequisites": [
+        "All ready region/multi-element/image payload profiles have not run in actual paired Google Chrome lanes."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E03",
+      "requirements": [
+        "BR-04",
+        "BR-09"
+      ],
+      "stimulus": "Screenshot slow, rejected, never resolves or loses document eligibility",
+      "expected": "Existing capture grace/timeout behavior; usable draft and truthful evidence state",
+      "assertions": [
+        "test/capture-stall.mjs: Suite Y pending/failed capture",
+        "test/unit/draft-retry.test.mjs: preserved retry payload"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "E04",
+      "requirements": [
+        "BR-02"
+      ],
+      "stimulus": "Double-click Send, repeated keyboard submit and late RPC answer",
+      "expected": "Same logical send is not duplicated; distinct intended sends remain distinct",
+      "assertions": [
+        "test/e2e.mjs: Suite A durable rapid sends",
+        "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+        "test/unit/queue.test.mjs: capacity and replay"
+      ],
+      "missing_prerequisites": [
+        "Full real double-click/keyboard/late-RPC browser schedule has not been parameterized for both candidates."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E05",
+      "requirements": [
+        "BR-04"
+      ],
+      "stimulus": "Rapid-fire send with outstanding work and full queue boundary",
+      "expected": "Responsive composer; recoverable ordered work; explicit overflow",
+      "assertions": [
+        "test/e2e.mjs: Suite A durable rapid sends",
+        "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+        "test/unit/queue.test.mjs: capacity and replay"
+      ],
+      "missing_prerequisites": [
+        "Fixed offered-load burst schedule and full real browser capacity boundary remain missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E06",
+      "requirements": [
+        "BR-02",
+        "BR-04"
+      ],
+      "stimulus": "Reload extension/page during pending send and retry restoration",
+      "expected": "Exact original submission restored; no phantom delivered state",
+      "assertions": [
+        "test/e2e.mjs: Suite A durable rapid sends",
+        "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+        "test/unit/queue.test.mjs: capacity and replay"
+      ],
+      "missing_prerequisites": [
+        "Full worker/page/extension interruption matrix remains missing beyond current Chromium regression cases."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E07",
+      "requirements": [
+        "BR-06"
+      ],
+      "stimulus": "Off/on toolbar, native button/shortcut, menus and tab switch during outage",
+      "expected": "Existing interaction checks pass; status updates without reopening menus",
+      "assertions": [
+        "test/off-means-off.mjs: Suite Z",
+        "test/toolbar-ux.mjs: Suite L live status/menu behavior"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "E08",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "stimulus": "Unchanged real watcher with synthetic opted-in session sink",
+      "expected": "Correct transport/hook/CLI integration; labeled as sink proof, not actual agent receipt",
+      "assertions": [
+        "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger"
+      ],
+      "missing_prerequisites": [
+        "Synthetic watcher is not an actual agent-session input receipt."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "E09",
+      "requirements": [
+        "BR-06",
+        "BR-11"
+      ],
+      "stimulus": "Supported actual push-capable agent host, idle and busy",
+      "expected": "Same submission observed at TS through supported channel; wake capability matches reality",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Supported isolated push-host input receipt observer and busy/idle host lane are not implemented/provisioned."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "E10",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "stimulus": "Supported actual pull-only host, idle and busy",
+      "expected": "No false auto-wake; next authorized prompt gets correct scoped context; waiting time explicit",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Supported isolated pull-host input receipt observer and authorized-next-prompt timing lane are not implemented/provisioned."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "E11",
+      "requirements": [
+        "BR-05",
+        "BR-07"
+      ],
+      "stimulus": "Actual host restart/re-arm with pending work and a withdrawal",
+      "expected": "No foreign delivery; unfinished work and stop signal surfaced under defined host semantics",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual host restart/re-arm/withdrawal input observer is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "E12",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Slow/unavailable model or host scheduling",
+      "expected": "Bridge TW remains separately measured; model delay not attributed to bridge",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual host/model scheduling/input observations are missing; TW is the observed transport boundary."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B01",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "One foreground tab, one eligible watcher, small prepared payload",
+      "expected": "Baseline T0-to-TW distribution with every attempt counted",
+      "assertions": [
+        "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger"
+      ],
+      "missing_prerequisites": [
+        "Diagnostic sample counts only; frozen five blocks of 2000 sends per candidate and formal uncertainty are not complete."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "B02",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "stimulus": "Five then 25 tabs; one then five sessions",
+      "expected": "Delivery/status tails and resource scaling; no source/routing errors",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Five/25-tab and one/five-session scaling workload is not implemented as a shared offered-load schedule."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B03",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "stimulus": "Empty, typical and large history fixtures",
+      "expected": "Measure serialization/read/broadcast costs and healthy peer latency",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Small/typical/10000-history fixtures with paired timing and resource lanes are not implemented."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B04",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "stimulus": "Text/DOM, 512 KiB screenshot, 2 MiB screenshot, maximum valid payload",
+      "expected": "Size-specific distributions; correct boundary behavior",
+      "assertions": [],
+      "missing_prerequisites": [
+        "512 KiB/2 MiB/maximum valid image distribution fixtures and paired browser timing are missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B05",
+      "requirements": [
+        "BR-04",
+        "BR-11"
+      ],
+      "stimulus": "Human cadence and controlled bursts with fixed offered load",
+      "expected": "Queue wait and end-to-end latency included; overload not hidden by waiting for each reply",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Independent human-cadence/burst offered-load scheduler is missing; diagnostic sends are sequential."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B06",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "stimulus": "Slow disk, CPU contention, delayed network and slow WS reader separately",
+      "expected": "Identify cause; preserve progress and retention; label fault duration",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Isolated slow-disk/CPU/network/slow-reader drivers with synchronized external clocks are incomplete."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B07",
+      "requirements": [
+        "BR-07",
+        "BR-11"
+      ],
+      "stimulus": "Cold bridge, warm bridge, worker idle restart and first send after resume",
+      "expected": "Startup/wake costs separated from steady-state latency",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Cold native/worker-idle/resume timing lanes are not provisioned."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B08",
+      "requirements": [
+        "BR-01",
+        "BR-07"
+      ],
+      "stimulus": "Two-hour development soak; 24-hour qualification soak",
+      "expected": "No accepted loss or cross-delivery; resource trends and every outage retained",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Two-hour development and 24-hour-per-candidate soaks have not run; full essential conformance is still incomplete."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B09",
+      "requirements": [
+        "BR-01",
+        "BR-07"
+      ],
+      "stimulus": "Repeated deterministic restart/flap campaign plus seeded random schedules",
+      "expected": "Reproducible failures, final ledger reconciliation and finite recovery",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Deterministic barriers exist; production random-kill/flap campaign with bounded healthy suffix is missing."
+      ],
+      "coverage": "missing",
+      "execution": "not-run"
+    },
+    {
+      "id": "B10",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Idle service, normal use and recovery storm resource sampling",
+      "expected": "Bridge and whole delivery process-tree RAM/CPU/wakeups reported separately",
+      "assertions": [
+        "test/bridge-resources.mjs: serial 300-request bridge-only RSS/CPU diagnostic"
+      ],
+      "missing_prerequisites": [
+        "Whole delivery process-tree/browser resources, wakeups and long-run post-drain trends are missing; current samples are bridge-only."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "H01",
+      "requirements": [
+        "BR-01",
+        "BR-02",
+        "BR-05"
+      ],
+      "stimulus": "Substitute a deliberately wrong bridge that drops, duplicates or misroutes one submission",
+      "expected": "Harness fails the corresponding independent assertion",
+      "assertions": [
+        "test/bridge-mutants.mjs: real dropped, duplicated and misrouted candidates"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "H02",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Lose one timed sample or omit a late result from output",
+      "expected": "Report fails/incomplete; timeout stays in denominator",
+      "assertions": [
+        "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "H03",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Empty fixture, duplicate case ID or unknown expected field",
+      "expected": "Fail before qualifying execution; no empty green run",
+      "assertions": [
+        "test/unit/bridge-catalog.test.mjs: empty, duplicate and unknown-key catalog mutations"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "H04",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Point test at foreign listener or live default endpoint/store",
+      "expected": "Refuse before mutation; exact store/build identity verified",
+      "assertions": [
+        "test/unit/bridge-candidate.test.mjs: live/foreign endpoint refusal and separate executable hash",
+        "test/chrome-delivery.mjs: source and executable byte revalidation"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "H05",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Change candidate/fixture/policy during or after a saved plan",
+      "expected": "Evidence marked stale/ineligible; old result retained",
+      "assertions": [
+        "test/unit/bridge-candidate.test.mjs: live/foreign endpoint refusal and separate executable hash",
+        "test/chrome-delivery.mjs: source and executable byte revalidation"
+      ],
+      "missing_prerequisites": [
+        "Actual during-run source/fixture/policy mutation campaign remains missing beyond byte revalidation."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "H06",
+      "requirements": [
+        "BR-12"
+      ],
+      "stimulus": "Interrupt runner or exceed deadline",
+      "expected": "Terminate owned children, preserve partial logs and fail/unavailable status; no global process cleanup",
+      "assertions": [
+        "test/bridge-harness-interrupt.mjs: SIGTERM preserves partial events and reaps bridge/watchers"
+      ],
+      "missing_prerequisites": [],
+      "coverage": "mapped",
+      "execution": "not-run"
+    },
+    {
+      "id": "H07",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Inject unrealistic zero/negative timings or shifted clock origin",
+      "expected": "Reject invalid timing; retain diagnostic and mark sample invalid, not fast",
+      "assertions": [
+        "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls"
+      ],
+      "missing_prerequisites": [
+        "Clock-origin validity outside the single harness clock remains a calibration prerequisite."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    },
+    {
+      "id": "H08",
+      "requirements": [
+        "BR-11"
+      ],
+      "stimulus": "Retry a failed suite; instrumentation overhead; background host load",
+      "expected": "All attempts visible; overhead/load recorded; no cherry-picked best result",
+      "assertions": [
+        "test/bridge-compare.mjs: retained seeded serial paired attempts and load samples"
+      ],
+      "missing_prerequisites": [
+        "Observer-overhead calibration, statistical paired uncertainty and formal background-load qualification remain missing."
+      ],
+      "coverage": "partial",
+      "execution": "not-run"
+    }
+  ]
+}

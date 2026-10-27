@@ -6,6 +6,7 @@ import http from 'node:http'
 import { candidate, binding, root, freePort } from './support/bridge-candidate.mjs'
 const outArg = process.argv.indexOf('--out')
 const out = path.resolve(outArg < 0 ? `artifacts/bridge-comparison/conformance-${Date.now()}` : process.argv[outArg + 1])
+assert(!fs.existsSync(out), 'evidence directory already exists; choose a fresh output')
 fs.mkdirSync(out, { recursive: true })
 const events = []
 const event = (kind, data) => { const e = {at:performance.now(),kind,data}; events.push(e); fs.appendFileSync(path.join(out,'events.jsonl'),JSON.stringify(e)+'\n') }

@@ -1,3 +1,4 @@
+import { bridgeCommand } from './support/candidate-command.mjs'
 // Additive browser protocol: origin admission, source-bound evidence and
 // submission idempotency. It uses protocol clients, not a Safari claim.
 import assert from 'node:assert/strict'
@@ -11,7 +12,7 @@ import WebSocket from '../bridge/node_modules/ws/index.js'
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const STORE = fs.mkdtempSync(path.join(os.tmpdir(), 'nudge-browser-protocol-'))
 const PORT = Number(process.env.NUDGE_TEST_PORT || 4821), base = `http://127.0.0.1:${PORT}`
-const startBridge = () => spawn(process.execPath, ['bridge/bridge.mjs'], { cwd: ROOT, env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_NO_RELOAD: '1' }, stdio: ['ignore', 'ignore', 'inherit'] })
+const startBridge = () => spawn(bridgeCommand[0], bridgeCommand.slice(1), { cwd: ROOT, env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT), NUDGE_NO_RELOAD: '1' }, stdio: ['ignore', 'ignore', 'inherit'] })
 let bridge = startBridge()
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 async function ready() { for (let i = 0; i < 30; i++) { try { const r = await fetch(`${base}/.identity`, { signal: AbortSignal.timeout(500) }); if (r.ok && (await r.json()).store === STORE) return } catch {} await sleep(100) }; throw new Error('bridge did not start') }

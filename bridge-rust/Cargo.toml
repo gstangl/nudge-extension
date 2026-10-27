@@ -1,0 +1,28 @@
+[package]
+name = "nudge-bridge-experiment"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[dependencies]
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "signal", "time", "sync"] }
+serde_json = "1"
+sha2 = "0.10"
+chrono = "0.4"
+url = "2"
+regex = "1"
+base64 = "0.22"
+png = "0.18"
+libc = "0.2"
+uuid = { version = "1", features = ["v4"] }
+futures-util = "0.3"
+tokio-tungstenite = "0.29"
+
+[features]
+fault-hooks = []
+
+[profile.release]
+lto = "thin"
+strip = true

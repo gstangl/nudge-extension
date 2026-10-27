@@ -1,3 +1,4 @@
+import { bridgeCommand } from './support/candidate-command.mjs'
 // Real WebSocket protocol errors and live roster updates. Each case gets its
 // own bridge/store; malformed clients must not disconnect healthy peers.
 import assert from 'node:assert/strict'
@@ -29,7 +30,7 @@ async function check(name, action) {
     await new Promise(resolve => probe.close(resolve))
     assert.notEqual(port, 4700)
     const base = `http://127.0.0.1:${port}`, store = path.join(out, name)
-    child = spawn(process.execPath, ['bridge/bridge.mjs'], { cwd: root, env: { ...process.env, NUDGE_STORE: store, NUDGE_PORT: String(port), NUDGE_NO_RELOAD: '1' }, stdio: ['ignore', 'ignore', 'pipe'] })
+    child = spawn(bridgeCommand[0], bridgeCommand.slice(1), { cwd: root, env: { ...process.env, NUDGE_STORE: store, NUDGE_PORT: String(port), NUDGE_NO_RELOAD: '1' }, stdio: ['ignore', 'ignore', 'pipe'] })
     const exited = once(child, 'exit')
     child.stderr.on('data', data => { log += data })
     const identity = () => fetch(base + '/.identity', { signal: AbortSignal.timeout(1000) }).then(r => r.json())

@@ -1,11 +1,26 @@
+---
+id: bridge-delivery
+status: accepted
+decision: Owner execution commission of 2026-10-27; preserve existing product obligations and compare candidates without preselecting a winner.
+---
+
 # Bridge delivery comparison
+
+## Purpose
+
+Help the person sending a nudge reach the correct agent quickly and recover work after interruption, with measured evidence for any bridge replacement.
 
 The comparison preserves [product behavior](../PRODUCT.md) and the
 [repository test obligations](../../CONTRIBUTING.md). Rust is experimental until
 it meets the same independently expected behavior as JavaScript and demonstrates
 an operational benefit. There is no installation or release decision here.
 
-## Observable obligations
+## Requirements
+
+### Requirement: Compare preserved delivery behavior independently
+ID: bridge-delivery-reference
+
+Both candidates preserve the following observable obligations through the same external expectations.
 
 | ID | Obligation |
 |---|---|
@@ -27,6 +42,11 @@ are reviewed independent event timelines. They are not expected-result functions
 imported from either candidate. RC01–RC12 remain bounded by their explicit policy
 dependencies. In particular, a stored effect is distinct from a watcher wake and
 from an actual agent input. Exact-once model execution is not promised.
+
+#### Scenario: Reject plausible false success
+- GIVEN a pre-registered input and expected owner
+- WHEN a candidate drops it, stores it twice or stamps a foreign owner
+- THEN the independent ledger rejects that candidate for the intended assertion.
 
 ## Experiment boundaries
 
@@ -60,3 +80,14 @@ unpacked lane, not native lifecycle or distribution acceptance. Compare the same
 extension/watcher bytes, data, deadlines and durability class. Keep all failed
 setup attempts, timeouts and negative controls. Never run long qualification on
 a candidate failing essential conformance.
+
+
+## Recovery record compatibility
+
+The optional `withdrawals` array is an additive, content-free journal. Deletion
+and its original-recipient/route/time metadata commit together. Startup restores
+atomic `inbox/<id>.withdrawn.md` markers and removes leftover prompt mirrors and
+images. Direct readers keep their existing marker interface. Known-age entries
+and markers expire together after the existing 24-hour retention; unknown ages
+are retained conservatively. Submission receipts keep their separate retry
+horizon. This is the shared JS1 recovery change, not a Rust-only improvement.

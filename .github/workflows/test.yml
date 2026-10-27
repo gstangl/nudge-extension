@@ -35,5 +35,59 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: developer-preview-verification
-          path: artifacts/safari/
+          path: |
+            artifacts/safari/
+            artifacts/bridge-comparison/
+          if-no-files-found: error
+
+  bridge-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [javascript, rust]
+    env:
+      NUDGE_CANDIDATE: ${{ matrix.candidate == 'rust' && '["./bridge-rust/target/release/nudge-bridge-experiment"]' || '["node","bridge/bridge.mjs"]' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix bridge
+      - run: npm ci --prefix test
+      - run: rustup default stable
+      - run: |
+          rustc --version
+          cargo --version
+          cargo test --locked --manifest-path bridge-rust/Cargo.toml
+          cargo build --locked --release --manifest-path bridge-rust/Cargo.toml
+      - run: node test/build-bridge-candidates.mjs
+      - if: matrix.candidate == 'javascript'
+        run: |
+          node test/bridge-commit-faults.mjs
+          node test/bridge-withdrawal-fault.mjs
+      - if: matrix.candidate == 'rust'
+        run: |
+          NUDGE_CANDIDATE='["./artifacts/bridge-comparison/bin/rust-fault-hooks"]' node test/bridge-commit-faults.mjs
+          NUDGE_CANDIDATE='["./artifacts/bridge-comparison/bin/rust-fault-hooks"]' node test/bridge-withdrawal-fault.mjs
+      - run: node test/bridge-conformance.mjs
+      - run: node test/bridge-image-conformance.mjs
+      - run: node test/bridge-retention.mjs
+      - run: node test/bridge-origin-headers.mjs
+      - run: node test/browser-protocol.mjs
+      - run: node test/bridge-boundary.mjs
+      - run: node test/bridge-realtime.mjs
+      - run: node test/bridge-rollback.mjs
+      - run: npx playwright install --with-deps chromium
+        working-directory: test
+      - run: node test/chrome-delivery.mjs --browser chromium --headless --samples 3
+      - name: Retain successes and failures; CI timing is diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-reference-${{ matrix.candidate }}
+          path: |
+            artifacts/safari/
+            artifacts/bridge-comparison/
           if-no-files-found: error

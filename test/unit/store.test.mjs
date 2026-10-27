@@ -291,4 +291,48 @@ describe('store.mjs — display label vs id', () => {
     const md = fs.readFileSync(path.join(STORE, 'inbox', `${pin.id}.md`), 'utf8')
     expect(md.split('\n')[0]).toBe(`# ${pin.id} (#${store.labelOf(pin.id)}) - open`)
   })
+  it('repairs interrupted withdrawal markers and removes leftover content from a content-free atomic journal', () => {
+    const pin = store.addPin({ text: 'Private withdrawn text', url: 'http://localhost:5322/', target: { selector: '#target' } }, { label: 'Original owner', session: 'session_alpha' })
+    store.deletePin(pin.id)
+    const disk = JSON.parse(fs.readFileSync(storeFile()))
+    expect(disk.pins).toEqual([])
+    expect(disk.withdrawals).toHaveLength(1)
+    expect(disk.withdrawals[0]).toMatchObject({ id: pin.id, owner: { session: 'session_alpha' }, target: { selector: '#target' } })
+    expect(JSON.stringify(disk.withdrawals)).not.toContain('Private withdrawn text')
+    const marker = path.join(STORE, 'inbox', `${pin.id}.withdrawn.md`)
+    fs.writeFileSync(marker, 'partial')
+    fs.writeFileSync(path.join(STORE, 'inbox', `${pin.id}.md`), pin.text)
+    fs.mkdirSync(path.join(STORE, 'shots'), { recursive: true })
+    fs.writeFileSync(path.join(STORE, 'shots', `${pin.id}.png`), 'old pixels')
+    store.pruneWithdrawn()
+    const recovered = fs.readFileSync(marker, 'utf8')
+    expect(recovered).toContain('session_alpha')
+    expect(recovered).not.toContain(pin.text)
+    expect(fs.existsSync(path.join(STORE, 'inbox', `${pin.id}.md`))).toBe(false)
+    expect(fs.existsSync(path.join(STORE, 'shots', `${pin.id}.png`))).toBe(false)
+  })
+  it('expires the withdrawal journal and marker together without losing a seven-day replay receipt', () => {
+    const now = Date.now()
+    const input = { submissionId: 'journal_retention_reference', submissionCreatedAt: new Date(now).toISOString(), text: 'Withdrawn' }
+    const made = store.submitPin(input, null)
+    store.deletePin(made.id)
+    const marker = path.join(STORE, 'inbox', `${made.id}.withdrawn.md`)
+    fs.utimesSync(marker, new Date(now), new Date(now))
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 24 * 3600e3 + 1000)
+    try {
+      store.pruneWithdrawn()
+      expect(fs.existsSync(marker)).toBe(false)
+      expect(JSON.parse(fs.readFileSync(storeFile())).withdrawals).toEqual([])
+      expect(store.submitPin(input, null)).toMatchObject({ id: made.id, replay: true, withdrawn: true })
+    } finally { clock.mockRestore() }
+  })
+  it('refuses an unknown withdrawal journal before removing committed work', () => {
+    const pin = store.addPin({ text: 'Keep original' }, null)
+    const disk = JSON.parse(fs.readFileSync(storeFile()))
+    disk.withdrawals = { unknown: 'preserve' }
+    fs.writeFileSync(storeFile(), JSON.stringify(disk)); bumpMtime(storeFile())
+    expect(() => store.deletePin(pin.id)).toThrow('invalid withdrawal journal')
+    expect(JSON.parse(fs.readFileSync(storeFile()))).toEqual(disk)
+  })
+
 })

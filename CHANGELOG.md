@@ -17,6 +17,26 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 0.35.2 · Bridge 0.20.1 — 2026-10-27 (Isolated bridge comparison)
+
+### Fixed
+- Retire replaced browser sockets so late open/message/close/error callbacks
+  cannot clear readiness, replace current pins or close the successor. This
+  shared extension fix is part of JS1 for both bridge candidates.
+- Commit a content-free withdrawal journal with deletion and reconstruct atomic
+  fallback markers after a process crash, retaining original recipients and
+  deleting leftover prompt mirrors/images. Existing direct readers keep their
+  marker format; the JSON field is additive.
+
+### Added
+- Independent delivery ledger, wrong-candidate controls, semantic crash barriers,
+  source/build-bound Google Chrome Send measurements and paired diagnostics.
+- An experimental Rust bridge using the existing JSON store and public protocol,
+  with the same external conformance, evidence and regression expectations.
+- Current-snapshot rollback/direct-reader checks and explicit scenario coverage.
+  Native lifecycle, actual agent receipts and long-run qualification remain
+  separately required; the JavaScript bridge remains the installed default.
+
 ## 0.35.1 · Bridge 0.20.0 — 2026-10-13 (Restore the session-name input)
 
 ### Fixed

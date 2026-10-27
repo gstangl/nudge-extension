@@ -1,3 +1,4 @@
+import { bridgeCommand } from './support/candidate-command.mjs'
 // Real HTTP/WS regressions for the GitHub developer-preview review. Random
 // side port and fresh retained store; never touches a live bridge or inbox.
 import assert from 'node:assert/strict'
@@ -24,7 +25,7 @@ const base = `http://127.0.0.1:${port}`
 let child, log = ''
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
 async function start() {
-  child = spawn(process.execPath, ['bridge/bridge.mjs'], { cwd: root, env: { ...process.env, NUDGE_PORT: String(port), NUDGE_STORE: store }, stdio: ['ignore', 'pipe', 'pipe'] })
+  child = spawn(bridgeCommand[0], bridgeCommand.slice(1), { cwd: root, env: { ...process.env, NUDGE_PORT: String(port), NUDGE_STORE: store }, stdio: ['ignore', 'pipe', 'pipe'] })
   child.stderr.on('data', data => { log += data })
   for (let i = 0; i < 80; i++) {
     try { if ((await (await fetch(base + '/.identity')).json()).store === store) return } catch { /* starting */ }

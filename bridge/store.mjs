@@ -402,14 +402,23 @@ export function deletePin(id) {
   const s = load()
   const i = s.pins.findIndex(p => p.id === id)
   if (i < 0) return null
+  if (s.withdrawals !== undefined && !Array.isArray(s.withdrawals)) throw new Error('invalid withdrawal journal')
   const [pin] = s.pins.splice(i, 1)
+  pin.withdrawnAt = new Date().toISOString()
+  // Keep the fallback stop signal in the same commit as deletion. The marker
+  // is repairable after a crash; this journal deliberately contains no text.
+  if (pin.status === 'open') {
+    s.withdrawals ||= []
+    s.withdrawals.push({ id: pin.id, status: 'open', url: cap(pin.url, 2000),
+      owner: sanitizeOwner(pin.owner), createdAt: capOrNull(pin.createdAt, 40),
+      withdrawnAt: pin.withdrawnAt, target: { selector: cap(pin.target?.selector, 500) } })
+  }
   for (const receipt of s.receipts || []) if (receipt.id === id) receipt.withdrawn = true
   persist()
   for (const f of [`${id}.png`, `${id}_full.jpg`, `${id}_after.png`]) {
     try { fs.unlinkSync(path.join(SHOTS_DIR, f)) } catch { /* not there */ }
   }
   try { fs.unlinkSync(path.join(INBOX_DIR, `${id}.md`)) } catch { /* not there */ }
-  pin.withdrawnAt = new Date().toISOString()
   // only an OPEN nudge is work-in-flight; discarding a resolved one is pure
   // housekeeping and needs no marker (nobody is working on it)
   if (pin.status === 'open') writeWithdrawnMarker(pin)
@@ -423,14 +432,18 @@ export function deletePin(id) {
 function writeWithdrawnMarker(pin) {
   try {
     fs.mkdirSync(INBOX_DIR, { recursive: true })
-    fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.withdrawn.md`),
+    const marker = path.join(INBOX_DIR, `${pin.id}.withdrawn.md`)
+    fs.writeFileSync(marker + '.tmp',
       `# ${pin.id} (#${labelOf(pin.id)}) - withdrawn\n\n`
       + `The user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n`
       + `- withdrawn: ${pin.withdrawnAt}\n- created: ${pin.createdAt}\n- url: ${pin.url}\n`
       + `- selector: \`${pin.target?.selector || '-'}\`\n`
       + (pin.owner?.label ? `- agent: ${pin.owner.label}\n` : '')
       + (pin.owner?.session ? `- session: ${pin.owner.session}\n` : ''))
-  } catch { /* readonly fs — the WS frame still carries the withdrawal */ }
+    fs.renameSync(marker + '.tmp', marker)
+    const at = Date.parse(pin.withdrawnAt || '')
+    if (Number.isFinite(at)) fs.utimesSync(marker, new Date(at), new Date(at))
+  } catch { /* the committed journal remains available for restart repair */ }
 }
 
 export function attachAfterShot(id, screenshot, provenance = null) {
@@ -509,6 +522,24 @@ export function pruneReceipts(now = Date.now()) {
 // in EVERY project, so the directory must not grow without bound.
 export function pruneWithdrawn(maxAgeMs = 24 * 3600e3) {
   const cutoff = Date.now() - maxAgeMs
+  const state = load()
+  if (Array.isArray(state.withdrawals)) {
+    const keep = state.withdrawals.filter(pin => {
+      const at = Date.parse(pin?.withdrawnAt || '')
+      return !Number.isFinite(at) || at >= cutoff
+    })
+    if (keep.length !== state.withdrawals.length) { state.withdrawals = keep; persist() }
+    for (const pin of keep) {
+      if (!pin || !/^(?:pin|nudge)_\d+$/.test(pin.id)) continue
+      // Rebuild atomically even when an interrupted historical marker exists.
+      // Remove the old prompt mirror/images left by a post-commit crash too.
+      writeWithdrawnMarker(pin)
+      try { fs.unlinkSync(path.join(INBOX_DIR, `${pin.id}.md`)) } catch { /* absent */ }
+      for (const suffix of ['.png', '_full.jpg', '_full.png', '_after.png']) {
+        try { fs.unlinkSync(path.join(SHOTS_DIR, pin.id + suffix)) } catch { /* absent */ }
+      }
+    }
+  }
   let n = 0
   try {
     for (const f of fs.readdirSync(INBOX_DIR)) {

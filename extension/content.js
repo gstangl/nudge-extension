@@ -1707,13 +1707,24 @@
   function connect() {
     if (dead) return
     clearTimeout(retryTimer)
-    try { sock = new WebSocket(WS) } catch { return scheduleRetry() }
-    sock.onopen = () => {
+    let current
+    try {
+      current = new WebSocket(WS)
+      const previous = sock
+      sock = current
+      // A focus retry can replace a still-opening socket. Retire its callbacks
+      // before closing it; a delayed event must never affect the successor.
+      try { previous?.close() } catch { /* already retired */ }
+    } catch { return scheduleRetry() }
+    const active = () => !dead && sock === current
+    current.onopen = () => {
+      if (!active()) return
       try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
       if (hadOutage) { notify('check', 'Bridge reconnected'); hadOutage = false }
       wsOk = true; retryDelay = 3000; updatePill(); flushQueue()
     }
-    sock.onmessage = (e) => {
+    current.onmessage = (e) => {
+      if (!active()) return
       try {
         const msg = JSON.parse(e.data)
         if (msg.type === 'pins') {
@@ -1733,14 +1744,18 @@
         if (msg.type === 'reload' && NUDGE_PLATFORM.developmentReload) chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
       } catch { /* ignore malformed frames */ }
     }
-    sock.onclose = () => {
+    current.onclose = () => {
+      if (!active()) return
       if (wsOk && !hadOutage) { notify('alert', 'Bridge disconnected'); hadOutage = true }
       wsOk = false; agentLive = false; updatePill(); scheduleRetry()
       if (statusMenu.classList.contains('on')) renderStatusMenu()
       // ask the SW to (re)start the bridge via the native host — Chrome heals itself
       try { chrome.runtime.sendMessage({ type: 'nudge-bridge-down' }) } catch { /* orphan */ }
     }
-    sock.onerror = () => { try { sock.close() } catch { /* already closed */ } }
+    current.onerror = () => {
+      if (!active()) return
+      try { current.close() } catch { /* already closed */ }
+    }
   }
   // exponential backoff, capped LOW (browser-tools-mcp reconnects at a fixed 5s —
   // a tab must not be blind for half a minute after a bridge restart), plus an

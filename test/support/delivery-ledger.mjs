@@ -17,6 +17,8 @@ export class DeliveryLedger {
       const pin = matches[0]
       assert.equal(pin.text, attempt.text, 'payload drift')
       assert.equal(pin.url, attempt.url, 'source drift')
+      if (attempt.targetSelector) assert.equal(pin.target?.selector, attempt.targetSelector, 'wrong DOM target')
+      if (attempt.browserSource) assert.deepEqual(pin.browserSource, attempt.browserSource, 'browser provenance drift')
       assert.equal(pin.owner?.session ?? null, attempt.owner, 'wrong owner')
       if (requireWatcher) {
         const receipts = attempt.observations.filter(o => o.kind === 'watcher')
@@ -24,13 +26,15 @@ export class DeliveryLedger {
         assert.equal(receipts[0].id, pin.id, 'wrong watcher pin identity')
         assert.equal(receipts[0].session, attempt.owner, 'wrong watcher session')
         assert(receipts[0].at >= attempt.t0 && Number.isFinite(receipts[0].at), 'invalid watcher clock')
+        assert(receipts[0].at - attempt.t0 <= (attempt.deadlineMs || 5000), 'watcher deadline exceeded')
       }
       assert.notEqual(attempt.status, 'pending', 'unterminated attempt')
     }
     return { attempted: this.attempts.length, stored: pins.length, failed: this.attempts.filter(a => a.status !== 'passed').length }
   }
 }
-export function summary(attempts) {
+export function summary(attempts, scheduledCount = attempts.length) {
+  assert.equal(attempts.length, scheduledCount, 'omitted scheduled attempt')
   assert(attempts.length, 'empty timings')
   const values = attempts.filter(a => a.status === 'passed').map(a => {
     assert(Number.isFinite(a.latencyMs) && a.latencyMs > 0, 'invalid timing'); return a.latencyMs

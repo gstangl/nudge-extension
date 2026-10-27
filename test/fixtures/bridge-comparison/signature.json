@@ -1,0 +1,9 @@
+{
+  "provenance": "Hand-enumerated signed fields; standard SHA-256 of canonical UTF-8, without importing either candidate",
+  "input": {
+    "text": "Original",
+    "url": "http://localhost:5322/"
+  },
+  "signed_utf8": "{\"annotations\":null,\"author\":\"\",\"browserSource\":null,\"console\":null,\"screenshot\":null,\"screenshotFull\":null,\"selectionGeneration\":null,\"submissionCreatedAt\":null,\"target\":null,\"targets\":null,\"text\":\"Original\",\"title\":\"\",\"ua\":\"\",\"url\":\"http://localhost:5322/\",\"viewport\":null}",
+  "sha256": "e450c94825f1d89c649a06f29fb3537ea850230a9d10e7c308c058300fcce064"
+}
