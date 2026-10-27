@@ -1,0 +1,29 @@
+{
+  "source": "1d112704b141622f68d3d282bce1b72159bdab37bd25e3c4dca850393d3fa0e1",
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "build": [
+    {
+      "file": "<toolchain>",
+      "sha256": "8a5704ed9b93d6b05be5575f88f1c504d1544f5c994cd220775b692179293c25"
+    },
+    {
+      "file": "<repo>/bridge/bridge.mjs",
+      "sha256": "088cb439c43e2e40ee857f909892823192528dcd5fadb098945e98bc21593533"
+    }
+  ],
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nDate: Tue, 27 Oct 2026 17:06:59 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n23\r\n{\"error\":\"foreign origin rejected\"}\r\n0\r\n\r\n"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nDate: Tue, 27 Oct 2026 17:06:59 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n23\r\n{\"error\":\"foreign origin rejected\"}\r\n0\r\n\r\n"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "port": 57019,
+  "store": "<tmp>/nudge-comparison-rmc83w/store",
+  "pid": 37531,
+  "build": [
+    {
+      "file": "<toolchain>",
+      "sha256": "8a5704ed9b93d6b05be5575f88f1c504d1544f5c994cd220775b692179293c25"
+    },
+    {
+      "file": "<repo>/bridge/bridge.mjs",
+      "sha256": "088cb439c43e2e40ee857f909892823192528dcd5fadb098945e98bc21593533"
+    }
+  ]
+}

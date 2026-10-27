@@ -1,0 +1,26 @@
+{
+  "source": "ff28566d6684c471091697c1a829483ba52974ea24af8c5dac785e5176c68ee1",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "id": "valid-png",
+      "verdict": "passed"
+    },
+    {
+      "id": "trailing",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: trailing accepted malformed PNG\n    at file://<repo>/test/bridge-image-conformance.mjs:16:7\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "id": "truncated-iend",
+      "verdict": "passed"
+    },
+    {
+      "id": "corrupt-iend",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: corrupt-iend accepted malformed PNG\n    at file://<repo>/test/bridge-image-conformance.mjs:16:7\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    }
+  ]
+}

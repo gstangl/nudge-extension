@@ -1,0 +1,268 @@
+npm notice run nudge-test@1.0.0 test
+npm notice run vitest run --reporter=verbose
+
+ RUN  v3.2.7 <repo>/test
+
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > coalesces identical states during a roster storm and reuses the three icon sizes 6ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > renders every changed badge and connection state without rerasterizing an existing color 2ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > keeps per-tab state independent while sharing immutable color bitmaps 1ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > repaints after navigation resets, including same-document URLs and completed loads 2ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > refreshes the icon on named local navigation but ignores foreign lookalikes 1ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > does not repaint for title changes and clears state when a tab closes or starts loading 1ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > retries an identical state after a rejected action API call 1ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > does not let a late failure invalidate a newer successfully rendered state 2ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > contains synchronous API failures and retries the next report 2ms
+ ✓ unit/toolbar-action.test.mjs > bounded toolbar action rendering > ignores unrelated messages and reports without a sender tab 1ms
+ ✓ unit/after-retry.test.mjs > source-bound after-request arbitration > ignores a pre-navigation grab signal while a successor capture is hidden 6ms
+ ✓ unit/after-retry.test.mjs > source-bound after-request arbitration > coalesces private replacement tokens while old pixels are in flight 5ms
+ ✓ unit/after-retry.test.mjs > source-bound after-request arbitration > cancels a scheduled retry when a fresh request arrives 2ms
+ ✓ unit/after-retry.test.mjs > source-bound after-request arbitration > a deferred timer cannot re-register an older token over a newer hidden-tab request 2ms
+ ✓ unit/after-retry.test.mjs > source-bound after-request arbitration > uses the replacement after the bridge rejects an already-posted old token 3ms
+ ✓ unit/runtime.test.mjs > runtime-neutral store > uses the explicit store override first 2ms
+ ✓ unit/runtime.test.mjs > runtime-neutral store > uses a neutral path for a fresh installation and preserves a legacy installation 2ms
+ ✓ unit/runtime.test.mjs > runtime-neutral store > accepts a legacy symlink to the neutral store but refuses split-brain data 3ms
+ ✓ unit/runtime.test.mjs > runtime-neutral agent identity > normalizes generic, Codex, and Claude identities in priority order 1ms
+ ✓ unit/runtime.test.mjs > runtime-neutral agent identity > keeps runtime, surface, and wake capability independent 0ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > retries a failed restoration read and replays the original submission 11ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > finds the exact retry under its previous browser tab identity 3ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > keeps a missing or mismatched restored reference blocked 1ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > does not persist an unsaved retry reference on pagehide after a storage failure 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > retains the exact submission after an ambiguous acknowledgement 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > never sends when the page snapshot cannot be saved 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > preserves an unresolved restored reference across another pagehide 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > keeps an unregistered draft sendable without a phantom retry reference 3ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > retries failed registration and coalesces concurrent callers 3ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > releases Send after a preparation exception and keeps the draft retryable 3ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > recovers from a storage call that never replies without submitting 6ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > bounds a missing queue reply and ignores its late acknowledgement after retry 3ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > allows registration to retry after a missing startup reply 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > settles malformed page-console context: {broken 2ms
+ ✓ unit/draft-retry.test.mjs > draft retry persistence > settles malformed page-console context: {"not":"an array"} 1ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > admits named local page origins: http://task-a.app.localhost:1355 2ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > admits named local page origins: http://task-b.app.localhost:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > admits named local page origins: https://app.localhost 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://app.localhost.evil:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://notlocalhost:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://.localhost:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://app..localhost:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://-app.localhost:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://app.localhost:1355/path 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects lookalike or malformed named origins: http://app.localhost@evil:1355 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > keeps the bridge endpoint on direct loopback hosts 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > allows local tools and local pages on localhost 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > allows local tools and local pages on localhost:4700 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > allows local tools and local pages on 127.0.0.1:4799 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > allows local tools and local pages on LOCALHOST:4700 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host undefined without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host  without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host elsewhere.example without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost.evil without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost@evil without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost:0 without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost:65536 without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost:abc without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host 127.1 without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host [::1] without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost,localhost without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects missing/foreign/malformed Host localhost. without Origin 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects duplicate Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin null even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin  even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin https://elsewhere.example even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin http://localhost.evil even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin http://localhost@evil even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects Origin http://localhost, http://localhost even on a valid Host 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target http://elsewhere.example/comments 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target http://localhost:4700/comments 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target //elsewhere.example/comments 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target /\elsewhere.example/comments 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target /comments#fragment 0ms
+ ✓ unit/http-boundary.test.mjs > loopback admission shared by HTTP and WebSocket > rejects proxy/ambiguous request target * 0ms
+ ✓ unit/http-boundary.test.mjs > bounded UTF-8 request decoding > preserves text and context at every possible byte split 12ms
+ ✓ unit/http-boundary.test.mjs > bounded UTF-8 request decoding > enforces bytes, not UTF-16 characters, with an exact inclusive limit 1ms
+ ✓ unit/http-boundary.test.mjs > bounded UTF-8 request decoding > rejects invalid/truncated UTF-8 and JSON instead of storing replacement text 0ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > registers and captures a named local top-level document 10ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > reports a stalled cleanup stage without releasing pending identity operations 6ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > retains restart retries until expiry, cleans closed tabs and never deletes the offline queue 8ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > installs one background queue owner 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > serializes concurrent allocation with one session and distinct tab identities 4ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > preserves identities across worker suspension using session storage 3ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > never reuses persistent identities across browser restart or missing session API 5ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > does not reuse a closed tab token when its browser numeric ID is reused 1ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects copied source tokens from another tab and mismatched runtime document IDs 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects old documents after navigation and allows a registered successor in the same tab 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > preserves a proven current document through same-document loading/hash navigation 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > recovers a pending same-document navigation without browser documentId support 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects an old document trying to reclaim registration during and after a successor navigation 3ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects a document probe at a different route, preserving the query-string exclusion 3ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects navigation occurring while a current-document probe is in flight 14ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects a replacement registration without a navigation boundary 15ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > recovers a proven current document after a worker restart missed navigation 5ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > still requires a navigation boundary for replacement tokens in the same runtime document 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > does not infer a missed navigation when the browser has no runtime document IDs 2ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > checks active tab and focused window without activating either 8ms
+ ✓ unit/images.test.mjs > actual image admission > fully decodes a valid PNG and returns its exact original bytes 4ms
+ ✓ unit/images.test.mjs > actual image admission > reconstructs PNG filter 0 1ms
+ ✓ unit/images.test.mjs > actual image admission > reconstructs PNG filter 1 0ms
+ ✓ unit/images.test.mjs > actual image admission > reconstructs PNG filter 2 0ms
+ ✓ unit/images.test.mjs > actual image admission > reconstructs PNG filter 3 0ms
+ ✓ unit/images.test.mjs > actual image admission > reconstructs PNG filter 4 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":0,"depth":1,"raw":{"type":"Buffer","data":[0,128]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":0,"depth":8,"raw":{"type":"Buffer","data":[0,20]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":0,"depth":16,"raw":{"type":"Buffer","data":[0,20,0]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":2,"depth":8,"raw":{"type":"Buffer","data":[0,20,180,90]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":2,"depth":16,"raw":{"type":"Buffer","data":[0,20,0,180,0,90,0]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":4,"depth":8,"raw":{"type":"Buffer","data":[0,20,255]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > validates standard noninterlaced sample format {"colour":6,"depth":16,"raw":{"type":"Buffer","data":[0,20,0,180,0,90,0,255,255]}} 0ms
+ ✓ unit/images.test.mjs > actual image admission > checks decoded palette indices, including packed low-bit-depth samples 1ms
+ ✓ unit/images.test.mjs > actual image admission > rejects malformed, noncanonical, empty and signature-only base64 1ms
+ ✓ unit/images.test.mjs > actual image admission > rejects every truncation of a valid PNG and trailing bytes 2ms
+ ✓ unit/images.test.mjs > actual image admission > rejects corrupt chunk CRC and compressed streams even when container CRC is correct 7ms
+ ✓ unit/images.test.mjs > actual image admission > rejects wrong decoded lengths, invalid filters and extra compressed members 1ms
+ ✓ unit/images.test.mjs > actual image admission > rejects chunk-order errors, unknown critical chunks, unsupported interlace and oversized output 12ms
+ ✓ unit/images.test.mjs > actual image admission > accepts a real browser JPEG only with an explicit structural-validation label 2ms
+ ✓ unit/images.test.mjs > actual image admission > rejects JPEG truncation, signatures alone, corrupt segment length and trailing garbage 25ms
+ ✓ unit/images.test.mjs > actual image admission > does not confuse the declared MIME with the file format 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > durably accepts another prompt without waiting behind a stalled transport 26ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > persists before transport and acknowledges only a validated delivered response 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > does not acknowledge a failed enqueue behind an older blocked delivery 24ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > revalidates retries with the bridge instead of reusing a stale delivered receipt 3ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > serializes two visible-window submissions and concurrent flushes without loss or duplicates 5ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the stable payload across a post-commit network loss and worker restart 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > rejects initial storage failure before sending, and recovers its serialized owner 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > retains already durable work when acknowledgment deletion fails 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > preserves all 25 accepted items and rejects number 26 without eviction 18ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > refuses reuse of a durable token with different content 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on HTTP 400 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on HTTP 409 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on HTTP 500 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on malformed response {} 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on malformed response {"id":1} 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps the queue on malformed response {"id":"not-a-nudge"} 0ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > does not replay against an old bridge lacking idempotency 0ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > migrates legacy order/content without invented age or provenance and requires explicit action 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > preserves originals when interrupted before migration write and tokens after it 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > keeps expired and future items pending without changing creation time 1ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > preserves unsupported envelopes rather than overwriting them 0ms
+ ✓ unit/queue.test.mjs > serialized durable browser submission queue > accepts a withdrawn receipt without resurrecting the prompt 0ms
+ ✓ unit/queue.test.mjs > local content-script HTTP transport > keeps concurrent request transports bound to each actual sender tab 2ms
+ ✓ unit/queue.test.mjs > local content-script HTTP transport > transports named local page submissions through their own tab 1ms
+ ✓ unit/queue.test.mjs > local content-script HTTP transport > retains durable work when its transport tab closes and retries from a new local tab 1ms
+ ✓ unit/queue.test.mjs > local content-script HTTP transport > rejects malformed transport results without dropping durable work 1ms
+ ✓ unit/queue.test.mjs > local content-script HTTP transport > rejects other extensions, nonlocal origins, child frames and missing browser tab IDs 1ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > checks route before capture while deliberately excluding query strings 4ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects activation away-and-back races during capture, but restores overlays immediately 4ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects focus away-and-back races during capture, but restores overlays immediately 3ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects navigation away-and-back races during capture, but restores overlays immediately 4ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > also checks continuity after asynchronous image encoding 3ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > restores through the content timeout if screenshot API itself rejects 6ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > supports a missing windows API explicitly, without swallowing a present API failure 4ms
+ ✓ unit/capture-identity.test.mjs > privileged browser identity and capture continuity > rejects foreign extensions, non-local documents, child frames and unbounded tokens 4ms
+ ✓ unit/lifecycle.test.mjs > conservative single-writer lease > publishes a complete lease atomically and releases only its own nonce 50ms
+ ✓ unit/lifecycle.test.mjs > conservative single-writer lease > never treats an empty/malformed lease or interrupted recovery guard as stale 46ms
+ ✓ unit/lifecycle.test.mjs > conservative single-writer lease > only ESRCH proves death; EPERM and unknown failures are occupied 1ms
+ ✓ unit/lifecycle.test.mjs > bounded bridge identity > validates version/capability/store types and canonical symlink paths 2ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > rejects malformed annotations before creating a pin or receipt 7ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > retains a bounded lasso and projects malformed historical annotations without disk loss 37ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > rejects coerced non-string submission metadata before mutation 7ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > does not acknowledge uncommitted cache state after a failed store rename 18ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > preserves exact legacy 0.18 receipt replay without weakening new signatures 7ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > retains receipts through the retry horizon, then rejects a delayed withdrawn submission after expiry 13ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > persists a submission and its receipt in one atomic store rename 3ms
+ ✓ unit/images-store.test.mjs > image admission at store evidence boundary > rejects malformed supplied modern images before allocating a pin or durable receipt 34ms
+ ✓ unit/images-store.test.mjs > image admission at store evidence boundary > retains a legacy prompt but drops malformed before-images rather than asserting proof 12ms
+ ✓ unit/images-store.test.mjs > image admission at store evidence boundary > rejects corrupt/empty/header-only after-images before any file or cached proof mutation 29ms
+ ✓ unit/images-store.test.mjs > image admission at store evidence boundary > never lets a corrupt retry overwrite an accepted decoded PNG or its cached hash 33ms
+ ✓ unit/lifecycle.test.mjs > bounded bridge identity > never spawns on timeout, HTTP error, malformed JSON or incompatible identity 4ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > publishes a fresh data-only mark, then accepts its matching asynchronous image 36ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > can create a new mark with pixels in a single initial publication 12ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > inherits images on ancestor retarget only for the same mark and route, excluding query 4ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"selectionGeneration":"generation2"} 10ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"browserSource":{"browser":"chromium","session":"session1","tab":"tab1","document":"document1"}} 4ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"browserSource":{"browser":"safari","session":"session2","tab":"tab1","document":"document1"}} 14ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"browserSource":{"browser":"safari","session":"session1","tab":"tab2","document":"document1"}} 7ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"browserSource":{"browser":"safari","session":"session1","tab":"tab1","document":"document2"}} 3ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"url":"http://127.0.0.1:5322/route?query=1#hash"} 10ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > binds only running servers within the exact project, including app subdirectories 62ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"url":"http://localhost:5323/route?query=1#hash"} 18ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"url":"http://localhost:5322/other?query=1#hash"} 5ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects a late/mismatched image without touching selection or image bytes: {"url":"http://localhost:5322/route?query=1#other"} 5ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects an older mark image after a new generation becomes current 5ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > requires an initial publication before accepting a modern asynchronous image 1ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > rejects source/generation omissions and invalid bounded tokens without mutation 1ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > validates both image inputs before writing either file 4ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > retains legacy same-route inheritance but never inherits a source-aware mark 6ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > does not inherit legacy images when a modern mark begins 2ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > caps string, target, style and finite geometry fields 3ms
+ ✓ unit/selection.test.mjs > source and generation bound current selection > treats malformed persisted selection shapes as absent without rewriting them 2ms
+ ✓ unit/package-runtime.test.mjs > portable shared runtime resource packaging > audits current imports, Chrome resources, the production lock and setup assets 7ms
+ ✓ unit/package-runtime.test.mjs > portable shared runtime resource packaging > refuses broad output, existing evidence, symlinks and dangling symlinks 21ms
+ ✓ unit/package-runtime.test.mjs > portable shared runtime resource packaging > stages identical inputs deterministically and labels missing installed dependencies honestly 242ms
+stderr | unit/store.test.mjs > store.mjs — corrupt-store recovery > backs up a wrong-shape store.json, restarts empty, and floors seq from the inbox mirror
+[nudge-store] store.json UNUSABLE (wrong shape) — backed up to <tmp>/nudge-store-unit-37827/store.json.corrupt-1793118694206, starting empty at seq 2
+
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > does not deduplicate changed screenshot or console evidence as identical content 18ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > replays identical historical nudge after-images without inventing provenance or rewriting 15ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > replays identical historical pin after-images without inventing provenance or rewriting 37ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > only accepts a successor with explicitly vouched original provenance 8ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > issues sequential nudge_N ids and never reuses one after delete 6ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > caps oversized client fields 3ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > advances seq past any existing nudge number so a hand-edited store cannot cause id reuse 4ms
+ ✓ unit/store.test.mjs > store.mjs — nudge lifecycle > prunes old resolved nudges but never open ones 5ms
+ ✓ unit/store.test.mjs > store.mjs — owner provenance (bulletproof binding) > stamps the server-decided owner and ignores any owner in the payload 2ms
+ ✓ unit/store.test.mjs > store.mjs — owner provenance (bulletproof binding) > caps owner label to 60 and session to 128 2ms
+ ✓ unit/store.test.mjs > store.mjs — owner provenance (bulletproof binding) > keeps an owned nudge immutable on resolve, but attributes the resolver when the nudge was unowned 4ms
+ ✓ unit/store.test.mjs > store.mjs — corrupt-store recovery > backs up a wrong-shape store.json, restarts empty, and floors seq from the inbox mirror 45ms
+ ✓ unit/lifecycle.test.mjs > bounded bridge identity > handles asynchronous spawn errors without an unhandled error event 122ms
+ ✓ unit/store.test.mjs > store.mjs — sanitizing + projections > keeps multi-element targets only for 2+ elements and caps the count at 12 9ms
+ ✓ unit/store.test.mjs > store.mjs — sanitizing + projections > projects a speaking mark label and a client view that passes owner through 3ms
+ ✓ unit/store.test.mjs > store.mjs — display label vs id > wraps the label into 1..999 while the id keeps counting 1ms
+ ✓ unit/store.test.mjs > store.mjs — display label vs id > reads the legacy pin_ prefix and refuses to guess at a junk id 0ms
+ ✓ unit/store.test.mjs > store.mjs — display label vs id > never lets two nudges within one pool share a label 1ms
+ ✓ unit/store.test.mjs > store.mjs — display label vs id > ships the label alongside the id in every consumer projection 4ms
+ ✓ unit/store.test.mjs > store.mjs — display label vs id > writes both numbers into the inbox mirror heading 5ms
+ ✓ unit/lifecycle.test.mjs > bounded bridge identity > bounds refusal polling after a successful spawn 153ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > re-reads routes so later starts and server port changes do not retain stale claims 196ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > refuses foreign names, malformed state and unsupported TLS discovery 163ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > rejects unsupported explicit preview: https://app.localhost 1ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > rejects unsupported explicit preview: http://foreign.example 0ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > rejects unsupported explicit preview: http://app.localhost.evil 0ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > rejects unsupported explicit preview: http://user@app.localhost 0ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > rejects unsupported explicit preview: http://localhost:0 0ms
+ ✓ unit/preview-hosts.test.mjs > process-backed Portless worktree discovery > normalizes the direct IPv4 alias but retains complete named host identity 0ms
+ ✓ unit/package-runtime.test.mjs > portable shared runtime resource packaging > keeps CLI help executable after relocation without any resource path to the original payload 604ms
+ ✓ unit/package-runtime.test.mjs > portable shared runtime resource packaging > rejects invalid dependency mode before creating output 0ms
+stderr | unit/toolbar-toggle.test.mjs > native toolbar activation startup > registers action and shortcut handlers before fallible icon initialization
+[groundworks-nudge] initial toolbar icon unavailable Error: Icon renderer unavailable
+    at new Canvas (<repo>/test/unit/toolbar-toggle.test.mjs:25:43)
+    at drawCrosshairIcon (evalmachine.<anonymous>:265:13)
+    at iconImages (evalmachine.<anonymous>:282:57)
+    at evalmachine.<anonymous>:288:54
+    at Script.runInContext (node:vm:150:12)
+    at Script.runInNewContext (node:vm:155:17)
+    at Object.runInNewContext (node:vm:311:38)
+    at harness (<repo>/test/unit/toolbar-toggle.test.mjs:30:8)
+    at <repo>/test/unit/toolbar-toggle.test.mjs:41:15
+    at file://<repo>/test/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
+
+ ✓ unit/toolbar-toggle.test.mjs > native toolbar activation startup > registers action and shortcut handlers before fallible icon initialization 15ms
+ ✓ unit/toolbar-toggle.test.mjs > native toolbar activation startup > registers each activation once and ignores unrelated commands or missing tabs 2ms
+ ✓ unit/toolbar-toggle.test.mjs > native toolbar activation startup > contains missing-content-script delivery failures 2ms
+ ✓ unit/toolbar-toggle.test.mjs > native toolbar activation startup > does not require a promise from the startup icon API 2ms
+ ✓ unit/delivery-ledger.test.mjs > H01 positive reference and deliberately dropped/duplicated/misrouted effects 18ms
+ ✓ unit/delivery-ledger.test.mjs > H02/H03/H07 missing attempt, clock, receipt, identity and timing controls 4ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > checks each named local host independently on the same proxy port 27ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > keeps setup checks under status and does not expose a separate retired command 1305ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > checks Chromium, the intended port and the current pull session without creating a store 5ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > accepts Safari alone and never substitutes Chrome or another app for the requested browser 6ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > keeps absent browser connections separate from missing local installation 4ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > detects differing or missing Skills without overwriting them 4ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > does not use another live session or another page owner as readiness evidence 8ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > distinguishes a refused connection from unknown or incompatible listeners 5ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > leaves conflicting stores untouched and refuses invalid arguments before any request 8ms
+ ✓ unit/status-check.test.mjs > read-only Nudge readiness > reports missing runtime dependencies from an incomplete checkout without installing them 4ms
+
+ Test Files  17 passed (17)
+      Tests  242 passed (242)
+   Start at  17:31:32
+   Duration  2.94s (transform 992ms, setup 0ms, collect 4.36s, tests 4.08s, environment 6ms, prepare 7.95s)

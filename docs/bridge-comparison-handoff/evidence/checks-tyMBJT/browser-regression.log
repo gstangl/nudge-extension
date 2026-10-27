@@ -1,0 +1,193 @@
+RUN e2e (headless Chromium)
+[nudge-bridge] http://localhost:4720 (demo: /demo) - store: <tmp>/pin-e2e-store
+PASS agent identity (heartbeat label -> /.identity)
+PASS CORS boundary (foreign origin blocked, localhost reflected)
+  [browser] Demo error: SCOP value could not be loaded (test data)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS status check (real extension handshake and current page owner; simulated agent)
+PASS status hint (click dot → state guide, caret aligned, Escape)
+PASS chrome inert (page popover survives pill click, stays pickable)
+PASS pick = mark (selection published, survives Cancel, no nudge created)
+[nudge-bridge] stored nudge_1: "" @ #card-conversion [suite-a]
+[nudge-bridge] discarded nudge_1 — withdrawal sent to suite-a
+PASS empty send = numbered mark (Enter sends, pill shows the number)
+[nudge-bridge] stored nudge_2: "The heat-pump card needs more space from the title." @ #card-conversion [suite-a]
+PASS badge queue popover (open, content, owner shown, Escape)
+PASS pick + chips + styles + net-errors (DOM-only, no screenshot) + badge
+  nudge_2:      "The heat-pump card needs more space from the title." @ #card-conversion (xpath /html/body[1]/section[1]/div[1]/div[2])
+[nudge-bridge] stored nudge_3: "This banner looks lost - wider and with more presence." @ .banner [suite-a]
+PASS lasso (stroke + screenshot; screenshots exclusive to lasso)
+  nudge_3:      "This banner looks lost - wider and with more presence." (stroke 25 points)
+PASS SPA navigation badge refilter (hashchange/popstate)
+[nudge-bridge] evidence captured for nudge_3
+PASS lasso evidence loop (resolve -> after-shot; element nudges stay shot-free)
+[nudge-bridge] stored nudge_4: "Swap these two elements." @ #card-conversion li:nth-of-type(1) [suite-a]
+PASS multi-selection (Shift+click -> 2 targets in selection + nudge, outlines transient)
+PASS click convention (plain click resets multi to single)
+[nudge-bridge] stored nudge_5: "" @ #card-source [suite-a]
+[nudge-bridge] discarded nudge_5 — withdrawal sent to suite-a
+PASS queue management (label "what is marked", discard ×, dots lifecycle)
+[nudge-bridge] stored nudge_6: "[TEST] delayed delivery 1" @ #card-source [suite-a]
+[nudge-bridge] stored nudge_7: "[TEST] delayed delivery 2" @ #card-source [suite-a]
+PASS delayed transport accepts two durable prompts promptly and delivers exactly once in order: [1554,2050]
+  [browser] [groundworks-nudge] queue worker did not acknowledge; delivering directly Error: Extension reply timed out
+    at chrome-extension://dmkidoodmnlldeokhplooobkhocfkabo/content.js:25:70
+[nudge-bridge] stored nudge_8: "[TEST] silent worker" @ #card-source [suite-a]
+PASS silent queue worker: prompt delivered directly once (5591 ms)
+PASS runtime-neutral CLI launcher installs and runs
+PASS Claude Code, Codex and Grok replace stale Skills with exact canonical copies
+PASS optional hooks preserve settings and install idempotently for Claude Code and Codex
+
+Nudge agent setup: ALL PASS
+PASS agent wiring in sync (repo = isolated installation)
+RUN fixture-gauntlet (headless Chromium)
+[nudge-bridge] http://localhost:4722 (demo: /demo) - store: <tmp>/nudge-gauntlet-store
+FAIL: F1: expected #g-modal-title, got undefined
+RUN toolbar-ux (headless Chromium)
+[nudge-bridge] http://localhost:4785 (demo: /demo) - store: <tmp>/nudge-uxsuite-store
+[nudge-bridge] owner chosen: Estimate Templates :5175 for localhost:5196
+PASS L1 localhost is a clean pill on the toolbar AND switcher rows, never inline in the name
+PASS L2 connection feed chip shows a clean name + localhost pill (no inline :port)
+[nudge-bridge] stored nudge_1: "note" @ #t [Estimate Templates :5175]
+PASS L3 only one popover open at a time (queue ↔ switch-session are mutually exclusive)
+[nudge-bridge] stored nudge_2: "Make the published state clearly distinguishable from stagin" @ #t [Estimate Templates :5175]
+PASS L10 expanded prompt uses full width below stable metadata and collapses cleanly
+PASS L4 P/F hotkeys switch tools, and are suppressed while typing in a page field
+PASS L5 reduced-motion collapses overlay transitions (no gliding highlight / spinning clock)
+PASS L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot
+[nudge-bridge] stored nudge_3: "[TEST] scrollable queue 0" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_4: "[TEST] scrollable queue 1" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_5: "[TEST] scrollable queue 2" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_6: "[TEST] scrollable queue 3" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_7: "[TEST] scrollable queue 4" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_8: "[TEST] scrollable queue 5" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_9: "[TEST] scrollable queue 6" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_10: "[TEST] scrollable queue 7" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_11: "[TEST] scrollable queue 8" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_12: "[TEST] scrollable queue 9" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_13: "[TEST] scrollable queue 10" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_14: "[TEST] scrollable queue 11" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_15: "[TEST] scrollable queue 12" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_16: "[TEST] scrollable queue 13" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_17: "[TEST] scrollable queue 14" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_18: "[TEST] scrollable queue 15" @ http://localhost:5196/ [Estimate Templates :5175]
+PASS L8 bottom-edge queue grows, flips, scrolls with real wheel input and stays inside a narrow viewport
+PASS L9 an already open status menu reflects bridge loss immediately
+PASS L6 an orphaned tab (extension reload) shows the ⌘R hint instead of vanishing silently; click dismisses
+
+Suite L — Toolbar & popover UX: ALL PASS
+RUN page-inertness (headless Chromium)
+PASS M1 near-miss clicks around the toolbar are absorbed — the page modal survives
+PASS M2 a genuine outside click (far from the toolbar) still dismisses the modal — moat stays tight
+PASS M3 clicking a Nudge widget (Pick) does not touch the page modal
+PASS M4 a document capture-phase pointerdown dropdown (à la @roots/ui) stays open when reaching for the toolbar, and Pick still activates
+PASS M5 the pointerdown swallow left our own controls intact (composer typing + grip drag)
+
+Suite M — Page inertness: ALL PASS
+RUN escape-clear (headless Chromium)
+PASS O1 single pick: Escape clears highlight + composer (clean page)
+PASS O2 Shift multi-selection: Escape clears both outlines (clean page)
+PASS O3 lasso: Escape clears the stroke (clean page)
+PASS O4 page eats Escape at window capture: marks still clear
+PASS O5 page eats Escape at document capture: marks still clear
+PASS O6 P/F tool hotkeys still switch when the page owns the keyboard
+PASS O7 Escape disarms the tool AND still reaches the page
+
+Suite O — Escape clears marks: ALL PASS
+RUN multi-select (headless Chromium)
+PASS P1 Shift from the very first click collects 2 elements
+PASS P2 plain click, then Shift+click adds the second element
+PASS P3 a third Shift+click extends the same selection
+PASS P4 Shift+click on a collected element toggles it off
+PASS P5 the typed nudge survives extending the selection
+PASS P6 a plain click resets the multi set to one element
+PASS P7 a deliberate Shift+click right beside the composer still lands
+PASS P8 a region mark stays a region — Shift+click does not fold elements into it
+
+Suite P — Multi-selection: ALL PASS
+RUN reload-resilience (headless Chromium)
+PASS Q1 draft + target survive a page reload
+PASS Q2 the restored mark snaps back onto its live element
+PASS Q3 an element rendered ~1s after load is found inside the retry window
+PASS Q4 element gone: text kept, anchor honestly reported as lost
+PASS Q5 a mark whose element is gone still sends (queued offline, no crash)
+PASS Q6 Escape before the reload leaves nothing to restore
+PASS Q7 a Shift-collected set of elements survives the reload
+PASS Q8 quota failure followed by reload preserves a sendable draft
+PASS Q9 ambiguous acknowledgement survives reload with exactly one queued submission
+PASS Q10 malformed console context cannot leave Send disabled
+Q11 scroll geometry: {"offset":0,"scroll":120,"text":"Keep this draft while scrolling","start":5,"end":9,"focused":true,"disabled":true,"composerMovement":120}
+PASS Q11 page scroll keeps highlight/composer anchored without changing a pending draft
+PASS Q12 nested container scroll keeps the draft beside its target
+PASS Q12 resizing refreshes the live anchor without resetting text
+PASS Q13 scrolling after target removal hides the stale highlight and keeps the draft
+Q14 region geometry: {"before":{"offset":-5,"stroke":307,"composer":307},"nested":{"offset":-5,"stroke":207,"composer":207},"page":{"offset":-5,"stroke":127,"composer":127}}
+PASS Q14 freeform stroke and composer follow nested and page scrolling
+PASS Q14 persisted region uses the same updated coordinates as its visible stroke
+PASS Q14 reload preserves region shape and relocates it with its original target
+Q15 drag geometry: {"before":{"x":301,"y":650,"width":340,"height":293},"dropped":{"x":471,"y":230,"width":340,"height":293}}
+PASS Q15 region/element header dragging, release, scroll, reload, resize and controls
+PASS Q16 changed tab identity and failed first read recover with the exact original submission
+Q17 tip geometry: {"left":400,"lines":1,"error":0,"bottom":761,"correctSide":true}
+Q17 tip geometry: {"left":400,"lines":12,"error":0,"bottom":792,"correctSide":true}
+Q17 tip geometry: {"left":400,"lines":3,"error":0,"bottom":768,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":1,"error":0,"bottom":761,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":12,"error":0,"bottom":792,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":3,"error":0,"bottom":768,"correctSide":true}
+PASS Q17 measured arrow alignment for growing/shrinking drafts on both sides
+
+Suite Q — Reload resilience: ALL PASS
+RUN amend (headless Chromium)
+[nudge-bridge] http://localhost:4788 (demo: /demo) - store: <tmp>/nudge-amend-store
+[nudge-bridge] stored nudge_1: "The card needs more spacing." @ #t
+[nudge-bridge] amended nudge_1: "and the title one size smaller"
+PASS N1 open nudge takes a follow-up — original immutable, stored with timestamp, inbox mirror carries both
+[nudge-bridge] stored nudge_2: "First thought." @ #t
+[nudge-bridge] amended nudge_2: "second"
+[nudge-bridge] amended nudge_2: "third"
+PASS N2 multiple follow-ups accrue in order; an empty follow-up is rejected (400)
+[nudge-bridge] stored nudge_3: "Almost done." @ #t
+PASS N3 a resolved nudge refuses a follow-up (409, no re-open); unknown id is 404
+[nudge-bridge] stored nudge_4: "Please make the banner wider." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_4: "and with more presence"
+PASS N4 a REAL watcher wakes on the fresh nudge AND re-wakes on the amendment (owning agent sees the follow-up)
+[nudge-bridge] stored nudge_5: "UI nudge to amend." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_5: "one more detail"
+PASS N5 History "+ amend" round-trips: follow-up reaches the store, the "+1" badge shows, and its TEXT is readable under the expanded row
+[nudge-bridge] stored nudge_6: "Second UI nudge." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_6: "first line
+second line"
+PASS N6 submit contract: Enter sends, Shift+Enter is a newline (not send), the field clears after a successful send
+
+Suite N — Amend: ALL PASS
+RUN cancel (headless Chromium)
+[nudge-bridge] http://localhost:4791 (demo: /demo) - store: <tmp>/nudge-cancel-store
+[nudge-bridge] stored nudge_1: "This needs more spacing." @ #t [Agent A]
+PASS X1 a new nudge reaches the agent in ms — a × is therefore a cancel of RUNNING work, not a tidy-up
+[nudge-bridge] discarded nudge_1 — withdrawal sent to Agent A
+PASS X2 × reaches the working agent — actionable stop line, not just a vanished row
+PASS X4 DELETE answers who was notified + how they wake — the toolbar can stop guessing
+PASS X5 durable trace left behind (id, time, route) — prompt text deliberately gone
+PASS X6 gone from store, inbox and the tab snapshot — the row disappears
+PASS X10 a withdrawn nudge cannot be resolved (404) — no phantom completion
+[nudge-bridge] owner chosen: Agent A for localhost:5191
+[nudge-bridge] owner chosen: Agent B for localhost:5192
+[nudge-bridge] stored nudge_2: "Belongs to A." @ #t [Agent A]
+[nudge-bridge] discarded nudge_2 — withdrawal sent to Agent A
+PASS X3 the withdrawal goes to the owning agent only — B never hears about A's nudge
+[nudge-bridge] stored nudge_3: "Gone again at once." @ #t [Agent B]
+[nudge-bridge] discarded nudge_3 — withdrawal sent to Agent B
+PASS X8 a nudge that never reached this agent produces no stop line — nothing to cancel, no noise
+[nudge-bridge] stored nudge_4: "Already done." @ #t [Agent A]
+[nudge-bridge] discarded nudge_4 — no live recipient confirmed
+PASS X11 discarding a DONE nudge is housekeeping — no stop line, no marker, no false claim
+[nudge-bridge] stored nudge_5: "Pull path." @ #t [Agent A]
+[nudge-bridge] discarded nudge_5 — withdrawal sent to Agent A
+PASS X9 a CLI session sees the withdrawal in its next prompt context — as close to a stop as pull can get
+PASS X9b naming a withdrawn nudge answers "withdrawn", not "never existed" — the ambiguity is gone
+[nudge-bridge] owner chosen: Agent C for localhost:5191
+[nudge-bridge] stored nudge_6: "Without WS." @ #t [Agent C]
+[nudge-bridge] discarded nudge_6 — withdrawal sent to Agent C
+PASS X7 file fallback carries the withdrawal too — a WS-less / restarted watcher still stops
+[nudge-bridge] owner chosen: Agent A for localhost:4791

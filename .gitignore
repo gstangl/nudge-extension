@@ -20,3 +20,6 @@ docs/architecture/verification.local.json
 bridge-rust/target/
 artifacts/bridge-comparison/
 .groundworks/
+
+# Reviewed public handoff logs; private planning remains ignored.
+!docs/bridge-comparison-handoff/**/*.log

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "observed-local-existing-fast-gate",
+  "status": "passed",
+  "command_argv": [
+    "npm",
+    "run",
+    "test:ci"
+  ],
+  "working_directory": "test",
+  "started_at": "2026-10-27T16:06:32.401883+00:00",
+  "finished_at": "2026-10-27T16:06:40.127028+00:00",
+  "elapsed_seconds": 7.739,
+  "exit_code": 0,
+  "signal": null,
+  "timeout_seconds": 180,
+  "runtime": {
+    "node": "v26.12.0",
+    "npm": "12.2.1"
+  },
+  "environment_overrides": {
+    "NUDGE_NO_RELOAD": "1"
+  },
+  "source_subject": {
+    "base_revision": "dabeae4beea28f5cd3d3ec8397ca6d58f808e049",
+    "tree_state": "dirty",
+    "source_digest": "e33f8c7c4b922c7b81d8db5b3a190f4786c7a73512629fe357016f29987c9712",
+    "source_manifest_sha256": "89c8d25f3a14903776b22b526ee36a3697aaf6b773701520821354f28a58bc4a",
+    "content_checked_before_and_after": true,
+    "changed_source_paths_after_run": []
+  },
+  "unit_files_passed": 16,
+  "unit_tests_passed": 240,
+  "runtime_integration_passed": true,
+  "setup_integration_passed": true,
+  "log": "fast-gate.log",
+  "log_sha256": "b5d4bbc127735ed244cc3eafd8c27dbd8220188dce1289893ebe1ba39bf8648b",
+  "log_transformation": "Combined stdout/stderr retained; absolute repository, OS temp and home directory prefixes replaced with <repo>, <tmp> and <home>. No semantic result lines were removed. Raw unredacted output is not included.",
+  "evidence_scope": "Existing local unit/runtime/setup checks on this dirty source snapshot. No exact-revision CI, benchmark, Rust, Chrome/native/actual-agent or new catalog execution.",
+  "new_catalog_status": "not-run"
+}

@@ -1,0 +1,9 @@
+{
+  "source": "1fd947cbc93496c0e0ac8f355085f066df78c47e25d60da171ad660475da711c",
+  "results": [
+    {
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ undefined\n- 'Expected rollback alpha'\n\n    at file://<repo>/test/bridge-rollback.mjs:21:195\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    }
+  ]
+}

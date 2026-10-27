@@ -1,0 +1,15 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/withdrawal-fault-1793121468247",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "failed",
+      "error": "Error: deadline: withdrawal commit barrier\n    at until (file://<repo>/test/support/bridge-candidate.mjs:15:9)\n    at async file://<repo>/test/bridge-withdrawal-fault.mjs:15:119"
+    },
+    {
+      "modern": false,
+      "verdict": "failed",
+      "error": "Error: deadline: withdrawal commit barrier\n    at until (file://<repo>/test/support/bridge-candidate.mjs:15:9)\n    at async file://<repo>/test/bridge-withdrawal-fault.mjs:15:119"
+    }
+  ]
+}

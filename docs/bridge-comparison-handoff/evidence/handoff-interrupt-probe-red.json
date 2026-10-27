@@ -1,0 +1,4 @@
+{
+  "verdict": "failed",
+  "reason": "Probe sent SIGTERM repeatedly on stdout chunks; exit was signal rather than the expected 130. Recorder result not inferred from this invalid probe."
+}

@@ -1,0 +1,40 @@
+{"at":479.334926,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":504.919544,"kind":"pass","data":"P01"}
+{"at":533.588329,"kind":"stderr","data":"[nudge-bridge] stored nudge_1: \"Reference owner_a\" @ #reference [session_alpha]\n"}
+{"at":536.835145,"kind":"stderr","data":"[nudge-bridge] stored nudge_2: \"Reference owner_b\" @ #reference [session_beta]\n"}
+{"at":537.780483,"kind":"pass","data":"R01-stable-owners"}
+{"at":540.249935,"kind":"stderr","data":"[nudge-bridge] stored nudge_3: \"Reference a\" @ #reference [session_alpha]\n"}
+{"at":557.566865,"kind":"pass","data":"P02-P03-replay-conflict"}
+{"at":568.556678,"kind":"stderr","data":"[nudge-bridge] stored nudge_4: \"Reference race\" @ #reference [session_alpha]\n"}
+{"at":572.887123,"kind":"pass","data":"P04-concurrent-retries"}
+{"at":836.68563,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":858.439314,"kind":"pass","data":"P05-process-crash-replay"}
+{"at":861.842004,"kind":"stderr","data":"[nudge-bridge] discarded nudge_3 — no live recipient confirmed\n"}
+{"at":1129.321373,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":1145.820275,"kind":"pass","data":"P06-withdrawn-replay"}
+{"at":1150.06309,"kind":"stderr","data":"[nudge-bridge] stored nudge_5: \"Reference resolve\" @ #reference\n"}
+{"at":1152.933354,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"First amendment\"\n"}
+{"at":1155.528048,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"Second amendment\"\n"}
+{"at":1160.080276,"kind":"pass","data":"P07-resolve-amend-owner"}
+{"at":1167.039352,"kind":"stderr","data":"[nudge-bridge] stored nudge_6: \"Reference write_fault\" @ #reference\n"}
+{"at":1169.429409,"kind":"pass","data":"P13-write-failure-recovery"}
+{"at":1179.089028,"kind":"stderr","data":"[nudge-bridge] stored nudge_7: \"Reference lost_reply\" @ #reference\n"}
+{"at":1182.925816,"kind":"pass","data":"P03-lost-response-after-commit"}
+{"at":1192.663258,"kind":"stderr","data":"[nudge-bridge] stored nudge_8: \"Reference healthy\" @ #reference\n"}
+{"at":1194.244576,"kind":"pass","data":"P12-invalid-input-healthy-peer"}
+{"at":1455.445428,"kind":"pass","data":"L03-single-writer"}
+{"at":1457.692325,"kind":"stderr","data":"[nudge-bridge] stored nudge_9: \"Reference model_9\" @ #reference\n"}
+{"at":1783.102227,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":1808.973708,"kind":"stderr","data":"[nudge-bridge] stored nudge_10: \"Reference model_0\" @ #reference\n"}
+{"at":1812.221856,"kind":"stderr","data":"[nudge-bridge] stored nudge_11: \"Reference model_5\" @ #reference\n"}
+{"at":1814.810503,"kind":"stderr","data":"[nudge-bridge] stored nudge_12: \"Reference model_6\" @ #reference\n"}
+{"at":1821.180408,"kind":"stderr","data":"[nudge-bridge] stored nudge_13: \"Reference model_3\" @ #reference\n"}
+{"at":1823.751217,"kind":"stderr","data":"[nudge-bridge] stored nudge_14: \"Reference model_4\" @ #reference\n"}
+{"at":1826.217642,"kind":"stderr","data":"[nudge-bridge] stored nudge_15: \"Reference model_1\" @ #reference\n"}
+{"at":1835.774802,"kind":"stderr","data":"[nudge-bridge] stored nudge_16: \"Reference model_8\" @ #reference\n"}
+{"at":1837.928236,"kind":"stderr","data":"[nudge-bridge] stored nudge_17: \"Reference model_7\" @ #reference\n"}
+{"at":2061.87674,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":2084.108441,"kind":"stderr","data":"[nudge-bridge] stored nudge_18: \"Reference model_2\" @ #reference\n"}
+{"at":2401.414274,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":2677.457024,"kind":"stderr","data":"[nudge-bridge] http://localhost:59271 (demo: /demo) - store: <tmp>/nudge-comparison-G2epSZ/store\n"}
+{"at":2702.082594,"kind":"pass","data":"P15-seeded-reference-model"}

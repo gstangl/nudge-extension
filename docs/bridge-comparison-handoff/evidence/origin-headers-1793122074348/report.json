@@ -1,0 +1,24 @@
+{
+  "source": "6507cf79bb0ba3f4133e0fd76f64ded720bac710e37527cf87ef63ae6d2d0608",
+  "argv": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "62690ca68847aebccc4c36e3edef41310c790f60901227fc9f87fce18fc5bdda"
+    }
+  ],
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 17:27:54 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 17:27:54 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+npm notice run nudge-test@1.0.0 test
+npm notice run vitest run --run unit/store.test.mjs unit/connection-generation.test.mjs unit/bridge-catalog.test.mjs unit/delivery-ledger.test.mjs
+
+ RUN  v3.2.7 <repo>/test
+
+ ✓ unit/connection-generation.test.mjs (5 tests) 14ms
+ ✓ unit/bridge-catalog.test.mjs (2 tests) 17ms
+ ✓ unit/delivery-ledger.test.mjs (2 tests) 20ms
+stderr | unit/store.test.mjs > store.mjs — corrupt-store recovery > backs up a wrong-shape store.json, restarts empty, and floors seq from the inbox mirror
+[nudge-store] store.json UNUSABLE (wrong shape) — backed up to <tmp>/nudge-store-unit-69199/store.json.corrupt-1793121302791, starting empty at seq 2
+
+ ✓ unit/store.test.mjs (29 tests) 111ms
+
+ Test Files  4 passed (4)
+      Tests  38 passed (38)
+   Start at  18:15:01
+   Duration  1.39s (transform 111ms, setup 0ms, collect 220ms, tests 162ms, environment 1ms, prepare 1.30s)

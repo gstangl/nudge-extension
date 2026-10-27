@@ -1,0 +1,15 @@
+{
+  "source": "5296c1eb88dbb462afd108f3f05d1f25ee1f2d648301004d905d1587ebb4ae33",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: committed withdrawal lost its recoverable stop signal\n    at file://<repo>/test/bridge-withdrawal-fault.mjs:18:64\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "modern": false,
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: committed withdrawal lost its recoverable stop signal\n    at file://<repo>/test/bridge-withdrawal-fault.mjs:18:64\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    }
+  ]
+}

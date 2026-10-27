@@ -1,0 +1,58 @@
+{
+  "verdict": "passed",
+  "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "results": [
+    {
+      "id": "P01",
+      "verdict": "passed"
+    },
+    {
+      "id": "R01-stable-owners",
+      "verdict": "passed"
+    },
+    {
+      "id": "P02-P03-replay-conflict",
+      "verdict": "passed"
+    },
+    {
+      "id": "P04-concurrent-retries",
+      "verdict": "passed"
+    },
+    {
+      "id": "P05-process-crash-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P06-withdrawn-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P07-resolve-amend-owner",
+      "verdict": "passed"
+    },
+    {
+      "id": "P13-write-failure-recovery",
+      "verdict": "passed"
+    },
+    {
+      "id": "P03-lost-response-after-commit",
+      "verdict": "passed"
+    },
+    {
+      "id": "P12-invalid-input-healthy-peer",
+      "verdict": "passed"
+    },
+    {
+      "id": "L03-single-writer",
+      "verdict": "passed"
+    },
+    {
+      "id": "P15-seeded-reference-model",
+      "verdict": "passed"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "port": 59695,
+  "store": "<tmp>/nudge-comparison-JVoYvr/store",
+  "pid": 45901
+}

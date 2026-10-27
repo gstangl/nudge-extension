@@ -1,0 +1,30 @@
+[
+  {
+    "submissionId": "76ab97a01a4e4d2ab5170009aa868d47",
+    "text": "comparison_324f9a8f5cbe728c173c3114",
+    "url": "http://localhost:50577/demo",
+    "owner": "comparison_alpha",
+    "t0": 4157.479334,
+    "index": 0,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_1",
+        "at": 4193.060221
+      }
+    ],
+    "ta": 4196.116695,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_1",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4246.862499,
+    "latencyMs": 35.580887000000075
+  }
+]

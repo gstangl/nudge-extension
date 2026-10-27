@@ -1,0 +1,5 @@
+{
+  "verdict": "failed",
+  "error": "Error: candidate identity/store mismatch\n    at Object.start (file://<repo>/test/support/bridge-candidate.mjs:69:156)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file://<repo>/test/chrome-delivery.mjs:25:89",
+  "attempts": 0
+}

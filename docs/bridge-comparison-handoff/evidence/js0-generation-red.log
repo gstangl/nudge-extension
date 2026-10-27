@@ -1,0 +1,112 @@
+npm notice run nudge-test@1.0.0 test
+npm notice run vitest run --run unit/connection-generation.test.mjs
+
+ RUN  v3.2.7 <repo>/test
+
+ ❯ unit/connection-generation.test.mjs (5 tests | 5 failed) 28ms
+   × U16 retired close cannot clear current readiness or request native restart 16ms
+     → expected Object{ wsOk: false, …(2) } to match object { wsOk: true, agentLive: true }
+(1 matching property omitted from actual)
+   × U16 retired error cannot close the replacement socket 3ms
+     → expected 1 to be +0 // Object.is equality
+   × U16 retired message cannot replace current pins/owner 3ms
+     → expected [ Array(2) ] to deeply equal [ [ 'current_pin' ] ]
+   × U15/U16 retired open cannot send through or reflush the current connection 2ms
+     → expected 2 to be 1 // Object.is equality
+   × U15 orphaned generation cannot reconnect or deliver a late snapshot 3ms
+     → expected [ [ 'current_pin' ], [ 'late' ] ] to deeply equal [ [ 'current_pin' ] ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  unit/connection-generation.test.mjs > U16 retired close cannot clear current readiness or request native restart
+AssertionError: expected Object{ wsOk: false, …(2) } to match object { wsOk: true, agentLive: true }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "agentLive": true,
+-   "wsOk": true,
++   "agentLive": false,
++   "wsOk": false,
+  }
+
+ ❯ unit/connection-generation.test.mjs:24:178
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  unit/connection-generation.test.mjs > U16 retired error cannot close the replacement socket
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ unit/connection-generation.test.mjs:25:126
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  unit/connection-generation.test.mjs > U16 retired message cannot replace current pins/owner
+AssertionError: expected [ Array(2) ] to deeply equal [ [ 'current_pin' ] ]
+
+- Expected
++ Received
+
+  [
+    [
+      "current_pin",
+    ],
++   [
++     "foreign_pin",
++   ],
+  ]
+
+ ❯ unit/connection-generation.test.mjs:26:232
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  unit/connection-generation.test.mjs > U15/U16 retired open cannot send through or reflush the current connection
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ unit/connection-generation.test.mjs:27:173
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  unit/connection-generation.test.mjs > U15 orphaned generation cannot reconnect or deliver a late snapshot
+AssertionError: expected [ [ 'current_pin' ], [ 'late' ] ] to deeply equal [ [ 'current_pin' ] ]
+
+- Expected
++ Received
+
+  [
+    [
+      "current_pin",
+    ],
++   [
++     "late",
++   ],
+  ]
+
+ ❯ unit/connection-generation.test.mjs:28:289
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  17:56:19
+   Duration  867ms (transform 31ms, setup 0ms, collect 23ms, tests 28ms, environment 0ms, prepare 199ms)

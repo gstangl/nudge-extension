@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "port": 59157,
+  "store": "<tmp>/nudge-comparison-ghyTL4/store",
+  "pid": 10334
+}

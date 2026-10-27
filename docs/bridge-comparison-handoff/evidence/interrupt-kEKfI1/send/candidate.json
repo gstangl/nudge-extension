@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "port": 49873,
+  "store": "<tmp>/nudge-comparison-LxtCJp/store",
+  "pid": 10381,
+  "build": [
+    {
+      "file": "<toolchain>",
+      "sha256": "8a5704ed9b93d6b05be5575f88f1c504d1544f5c994cd220775b692179293c25"
+    },
+    {
+      "file": "<repo>/bridge/bridge.mjs",
+      "sha256": "12491c02537dc2b0e2399ac36b64e7169576ad2501cdcfd1582a5733da05e937"
+    }
+  ]
+}

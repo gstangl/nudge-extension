@@ -1,0 +1,57 @@
+{
+  "verdict": "passed",
+  "source": "ff28566d6684c471091697c1a829483ba52974ea24af8c5dac785e5176c68ee1",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "id": "P01",
+      "verdict": "passed"
+    },
+    {
+      "id": "R01-stable-owners",
+      "verdict": "passed"
+    },
+    {
+      "id": "P02-P03-replay-conflict",
+      "verdict": "passed"
+    },
+    {
+      "id": "P04-concurrent-retries",
+      "verdict": "passed"
+    },
+    {
+      "id": "P05-process-crash-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P06-withdrawn-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P07-resolve-amend-owner",
+      "verdict": "passed"
+    },
+    {
+      "id": "P13-write-failure-recovery",
+      "verdict": "passed"
+    },
+    {
+      "id": "P03-lost-response-after-commit",
+      "verdict": "passed"
+    },
+    {
+      "id": "P12-invalid-input-healthy-peer",
+      "verdict": "passed"
+    },
+    {
+      "id": "L03-single-writer",
+      "verdict": "passed"
+    },
+    {
+      "id": "P15-seeded-reference-model",
+      "verdict": "passed"
+    }
+  ]
+}

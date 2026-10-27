@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "port": 65281,
+  "store": "<tmp>/nudge-comparison-0EPjII/store",
+  "pid": 13723
+}

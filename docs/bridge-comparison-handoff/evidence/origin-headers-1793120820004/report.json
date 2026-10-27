@@ -1,0 +1,26 @@
+{
+  "source": "1d112704b141622f68d3d282bce1b72159bdab37bd25e3c4dca850393d3fa0e1",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "542cdc63f1de17a4c8a3f7bda2da5a6dac356a391c6fab262156fabd773c117a"
+    }
+  ],
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: malformed Origin must not become missing Origin\n    at file://<repo>/test/bridge-origin-headers.mjs:11:14\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+      "response": "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\naccess-control-allow-origin: http://localhost:5322\r\naccess-control-allow-methods: GET, POST, DELETE, OPTIONS\r\naccess-control-allow-headers: Content-Type\r\nvary: Origin\r\ncontent-length: 2\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 17:07:00 GMT\r\n\r\n[]"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: malformed Origin must not become missing Origin\n    at file://<repo>/test/bridge-origin-headers.mjs:11:14\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+      "response": "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 2\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 17:07:00 GMT\r\n\r\n[]"
+    }
+  ]
+}

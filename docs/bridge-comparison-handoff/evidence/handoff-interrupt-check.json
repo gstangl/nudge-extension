@@ -1,0 +1,10 @@
+{
+  "verdict": "passed",
+  "exit": {
+    "code": 130,
+    "signal": null
+  },
+  "output": "RUN rust-builds\nFAILED rust-builds\n\n{\n  \"out\": \"<repo>/artifacts/bridge-comparison/checks-KeEFxC\",\n  \"verdict\": \"failed\",\n  \"results\": [\n    {\n      \"id\": \"rust-builds\",\n      \"verdict\": \"failed\"\n    }\n  ]\n}\n",
+  "report": "checks-KeEFxC/report.json",
+  "meaning": "A single interruption must not schedule another check"
+}

@@ -1,0 +1,216 @@
+{
+  "root": "<repo>",
+  "head": "bc90a4c76cc6034171c9c55660956f0ed912de97",
+  "contracts": {
+    "total": 4,
+    "by_kind": {
+      "command": 4,
+      "unguarded": 0
+    },
+    "evidence": null,
+    "stale": false,
+    "contracts": [
+      {
+        "id": "existing-fast-gate",
+        "kind": "command",
+        "register_kind": "check",
+        "cadence": "on_change",
+        "level": "declared",
+        "last_result": null,
+        "state": "missing",
+        "current": false
+      },
+      {
+        "id": "bridge-reference",
+        "kind": "command",
+        "register_kind": "check",
+        "cadence": "on_change",
+        "level": "declared",
+        "last_result": null,
+        "state": "missing",
+        "current": false
+      },
+      {
+        "id": "bridge-negative-controls",
+        "kind": "command",
+        "register_kind": "check",
+        "cadence": "on_change",
+        "level": "declared",
+        "last_result": null,
+        "state": "missing",
+        "current": false
+      },
+      {
+        "id": "rust-unit",
+        "kind": "command",
+        "register_kind": "check",
+        "cadence": "on_change",
+        "level": "declared",
+        "last_result": null,
+        "state": "missing",
+        "current": false
+      }
+    ],
+    "aggregate": "declared",
+    "ci_subject_mismatch": false
+  },
+  "receipts": {
+    "count": 0,
+    "last": [],
+    "fail_share": null,
+    "accepted_on_proof_share": null,
+    "beyond_ci_count": 0
+  },
+  "entry": {
+    "measured": {
+      "files": {
+        "AGENTS.md": 2261,
+        "CLAUDE.md": 125
+      },
+      "imports": {},
+      "skills_descriptions": 0,
+      "chain": {
+        "path": ".",
+        "bytes": 2386,
+        "files": [],
+        "nested_bytes": 0
+      }
+    },
+    "budget": null
+  },
+  "context": {
+    "schema_version": 1,
+    "inputs": {
+      "feature": [
+        "bridge-delivery"
+      ],
+      "changedFrom": null,
+      "files": [],
+      "resume": null,
+      "maxBytes": 65536
+    },
+    "revision": "bc90a4c76cc6034171c9c55660956f0ed912de97",
+    "tree_state": "dirty",
+    "base_revision": null,
+    "manifest_hash": "d7a2d0f9c23211d0d637437dd9908d8ed7bfc39df117a63d6e457b443d50dfe7",
+    "features": [
+      "bridge-delivery"
+    ],
+    "requirement_ids": [
+      "bridge-delivery-reference"
+    ],
+    "contract_ids": [],
+    "check_ids": [
+      "bridge-negative-controls",
+      "bridge-reference",
+      "existing-fast-gate",
+      "rust-unit"
+    ],
+    "contracts": [],
+    "checks": [
+      {
+        "id": "bridge-negative-controls",
+        "register_kind": "check",
+        "requirement": "BR-11 rejects lost, duplicated and misrouted stored effects.",
+        "defined_in": "docs/specs/bridge-delivery.md",
+        "harness": {
+          "kind": "command",
+          "run": "node test/bridge-mutants.mjs"
+        },
+        "cadence": "on_change"
+      },
+      {
+        "id": "bridge-reference",
+        "register_kind": "check",
+        "requirement": "BR-01/02/03/05/08/12 independent external effects.",
+        "defined_in": "docs/specs/bridge-delivery.md",
+        "harness": {
+          "kind": "command",
+          "run": "node test/bridge-conformance.mjs"
+        },
+        "cadence": "on_change"
+      },
+      {
+        "id": "existing-fast-gate",
+        "register_kind": "check",
+        "requirement": "Preserve the existing required local gate.",
+        "defined_in": "CONTRIBUTING.md#tests",
+        "harness": {
+          "kind": "command",
+          "run": "npm run test:ci --prefix test"
+        },
+        "cadence": "on_change"
+      },
+      {
+        "id": "rust-unit",
+        "register_kind": "check",
+        "requirement": "Experimental Rust module checks.",
+        "defined_in": "docs/specs/bridge-delivery.md",
+        "harness": {
+          "kind": "command",
+          "run": "cargo test --locked --manifest-path bridge-rust/Cargo.toml"
+        },
+        "cadence": "on_change"
+      }
+    ],
+    "specs": [
+      {
+        "path": "docs/specs/bridge-delivery.md",
+        "hash": "a35c0d8c2f5daf200da667267a0f4123dd8b16888a811753508f9e8c507dcf9c",
+        "feature_id": "bridge-delivery",
+        "status": "accepted",
+        "requirement_ids": [
+          "bridge-delivery-reference"
+        ]
+      }
+    ],
+    "methods": [],
+    "reasons": {
+      "bridge-delivery": [
+        "explicit feature"
+      ]
+    },
+    "changed_paths": [],
+    "renames": [],
+    "unmapped_paths": [],
+    "active_work": [],
+    "contents": [
+      {
+        "path": "docs/specs/bridge-delivery.md",
+        "kind": "specification",
+        "content": "---\nid: bridge-delivery\nstatus: accepted\ndecision: Owner execution commission of 2026-10-27; preserve existing product obligations and compare candidates without preselecting a winner.\n---\n\n# Bridge delivery comparison\n\n## Purpose\n\nHelp the person sending a nudge reach the correct agent quickly and recover work after interruption, with measured evidence for any bridge replacement.\n\nThe comparison preserves [product behavior](../PRODUCT.md) and the\n[repository test obligations](../../CONTRIBUTING.md). Rust is experimental until\nit meets the same independently expected behavior as JavaScript and demonstrates\nan operational benefit. There is no installation or release decision here.\n\n## Requirements\n\n### Requirement: Compare preserved delivery behavior independently\nID: bridge-delivery-reference\n\nBoth candidates preserve the following observable obligations through the same external expectations.\n\n| ID | Obligation |\n|---|---|\n| BR-01 | Confirmed acceptance survives bridge-process restart on a functioning filesystem. |\n| BR-02 | A stable submission identity has one stored effect through the supported retry horizon. |\n| BR-03 | Conflicting content under that identity is explicitly refused without replacing original work. |\n| BR-04 | Browser-accepted work remains recoverable in durable acceptance order within one installation. |\n| BR-05 | Preserve opt-in, host routing and immutable committed ownership. |\n| BR-06 | Distinguish reachable bridge, fresh watcher and actual push capability truthfully. |\n| BR-07 | Eligible participants automatically recover transient transport/process interruptions using original identities. |\n| BR-08 | Malformed and slow peers cannot crash or indefinitely starve healthy clients. |\n| BR-09 | Selection and evidence remain bound to their browser, tab, document, route and mark generation. |\n| BR-10 | Preserve wire/file compatibility and direct CLI/hook/watcher readers; refuse unsafe changes before mutation. |\n| BR-11 | Measure named boundaries with independent expectations and every attempt retained. |\n| BR-12 | Start/stop/upgrade affect only positively identified owned instances. |\n\nThe [reference examples](../../test/fixtures/bridge-comparison/reference-cases.json)\nare reviewed independent event timelines. They are not expected-result functions\nimported from either candidate. RC01–RC12 remain bounded by their explicit policy\ndependencies. In particular, a stored effect is distinct from a watcher wake and\nfrom an actual agent input. Exact-once model execution is not promised.\n\n#### Scenario: Reject plausible false success\n- GIVEN a pre-registered input and expected owner\n- WHEN a candidate drops it, stores it twice or stamps a foreign owner\n- THEN the independent ledger rejects that candidate for the intended assertion.\n\n## Experiment boundaries\n\nThe [frozen experiment policy](../../test/fixtures/bridge-comparison/policy.json)\nis an engineering comparison policy, not a new product service-level promise.\nIts hash must be retained before Rust qualification. Process-crash recovery is\nthe common durability class; no fsync/power-loss claim follows from a successful\nrename. OS/power-loss durability remains outside this experiment.\n\nOwner selection at server acceptance and later ownership immutability retain\ncurrent behavior. Pre-commit ownership switches and ambiguous offline selection\nremain unqualified rather than acquiring a new rule through these tests. Corrupt\noriginal files must be preserved; complete recovery from irrecoverable bytes is\nnot claimed. The initial compatibility subject is the reviewed handoff snapshot;\na broader historical/platform support matrix is not implied.\n\nT0 is the harness timestamp immediately before a ready Send button receives real\npointer input. Geometry/actionability preparation is outside T0; dispatch and\nwatcher pipe observation costs remain inside. TW is exact watcher stdout matched\nto browser request identity and independent expected payload/owner. TA observes\nHTTP response headers; UI disappearance is only an upper bound for queue UI\nacknowledgement, not an instrumented storage-acknowledgement timestamp TQ.\nTS requires supported input-boundary evidence from an actual opted-in host. A\nsynthetic watcher and an eventual model answer cannot establish TS. Pull waiting\nand model scheduling must remain separate from transport latency.\n\nAll tests use private stores, side ports, profiles and synthetic identities. Test\nextension native autostart is disabled before loading. Google Chrome uses an\nisolated debugging pipe and `Extensions.loadUnpacked`; this is an automated\nunpacked lane, not native lifecycle or distribution acceptance. Compare the same\nextension/watcher bytes, data, deadlines and durability class. Keep all failed\nsetup attempts, timeouts and negative controls. Never run long qualification on\na candidate failing essential conformance.\n",
+        "hash": "a35c0d8c2f5daf200da667267a0f4123dd8b16888a811753508f9e8c507dcf9c",
+        "bytes": 4882
+      },
+      {
+        "path": "docs/bridge-comparison.md",
+        "kind": "existing documentation",
+        "content": "# Run the isolated bridge comparison\n\nThe [canonical requirements](specs/bridge-delivery.md) and\n[frozen policy](../test/fixtures/bridge-comparison/policy.json) define the experiment.\nThe Rust executable is experimental and refuses the default bridge port. The\nJavaScript bridge remains the installed default. None of these commands installs,\npublishes, merges or changes an ordinary browser/agent profile.\n\nFrom the repository root:\n\n```sh\nnpm ci --prefix bridge\nnpm ci --prefix test\ncargo test --locked --manifest-path bridge-rust/Cargo.toml\ncargo build --locked --release --manifest-path bridge-rust/Cargo.toml\nnpm run test:ci --prefix test\nnode test/bridge-mutants.mjs\nnode test/bridge-conformance.mjs\nnode test/bridge-image-conformance.mjs\nnode test/bridge-retention.mjs\n```\n\nUse the same commands/expectations with a candidate argument array:\n\n```sh\nexport NUDGE_CANDIDATE='[\"./bridge-rust/target/release/nudge-bridge-experiment\"]'\nnode test/bridge-conformance.mjs\nnode test/bridge-image-conformance.mjs\nnode test/bridge-retention.mjs\nnode test/browser-protocol.mjs\nnode test/bridge-boundary.mjs\nnode test/bridge-realtime.mjs\nunset NUDGE_CANDIDATE\nnode test/bridge-rollback.mjs\nnode test/bridge-harness-interrupt.mjs\n```\n\nOnly startup is parameterized in the three existing protocol suites; their\nassertions remain unchanged. They use isolated resources and must run serially.\nThe existing [portable/browser runners](../CONTRIBUTING.md#tests) remain required.\nSuite A runs first in the browser runner. Chromium, Chrome for Testing and actual\nGoogle Chrome are separate lanes. Google Chrome is loaded through the documented\n[DevTools extension API](https://chromedevtools.github.io/devtools-protocol/tot/Extensions/#method-loadUnpacked)\nin a throwaway profile, with native autostart disabled before the worker loads.\n\n```sh\nnode test/chrome-delivery.mjs --browser chrome --samples 30\nnode test/chrome-delivery.mjs --browser chromium --headless --samples 10\nnode test/bridge-compare.mjs --blocks 3 --samples 20\nnode test/bridge-resources.mjs\n```\n\nPaired runs alternate candidate order from a fixed seed, use the same extension,\nwatcher and inputs, and retain every attempted input, failure and timeout. The\npaired command performs essential external checks before timing. Results are\n**diagnostic and inconclusive for adoption**; `--qualify` refuses while complete\ncatalog/coverage/mutation, native/host/OS and soak prerequisites are missing.\nBridge-only RSS samples and direct HTTP timing do not establish whole-system cost\nor Chrome-to-agent speed. Pull waiting and model scheduling remain separate.\n\nCrash barriers use dedicated instrumented builds, never timing builds:\n\n```sh\nnode test/bridge-commit-faults.mjs\ncargo build --locked --release --features fault-hooks --manifest-path bridge-rust/Cargo.toml\nNUDGE_CANDIDATE='[\"./bridge-rust/target/release/nudge-bridge-experiment\"]' node test/bridge-commit-faults.mjs\ncargo build --locked --release --manifest-path bridge-rust/Cargo.toml\n```\n\nThe final command restores the production-feature build. File writes/rename and\nSIGKILL establish process-crash evidence on a functioning OS, not power-loss\nsafety. Deterministic pre-write/post-write/pre-rename/post-rename tests do not yet\ncover all partial writes, withdrawal/evidence races, sync/ENOSPC simulations or\nproduction random-kill schedules.\n\nEvidence is retained under `artifacts/bridge-comparison/` and the existing\n`artifacts/safari/` runner directories. Source manifests include hashes of tracked\nand relevant untracked files; candidate executable bytes are bound separately in\nChrome/retention reports. Earlier failed setup runs and red regressions remain.\nThe [catalog](../test/fixtures/bridge-comparison/catalog.json) maps all 115 IDs to\nspecific assertions or explicit missing drivers/platform/host prerequisites;\na mapped or partially exercised case is never automatically passed.\n\nJS0 is the reviewed handoff snapshot. JS1 adds the shared retired-socket callback\nfix in extension 0.35.2; both candidates use JS1 extension bytes for paired runs.\nNo Node bridge, queue deadline, storage durability or watcher change is credited\nto Rust. Rust still leaves the CLI/hook/watcher dependent on Node.\n",
+        "hash": "d690fb62975adaa8f56cfd37c8e174df46c7011c289b4a32b2a78c4cba749867",
+        "bytes": 4213
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "kind": "contract authority",
+        "content": "# Contributing to Nudge\n\nThanks for helping. This page tells you how the repository works so that a\npull request lands without surprises.\n\nIf you are a coding agent working **in this checkout**, start at\n[AGENTS.md](AGENTS.md). If you only want to *use* Nudge on another project,\nstop here and follow [INSTALL.md](INSTALL.md) — invoke `/groundworks-nudge`\nthere, not here.\n\nRead [docs/VISION.md](docs/VISION.md) first: it lists the non-goals (no\nannotation tool, no cloud, no framework adapters), and a PR that crosses one\nof them will not be merged however good the code is.\n\n## Dev setup\n\n```sh\ngit clone https://github.com/gstangl/nudge-extension.git\ncd nudge-extension\n(cd bridge && npm ci)             # locked runtime dependency: ws\n(cd test && npm ci)               # locked vitest + playwright\n(cd test && npx playwright install chromium)   # browser for the e2e suites\n```\n\nFor actual project use, follow [INSTALL.md](INSTALL.md) for Chrome or the\n[temporary Safari guide](docs/SAFARI.md). Browser tests below stage isolated\nresources and do not require installing into your everyday browser. The shared\nextension is plain JavaScript without a bundler; Safari resources are staged\ndeterministically. The bridge and CLI are plain ES modules run by Node 22+.\n\n**Chrome dev auto-reload.** While a bridge runs, it watches `extension/`. On any\nchange it tells Chrome's unpacked extension to reload itself and refreshes the\nlocalhost tabs. Safari's release-configured temporary resources disable this;\n[restage and reload them](docs/SAFARI.md#updates-and-removal) explicitly. (Under\nPlaywright's `--load-extension` the reload kills the extension instead, so\n`test/autoreload-check.mjs` is a manual check.)\n\n**Bridge changes.** Follow the identity-checked\n[restart instructions](INSTALL.md#updating). Never stop an unknown listener or\nthe live shared bridge to run tests; test bridges use separate ports and stores.\n\n## Tests\n\nThree layers. Run the first before every push; run the relevant Playwright\nsuites when you touch the extension or the bridge.\n\n1. **Fast gate, required in CI**\n   ```sh\n   cd test && npm run test:ci\n   ```\n   Vitest units for `store.mjs` and `runtime.mjs`, the runtime-neutral\n   integration (real bridge, real watcher, CLI, hook), and the idempotent\n   installer check. Takes a few seconds, needs no browser.\n\n2. **Playwright suites**, each a standalone script with its own bridge on a\n   side port and a throwaway store. The contract, the legs and the last\n   results are in [test/protocols.md](test/protocols.md). The ones every\n   contributor can run are listed below. Prefer the serial isolated runners:\n\n   ```sh\n   node test/run-portable-regression.mjs\n   node test/run-browser-regression.mjs --headless\n   node test/browser-parity.mjs --chromium --headless\n   node test/browser-coexistence.mjs --chromium-only --headless\n   ```\n\n   Do not run them concurrently. For an individual browser suite, stage a\n   native-disabled test package **before** loading its worker. Setting only\n   `nudgePort` after startup is too late to prevent native autostart:\n\n   ```sh\n   node scripts/package-safari.mjs --mode test --use-storage-port --out artifacts/safari/manual-test-extension\n   export NUDGE_EXT=\"$PWD/artifacts/safari/manual-test-extension\"\n   export NUDGE_NO_RELOAD=1\n   ```\n\n   This package is only for tests, never the Safari project installation.\n   Individual suites (from the repository root, with that test environment):\n\n   ```sh\n   node test/e2e.mjs               # Suite A: the core end-to-end run\n   node test/bridge-brutal.mjs     # Suite D: adversarial bridge (about 90 s)\n   node test/bridge-hardening.mjs\n   node test/fixture-gauntlet.mjs  # Suite F: third-party UIs (needs python3)\n   node test/origin-routing.mjs    # Suite K\n   node test/toolbar-ux.mjs        # Suite L\n   node test/page-inertness.mjs    # Suite M\n   node test/amend.mjs             # Suite N\n   node test/escape-clear.mjs      # Suite O\n   node test/multi-select.mjs      # Suite P\n   node test/reload-resilience.mjs # Suite Q\n   node test/wake-mode.mjs         # Suite W\n   node test/cancel.mjs            # Suite X\n   node test/capture-stall.mjs     # Suite Y\n   node test/off-means-off.mjs     # Suite Z\n   node test/hook-optin.mjs        # Suite G\n   node test/provenance.mjs        # Suite H\n   node test/battletest.mjs        # Suite I (needs python3)\n   ```\n   Suites E, B and J (`real-apps.mjs`, `live-drill.mjs`, `cross-app.mjs`)\n   drive the maintainers' private apps and are not runnable from this\n   repository alone.\n\n3. **Manual drills** listed in `test/protocols.md` under Suite C, each tied to\n   a trigger (\"run after X changed\").\n\nStanding rules: tests never touch port 4700 or the live store; every suite\nuses its own side port. If an interrupted run leaves a bridge or watcher\nbehind, kill it by its side port, never by process name (a `watch-nudges`\nprocess is usually somebody's real armed session). Verify the listener belongs\nto the exact test before stopping it; an occupied side port may be unrelated.\n\nExternal tools the test layer needs: Node 22+, Playwright's Chromium\n(`npx playwright install chromium`), and `python3` for the two suites that\nserve static fixtures with `http.server`. The product itself needs none of\nthese.\n\nSuite D's LAN-bind check also requires a non-loopback IPv4 interface. Without\none it reports a blocked check and exits nonzero; it cannot prove LAN isolation\non an offline loopback-only machine. Watcher fixtures use their own identities,\nso tests do not require running inside a coding-agent session.\n\n## Versioning and changelog\n\n- The extension version in `extension/manifest.json` is the product version.\n  The bridge has its own version in `bridge/bridge.mjs` (`VERSION`) and\n  `bridge/package.json`.\n- Bump on every behaviour change, and add a `CHANGELOG.md` entry in the same\n  change (Keep a Changelog format, newest first, `Added / Changed / Fixed /\n  Removed / Security`). No silent releases.\n- Write the entry for the reader who hits the behaviour, not for the author:\n  what changed, why, and how it is proven (which suite leg).\n\n## Code conventions\n\n- **Plain ES modules, no bundler, no TypeScript, no framework** in the\n  extension. This keeps \"load unpacked\" a one-click install and lets the bridge\n  reload the extension without a build.\n- **English everywhere**: code, comments, UI strings, agent-facing strings,\n  docs, changelog. No personal names, machine paths or ids in the repository.\n- Comments explain *why*, and bug lessons keep their date (\"2026-07-29: a\n  stalled capture used to hide the toolbar\"). That history is how the next\n  person avoids re-breaking things.\n- The store schema (`~/.nudge/store.json`, the `inbox/*.md` mirrors) and the\n  bridge HTTP/WS routes are contracts between three parts that update\n  independently. Change them additively, and update `test/unit/store.test.mjs`\n  and the affected suites in the same PR.\n- Keep the opt-in fence: a session appears in the browser only after the user\n  invoked the Skill in it. No code path may arm a watcher or inject Nudge\n  context into a session that did not opt in.\n- Vendored code (`extension/vendor/finder.js`) is replaced wholesale from the\n  upstream dist build; keep the `window.__nudgeFinder` export line.\n\n## Pull requests\n\n1. Fork or branch, one topic per PR. Small is good.\n2. Run `npm run test:ci` and the Playwright suites that cover what you touched.\n   Name them in the PR description.\n3. Bump the version and add the changelog entry.\n4. If you changed a workflow decision (how the repo is organised, not what\n   the product does), add a dated entry to `docs/DECISIONS.md`, newest first,\n   with what was rejected and why.\n5. Fill in the PR template. CI must be green.\n\nWhere to start: `test/scenarios.md` has a backlog of edge cases worth\nautomating, and Windows support for the native host installer is open. The\nterminal, Zed and T3 Code are tested; reports from other agent surfaces still\nhelp. Good first issues are labelled `good first issue` when they exist.\n\n## Reporting bugs and security issues\n\nBugs: open an issue with the template. Security: see\n[SECURITY.md](SECURITY.md). Please do not file vulnerabilities as public\nissues.\n",
+        "hash": "8b7f274e197aeec89b90984672a293795e43165688554057600156e65cf0fe62",
+        "bytes": 8221
+      }
+    ],
+    "omissions": [],
+    "content_budget_bytes": 65536,
+    "used_bytes": 17316,
+    "complete": true,
+    "check_scope": "mapped and required contracts",
+    "findings": [],
+    "selection_id": "55fd83b9d872477c02d00f9f459da90e09aeb516c9262bd35f0912a28ed21a1d"
+  },
+  "updates": {
+    "repository": "gstangl/groundworks",
+    "current_version": null,
+    "channel": "stable",
+    "state": "skipped",
+    "cached": false,
+    "message": "Update check disabled; no network or cache access."
+  }
+}

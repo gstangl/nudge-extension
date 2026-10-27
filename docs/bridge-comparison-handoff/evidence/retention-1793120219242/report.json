@@ -1,0 +1,19 @@
+{
+  "verdict": "passed",
+  "source": "50a2f80404427c8446d4fa263db68031e83aecab3a09e08927aab04d02e7c8b1",
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "build": [
+    {
+      "file": "<toolchain>",
+      "sha256": "8a5704ed9b93d6b05be5575f88f1c504d1544f5c994cd220775b692179293c25"
+    },
+    {
+      "file": "<repo>/bridge/bridge.mjs",
+      "sha256": "088cb439c43e2e40ee857f909892823192528dcd5fadb098945e98bc21593533"
+    }
+  ],
+  "scope": "P09/P10 old open preserved, old resolved pruned, unknown-age receipt retained, ID never reused, old withdrawal marker collected"
+}

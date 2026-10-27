@@ -1,0 +1,37 @@
+[
+  {
+    "submissionId": "105766b9fed247a9b0bea19d51173318",
+    "text": "comparison_990e240a2ceb54e95b40c830",
+    "url": "http://localhost:49873/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 4617.933172,
+    "index": 0,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_1",
+        "at": 4661.399316
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "656ebfe83a85445fb3a63b412150b478",
+      "session": "bf9aa8da56b04365a21ef552d27b91e3",
+      "tab": "6fe6cb37b58d4d6d9faf463596606bfc"
+    },
+    "ta": 4665.18184,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_1",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4718.368168,
+    "latencyMs": 43.466143999999986
+  }
+]

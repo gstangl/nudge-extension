@@ -1,0 +1,10 @@
+{
+  "source": "a3ba52dfcf84a440069c791e287fd036b2b4c8557ab23ef5855649d175b293a3",
+  "results": [
+    {
+      "id": "M01-M03-current-snapshot-direct-readers",
+      "verdict": "passed",
+      "scope": "Modern v2 receipts, submit/retry/resolve/withdraw and unchanged CLI files; pending browser queue, images and older release range unqualified"
+    }
+  ]
+}

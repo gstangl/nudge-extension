@@ -1,0 +1,7 @@
+    Updating crates.io index
+     Locking 146 packages to highest Rust 1.99.1 compatible versions
+      Adding base64 v0.22.1 (available: v0.23.1)
+      Adding generic-array v0.14.7 (available: v0.14.9)
+      Adding matchit v0.8.4 (available: v0.8.6)
+      Adding sha2 v0.10.9 (available: v0.11.1)
+      Adding tokio-tungstenite v0.29.0 (available: v0.30.0)

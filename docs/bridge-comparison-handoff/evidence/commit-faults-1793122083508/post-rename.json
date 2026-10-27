@@ -1,0 +1,17 @@
+[
+  {
+    "at": 885.370729,
+    "kind": "stderr",
+    "data": "experimental Rust bridge listening on isolated port 49653\n"
+  },
+  {
+    "at": 939.065914,
+    "kind": "stderr",
+    "data": "experimental Rust bridge listening on isolated port 49653\n"
+  },
+  {
+    "at": 1010.878718,
+    "kind": "stderr",
+    "data": "experimental Rust bridge listening on isolated port 49653\n"
+  }
+]

@@ -1,0 +1,406 @@
+{
+  "verdict": "inconclusive",
+  "reason": "Diagnostic sample counts; no qualified p99, native lifecycle, actual-agent receipt or completed soak claim",
+  "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+  "policy": {
+    "version": 1,
+    "frozen_before_rust": true,
+    "scope": "Engineering experiment; no product service-level promise",
+    "durability": "process-crash on functioning OS/filesystem; rename without data fsync in both candidates",
+    "primary_boundary": "ready real Google Chrome pointer dispatch T0 to unchanged watcher stdout TW",
+    "actual_agent_boundary": "TS unavailable until a supported isolated host input receipt is recorded",
+    "queue_boundary": "UI acknowledgement upper bound; storage acknowledgement TQ unavailable without separate instrumentation",
+    "percentile": "nearest rank, ceil(n*q)-1, successful values only alongside full attempt denominator",
+    "normalization_allowlist": [
+      "timestamps",
+      "pids",
+      "ports",
+      "temporary absolute root",
+      "opaque capture tokens",
+      "object key order"
+    ],
+    "hard_failures": [
+      "accepted loss",
+      "duplicate stored effect",
+      "foreign implicit delivery",
+      "false acceptance",
+      "unsafe compatibility"
+    ],
+    "healthy_targets_ms": {
+      "p50": 50,
+      "p95": 150,
+      "p99": 300
+    },
+    "recovery_targets_ms": {
+      "foreground_detection": 5000,
+      "restored_delivery": 5000
+    },
+    "legacy_deadlines": {
+      "agent_fresh_ms": 12000,
+      "agent_sweep_ms": 5000,
+      "ws_ping_ms": 30000,
+      "retry_horizon_ms": 604800000,
+      "clock_allowance_ms": 300000
+    },
+    "primary_benefit": "Chrome-to-watcher p95 improvement of at least 20 percent and 20 ms",
+    "alternative_benefit": "at least 30 percent in a dominant measured resource/recovery cost or demonstrated removal of an installation failure class",
+    "noninferiority": {
+      "latency_percent": 10,
+      "latency_ms": 20,
+      "recovery_percent": 10,
+      "recovery_ms": 250
+    },
+    "qualification": {
+      "blocks_per_candidate": 5,
+      "sends_per_block": 2000,
+      "cadence_ms": 2000,
+      "development_soak_hours": 2,
+      "qualification_soak_hours": 24
+    },
+    "uncertainty": "paired block bootstrap, deterministic seed, 95 percent percentile interval; fewer than five pairs is inconclusive",
+    "coverage_target": {
+      "critical_branch_percent": 95,
+      "critical_line_percent": 95,
+      "all_critical_guards": true
+    },
+    "eligibility": "All essential conformance, required real Chrome/native/host/OS and compatible rollback evidence before adoption. Missing evidence stays unavailable or not-run.",
+    "baseline_feasibility": "JS0 visible Google Chrome 30/30, p50 39.165 ms, p95 89.284 ms; diagnostic sample only. Geometry preparation removed from timed locator auto-wait; prior attempts retained."
+  },
+  "builds": {
+    "js": [
+      {
+        "file": "<toolchain>",
+        "sha256": "8a5704ed9b93d6b05be5575f88f1c504d1544f5c994cd220775b692179293c25"
+      },
+      {
+        "file": "<repo>/bridge/bridge.mjs",
+        "sha256": "088cb439c43e2e40ee857f909892823192528dcd5fadb098945e98bc21593533"
+      }
+    ],
+    "rust": [
+      {
+        "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+        "sha256": "542cdc63f1de17a4c8a3f7bda2da5a6dac356a391c6fab262156fabd773c117a"
+      }
+    ]
+  },
+  "host": {
+    "type": "Darwin",
+    "release": "24.6.0",
+    "arch": "x64",
+    "cpu": "Intel(R) Xeon(R) W-2140B CPU @ 3.20GHz"
+  },
+  "scheduledPerCandidate": 60,
+  "paired": [
+    {
+      "block": 0,
+      "jsP95": 297.26875499999915,
+      "rustP95": 436.99670200000037,
+      "differenceMs": 139.72794700000122
+    },
+    {
+      "block": 1,
+      "jsP95": 505.6319160000003,
+      "rustP95": 557.6308540000009,
+      "differenceMs": 51.998938000000635
+    },
+    {
+      "block": 2,
+      "jsP95": 147.50344199999927,
+      "rustP95": 211.57594199999994,
+      "differenceMs": 64.07250000000067
+    }
+  ],
+  "results": [
+    {
+      "id": "gate-js-bridge-conformance",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "id": "gate-js-bridge-image-conformance",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "id": "gate-rust-bridge-conformance",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "id": "gate-rust-bridge-image-conformance",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "id": "block-0-rust",
+      "block": 0,
+      "candidate": "rust",
+      "order": [
+        "rust",
+        "js"
+      ],
+      "loadBefore": [
+        42.046875,
+        27.98486328125,
+        25.93359375
+      ],
+      "loadAfter": [
+        40.55029296875,
+        28.5654296875,
+        26.18896484375
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 96.45107400000052,
+          "p95": 436.99670200000037,
+          "p99": 635.4485399999994,
+          "max": 635.4485399999994
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    },
+    {
+      "id": "block-0-js",
+      "block": 0,
+      "candidate": "js",
+      "order": [
+        "rust",
+        "js"
+      ],
+      "loadBefore": [
+        40.55029296875,
+        28.5654296875,
+        26.18896484375
+      ],
+      "loadAfter": [
+        41.17529296875,
+        29.61279296875,
+        26.62646484375
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 51.356933000000936,
+          "p95": 297.26875499999915,
+          "p99": 2375.5503479999998,
+          "max": 2375.5503479999998
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    },
+    {
+      "id": "block-1-js",
+      "block": 1,
+      "candidate": "js",
+      "order": [
+        "js",
+        "rust"
+      ],
+      "loadBefore": [
+        41.17529296875,
+        29.61279296875,
+        26.62646484375
+      ],
+      "loadAfter": [
+        36.63623046875,
+        29.14794921875,
+        26.51123046875
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 47.84990900000048,
+          "p95": 505.6319160000003,
+          "p99": 1085.1307450000004,
+          "max": 1085.1307450000004
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    },
+    {
+      "id": "block-1-rust",
+      "block": 1,
+      "candidate": "rust",
+      "order": [
+        "js",
+        "rust"
+      ],
+      "loadBefore": [
+        36.63623046875,
+        29.14794921875,
+        26.51123046875
+      ],
+      "loadAfter": [
+        33.294921875,
+        28.85107421875,
+        26.4638671875
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 49.03848000000016,
+          "p95": 557.6308540000009,
+          "p99": 586.9221889999999,
+          "max": 586.9221889999999
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    },
+    {
+      "id": "block-2-rust",
+      "block": 2,
+      "candidate": "rust",
+      "order": [
+        "rust",
+        "js"
+      ],
+      "loadBefore": [
+        33.294921875,
+        28.85107421875,
+        26.4638671875
+      ],
+      "loadAfter": [
+        30.7529296875,
+        28.5,
+        26.37939453125
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 42.99610399999983,
+          "p95": 211.57594199999994,
+          "p99": 270.6845909999993,
+          "max": 270.6845909999993
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    },
+    {
+      "id": "block-2-js",
+      "block": 2,
+      "candidate": "js",
+      "order": [
+        "rust",
+        "js"
+      ],
+      "loadBefore": [
+        30.7529296875,
+        28.5,
+        26.37939453125
+      ],
+      "loadAfter": [
+        30.00634765625,
+        28.4814453125,
+        26.41162109375
+      ],
+      "code": 0,
+      "signal": null,
+      "report": {
+        "verdict": "passed",
+        "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+        "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+        "actualAgentReceipt": "unavailable",
+        "wake": "pull",
+        "intentionalWaitMs": null,
+        "source": "f35aa7dd70fc894fb8722a4f67ca319e7bc15a8a642b6efe779dd5b2ca040468",
+        "browser": "chrome",
+        "statistics": {
+          "attempts": 20,
+          "successful": 20,
+          "failed": 0,
+          "p50": 47.691799000000174,
+          "p95": 147.50344199999927,
+          "p99": 265.2933690000009,
+          "max": 265.2933690000009
+        },
+        "reconciliation": {
+          "attempted": 20,
+          "stored": 20,
+          "failed": 0
+        }
+      }
+    }
+  ]
+}

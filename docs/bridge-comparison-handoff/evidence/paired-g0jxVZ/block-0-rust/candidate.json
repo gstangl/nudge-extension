@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "port": 56893,
+  "store": "<tmp>/nudge-comparison-PQIE6u/store",
+  "pid": 30080,
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "542cdc63f1de17a4c8a3f7bda2da5a6dac356a391c6fab262156fabd773c117a"
+    }
+  ]
+}

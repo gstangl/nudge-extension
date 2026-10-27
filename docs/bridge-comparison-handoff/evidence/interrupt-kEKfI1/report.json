@@ -1,0 +1,16 @@
+{
+  "verdict": "passed",
+  "scope": "H06 interrupted runner preserves partial output and reaps owned bridge/watchers",
+  "owned": {
+    "bridge": 10381,
+    "watchers": [
+      10382,
+      10383
+    ],
+    "profile": "<tmp>/nudge-comparison-LxtCJp/profile"
+  },
+  "outcome": {
+    "code": 130,
+    "signal": null
+  }
+}

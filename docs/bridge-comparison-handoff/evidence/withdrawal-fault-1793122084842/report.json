@@ -1,0 +1,25 @@
+{
+  "source": "6507cf79bb0ba3f4133e0fd76f64ded720bac710e37527cf87ef63ae6d2d0608",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks",
+          "sha256": "c69599c7ce0fa18f306469ce5cb3915fbaede85683715bfa4ad9ae78ed5874fd"
+        }
+      ]
+    },
+    {
+      "modern": false,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks",
+          "sha256": "c69599c7ce0fa18f306469ce5cb3915fbaede85683715bfa4ad9ae78ed5874fd"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "kind": "reviewed-public-handoff",
+  "original_plan_sha256": "5b46ad903a7daf30de93c84f1deb73298a3f1abbc34023c3954cb1ee56961a75",
+  "public_plan_sha256": "b1b494f66aedb1491967a0ed9784588d5ec152c910be600d052846e59b1ceba0",
+  "changes": "Context banner and local relative links; original requirements/scenario tables and policy proposals retained. Private docs/plans were not force-added.",
+  "baseline_source": "Git commit 9241fae, reachable from the handoff branch, replaces the need to publish a duplicate source snapshot archive.",
+  "planning_status": "not execution evidence"
+}

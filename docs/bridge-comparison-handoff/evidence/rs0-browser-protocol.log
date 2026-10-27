@@ -1,0 +1,38 @@
+experimental Rust bridge listening on isolated port 4821
+PASS foreign HTTP origin is rejected before mutation
+PASS incomplete source and submission identities cannot downgrade to legacy
+PASS submission retry is exactly-once and content conflicts
+PASS source-bound after evidence rejects wrong documents and accepts exact duplicate delivery
+PASS private requests follow same-tab reload/query continuity, invalidate old documents and retain original plus accepted provenance
+PASS route/hash/closed source defer without cross-tab fallback; visibility hello retries invalidate prior requests
+PASS withdrawn submission receipt cannot resurrect a nudge
+experimental Rust bridge listening on isolated port 4821
+PASS restart reconstructs pending evidence with fresh tokens and preserves withdrawal receipts
+node:internal/modules/run_main:111
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
+-   provenance: 'legacy_unverified',
+    reason: 'legacy_unbound',
+    status: 'pending'
+  }
+
+    at file://<repo>/test/browser-protocol.mjs:183:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: { reason: 'legacy_unbound', status: 'pending' },
+  expected: {
+    status: 'pending',
+    reason: 'legacy_unbound',
+    provenance: 'legacy_unverified'
+  },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.12.0

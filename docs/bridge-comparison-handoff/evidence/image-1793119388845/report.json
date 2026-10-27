@@ -1,0 +1,25 @@
+{
+  "source": "ff28566d6684c471091697c1a829483ba52974ea24af8c5dac785e5176c68ee1",
+  "argv": [
+    "<toolchain>",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "results": [
+    {
+      "id": "valid-png",
+      "verdict": "passed"
+    },
+    {
+      "id": "trailing",
+      "verdict": "passed"
+    },
+    {
+      "id": "truncated-iend",
+      "verdict": "passed"
+    },
+    {
+      "id": "corrupt-iend",
+      "verdict": "passed"
+    }
+  ]
+}

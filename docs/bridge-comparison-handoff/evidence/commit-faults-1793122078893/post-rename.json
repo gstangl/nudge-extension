@@ -1,0 +1,22 @@
+[
+  {
+    "at": 3860.334543,
+    "kind": "stderr",
+    "data": "[nudge-bridge] http://localhost:49571 (demo: /demo) - store: <tmp>/nudge-comparison-b3n2GC/store\n"
+  },
+  {
+    "at": 3875.367811,
+    "kind": "stderr",
+    "data": "[nudge-bridge] stored nudge_1: \"Expected alpha\" @ http://localhost:5322/\n"
+  },
+  {
+    "at": 4120.992988,
+    "kind": "stderr",
+    "data": "[nudge-bridge] http://localhost:49571 (demo: /demo) - store: <tmp>/nudge-comparison-b3n2GC/store\n"
+  },
+  {
+    "at": 4390.631503,
+    "kind": "stderr",
+    "data": "[nudge-bridge] http://localhost:49571 (demo: /demo) - store: <tmp>/nudge-comparison-b3n2GC/store\n"
+  }
+]

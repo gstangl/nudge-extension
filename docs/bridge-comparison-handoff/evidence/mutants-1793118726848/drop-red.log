@@ -1,0 +1,7 @@
+AssertionError [ERR_ASSERTION]: stored effect count differs from attempted work
+
+0 !== 1
+
+    at DeliveryLedger.reconcile (file://<repo>/test/support/delivery-ledger.mjs:13:12)
+    at file://<repo>/test/bridge-mutants.mjs:28:14
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

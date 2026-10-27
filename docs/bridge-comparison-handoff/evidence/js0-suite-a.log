@@ -1,0 +1,50 @@
+{
+  "mode": "test",
+  "out": "artifacts/safari/chromium-suite-a",
+  "bridgePort": 4720,
+  "files": 26,
+  "resourceHash": "c1a2061b0209d80c15962010f3a87a9050f5e21d37f3edba481db4a2bc66b143"
+}
+[nudge-bridge] http://localhost:4720 (demo: /demo) - store: <tmp>/pin-e2e-store
+PASS agent identity (heartbeat label -> /.identity)
+PASS CORS boundary (foreign origin blocked, localhost reflected)
+  [browser] Demo error: SCOP value could not be loaded (test data)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+PASS status check (real extension handshake and current page owner; simulated agent)
+PASS status hint (click dot → state guide, caret aligned, Escape)
+PASS chrome inert (page popover survives pill click, stays pickable)
+PASS pick = mark (selection published, survives Cancel, no nudge created)
+[nudge-bridge] stored nudge_1: "" @ #card-conversion [suite-a]
+[nudge-bridge] discarded nudge_1 — withdrawal sent to suite-a
+PASS empty send = numbered mark (Enter sends, pill shows the number)
+[nudge-bridge] stored nudge_2: "The heat-pump card needs more space from the title." @ #card-conversion [suite-a]
+PASS badge queue popover (open, content, owner shown, Escape)
+PASS pick + chips + styles + net-errors (DOM-only, no screenshot) + badge
+  nudge_2:      "The heat-pump card needs more space from the title." @ #card-conversion (xpath /html/body[1]/section[1]/div[1]/div[2])
+[nudge-bridge] stored nudge_3: "This banner looks lost - wider and with more presence." @ .banner [suite-a]
+PASS lasso (stroke + screenshot; screenshots exclusive to lasso)
+  nudge_3:      "This banner looks lost - wider and with more presence." (stroke 25 points)
+PASS SPA navigation badge refilter (hashchange/popstate)
+  [browser] [groundworks-nudge] capture failed: Error: This request exceeds the MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND quota.
+[nudge-bridge] evidence captured for nudge_3
+PASS lasso evidence loop (resolve -> after-shot; element nudges stay shot-free)
+[nudge-bridge] stored nudge_4: "Swap these two elements." @ #card-conversion li:nth-of-type(1) [suite-a]
+PASS multi-selection (Shift+click -> 2 targets in selection + nudge, outlines transient)
+PASS click convention (plain click resets multi to single)
+[nudge-bridge] stored nudge_5: "" @ #card-source [suite-a]
+[nudge-bridge] discarded nudge_5 — withdrawal sent to suite-a
+PASS queue management (label "what is marked", discard ×, dots lifecycle)
+[nudge-bridge] stored nudge_6: "[TEST] delayed delivery 1" @ #card-source [suite-a]
+[nudge-bridge] stored nudge_7: "[TEST] delayed delivery 2" @ #card-source [suite-a]
+PASS delayed transport accepts two durable prompts promptly and delivers exactly once in order: [2554,3537]
+  [browser] [groundworks-nudge] queue worker did not acknowledge; delivering directly Error: Extension reply timed out
+    at chrome-extension://mjiobjgnkbkhijocfkldacpekakekkop/content.js:25:70
+[nudge-bridge] stored nudge_8: "[TEST] silent worker" @ #card-source [suite-a]
+PASS silent queue worker: prompt delivered directly once (5554 ms)
+PASS runtime-neutral CLI launcher installs and runs
+PASS Claude Code, Codex and Grok replace stale Skills with exact canonical copies
+PASS optional hooks preserve settings and install idempotently for Claude Code and Codex
+
+Nudge agent setup: ALL PASS
+PASS agent wiring in sync (repo = isolated installation)

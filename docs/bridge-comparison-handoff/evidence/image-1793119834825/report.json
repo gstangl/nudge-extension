@@ -1,0 +1,28 @@
+{
+  "source": "1fd947cbc93496c0e0ac8f355085f066df78c47e25d60da171ad660475da711c",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "id": "valid-png",
+      "verdict": "passed"
+    },
+    {
+      "id": "jpeg-overview",
+      "verdict": "passed"
+    },
+    {
+      "id": "trailing",
+      "verdict": "passed"
+    },
+    {
+      "id": "truncated-iend",
+      "verdict": "passed"
+    },
+    {
+      "id": "corrupt-iend",
+      "verdict": "passed"
+    }
+  ]
+}

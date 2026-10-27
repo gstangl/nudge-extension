@@ -1,0 +1,15 @@
+{
+  "lane": "chrome",
+  "headless": false,
+  "version": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/156.0.8078.48",
+    "revision": "@d0c02bfad08ec92a6ffcf989e53cd995e6381a4c",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "jsVersion": "15.6.75.19"
+  },
+  "extensionId": "hpdglblnhmfoldilbmmafcjpkbeanpel",
+  "nativeAutostart": false,
+  "installation": "CDP Extensions.loadUnpacked over isolated debugging pipe",
+  "actualAgentReceipt": "unavailable; synthetic watcher only"
+}

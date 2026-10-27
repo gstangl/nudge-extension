@@ -1,0 +1,11 @@
+npm notice run nudge-test@1.0.0 test
+npm notice run vitest run --run unit/connection-generation.test.mjs
+
+ RUN  v3.2.7 <repo>/test
+
+ ✓ unit/connection-generation.test.mjs (5 tests) 12ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  17:56:58
+   Duration  744ms (transform 22ms, setup 0ms, collect 19ms, tests 12ms, environment 0ms, prepare 228ms)

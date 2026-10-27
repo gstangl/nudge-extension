@@ -1,0 +1,15 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/withdrawal-fault-1793121107723",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: committed withdrawal lost its recoverable stop signal\n    at file://<repo>/test/bridge-withdrawal-fault.mjs:18:64\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    },
+    {
+      "modern": false,
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: committed withdrawal lost its recoverable stop signal\n    at file://<repo>/test/bridge-withdrawal-fault.mjs:18:64\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+    }
+  ]
+}

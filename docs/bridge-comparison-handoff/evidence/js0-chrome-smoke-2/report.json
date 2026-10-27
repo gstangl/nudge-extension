@@ -1,0 +1,5 @@
+{
+  "verdict": "failed",
+  "error": "browserContext.waitForEvent: Timeout 10000ms exceeded while waiting for event \"serviceworker\"\n    at <repo>/test/chrome-delivery.mjs:62:49",
+  "attempts": 0
+}

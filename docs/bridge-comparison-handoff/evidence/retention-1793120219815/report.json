@@ -1,0 +1,14 @@
+{
+  "verdict": "passed",
+  "source": "50a2f80404427c8446d4fa263db68031e83aecab3a09e08927aab04d02e7c8b1",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "542cdc63f1de17a4c8a3f7bda2da5a6dac356a391c6fab262156fabd773c117a"
+    }
+  ],
+  "scope": "P09/P10 old open preserved, old resolved pruned, unknown-age receipt retained, ID never reused, old withdrawal marker collected"
+}

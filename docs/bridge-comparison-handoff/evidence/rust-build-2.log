@@ -1,0 +1,19 @@
+   Compiling nudge-bridge-experiment v0.1.0 (<repo>/bridge-rust)
+error: expected identifier, found reserved keyword `gen`
+  --> src/main.rs:40:194
+   |
+40 | ...;let src=source(&p["browserSource"]);let gen=token(&p["selectionGeneration"],128);let bound=!p["browserSource"].is_null()||!p["se...
+   |                                             ^^^ expected identifier, found reserved keyword
+   |
+help: escape `gen` to use it as an identifier
+   |
+40 |   let path=self.store.dir.join("selection.json");let prev:Value=fs::read(&path).ok().and_then(|b|serde_json::from_slice(&b).ok()).unwrap_or(Value::Null);let src=source(&p["browserSource"]);let r#gen=token(&p["selectionGeneration"],128);let bound=!p["browserSource"].is_null()||!p["selectionGeneration"].is_null();let prior=!prev["browserSource"].is_null()||!prev["selectionGeneration"].is_null();let same_route=route(s(&p["url"])).is_some()&&route(s(&p["url"]))==route(s(&prev["url"]));let same=bound&&prior&&same_route&&src==prev["browserSource"]&&gen==prev["selectionGeneration"];
+   |                                                                                                                                                                                                  ++
+
+error: expected expression, found reserved keyword `gen`
+  --> src/main.rs:40:548
+   |
+40 | ...ound&&prior&&same_route&&src==prev["browserSource"]&&gen==prev["selectionGeneration"];
+   |                                                         ^^^ expected expression
+
+error: could not compile `nudge-bridge-experiment` (bin "nudge-bridge-experiment" test) due to 2 previous errors

@@ -1,0 +1,34 @@
+{
+  "source": "6507cf79bb0ba3f4133e0fd76f64ded720bac710e37527cf87ef63ae6d2d0608",
+  "scope": "instrumented semantic process-crash barriers; no power-loss claim",
+  "results": [
+    {
+      "barrier": "write-start",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "write-complete",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "pre-rename",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "post-rename",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    }
+  ]
+}

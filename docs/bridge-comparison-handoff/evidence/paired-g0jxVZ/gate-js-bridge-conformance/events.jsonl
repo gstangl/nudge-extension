@@ -1,0 +1,40 @@
+{"at":749.075147,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":797.611554,"kind":"pass","data":"P01"}
+{"at":831.939974,"kind":"stderr","data":"[nudge-bridge] stored nudge_1: \"Reference owner_a\" @ #reference [session_alpha]\n"}
+{"at":835.966446,"kind":"stderr","data":"[nudge-bridge] stored nudge_2: \"Reference owner_b\" @ #reference [session_beta]\n"}
+{"at":837.254047,"kind":"pass","data":"R01-stable-owners"}
+{"at":840.845058,"kind":"stderr","data":"[nudge-bridge] stored nudge_3: \"Reference a\" @ #reference [session_alpha]\n"}
+{"at":859.71974,"kind":"pass","data":"P02-P03-replay-conflict"}
+{"at":867.468991,"kind":"stderr","data":"[nudge-bridge] stored nudge_4: \"Reference race\" @ #reference [session_alpha]\n"}
+{"at":873.351661,"kind":"pass","data":"P04-concurrent-retries"}
+{"at":1209.189693,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":1233.974787,"kind":"pass","data":"P05-process-crash-replay"}
+{"at":1237.506002,"kind":"stderr","data":"[nudge-bridge] discarded nudge_3 — no live recipient confirmed\n"}
+{"at":1710.367117,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":1724.682468,"kind":"pass","data":"P06-withdrawn-replay"}
+{"at":1741.024275,"kind":"stderr","data":"[nudge-bridge] stored nudge_5: \"Reference resolve\" @ #reference\n"}
+{"at":1744.828929,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"First amendment\"\n"}
+{"at":1747.538292,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"Second amendment\"\n"}
+{"at":1753.37202,"kind":"pass","data":"P07-resolve-amend-owner"}
+{"at":1759.085948,"kind":"stderr","data":"[nudge-bridge] stored nudge_6: \"Reference write_fault\" @ #reference\n"}
+{"at":1762.027193,"kind":"pass","data":"P13-write-failure-recovery"}
+{"at":1774.244344,"kind":"stderr","data":"[nudge-bridge] stored nudge_7: \"Reference lost_reply\" @ #reference\n"}
+{"at":1779.108015,"kind":"pass","data":"P03-lost-response-after-commit"}
+{"at":1792.477259,"kind":"stderr","data":"[nudge-bridge] stored nudge_8: \"Reference healthy\" @ #reference\n"}
+{"at":1794.061003,"kind":"pass","data":"P12-invalid-input-healthy-peer"}
+{"at":2173.164947,"kind":"pass","data":"L03-single-writer"}
+{"at":2176.38485,"kind":"stderr","data":"[nudge-bridge] stored nudge_9: \"Reference model_9\" @ #reference\n"}
+{"at":2695.272346,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":2713.802792,"kind":"stderr","data":"[nudge-bridge] stored nudge_10: \"Reference model_0\" @ #reference\n"}
+{"at":2716.939583,"kind":"stderr","data":"[nudge-bridge] stored nudge_11: \"Reference model_5\" @ #reference\n"}
+{"at":2719.786831,"kind":"stderr","data":"[nudge-bridge] stored nudge_12: \"Reference model_6\" @ #reference\n"}
+{"at":2725.831123,"kind":"stderr","data":"[nudge-bridge] stored nudge_13: \"Reference model_3\" @ #reference\n"}
+{"at":2729.009997,"kind":"stderr","data":"[nudge-bridge] stored nudge_14: \"Reference model_4\" @ #reference\n"}
+{"at":2731.990221,"kind":"stderr","data":"[nudge-bridge] stored nudge_15: \"Reference model_1\" @ #reference\n"}
+{"at":2749.95253,"kind":"stderr","data":"[nudge-bridge] stored nudge_16: \"Reference model_8\" @ #reference\n"}
+{"at":2753.443994,"kind":"stderr","data":"[nudge-bridge] stored nudge_17: \"Reference model_7\" @ #reference\n"}
+{"at":3086.833332,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":3133.968855,"kind":"stderr","data":"[nudge-bridge] stored nudge_18: \"Reference model_2\" @ #reference\n"}
+{"at":3473.714595,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":3927.124769,"kind":"stderr","data":"[nudge-bridge] http://localhost:56649 (demo: /demo) - store: <tmp>/nudge-comparison-QMyKY3/store\n"}
+{"at":3992.268103,"kind":"pass","data":"P15-seeded-reference-model"}

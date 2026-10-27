@@ -1,0 +1,86 @@
+[
+  {
+    "submissionId": "79650d7303ff4f7b9183ee28a2f38eff",
+    "text": "comparison_4579e2ffc01ded271ae2218e",
+    "url": "http://localhost:59157/demo",
+    "owner": "comparison_alpha",
+    "t0": 3613.781251,
+    "index": 0,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_1",
+        "at": 4447.678144
+      }
+    ],
+    "ta": 4452.620326,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_1",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4491.784813,
+    "latencyMs": 833.8968930000005
+  },
+  {
+    "submissionId": "bd47a577502a477ebcd3b8a383e4b3ed",
+    "text": "comparison_9a2acbb81ef5fa99f71b101d",
+    "url": "http://localhost:59157/demo",
+    "owner": "comparison_alpha",
+    "t0": 4578.448454,
+    "index": 1,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_2",
+        "at": 4851.7083
+      }
+    ],
+    "ta": 4854.263252,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_2",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4908.469945,
+    "latencyMs": 273.2598459999999
+  },
+  {
+    "submissionId": "767546cba9c74d40911cc44e25ac8353",
+    "text": "comparison_09f2c2d8a266940a59c1eaec",
+    "url": "http://localhost:59157/demo",
+    "owner": "comparison_alpha",
+    "t0": 4993.653935,
+    "index": 2,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_3",
+        "at": 5263.098367
+      }
+    ],
+    "ta": 5266.044521,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_3",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 5271.109455,
+    "latencyMs": 269.4444319999993
+  }
+]

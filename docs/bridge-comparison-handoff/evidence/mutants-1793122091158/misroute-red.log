@@ -1,0 +1,10 @@
+AssertionError [ERR_ASSERTION]: wrong owner
++ actual - expected
+
++ 'session_beta'
+- 'session_alpha'
+           ^
+
+    at DeliveryLedger.reconcile (file://<repo>/test/support/delivery-ledger.mjs:22:14)
+    at file://<repo>/test/bridge-mutants.mjs:28:14
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
