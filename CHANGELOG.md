@@ -16,6 +16,16 @@ The changelog is English throughout.
   Keep all menu-flip, scrolling and containment assertions unchanged.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
+- Experimental Rust bridge candidate 0.1.1 (not installed, no product version
+  change): elect the last-joined session among equal `since` values like the
+  JavaScript roster; make version-2 receipt signatures byte-compatible with the
+  JavaScript bridge (ECMAScript numbers, UTF-16 key order and truncation,
+  `|| null` truthiness), so JS↔Rust retries replay instead of conflicting; read
+  JavaScript stores holding an unpaired surrogate instead of treating them as
+  corrupt; answer clients that half-close after their request. Independent
+  owner-tie, cross-implementation retry and half-close checks run for both
+  candidates in the comparison recorder.
+- Wait for the fixture gauntlet's static server before the first navigation.
 
 ## 0.35.2 · Bridge 0.20.1 — 2026-10-27 (Isolated bridge comparison)
 

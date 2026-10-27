@@ -24,6 +24,9 @@ use tokio::sync::mpsc;
 struct Agent {
     value: Value,
     last: Instant,
+    /// Roster join order. Like the JavaScript Map, a heartbeat for an existing
+    /// key keeps its position; an expired and rejoined key moves to the end.
+    joined: u64,
 }
 struct Client {
     tx: mpsc::Sender<Value>,
@@ -56,6 +59,7 @@ struct App {
     pending: HashMap<String, Capture>,
     completed: HashMap<String, Completed>,
     next: usize,
+    joined: u64,
     roster_sig: String,
 }
 type Shared = Arc<Mutex<App>>;
@@ -72,21 +76,21 @@ fn key(v: &Value) -> String {
         format!("p:{}", v["pid"])
     }
 }
+/// Newest armed session in join order: `reduce((a, b) => b.since >= a.since ? b : a)`,
+/// so equal `since` values elect the session that joined last.
+fn newest<'a>(agents: impl Iterator<Item = &'a Value>) -> Option<&'a Value> {
+    let since = |v: &Value| v["since"].as_f64().unwrap_or(0.);
+    agents.reduce(|a, b| if since(b) >= since(a) { b } else { a })
+}
 impl App {
     fn fresh(&self) -> Vec<Value> {
         let mut a = self
             .agents
             .values()
             .filter(|a| a.last.elapsed() < Duration::from_secs(12))
-            .map(|a| a.value.clone())
             .collect::<Vec<_>>();
-        a.sort_by(|a, b| {
-            a["since"]
-                .as_f64()
-                .unwrap_or(0.)
-                .total_cmp(&b["since"].as_f64().unwrap_or(0.))
-        });
-        a
+        a.sort_by_key(|a| a.joined);
+        a.into_iter().map(|a| a.value.clone()).collect()
     }
     fn owner(&self, host: &str) -> Value {
         let a = self.fresh();
@@ -105,12 +109,11 @@ impl App {
                         .is_some_and(|h| h.iter().any(|v| s(v) == host))
             })
             .collect::<Vec<_>>();
-        if let Some(v) = eligible.last() {
-            return (*v).clone();
+        if let Some(v) = newest(eligible.into_iter()) {
+            return v.clone();
         }
-        a.into_iter()
-            .filter(|a| a["hosts"].is_null())
-            .last()
+        newest(a.iter().filter(|a| a["hosts"].is_null()))
+            .cloned()
             .unwrap_or(Value::Null)
     }
     fn stamp(&self, host: &str) -> Value {
@@ -655,11 +658,19 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
             ] {
                 v[k] = opt(&payload[k], n)
             }
+            let joined = match a.agents.get(&k) {
+                Some(old) => old.joined,
+                None => {
+                    a.joined += 1;
+                    a.joined
+                }
+            };
             a.agents.insert(
                 k,
                 Agent {
                     value: v.clone(),
                     last: Instant::now(),
+                    joined,
                 },
             );
             let owns = a.owns(&v);
@@ -884,6 +895,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         pending: HashMap::new(),
         completed: HashMap::new(),
         next: 0,
+        joined: 0,
         roster_sig: String::new(),
     }));
     let sweep = shared.clone();
@@ -906,20 +918,60 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).await?;
     eprintln!("experimental Rust bridge listening on isolated port {port}");
     let router = Router::new().fallback(any(handler)).with_state(shared);
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async {
-            #[cfg(unix)]
-            {
-                let mut term =
-                    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-                        .unwrap();
-                tokio::select! {_=tokio::signal::ctrl_c()=>{},_=term.recv()=>{}}
-            }
-            #[cfg(not(unix))]
-            {
-                let _ = tokio::signal::ctrl_c().await;
-            }
-        })
-        .await?;
+    serve(listener, router).await;
     Ok(())
+}
+/// HTTP/1.1 accept loop. Like Node's HTTP server it answers a request whose
+/// client already half-closed its write side, and disables Nagle's algorithm.
+/// `axum::serve` drops such responses and exposes neither option.
+async fn serve(listener: tokio::net::TcpListener, router: Router) {
+    let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
+    let mut connections = tokio::task::JoinSet::new();
+    let mut shutdown = std::pin::pin!(shutdown_signal());
+    loop {
+        tokio::select! {
+            accepted = listener.accept() => {
+                let Ok((stream, _)) = accepted else { continue };
+                let _ = stream.set_nodelay(true);
+                let service = hyper_util::service::TowerToHyperService::new(router.clone());
+                let mut stop = stop_rx.clone();
+                connections.spawn(async move {
+                    let connection = hyper::server::conn::http1::Builder::new()
+                        .half_close(true)
+                        .serve_connection(hyper_util::rt::TokioIo::new(stream), service)
+                        .with_upgrades();
+                    let mut connection = std::pin::pin!(connection);
+                    tokio::select! {
+                        _ = connection.as_mut() => {}
+                        _ = stop.changed() => {
+                            connection.as_mut().graceful_shutdown();
+                            let _ = connection.await;
+                        }
+                    }
+                });
+            }
+            Some(_) = connections.join_next(), if !connections.is_empty() => {}
+            _ = &mut shutdown => break,
+        }
+    }
+    drop(listener);
+    let _ = stop_tx.send(true);
+    // Every commit is written before its response; in-flight responses get a
+    // bounded grace period, never an unbounded wait on a slow peer.
+    let _ = tokio::time::timeout(Duration::from_secs(1), async {
+        while connections.join_next().await.is_some() {}
+    })
+    .await;
+}
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    {
+        let mut term =
+            tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()).unwrap();
+        tokio::select! {_=tokio::signal::ctrl_c()=>{},_=term.recv()=>{}}
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = tokio::signal::ctrl_c().await;
+    }
 }

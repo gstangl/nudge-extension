@@ -29,6 +29,13 @@ const bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], {
     try { up = (await (await fetch(`http://localhost:${TESTPORT}/.identity`)).json()).store === STORE } catch { /* not yet */ }
   }
   if (!up) { console.error('FAIL: test bridge did not come up'); process.exit(1) }
+  // The static server is a separate process; page.goto must not race its bind.
+  let served = false
+  for (let i = 0; i < 50 && !served; i++) {
+    try { served = (await fetch(`http://localhost:${PAGEPORT}/tailwind-gauntlet.html`, { signal: AbortSignal.timeout(1000) })).ok } catch { /* not yet */ }
+    if (!served) await new Promise(r => setTimeout(r, 200))
+  }
+  if (!served) { console.error(`FAIL: static fixture server did not serve :${PAGEPORT}`); bridge.kill(); statics.kill(); process.exit(1) }
 }
 const cleanup = () => { bridge.kill(); statics.kill() }
 const fail = (m) => { console.error('FAIL:', m); cleanup(); process.exit(1) }

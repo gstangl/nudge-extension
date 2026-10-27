@@ -630,12 +630,14 @@ dependencies = [
 
 [[package]]
 name = "nudge-bridge-experiment"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "axum",
  "base64",
  "chrono",
  "futures-util",
+ "hyper",
+ "hyper-util",
  "libc",
  "png",
  "regex",

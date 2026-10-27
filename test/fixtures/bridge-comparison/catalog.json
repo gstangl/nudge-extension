@@ -129,7 +129,8 @@
       "stimulus": "Same submission ID with equivalent/reordered fields versus changed text/image/console",
       "expected": "Equivalent replay returns original effect; material changes conflict",
       "assertions": [
-        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+        "test/bridge-canonical-retry.mjs: JS/Rust cross-implementation replay of number spellings, UTF-16 key order, falsy fields and surrogate truncation"
       ],
       "missing_prerequisites": [],
       "coverage": "mapped",
@@ -171,7 +172,8 @@
       "stimulus": "Owner/session changes before/after submit and resolve",
       "expected": "Server chooses/stamps owner according to the canonical acceptance rule; later actions do not relabel owned work",
       "assertions": [
-        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases"
+        "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+        "test/bridge-owner-tie.mjs: equal-since election follows roster join order across fresh processes"
       ],
       "missing_prerequisites": [],
       "coverage": "mapped",
@@ -469,7 +471,8 @@
       "stimulus": "Same ID with changed evidence/payload and JSON field permutations",
       "expected": "Reviewed equivalence cases replay; conflicting cases fail without mutation",
       "assertions": [
-        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model"
+        "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+        "test/bridge-canonical-retry.mjs: JS/Rust cross-implementation replay of number spellings, UTF-16 key order, falsy fields and surrogate truncation"
       ],
       "missing_prerequisites": [],
       "coverage": "mapped",
@@ -658,10 +661,11 @@
       "expected": "Healthy peers progress; retries preserve exact identity",
       "assertions": [
         "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
-        "test/unit/connection-generation.test.mjs: current vs retired sockets"
+        "test/unit/connection-generation.test.mjs: current vs retired sockets",
+        "test/bridge-half-close.mjs: valid and malformed-Origin requests answered after client half-close"
       ],
       "missing_prerequisites": [
-        "Full half-open/slow-body concurrency and response-boundary fault matrix is not implemented."
+        "Slow-body concurrency, TCP reset during response and the full response-boundary fault matrix are not implemented; half-closed request writes are covered."
       ],
       "coverage": "partial",
       "execution": "not-run"
@@ -1189,7 +1193,8 @@
       "stimulus": "Supported legacy store/receipt fixtures, new candidate writes, legacy reader reads",
       "expected": "CLI, hook and watcher keep interpreting data; no schema-only appearance of success",
       "assertions": [
-        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader"
+        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader",
+        "test/bridge-canonical-retry.mjs: JavaScript-written store with an unpaired surrogate is read, not classified corrupt"
       ],
       "missing_prerequisites": [
         "Supported historical version range is undeclared; v1 receipt safe refusal is not full historic replay qualification."
@@ -1219,7 +1224,8 @@
       "stimulus": "JS to Rust to JS using a cloned real-format store and pending queue",
       "expected": "Submit/retry/resolve/withdraw and after-evidence survive rollback",
       "assertions": [
-        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader"
+        "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader",
+        "test/bridge-canonical-retry.mjs: JS->Rust->JS and Rust->JS->Rust retries keep one effect and the visible work"
       ],
       "missing_prerequisites": [
         "Pending browser queue and image/after-evidence rollback variants remain missing."

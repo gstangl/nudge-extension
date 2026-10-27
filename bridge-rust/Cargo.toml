@@ -1,6 +1,6 @@
 [package]
 name = "nudge-bridge-experiment"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 publish = false
 license = "MIT"
@@ -18,6 +18,8 @@ png = "0.18"
 libc = "0.2"
 uuid = { version = "1", features = ["v4"] }
 futures-util = "0.3"
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio", "service"] }
 tokio-tungstenite = "0.29"
 
 [features]
