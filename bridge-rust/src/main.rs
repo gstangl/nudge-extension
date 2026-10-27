@@ -572,15 +572,19 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
         return response(204, Value::Null, origin);
     }
     let path = uri.path().to_string();
+    let mut raw = None;
     let payload = if method == "POST" && !path.ends_with("/resolve") {
         let max = std::env::var("NUDGE_MAX_BODY")
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(40000000);
         match tokio::time::timeout(Duration::from_secs(8), to_bytes(req.into_body(), max)).await {
-            Ok(Ok(b)) => match serde_json::from_slice::<Value>(&b) {
-                Ok(p) => p,
-                Err(_) => return response(400, json!({"error":"invalid JSON or UTF-8"}), origin),
+            Ok(Ok(b)) => match parse_json(&b) {
+                Some(p) => {
+                    raw = Some(b);
+                    p
+                }
+                None => return response(400, json!({"error":"invalid JSON or UTF-8"}), origin),
             },
             Ok(Err(_)) => return response(413, json!({"error":"body too large"}), origin),
             Err(_) => return response(408, json!({"error":"body deadline"}), origin),
@@ -703,7 +707,13 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
         }
         ("POST", "/comments") => {
             let owner = a.stamp(&host(s(&payload["url"])));
-            match a.store.submit(&payload, owner) {
+            // Sign the exact request units so a JavaScript-written receipt
+            // replays even when the browser sent an unpaired surrogate.
+            let sig = raw
+                .as_deref()
+                .and_then(parse_js)
+                .map_or_else(|| signature(&payload), |j| signature_js(&j));
+            match a.store.submit_signed(&payload, &sig, owner) {
                 Ok((code, v)) => {
                     if code == 201 {
                         a.broadcast()

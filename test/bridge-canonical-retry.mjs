@@ -25,6 +25,9 @@ const cases=[
  // edits the start of the prompt, inside the retained prefix.
  {id:'surrogate_boundary',text:'a'.repeat(3999)+'\u{1F600}tail'},
  {id:'falsy_console',fields:'"console":""'},
+ // The extension cuts innerText at 300 UTF-16 units; JSON.stringify then sends
+ // an unpaired surrogate escape that JSON.parse accepts.
+ {id:'lone_surrogate_body',fields:'"target":{"selector":"#cut","innerText":"cut\\ud83d"}'},
 ]
 const rawFor=(c,variant='')=>c.text!==undefined?JSON.stringify({submissionId:`canon_${c.id}`,submissionCreatedAt:at,url:'http://localhost:5341/',text:variant+c.text}):body(`canon_${c.id}`,c.fields).replace(`"text":"Canonical canon_${c.id}"`,`"text":"Canonical canon_${c.id}${variant}"`)
 async function post(bridge,raw){const r=await fetch(`http://127.0.0.1:${bridge.port}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},body:raw,signal:AbortSignal.timeout(5000)});return {status:r.status,body:await r.json()}}

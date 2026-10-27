@@ -22,7 +22,9 @@ The changelog is English throughout.
   JavaScript bridge (ECMAScript numbers, UTF-16 key order and truncation,
   `|| null` truthiness), so JS↔Rust retries replay instead of conflicting; read
   JavaScript stores holding an unpaired surrogate instead of treating them as
-  corrupt; answer clients that half-close after their request. Independent
+  corrupt, and accept request bodies with the unpaired surrogate escape the
+  extension's own UTF-16 truncation can send (signed from the exact request
+  units); answer clients that half-close after their request. Independent
   owner-tie, cross-implementation retry and half-close checks run for both
   candidates in the comparison recorder.
 - Wait for the fixture gauntlet's static server before the first navigation.

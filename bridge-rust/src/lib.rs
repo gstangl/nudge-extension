@@ -77,16 +77,6 @@ pub fn js_number(x: f64) -> String {
         format!("{}{rest}e{sign}{}", &digits[..1], (n - 1).abs())
     }
 }
-/// JavaScript truthiness of a JSON value.
-pub fn js_truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|x| x != 0.0 && !x.is_nan()),
-        Value::String(s) => !s.is_empty(),
-        _ => true,
-    }
-}
 fn cap_units(v: &Value, n: usize) -> Vec<u16> {
     js_string(v).encode_utf16().take(n).collect()
 }
@@ -145,9 +135,9 @@ pub fn target(v: &Value) -> Value {
 pub fn targets(v: &Value) -> Value {
     match v.as_array(){Some(a) if a.len()>=2=>json!(a.iter().take(12).map(|t|json!({"selector":cap(&t["selector"],500),"source":opt(&t["source"],500),"xpath":opt(&t["xpath"],500),"innerText":cap(&t["innerText"],300),"outerHTML":cap(&t["outerHTML"],1200),"styles":styles(&t["styles"])})).collect::<Vec<_>>()),_=>Value::Null}
 }
-/// A JSON value in ECMAScript terms: strings are UTF-16 code units, so a cut
-/// surrogate pair and the key order of `Array.prototype.sort` stay exact.
-enum Js {
+/// A JSON value in ECMAScript terms: strings are UTF-16 code units, so an
+/// unpaired surrogate, a cut pair and `Array.prototype.sort` key order stay exact.
+pub enum Js {
     Null,
     Bool(bool),
     Num(f64),
@@ -155,8 +145,9 @@ enum Js {
     Arr(Vec<Js>),
     Obj(Vec<(Vec<u16>, Js)>),
 }
+static JS_NULL: Js = Js::Null;
 impl Js {
-    fn from(v: &Value) -> Js {
+    pub fn from(v: &Value) -> Js {
         match v {
             Value::Null => Js::Null,
             Value::Bool(b) => Js::Bool(*b),
@@ -173,8 +164,54 @@ impl Js {
     fn obj(fields: Vec<(&str, Js)>) -> Js {
         Js::Obj(fields.into_iter().map(|(k, v)| (k.encode_utf16().collect(), v)).collect())
     }
-    fn opt(units: Vec<u16>) -> Js {
-        if units.is_empty() { Js::Null } else { Js::Str(units) }
+    fn get(&self, key: &str) -> &Js {
+        let key = key.encode_utf16().collect::<Vec<_>>();
+        match self {
+            Js::Obj(o) => o.iter().find(|(k, _)| *k == key).map_or(&JS_NULL, |(_, v)| v),
+            _ => &JS_NULL,
+        }
+    }
+    fn truthy(&self) -> bool {
+        match self {
+            Js::Null => false,
+            Js::Bool(b) => *b,
+            Js::Num(x) => *x != 0.0 && !x.is_nan(),
+            Js::Str(u) => !u.is_empty(),
+            _ => true,
+        }
+    }
+    fn is_object(&self) -> bool {
+        matches!(self, Js::Obj(_) | Js::Arr(_))
+    }
+    /// `String(v ?? '')`.
+    fn string(&self) -> Vec<u16> {
+        match self {
+            Js::Null => vec![],
+            Js::Bool(b) => b.to_string().encode_utf16().collect(),
+            Js::Num(x) => js_number(*x).encode_utf16().collect(),
+            Js::Str(u) => u.clone(),
+            Js::Arr(a) => {
+                let mut out = vec![];
+                for (i, v) in a.iter().enumerate() {
+                    if i > 0 {
+                        out.push(b',' as u16)
+                    }
+                    out.extend(v.string())
+                }
+                out
+            }
+            Js::Obj(_) => "[object Object]".encode_utf16().collect(),
+        }
+    }
+    fn clone_js(&self) -> Js {
+        match self {
+            Js::Null => Js::Null,
+            Js::Bool(b) => Js::Bool(*b),
+            Js::Num(x) => Js::Num(*x),
+            Js::Str(u) => Js::Str(u.clone()),
+            Js::Arr(a) => Js::Arr(a.iter().map(Js::clone_js).collect()),
+            Js::Obj(o) => Js::Obj(o.iter().map(|(k, v)| (k.clone(), v.clone_js())).collect()),
+        }
     }
     /// `JSON.stringify` with the store's sorted-key replacer.
     fn write(&self, out: &mut String) {
@@ -229,66 +266,198 @@ fn quote(units: &[u16], out: &mut String) {
     }
     out.push('"');
 }
-fn js_cap(v: &Value, n: usize) -> Js {
-    Js::Str(cap_units(v, n))
+/// Parse JSON that serde_json (or `parse_json`) already accepted into UTF-16
+/// strings, keeping unpaired surrogate escapes exactly as `JSON.parse` does.
+/// Grammar is not re-validated here; callers parse with serde first.
+pub fn parse_js(bytes: &[u8]) -> Option<Js> {
+    struct P<'a>(&'a [u8], usize);
+    impl P<'_> {
+        fn peek(&self) -> Option<u8> {
+            self.0.get(self.1).copied()
+        }
+        fn ws(&mut self) {
+            while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r')) {
+                self.1 += 1
+            }
+        }
+        fn lit(&mut self, word: &[u8], v: Js) -> Option<Js> {
+            (self.0.get(self.1..self.1 + word.len())? == word).then(|| self.1 += word.len())?;
+            Some(v)
+        }
+        fn string(&mut self) -> Option<Vec<u16>> {
+            self.1 += 1;
+            let mut out = vec![];
+            loop {
+                let start = self.1;
+                while !matches!(self.peek()?, b'"' | b'\\') {
+                    self.1 += 1
+                }
+                out.extend(std::str::from_utf8(&self.0[start..self.1]).ok()?.encode_utf16());
+                if self.peek()? == b'"' {
+                    self.1 += 1;
+                    return Some(out);
+                }
+                let escape = *self.0.get(self.1 + 1)?;
+                self.1 += 2;
+                out.push(match escape {
+                    b'"' => b'"' as u16,
+                    b'\\' => b'\\' as u16,
+                    b'/' => b'/' as u16,
+                    b'b' => 8,
+                    b'f' => 12,
+                    b'n' => b'\n' as u16,
+                    b'r' => b'\r' as u16,
+                    b't' => b'\t' as u16,
+                    b'u' => {
+                        let hex = std::str::from_utf8(self.0.get(self.1..self.1 + 4)?).ok()?;
+                        self.1 += 4;
+                        u16::from_str_radix(hex, 16).ok()?
+                    }
+                    _ => return None,
+                })
+            }
+        }
+        fn value(&mut self) -> Option<Js> {
+            self.ws();
+            match self.peek()? {
+                b'n' => self.lit(b"null", Js::Null),
+                b't' => self.lit(b"true", Js::Bool(true)),
+                b'f' => self.lit(b"false", Js::Bool(false)),
+                b'"' => Some(Js::Str(self.string()?)),
+                b'[' => {
+                    self.1 += 1;
+                    let mut items = vec![];
+                    self.ws();
+                    if self.peek()? == b']' {
+                        self.1 += 1;
+                        return Some(Js::Arr(items));
+                    }
+                    loop {
+                        items.push(self.value()?);
+                        self.ws();
+                        match self.peek()? {
+                            b',' => self.1 += 1,
+                            b']' => {
+                                self.1 += 1;
+                                return Some(Js::Arr(items));
+                            }
+                            _ => return None,
+                        }
+                    }
+                }
+                b'{' => {
+                    self.1 += 1;
+                    let mut fields: Vec<(Vec<u16>, Js)> = vec![];
+                    self.ws();
+                    if self.peek()? == b'}' {
+                        self.1 += 1;
+                        return Some(Js::Obj(fields));
+                    }
+                    loop {
+                        self.ws();
+                        if self.peek()? != b'"' {
+                            return None;
+                        }
+                        let key = self.string()?;
+                        self.ws();
+                        (self.peek()? == b':').then(|| self.1 += 1)?;
+                        let v = self.value()?;
+                        // JSON.parse: a repeated key keeps the last value.
+                        match fields.iter_mut().find(|(k, _)| *k == key) {
+                            Some(field) => field.1 = v,
+                            None => fields.push((key, v)),
+                        }
+                        self.ws();
+                        match self.peek()? {
+                            b',' => self.1 += 1,
+                            b'}' => {
+                                self.1 += 1;
+                                return Some(Js::Obj(fields));
+                            }
+                            _ => return None,
+                        }
+                    }
+                }
+                _ => {
+                    let start = self.1;
+                    while matches!(self.peek(), Some(b'0'..=b'9' | b'-' | b'+' | b'.' | b'e' | b'E')) {
+                        self.1 += 1
+                    }
+                    std::str::from_utf8(&self.0[start..self.1]).ok()?.parse::<f64>().ok().map(Js::Num)
+                }
+            }
+        }
+    }
+    let mut p = P(bytes, 0);
+    let v = p.value()?;
+    p.ws();
+    (p.1 == bytes.len()).then_some(v)
+}
+fn cap_js(v: &Js, n: usize) -> Vec<u16> {
+    v.string().into_iter().take(n).collect()
+}
+fn js_cap(v: &Js, n: usize) -> Js {
+    Js::Str(cap_js(v, n))
 }
 /// `capOrNull`: null/undefined stay null, an empty capped string becomes null.
-fn js_cap_or_null(v: &Value, n: usize) -> Js {
-    if v.is_null() { Js::Null } else { Js::opt(cap_units(v, n)) }
+fn js_cap_or_null(v: &Js, n: usize) -> Js {
+    let units = cap_js(v, n);
+    if matches!(v, Js::Null) || units.is_empty() { Js::Null } else { Js::Str(units) }
 }
-fn js_or_null(v: &Value) -> Js {
-    if js_truthy(v) { Js::from(v) } else { Js::Null }
+fn js_or_null(v: &Js) -> Js {
+    if v.truthy() { v.clone_js() } else { Js::Null }
 }
-fn js_styles(v: &Value) -> Js {
-    if !js_truthy(v) || !(v.is_object() || v.is_array()) {
+fn js_styles(v: &Js) -> Js {
+    if !v.truthy() || !v.is_object() {
         return Js::Null;
     }
-    let value = Js::from(v);
     let mut text = String::new();
-    value.write(&mut text);
-    // JSON.stringify(styles).length counts UTF-16 units in insertion order; the
-    // sorted form has the same length.
-    if text.encode_utf16().count() > 20_000 { Js::Null } else { value }
+    v.write(&mut text);
+    // JSON.stringify(styles).length counts UTF-16 units; key order does not
+    // change that length.
+    if text.encode_utf16().count() > 20_000 { Js::Null } else { v.clone_js() }
 }
-fn js_rect(v: &Value) -> Js {
-    if !js_truthy(v) || !(v.is_object() || v.is_array()) {
+fn js_rect(v: &Js) -> Js {
+    if !v.truthy() || !v.is_object() {
         return Js::Null;
     }
     let fields = ["x", "y", "w", "h", "width", "height", "top", "left", "dpr"]
         .into_iter()
-        .filter(|k| v[*k].is_number())
-        .map(|k| (k, Js::from(&v[k])))
+        .filter_map(|k| match v.get(k) {
+            Js::Num(x) => Some((k, Js::Num(*x))),
+            _ => None,
+        })
         .collect::<Vec<_>>();
     if fields.is_empty() { Js::Null } else { Js::obj(fields) }
 }
-fn js_target(t: &Value) -> Js {
-    if !js_truthy(t) || !(t.is_object() || t.is_array()) {
+fn js_target(t: &Js) -> Js {
+    if !t.truthy() || !t.is_object() {
         return Js::Null;
     }
     Js::obj(vec![
-        ("selector", js_cap(&t["selector"], 500)),
-        ("source", js_cap_or_null(&t["source"], 500)),
-        ("xpath", js_cap_or_null(&t["xpath"], 500)),
-        ("innerText", js_cap(&t["innerText"], 300)),
-        ("outerHTML", js_cap(&t["outerHTML"], 4000)),
-        ("styles", js_styles(&t["styles"])),
-        ("rect", js_rect(&t["rect"])),
+        ("selector", js_cap(t.get("selector"), 500)),
+        ("source", js_cap_or_null(t.get("source"), 500)),
+        ("xpath", js_cap_or_null(t.get("xpath"), 500)),
+        ("innerText", js_cap(t.get("innerText"), 300)),
+        ("outerHTML", js_cap(t.get("outerHTML"), 4000)),
+        ("styles", js_styles(t.get("styles"))),
+        ("rect", js_rect(t.get("rect"))),
     ])
 }
-fn js_targets(v: &Value) -> Js {
-    match v.as_array() {
-        Some(a) if a.len() >= 2 => Js::Arr(
+fn js_targets(v: &Js) -> Js {
+    match v {
+        Js::Arr(a) if a.len() >= 2 => Js::Arr(
             a.iter()
                 .take(12)
                 .map(|t| {
-                    let truthy_cap = |k: &str, n| if js_truthy(&t[k]) { js_cap(&t[k], n) } else { Js::Null };
+                    let truthy_cap = |k: &str, n| if t.get(k).truthy() { js_cap(t.get(k), n) } else { Js::Null };
                     Js::obj(vec![
-                        ("selector", js_cap(&t["selector"], 500)),
+                        ("selector", js_cap(t.get("selector"), 500)),
                         ("source", truthy_cap("source", 500)),
                         ("xpath", truthy_cap("xpath", 500)),
-                        ("innerText", js_cap(&t["innerText"], 300)),
-                        ("outerHTML", js_cap(&t["outerHTML"], 1200)),
-                        ("styles", js_styles(&t["styles"])),
+                        ("innerText", js_cap(t.get("innerText"), 300)),
+                        ("outerHTML", js_cap(t.get("outerHTML"), 1200)),
+                        ("styles", js_styles(t.get("styles"))),
                     ])
                 })
                 .collect(),
@@ -296,36 +465,68 @@ fn js_targets(v: &Value) -> Js {
         _ => Js::Null,
     }
 }
+fn identity_units(u: &[u16], max: usize) -> bool {
+    !u.is_empty()
+        && u.len() <= max
+        && u.iter().all(|&c| c < 128 && ((c as u8).is_ascii_alphanumeric() || c == b'_' as u16 || c == b'-' as u16))
+}
+/// `sanitizeBrowserSource`: four strings matching the identity pattern.
+fn js_source(v: &Js) -> Js {
+    if !v.truthy() || !v.is_object() {
+        return Js::Null;
+    }
+    let field = |k: &str, max| match v.get(k) {
+        Js::Str(u) if identity_units(u, max) => Some(u.clone()),
+        _ => None,
+    };
+    match (field("browser", 32), field("session", 128), field("tab", 128), field("document", 128)) {
+        (Some(b), Some(s), Some(t), Some(d)) => Js::obj(vec![
+            ("browser", Js::Str(b)),
+            ("session", Js::Str(s)),
+            ("tab", Js::Str(t)),
+            ("document", Js::Str(d)),
+        ]),
+        _ => Js::Null,
+    }
+}
 /// The store's `token(v)`: `String(v || '')` must match the identity pattern.
+fn js_token_units(v: &Js) -> Js {
+    let s = if v.truthy() { v.string() } else { vec![] };
+    if identity_units(&s, 128) { Js::Str(s) } else { Js::Null }
+}
 pub fn js_token(v: &Value) -> Value {
-    let s = if js_truthy(v) { js_string(v) } else { String::new() };
-    token(&json!(s), 128)
+    match js_token_units(&Js::from(v)) {
+        Js::Str(u) => json!(String::from_utf16_lossy(&u)),
+        _ => Value::Null,
+    }
 }
 /// Version-2 receipt signature, byte-compatible with the JavaScript bridge's
 /// `payloadSignature`: same sanitizers, `|| null` truthiness, ECMAScript number
 /// spelling, UTF-16 key order and UTF-16 truncation.
-pub fn signature(p: &Value) -> String {
-    let browser = source(&p["browserSource"]);
+pub fn signature_js(p: &Js) -> String {
     let canonical = Js::obj(vec![
-        ("text", js_cap(&p["text"], 4000)),
-        ("url", js_cap(&p["url"], 2000)),
-        ("author", js_cap(&p["author"], 80)),
-        ("target", js_target(&p["target"])),
-        ("targets", js_targets(&p["targets"])),
-        ("browserSource", Js::from(&browser)),
-        ("submissionCreatedAt", js_or_null(&p["submissionCreatedAt"])),
-        ("selectionGeneration", Js::from(&js_token(&p["selectionGeneration"]))),
-        ("title", js_cap(&p["title"], 300)),
-        ("ua", js_cap(&p["ua"], 300)),
-        ("viewport", js_rect(&p["viewport"])),
-        ("annotations", js_or_null(&p["annotations"])),
-        ("console", js_or_null(&p["console"])),
-        ("screenshot", js_or_null(&p["screenshot"])),
-        ("screenshotFull", js_or_null(&p["screenshotFull"])),
+        ("text", js_cap(p.get("text"), 4000)),
+        ("url", js_cap(p.get("url"), 2000)),
+        ("author", js_cap(p.get("author"), 80)),
+        ("target", js_target(p.get("target"))),
+        ("targets", js_targets(p.get("targets"))),
+        ("browserSource", js_source(p.get("browserSource"))),
+        ("submissionCreatedAt", js_or_null(p.get("submissionCreatedAt"))),
+        ("selectionGeneration", js_token_units(p.get("selectionGeneration"))),
+        ("title", js_cap(p.get("title"), 300)),
+        ("ua", js_cap(p.get("ua"), 300)),
+        ("viewport", js_rect(p.get("viewport"))),
+        ("annotations", js_or_null(p.get("annotations"))),
+        ("console", js_or_null(p.get("console"))),
+        ("screenshot", js_or_null(p.get("screenshot"))),
+        ("screenshotFull", js_or_null(p.get("screenshotFull"))),
     ]);
     let mut text = String::new();
     canonical.write(&mut text);
     digest(&text)
+}
+pub fn signature(p: &Value) -> String {
+    signature_js(&Js::from(p))
 }
 pub fn annotations(v: &Value) -> bool {
     v.is_null()
@@ -515,7 +716,7 @@ pub struct Store {
 /// (left by UTF-16 truncation) as a `\\udXXX` escape, which serde_json refuses.
 /// Such a store is valid, not corrupt: only that unit becomes U+FFFD, matching
 /// what this bridge stores for its own truncated prompts.
-pub fn parse_store(bytes: &[u8]) -> Option<Value> {
+pub fn parse_json(bytes: &[u8]) -> Option<Value> {
     serde_json::from_slice::<Value>(bytes)
         .ok()
         .or_else(|| serde_json::from_slice::<Value>(&replace_lone_surrogates(bytes)?).ok())
@@ -569,7 +770,7 @@ fn replace_lone_surrogates(bytes: &[u8]) -> Option<Vec<u8>> {
 impl Store {
     pub fn open(dir: PathBuf) -> io::Result<Self> {
         let file = dir.join("store.json");
-        let parsed = fs::read(&file).ok().and_then(|b| parse_store(&b));
+        let parsed = fs::read(&file).ok().and_then(|b| parse_json(&b));
         let mut data = match parsed {
             Some(v) if v.is_object() && v["pins"].is_array() && v["seq"].is_number() => v,
             _ => {
@@ -707,6 +908,10 @@ impl Store {
         Ok(Some(format!("shots/{name}")))
     }
     pub fn submit(&mut self, p: &Value, owner: Value) -> Result<(u16, Value), String> {
+        self.submit_signed(p, &signature(p), owner)
+    }
+    /// Submit with the signature of the exact request bytes (see `parse_js`).
+    pub fn submit_signed(&mut self, p: &Value, sig: &str, owner: Value) -> Result<(u16, Value), String> {
         if !p.is_object() {
             return Err("invalid_submission".into());
         }
@@ -737,7 +942,7 @@ impl Store {
                 if prior["signatureVersion"] != 2 {
                     return Err("unsupported_receipt_version".into());
                 }
-                if prior["signature"] != signature(p) {
+                if prior["signature"] != sig {
                     return Ok((409, json!({"error":"submission_conflict"})));
                 }
                 return Ok((
@@ -783,7 +988,7 @@ impl Store {
         next["seq"] = json!(seq);
         next["pins"].as_array_mut().unwrap().push(pin.clone());
         if modern {
-            next["receipts"].as_array_mut().unwrap().push(json!({"submissionId":sid,"signature":signature(p),"signatureVersion":2,"createdAt":p["submissionCreatedAt"],"withdrawn":false,"id":id}));
+            next["receipts"].as_array_mut().unwrap().push(json!({"submissionId":sid,"signature":sig,"signatureVersion":2,"createdAt":p["submissionCreatedAt"],"withdrawn":false,"id":id}));
         }
         self.commit(next).map_err(|e| e.to_string())?;
         let _ = self.mirror(&pin, false);
@@ -1048,13 +1253,24 @@ mod tests {
         assert_eq!(signature(&number), signature(&text));
     }
     #[test]
+    fn request_bytes_keep_unpaired_surrogates_for_signatures() {
+        let body = br##"{"text":"Same","url":"http://localhost:5322/","target":{"selector":"#x","innerText":"cut\ud83d"},"text":"Last wins"}"##;
+        let value = parse_json(body).unwrap();
+        assert_eq!(value["target"]["innerText"], "cut\u{fffd}");
+        let exact = signature_js(&parse_js(body).unwrap());
+        assert_ne!(exact, signature(&value), "U+FFFD must not stand in for the JavaScript unit");
+        let mut out = String::new();
+        parse_js(body).unwrap().write(&mut out);
+        assert_eq!(out, r##"{"target":{"innerText":"cut\ud83d","selector":"#x"},"text":"Last wins","url":"http://localhost:5322/"}"##);
+    }
+    #[test]
     fn javascript_lone_surrogate_store_is_valid_not_corrupt() {
         let written = br#"{"seq":1,"pins":[{"id":"nudge_1","text":"cut\ud83d","pair":"\ud83d\ude00","literal":"\\ud83d"}],"receipts":[]}"#;
-        let parsed = parse_store(written).unwrap();
+        let parsed = parse_json(written).unwrap();
         assert_eq!(parsed["pins"][0]["text"], "cut\u{fffd}");
         assert_eq!(parsed["pins"][0]["pair"], "\u{1F600}");
         assert_eq!(parsed["pins"][0]["literal"], "\\ud83d");
-        assert!(parse_store(b"{\"seq\":1,\"pins\":[").is_none());
+        assert!(parse_json(b"{\"seq\":1,\"pins\":[").is_none());
     }
     #[test]
     fn malformed_images_and_geometry_are_refused() {
