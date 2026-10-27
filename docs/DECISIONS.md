@@ -6,6 +6,25 @@ developer (or agent) would otherwise re-litigate. The timeless core lives in
 does NOT duplicate them. Newest first. **If two entries conflict, the newer
 date wins.**
 
+## The bridge stays JavaScript — Rust experiment ended (2026-10-27)
+An experimental Rust bridge was built and compared against the JavaScript
+bridge under a frozen policy (issue #12, branch `agent/bridge-comparison`,
+results in `docs/bridge-comparison-handoff/MACBOOK-AIR-RESULTS.md` there). On
+an Apple M2 laptop with real Google Chrome, Send-to-watcher latency was the
+same for both (p50 ≈ 21 ms; JavaScript p95 22 ms), so the required p95 gain of
+20 ms cannot exist: both share the same dispatch-to-watcher floor. Rust's only
+win was bridge-process memory (13 vs 90 MB), which is neither a dominant cost
+nor the whole footprint: the watcher, CLI and hook still need Node, so Rust adds
+a toolchain without removing one. Matching existing behaviour was the real cost:
+one review session found eleven compatibility defects in the Rust port (receipt
+signatures, store parsing, owner ties, inbox files, host discovery). The
+experiment is closed; no Rust code ships. Two JavaScript fixes made along the
+way (retired-socket guard in the extension, crash-safe withdrawal journal in
+the bridge) exist only on that branch and would be taken over separately.
+Rejected — finishing the Rust port (native launcher, soaks, full parity): no
+measurable user benefit at this scale. Reopen only with a dominant, measured
+whole-process cost or an installation failure class Rust would actually remove.
+
 ## Open source: pull requests from forks, main stays green (2026-09-12)
 The repository is public. Contributors work on a fork or a branch and open a
 pull request; CI (`npm run test:ci`) must be green before merge, and the
