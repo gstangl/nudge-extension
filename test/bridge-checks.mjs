@@ -27,11 +27,12 @@ const commands=[
  ]:[]),
 ]
 const report={source:before.sha256,revision:before.revision,scope:'Local checks only; no remote CI, native Chrome/OS or actual host receipt',runtime:{node:process.version,rust:execFileSync('rustc',['--version'],{encoding:'utf8'}).trim(),os:os.type(),release:os.release(),arch:os.arch(),cpu:os.cpus()[0]?.model},build:fs.existsSync(rust[0])?commandBinding(rust):[],results:[]}
-let child
+let child, interruptedRun=false
 const save=()=>fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n')
-const interrupted=async()=>{report.verdict='failed';report.interrupted=true;await stop(child);save();process.exit(130)}
+const interrupted=async()=>{interruptedRun=true;report.verdict='failed';report.interrupted=true;await stop(child);save();process.exit(130)}
 process.once('SIGINT',interrupted);process.once('SIGTERM',interrupted)
 for(const [id,exe,args,candidate]of commands){
+ if(interruptedRun)break
  const startedAt=new Date().toISOString(),t0=performance.now();let output='',timer
  console.log('RUN',id)
  const env={...process.env,NUDGE_NO_RELOAD:'1'};delete env.NUDGE_CANDIDATE;if(candidate)env.NUDGE_CANDIDATE=candidate
