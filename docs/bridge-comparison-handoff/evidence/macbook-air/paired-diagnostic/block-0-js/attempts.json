@@ -1,0 +1,702 @@
+[
+  {
+    "submissionId": "b346899a15824d11aac8eb462dfddad5",
+    "text": "comparison_920f290fe0cadf876d075457",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 1450.085875,
+    "index": 0,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_1",
+        "at": 1511.1675
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 1513.076291,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_1",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 1530.766541,
+    "latencyMs": 61.08162500000003
+  },
+  {
+    "submissionId": "8718a5bef9d6424fa4cd61fbb4b28e13",
+    "text": "comparison_508364061814ee11d3aca586",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 1600.027708,
+    "index": 1,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_2",
+        "at": 1620.201791
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 1621.343583,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_2",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 1629.8235,
+    "latencyMs": 20.174082999999882
+  },
+  {
+    "submissionId": "6a2ea604bca54610961e018eb07ceb5d",
+    "text": "comparison_f01c3c0f19a4678c70206b93",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 1699.973958,
+    "index": 2,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_3",
+        "at": 1721.364125
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 1723.130666,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_3",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 1776.0865,
+    "latencyMs": 21.39016700000002
+  },
+  {
+    "submissionId": "449c75b9027a41af8f1efbc3c5519a83",
+    "text": "comparison_36f97f82e223792a8050497d",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 1850.020125,
+    "index": 3,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_4",
+        "at": 1870.880958
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 1872.560125,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_4",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 1925.89725,
+    "latencyMs": 20.860832999999957
+  },
+  {
+    "submissionId": "8b1dfeb827c54c22b93b88179834bf07",
+    "text": "comparison_19b9fa9e7ca11f32dbfa4085",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2000.1755,
+    "index": 4,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_5",
+        "at": 2022.156541
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2023.55475,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_5",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2082.516291,
+    "latencyMs": 21.981041000000005
+  },
+  {
+    "submissionId": "26103ef0df254a749b9703234959e4b0",
+    "text": "comparison_549c94d08a5275b85b600db1",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2183.767291,
+    "index": 5,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_6",
+        "at": 2204.371833
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2206.359708,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_6",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2214.363416,
+    "latencyMs": 20.604542000000038
+  },
+  {
+    "submissionId": "d82c8b5d7b284f4dad9c08fa3b30d861",
+    "text": "comparison_d305aa9486b65433e09db8b1",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2283.004125,
+    "index": 6,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_7",
+        "at": 2304.4745
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2307.254791,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_7",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2365.853833,
+    "latencyMs": 21.470374999999876
+  },
+  {
+    "submissionId": "e24d6104d1834c928a26c2fd454a0666",
+    "text": "comparison_cd311f558d393f19e2238ab7",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2467.235708,
+    "index": 7,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_8",
+        "at": 2490.236958
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2500.235,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_8",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2553.962958,
+    "latencyMs": 23.0012499999998
+  },
+  {
+    "submissionId": "29a055ea4177426a87028b2ef9fb606c",
+    "text": "comparison_ee089ba6977667c82e22c483",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2650.366416,
+    "index": 8,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_9",
+        "at": 2670.499458
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2672.372416,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_9",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2680.228666,
+    "latencyMs": 20.133041999999932
+  },
+  {
+    "submissionId": "dd415994e1834baab093c9c8d13e397b",
+    "text": "comparison_683613f50eefa6d75236c574",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2754.322583,
+    "index": 9,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_10",
+        "at": 2772.586916
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2774.959041,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_10",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2787.220083,
+    "latencyMs": 18.26433300000008
+  },
+  {
+    "submissionId": "464e1d9f19d2407087cf5bcde4ccbe52",
+    "text": "comparison_770461cef7039c70eebb260e",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 2866.74825,
+    "index": 10,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_11",
+        "at": 2887.142875
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 2889.296291,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_11",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 2897.529375,
+    "latencyMs": 20.394624999999905
+  },
+  {
+    "submissionId": "c2178367d62044b488ad7492f08793db",
+    "text": "comparison_64b0e838db6f8ae1a370b762",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3000.781291,
+    "index": 11,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_12",
+        "at": 3021.22275
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3023.353458,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_12",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3035.056666,
+    "latencyMs": 20.441459000000123
+  },
+  {
+    "submissionId": "fbc48051ba1b4596b9e2b2022aa9480e",
+    "text": "comparison_0924f1ebd00d9f16102dbe81",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3118.024583,
+    "index": 12,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_13",
+        "at": 3138.588083
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3141.086333,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_13",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3200.318916,
+    "latencyMs": 20.563500000000204
+  },
+  {
+    "submissionId": "964bc659105b47bfa4840a80369ce561",
+    "text": "comparison_530d84f5314e131a0115d018",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3300.145875,
+    "index": 13,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_14",
+        "at": 3320.369
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3322.479041,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_14",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3383.01,
+    "latencyMs": 20.223124999999982
+  },
+  {
+    "submissionId": "90baa3a639064d279fbdd26dd4087a10",
+    "text": "comparison_8397c196d60b95703e6ccb11",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3483.745375,
+    "index": 14,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_15",
+        "at": 3503.737958
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3506.50375,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_15",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3515.772166,
+    "latencyMs": 19.992583000000195
+  },
+  {
+    "submissionId": "c6011ac3bd984ef1834b95b335906414",
+    "text": "comparison_5c6216b076892d93366eb489",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3616.678875,
+    "index": 15,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_16",
+        "at": 3638.443791
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3641.138166,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_16",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3701.38725,
+    "latencyMs": 21.764916000000085
+  },
+  {
+    "submissionId": "a8bc67fd25a24d7b840af6c15498be72",
+    "text": "comparison_5be8c7ac6436226da40df497",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3800.309375,
+    "index": 16,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_17",
+        "at": 3821.128333
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 3824.0235,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_17",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 3884.201041,
+    "latencyMs": 20.818958000000293
+  },
+  {
+    "submissionId": "34ad11f1581544078e36c50a33ad2ede",
+    "text": "comparison_268dfb5603315ebb205b8127",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 3983.447875,
+    "index": 17,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_18",
+        "at": 4003.768625
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 4006.681041,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_18",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4066.790875,
+    "latencyMs": 20.320750000000317
+  },
+  {
+    "submissionId": "9c0277d0c9e24daab6f9da18f5f301a1",
+    "text": "comparison_4e0d24259abaa48c011b9e94",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 4166.919125,
+    "index": 18,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_19",
+        "at": 4187.70175
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 4191.007708,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_19",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4248.736375,
+    "latencyMs": 20.782624999999825
+  },
+  {
+    "submissionId": "54000d4f3e7441aa89646015ea720edf",
+    "text": "comparison_965f3206c53da46aa91cdd86",
+    "url": "http://localhost:51542/demo",
+    "owner": "comparison_alpha",
+    "targetSelector": "#card-conversion",
+    "t0": 4350.258458,
+    "index": 19,
+    "status": "passed",
+    "observations": [
+      {
+        "kind": "watcher",
+        "session": "comparison_alpha",
+        "id": "nudge_20",
+        "at": 4370.989916
+      }
+    ],
+    "browserSource": {
+      "browser": "chrome",
+      "document": "d6fe4bc5f4014a9ba0a406e0c36bc9b1",
+      "session": "7497938e51da45f292f272323980fc6c",
+      "tab": "a7041dc058cc4470a02fe7c783b38997"
+    },
+    "ta": 4373.845916,
+    "http": {
+      "status": 201,
+      "body": {
+        "id": "nudge_20",
+        "replay": false,
+        "withdrawn": false
+      }
+    },
+    "queueUiObservedAt": 4432.850041,
+    "latencyMs": 20.731458000000202
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/withdrawal-fault-1793128129894",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks",
+          "sha256": "beb152cce70a30c09a5aa64cc3b7371f68b2d159815b2704192a2b441dcdba8f"
+        }
+      ]
+    },
+    {
+      "modern": false,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks",
+          "sha256": "beb152cce70a30c09a5aa64cc3b7371f68b2d159815b2704192a2b441dcdba8f"
+        }
+      ]
+    }
+  ]
+}

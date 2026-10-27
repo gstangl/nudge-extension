@@ -1,0 +1,56 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/owner-tie-1793128838987",
+  "candidate": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "trial": 0,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 1,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 2,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 3,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 4,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 5,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    }
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "source": "6aa68209570052939aeb4590a0c0c61e1145f219212e37d89196564276277832",
+  "reference": [
+    "<toolchain>/node",
+    "<dev-worktree>/bridge/bridge.mjs"
+  ],
+  "subject": [
+    "<dev-worktree>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "name": "mirror",
+      "verdict": "failed",
+      "error": "mirror: subject differs from the reviewed reference\n+ actual - expected\n... Skipped lines\n\n  {\n    amended: '# nudge_1 (#1) - open\\n' +\n      '\\n' +\n+     '> \\n' +\n-     '> _(Mark: 2 elements — reference for \"this one\" in chat)_\\n' +\n      '\\n' +\n-     '\\n' +\n-     '> **Amendment (<hh:mm>):** more\\n' +\n-     '\\n' +\n      '- url: http://localhost:5345/x\\n' +\n      '- selector: `#a`\\n' +\n-     '- source: `src/App.tsx:10`\\n' +\n-     '- author: reviewer\\n' +\n-     '- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\\n' +\n      '- created: <time>\\n' +\n      '\\n' +\n+     '> **Amendment:** more\\n' +\n-     '![screenshot](../shots/nudge_1.png)\\n' +\n      '\\n' +\n+     '## Screenshot\\n' +\n      '\\n' +\n+     '![image](../shots/nudge_1.png)\\n' +\n-     '## Elements (2)\\n' +\n-     '1. `#a` — `s1`\\n' +\n-     '2. `#b`\\n' +\n      '\\n' +\n+     '- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\\n',\n-     '\\n' +\n-     '## Console\\n' +\n-     '```\\n' +\n-     'err1\\n' +\n-     'err2\\n' +\n-     '```\\n',\n    annotations: [\n      {\n+       color: 'red',\n        points: [\n          [\n            1,\n            2\n          ]\n...\n      '\\n' +\n+     '> \\n' +\n-     '> _(Mark without element — reference for \"this one\" in chat)_\\n' +\n      '\\n' +\n      '- url: http://localhost:5345/x\\n' +\n+     '- selector: ``\\n' +\n-     '- selector: `-`\\n' +\n-     '- browser provenance: legacy / unverified\\n' +\n      '- created: <time>\\n',\n    created: '# nudge_1 (#1) - open\\n' +\n      '\\n' +\n+     '> \\n' +\n-     '> _(Mark: 2 elements — reference for \"this one\" in chat)_\\n' +\n      '\\n' +\n      '- url: http://localhost:5345/x\\n' +\n      '- selector: `#a`\\n' +\n-     '- source: `src/App.tsx:10`\\n' +\n-     '- author: reviewer\\n' +\n-     '- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\\n' +\n      '- created: <time>\\n' +\n      '\\n' +\n+     '## Screenshot\\n' +\n-     '![screenshot](../shots/nudge_1.png)\\n' +\n      '\\n' +\n+     '![image](../shots/nudge_1.png)\\n' +\n      '\\n' +\n+     '- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\\n',\n-     '## Elements (2)\\n' +\n-     '1. `#a` — `s1`\\n' +\n-     '2. `#b`\\n' +\n-     '\\n' +\n-     '\\n' +\n-     '## Console\\n' +\n-     '```\\n' +\n-     'err1\\n' +\n-     'err2\\n' +\n-     '```\\n',\n    projection: {\n      amendments: [\n        {\n          at: '<time>',\n+         author: 'reviewer',\n          text: 'more'\n        }\n      ],\n      author: 'reviewer',\n      browserSource: {\n...\n        {\n+         innerText: '',\n+         outerHTML: '<a>',\n          selector: '#a',\n+         source: 's1',\n+         styles: null,\n+         xpath: null\n        },\n        {\n+         innerText: '',\n+         outerHTML: '',\n          selector: '#b',\n+         source: null,\n+         styles: null,\n+         xpath: null\n        }\n      ],\n      text: '',\n      url: 'http://localhost:5345/x'\n    },\n    resolved: '# nudge_1 (#1) - resolved\\n' +\n      '\\n' +\n+     '> \\n' +\n-     '> _(Mark: 2 elements — reference for \"this one\" in chat)_\\n' +\n      '\\n' +\n-     '\\n' +\n-     '> **Amendment (<hh:mm>):** more\\n' +\n-     '\\n' +\n      '- url: http://localhost:5345/x\\n' +\n      '- selector: `#a`\\n' +\n-     '- source: `src/App.tsx:10`\\n' +\n-     '- author: reviewer\\n' +\n-     '- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\\n' +\n      '- created: <time>\\n' +\n      '\\n' +\n+     '> **Amendment:** more\\n' +\n-     '![screenshot](../shots/nudge_1.png)\\n' +\n      '\\n' +\n+     '## Screenshot\\n' +\n      '\\n' +\n+     '![image](../shots/nudge_1.png)\\n' +\n-     '## Elements (2)\\n' +\n-     '1. `#a` — `s1`\\n' +\n-     '2. `#b`\\n' +\n      '\\n' +\n+     '- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\\n'\n-     '\\n' +\n-     '## Console\\n' +\n-     '```\\n",
+      "observed": {
+        "reference": {
+          "created": "# nudge_1 (#1) - open\n\n> _(Mark: 2 elements — reference for \"this one\" in chat)_\n\n- url: http://localhost:5345/x\n- selector: `#a`\n- source: `src/App.tsx:10`\n- author: reviewer\n- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\n- created: <time>\n\n![screenshot](../shots/nudge_1.png)\n\n\n## Elements (2)\n1. `#a` — `s1`\n2. `#b`\n\n\n## Console\n```\nerr1\nerr2\n```\n",
+          "amended": "# nudge_1 (#1) - open\n\n> _(Mark: 2 elements — reference for \"this one\" in chat)_\n\n\n> **Amendment (<hh:mm>):** more\n\n- url: http://localhost:5345/x\n- selector: `#a`\n- source: `src/App.tsx:10`\n- author: reviewer\n- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\n- created: <time>\n\n![screenshot](../shots/nudge_1.png)\n\n\n## Elements (2)\n1. `#a` — `s1`\n2. `#b`\n\n\n## Console\n```\nerr1\nerr2\n```\n",
+          "projection": {
+            "id": "nudge_1",
+            "label": 1,
+            "status": "open",
+            "author": "reviewer",
+            "owner": null,
+            "text": "",
+            "url": "http://localhost:5345/x",
+            "createdAt": "<time>",
+            "amendments": [
+              {
+                "text": "more",
+                "at": "<time>"
+              }
+            ],
+            "screenshot": "shots/nudge_1.png",
+            "browserSource": {
+              "browser": "chrome",
+              "session": "browser_session_1",
+              "tab": "tab_1",
+              "document": "doc_1"
+            },
+            "isRegion": true,
+            "target": {
+              "selector": "#a",
+              "rect": null,
+              "innerText": "  Hello world that is a fairly long label for a mark  "
+            },
+            "targets": [
+              {
+                "selector": "#a"
+              },
+              {
+                "selector": "#b"
+              }
+            ]
+          },
+          "annotations": [
+            {
+              "type": "lasso",
+              "points": [
+                [
+                  1,
+                  2
+                ]
+              ]
+            }
+          ],
+          "resolved": "# nudge_1 (#1) - resolved\n\n> _(Mark: 2 elements — reference for \"this one\" in chat)_\n\n\n> **Amendment (<hh:mm>):** more\n\n- url: http://localhost:5345/x\n- selector: `#a`\n- source: `src/App.tsx:10`\n- author: reviewer\n- browser provenance: `{\"browser\":\"chrome\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\",\"document\":\"doc_1\"}`\n- created: <time>\n\n![screenshot](../shots/nudge_1.png)\n\n\n## Elements (2)\n1. `#a` — `s1`\n2. `#b`\n\n\n## Console\n```\nerr1\nerr2\n```\n",
+          "bare": "# nudge_2 (#2) - open\n\n> _(Mark without element — reference for \"this one\" in chat)_\n\n- url: http://localhost:5345/x\n- selector: `-`\n- browser provenance: legacy / unverified\n- created: <time>\n"
+        },
+        "subject": {
+          "created": "# nudge_1 (#1) - open\n\n> \n\n- url: http://localhost:5345/x\n- selector: `#a`\n- created: <time>\n\n## Screenshot\n\n![image](../shots/nudge_1.png)\n\n- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\n",
+          "amended": "# nudge_1 (#1) - open\n\n> \n\n- url: http://localhost:5345/x\n- selector: `#a`\n- created: <time>\n\n> **Amendment:** more\n\n## Screenshot\n\n![image](../shots/nudge_1.png)\n\n- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\n",
+          "projection": {
+            "amendments": [
+              {
+                "at": "<time>",
+                "author": "reviewer",
+                "text": "more"
+              }
+            ],
+            "author": "reviewer",
+            "browserSource": {
+              "browser": "chrome",
+              "document": "doc_1",
+              "session": "browser_session_1",
+              "tab": "tab_1"
+            },
+            "createdAt": "<time>",
+            "id": "nudge_1",
+            "isRegion": true,
+            "label": 1,
+            "owner": null,
+            "screenshot": "shots/nudge_1.png",
+            "status": "open",
+            "target": {
+              "innerText": "  Hello world that is a fairly long label for a mark  ",
+              "rect": null,
+              "selector": "#a"
+            },
+            "targets": [
+              {
+                "innerText": "",
+                "outerHTML": "<a>",
+                "selector": "#a",
+                "source": "s1",
+                "styles": null,
+                "xpath": null
+              },
+              {
+                "innerText": "",
+                "outerHTML": "",
+                "selector": "#b",
+                "source": null,
+                "styles": null,
+                "xpath": null
+              }
+            ],
+            "text": "",
+            "url": "http://localhost:5345/x"
+          },
+          "annotations": [
+            {
+              "color": "red",
+              "points": [
+                [
+                  1,
+                  2
+                ]
+              ],
+              "type": "lasso"
+            }
+          ],
+          "resolved": "# nudge_1 (#1) - resolved\n\n> \n\n- url: http://localhost:5345/x\n- selector: `#a`\n- created: <time>\n\n> **Amendment:** more\n\n## Screenshot\n\n![image](../shots/nudge_1.png)\n\n- browser provenance: `{\"browser\":\"chrome\",\"document\":\"doc_1\",\"session\":\"browser_session_1\",\"tab\":\"tab_1\"}`\n",
+          "bare": "# nudge_2 (#2) - open\n\n> \n\n- url: http://localhost:5345/x\n- selector: ``\n- created: <time>\n"
+        }
+      }
+    },
+    {
+      "name": "withdrawal",
+      "verdict": "failed",
+      "error": "withdrawal: subject differs from the reviewed reference\n+ actual - expected\n\n  {\n    marker: '# nudge_1 (#1) - withdrawn\\n' +\n      '\\n' +\n      'The user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\\n' +\n      '\\n' +\n      '- withdrawn: <time>\\n' +\n+     '- url: http://localhost:5346/\\n' +\n+     '- selector: ``\\n' +\n      '- created: <time>\\n' +\n-     '- url: http://localhost:5346/\\n' +\n-     '- selector: `-`\\n' +\n      '- agent: Owner\\n' +\n      '- session: diff_owner\\n'\n  }\n",
+      "observed": {
+        "reference": {
+          "marker": "# nudge_1 (#1) - withdrawn\n\nThe user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n- withdrawn: <time>\n- created: <time>\n- url: http://localhost:5346/\n- selector: `-`\n- agent: Owner\n- session: diff_owner\n"
+        },
+        "subject": {
+          "marker": "# nudge_1 (#1) - withdrawn\n\nThe user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n- withdrawn: <time>\n- url: http://localhost:5346/\n- selector: ``\n- created: <time>\n- agent: Owner\n- session: diff_owner\n"
+        }
+      }
+    },
+    {
+      "name": "roster",
+      "verdict": "failed",
+      "error": "roster: subject differs from the reviewed reference\n+ actual - expected\n\n  {\n+   agentLabel: null,\n-   agentLabel: '?',\n    hosts: [\n+     '127.0.0.1:5347',\n      'localhost:5347'\n    ],\n    labels: [\n+     null\n-     '?'\n    ],\n    owner: {\n      label: 'Hosts',\n      session: 'diff_hosts'\n    }\n",
+      "observed": {
+        "reference": {
+          "agentLabel": "?",
+          "labels": [
+            "?"
+          ],
+          "hosts": [
+            "localhost:5347"
+          ],
+          "owner": {
+            "label": "Hosts",
+            "session": "diff_hosts"
+          }
+        },
+        "subject": {
+          "agentLabel": null,
+          "labels": [
+            null
+          ],
+          "hosts": [
+            "127.0.0.1:5347",
+            "localhost:5347"
+          ],
+          "owner": {
+            "label": "Hosts",
+            "session": "diff_hosts"
+          }
+        }
+      }
+    },
+    {
+      "name": "discovery",
+      "verdict": "failed",
+      "error": "discovery: subject differs from the reviewed reference\n+ actual - expected\n\n  {\n+   hosts: null,\n+   ownerOfForeignHost: {\n+     label: 'Discovered',\n+     session: 'diff_discovered'\n+   }\n-   hosts: [\n-     'diff.localhost:1355'\n-   ],\n-   ownerOfForeignHost: null\n  }\n",
+      "observed": {
+        "reference": {
+          "hosts": [
+            "diff.localhost:1355"
+          ],
+          "ownerOfForeignHost": null
+        },
+        "subject": {
+          "hosts": null,
+          "ownerOfForeignHost": {
+            "label": "Discovered",
+            "session": "diff_discovered"
+          }
+        }
+      }
+    },
+    {
+      "name": "selection",
+      "verdict": "failed",
+      "error": "selection: subject differs from the reviewed reference\n+ actual - expected\n\n  {\n+   cropUnchanged: false,\n-   cropUnchanged: true,\n    error: 'invalid_selection_image',\n    status: 409\n  }\n",
+      "observed": {
+        "reference": {
+          "status": 409,
+          "error": "invalid_selection_image",
+          "cropUnchanged": true
+        },
+        "subject": {
+          "status": 409,
+          "error": "invalid_selection_image",
+          "cropUnchanged": false
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/resources-1793129172276",
+  "results": [
+    {
+      "name": "js",
+      "verdict": "passed",
+      "samples": [
+        {
+          "phase": "idle",
+          "at": 341.491916,
+          "raw": "60504  57776   0:00.17",
+          "rssKiB": 57776
+        },
+        {
+          "phase": "accepted-100",
+          "at": 554.587541,
+          "raw": "60504  64064   0:00.31",
+          "rssKiB": 64064
+        },
+        {
+          "phase": "accepted-200",
+          "at": 830.466375,
+          "raw": "60504  73040   0:00.48",
+          "rssKiB": 73040
+        },
+        {
+          "phase": "accepted-300",
+          "at": 1123.2045,
+          "raw": "60504  89808   0:00.66",
+          "rssKiB": 89808
+        },
+        {
+          "phase": "complete",
+          "at": 1133.865416,
+          "raw": "60504  89808   0:00.66",
+          "rssKiB": 89808
+        }
+      ]
+    },
+    {
+      "name": "rust",
+      "verdict": "passed",
+      "samples": [
+        {
+          "phase": "idle",
+          "at": 1197.22425,
+          "raw": "60542   8880   0:00.01",
+          "rssKiB": 8880
+        },
+        {
+          "phase": "accepted-100",
+          "at": 1577.326791,
+          "raw": "60542  11248   0:00.15",
+          "rssKiB": 11248
+        },
+        {
+          "phase": "accepted-200",
+          "at": 1932.430041,
+          "raw": "60542  12224   0:00.33",
+          "rssKiB": 12224
+        },
+        {
+          "phase": "accepted-300",
+          "at": 2256.102791,
+          "raw": "60542  13072   0:00.55",
+          "rssKiB": 13072
+        },
+        {
+          "phase": "complete",
+          "at": 2260.146166,
+          "raw": "60542  13072   0:00.55",
+          "rssKiB": 13072
+        }
+      ]
+    }
+  ]
+}

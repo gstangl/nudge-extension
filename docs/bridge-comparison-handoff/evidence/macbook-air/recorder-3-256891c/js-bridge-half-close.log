@@ -1,0 +1,59 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/half-close-1793128117613",
+  "results": [
+    {
+      "name": "valid",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 200 OK"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "invalid-utf8",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "valid",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 200 OK"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "invalid-utf8",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    }
+  ]
+}

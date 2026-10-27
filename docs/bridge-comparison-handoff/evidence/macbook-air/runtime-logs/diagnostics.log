@@ -1,0 +1,13 @@
+STEP js0-chrome start 2026-10-27T19:24:11Z load { 10.29 9.58 11.01 }
+STEP js0-chrome exit=0 end 2026-10-27T19:24:23Z load { 9.04 9.34 10.90 }
+STEP js1-chrome start 2026-10-27T19:24:23Z load { 9.04 9.34 10.90 }
+STEP js1-chrome exit=0 end 2026-10-27T19:24:35Z load { 10.78 9.69 11.01 }
+STEP rust-chrome start 2026-10-27T19:24:35Z load { 10.78 9.69 11.01 }
+STEP rust-chrome exit=0 end 2026-10-27T19:24:47Z load { 13.96 10.52 11.28 }
+STEP paired start 2026-10-27T19:24:47Z load { 13.96 10.52 11.28 }
+STEP paired exit=0 end 2026-10-27T19:26:12Z load { 17.12 11.88 11.69 }
+STEP resources start 2026-10-27T19:26:12Z load { 17.12 11.88 11.69 }
+STEP resources exit=0 end 2026-10-27T19:26:14Z load { 17.12 11.88 11.69 }
+STEP portless start 2026-10-27T19:26:14Z load { 17.12 11.88 11.69 }
+STEP portless exit=1 end 2026-10-27T19:26:15Z load { 17.12 11.88 11.69 }
+DONE

@@ -1,0 +1,62 @@
+{
+  "source": "50438eca8385d46ac649e319588956a87bb9b7422186c2d52c3a985e9f145461",
+  "candidate": [
+    "<repo>/artifacts/bridge-comparison/bin/rust-production"
+  ],
+  "results": [
+    {
+      "trial": 0,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 2",
+        "session": "tie_session_2"
+      },
+      "error": "trial 0: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 2',\n+   session: 'tie_session_2'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    },
+    {
+      "trial": 1,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 3",
+        "session": "tie_session_3"
+      },
+      "error": "trial 1: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 3',\n+   session: 'tie_session_3'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    },
+    {
+      "trial": 2,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 2",
+        "session": "tie_session_2"
+      },
+      "error": "trial 2: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 2',\n+   session: 'tie_session_2'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    },
+    {
+      "trial": 3,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 0",
+        "session": "tie_session_0"
+      },
+      "error": "trial 3: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 0',\n+   session: 'tie_session_0'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    },
+    {
+      "trial": 4,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 0",
+        "session": "tie_session_0"
+      },
+      "error": "trial 4: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 0',\n+   session: 'tie_session_0'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    },
+    {
+      "trial": 5,
+      "verdict": "failed",
+      "observed": {
+        "label": "Tie 6",
+        "session": "tie_session_6"
+      },
+      "error": "trial 5: last-joined equal-since session owns the host\n+ actual - expected\n\n  {\n+   label: 'Tie 6',\n+   session: 'tie_session_6'\n-   label: 'Tie 7',\n-   session: 'tie_session_7'\n  }\n"
+    }
+  ]
+}

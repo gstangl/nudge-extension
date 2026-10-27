@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-10-27T19:27:31.842Z",
+  "hardware": [
+    "Model Name: MacBook Air",
+    "Model Identifier: Mac14,2",
+    "Chip: Apple M2",
+    "Total Number of Cores: 8 (4 Performance and 4 Efficiency)",
+    "Memory: 24 GB"
+  ],
+  "os": {
+    "product": "26.7.1",
+    "build": "25G241",
+    "kernel": "25.6.0",
+    "arch": "arm64"
+  },
+  "node": {
+    "version": "v26.12.1",
+    "arch": "arm64",
+    "binary": "Mach-O 64-bit executable arm64"
+  },
+  "rustc": [
+    "rustc 1.99.1 (58cf8f9c3 2026-10-13) (Homebrew)",
+    "binary: rustc",
+    "commit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "commit-date: 2026-10-13",
+    "host: aarch64-apple-darwin",
+    "release: 1.99.1",
+    "LLVM version: 23.1.3"
+  ],
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27) (Homebrew)",
+  "git": "git version 2.50.1 (Apple Git-155)",
+  "npm": "11.20.0",
+  "googleChrome": {
+    "path": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "version": "156.0.8078.48",
+    "sha256": "4f71e9dbe725fec1110977b6a6dd0708fb32fbde9c905b4b461cef880ac08288",
+    "binary": "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]\n/Applications/Google Chrome.app/Contents/MacOS/Google Chrome (for architecture x86_64):\tMach-O 64-bit executable x86_64\n/Applications/Google Chrome.app/Contents/MacOS/Google Chrome (for architecture arm64):\tMach-O 64-bit executable arm64"
+  },
+  "playwrightBrowsers": [
+    ".links",
+    "chromium-1228",
+    "chromium_headless_shell-1228",
+    "ffmpeg-1011"
+  ],
+  "excluded": "serial number and hardware UUID deliberately not recorded",
+  "backgroundLoad": "Spotlight indexing (mds_stores) and unrelated user processes were active throughout; load average 5-18 on 8 cores. No other work was stopped.",
+  "isolation": "isolated worktrees, side ports, private stores, throwaway browser profiles; port 4700 was not listening and never used"
+}

@@ -1,0 +1,15 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/origin-headers-1793128832342",
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nDate: Tue, 27 Oct 2026 19:20:32 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n23\r\n{\"error\":\"foreign origin rejected\"}\r\n0\r\n\r\n"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\nDate: Tue, 27 Oct 2026 19:20:32 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n23\r\n{\"error\":\"foreign origin rejected\"}\r\n0\r\n\r\n"
+    }
+  ]
+}

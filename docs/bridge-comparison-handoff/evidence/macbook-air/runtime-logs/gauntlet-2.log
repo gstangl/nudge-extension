@@ -1,0 +1,11 @@
+[nudge-bridge] http://localhost:4722 (demo: /demo) - store: <tmp>/nudge-gauntlet-store
+PASS F1 Flowbite modal (survives toolbar click + in-modal pick, A-8 wild)
+PASS F2 dropdown (item picked, href NOT followed, page stays)
+PASS F3 scroll + table (deep pick rect sane; row 35/40 uniquely addressed)
+PASS F4 transformed parent (selection rect = visual box within 2px)
+PASS F5 shadow DOM (pick retargets to the host element — closed boundary documented)
+PASS F6 z-9999 toast (aggressive page z-index cannot beat the picker)
+[nudge-bridge] stored nudge_1: "[TEST-F7] re-render pick" @ li:nth-of-type(2) [data-testid="todo-item-label"] [suite-f]
+PASS F7 TodoMVC (React re-render between pick and send — selector, rect, text survive)
+
+Suite F — Fixture Gauntlet: ALL PASS

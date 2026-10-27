@@ -1,0 +1,928 @@
+RUN e2e (headless Chromium)
+[nudge-bridge] http://localhost:4720 (demo: /demo) - store: <tmp>/pin-e2e-store
+PASS agent identity (heartbeat label -> /.identity)
+PASS CORS boundary (foreign origin blocked, localhost reflected)
+  [browser] Demo error: SCOP value could not be loaded (test data)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+  [browser] Failed to load resource: the server responded with a status of 404 (Not Found)
+  [browser] WebSocket connection to 'ws://localhost:4720/' failed: WebSocket is closed before the connection is established.
+PASS status check (real extension handshake and current page owner; simulated agent)
+PASS status hint (click dot → state guide, caret aligned, Escape)
+PASS chrome inert (page popover survives pill click, stays pickable)
+PASS pick = mark (selection published, survives Cancel, no nudge created)
+[nudge-bridge] stored nudge_1: "" @ #card-conversion [suite-a]
+[nudge-bridge] discarded nudge_1 — withdrawal sent to suite-a
+PASS empty send = numbered mark (Enter sends, pill shows the number)
+[nudge-bridge] stored nudge_2: "The heat-pump card needs more space from the title." @ #card-conversion [suite-a]
+PASS badge queue popover (open, content, owner shown, Escape)
+PASS pick + chips + styles + net-errors (DOM-only, no screenshot) + badge
+  nudge_2:      "The heat-pump card needs more space from the title." @ #card-conversion (xpath /html/body[1]/section[1]/div[1]/div[2])
+[nudge-bridge] stored nudge_3: "This banner looks lost - wider and with more presence." @ .banner [suite-a]
+PASS lasso (stroke + screenshot; screenshots exclusive to lasso)
+  nudge_3:      "This banner looks lost - wider and with more presence." (stroke 25 points)
+PASS SPA navigation badge refilter (hashchange/popstate)
+  [browser] [groundworks-nudge] capture failed: Error: This request exceeds the MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND quota.
+[nudge-bridge] evidence captured for nudge_3
+PASS lasso evidence loop (resolve -> after-shot; element nudges stay shot-free)
+[nudge-bridge] stored nudge_4: "Swap these two elements." @ #card-conversion li:nth-of-type(1) [suite-a]
+PASS multi-selection (Shift+click -> 2 targets in selection + nudge, outlines transient)
+PASS click convention (plain click resets multi to single)
+[nudge-bridge] stored nudge_5: "" @ #card-source [suite-a]
+[nudge-bridge] discarded nudge_5 — withdrawal sent to suite-a
+PASS queue management (label "what is marked", discard ×, dots lifecycle)
+[nudge-bridge] stored nudge_6: "[TEST] delayed delivery 1" @ #card-source [suite-a]
+[nudge-bridge] stored nudge_7: "[TEST] delayed delivery 2" @ #card-source [suite-a]
+PASS delayed transport accepts two durable prompts promptly and delivers exactly once in order: [1668,1614]
+  [browser] [groundworks-nudge] queue worker did not acknowledge; delivering directly Error: Extension reply timed out
+    at chrome-extension://gfmcalomkoaenmaodfobbgkjbhcpmnec/content.js:25:70
+[nudge-bridge] stored nudge_8: "[TEST] silent worker" @ #card-source [suite-a]
+PASS silent queue worker: prompt delivered directly once (5732 ms)
+PASS runtime-neutral CLI launcher installs and runs
+PASS Claude Code, Codex and Grok replace stale Skills with exact canonical copies
+PASS optional hooks preserve settings and install idempotently for Claude Code and Codex
+
+Nudge agent setup: ALL PASS
+PASS agent wiring in sync (repo = isolated installation)
+RUN fixture-gauntlet (headless Chromium)
+[nudge-bridge] http://localhost:4722 (demo: /demo) - store: <tmp>/nudge-gauntlet-store
+PASS F1 Flowbite modal (survives toolbar click + in-modal pick, A-8 wild)
+PASS F2 dropdown (item picked, href NOT followed, page stays)
+PASS F3 scroll + table (deep pick rect sane; row 35/40 uniquely addressed)
+PASS F4 transformed parent (selection rect = visual box within 2px)
+PASS F5 shadow DOM (pick retargets to the host element — closed boundary documented)
+PASS F6 z-9999 toast (aggressive page z-index cannot beat the picker)
+[nudge-bridge] stored nudge_1: "[TEST-F7] re-render pick" @ li:nth-of-type(2) [data-testid="todo-item-label"] [suite-f]
+PASS F7 TodoMVC (React re-render between pick and send — selector, rect, text survive)
+
+Suite F — Fixture Gauntlet: ALL PASS
+RUN toolbar-ux (headless Chromium)
+[nudge-bridge] http://localhost:4785 (demo: /demo) - store: <tmp>/nudge-uxsuite-store
+[nudge-bridge] owner chosen: Estimate Templates :5175 for localhost:5196
+PASS L1 localhost is a clean pill on the toolbar AND switcher rows, never inline in the name
+PASS L2 connection feed chip shows a clean name + localhost pill (no inline :port)
+[nudge-bridge] stored nudge_1: "note" @ #t [Estimate Templates :5175]
+PASS L3 only one popover open at a time (queue ↔ switch-session are mutually exclusive)
+[nudge-bridge] stored nudge_2: "Make the published state clearly distinguishable from stagin" @ #t [Estimate Templates :5175]
+PASS L10 expanded prompt uses full width below stable metadata and collapses cleanly
+PASS L4 P/F hotkeys switch tools, and are suppressed while typing in a page field
+PASS L5 reduced-motion collapses overlay transitions (no gliding highlight / spinning clock)
+PASS L7 the toolbar stays completely inside the viewport (shrink + its own growth) and returns to its dropped spot
+[nudge-bridge] stored nudge_3: "[TEST] scrollable queue 0" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_4: "[TEST] scrollable queue 1" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_5: "[TEST] scrollable queue 2" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_6: "[TEST] scrollable queue 3" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_7: "[TEST] scrollable queue 4" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_8: "[TEST] scrollable queue 5" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_9: "[TEST] scrollable queue 6" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_10: "[TEST] scrollable queue 7" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_11: "[TEST] scrollable queue 8" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_12: "[TEST] scrollable queue 9" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_13: "[TEST] scrollable queue 10" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_14: "[TEST] scrollable queue 11" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_15: "[TEST] scrollable queue 12" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_16: "[TEST] scrollable queue 13" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_17: "[TEST] scrollable queue 14" @ http://localhost:5196/ [Estimate Templates :5175]
+[nudge-bridge] stored nudge_18: "[TEST] scrollable queue 15" @ http://localhost:5196/ [Estimate Templates :5175]
+PASS L8 bottom-edge queue grows, flips, scrolls with real wheel input and stays inside a narrow viewport
+PASS L9 an already open status menu reflects bridge loss immediately
+PASS L6 an orphaned tab (extension reload) shows the ⌘R hint instead of vanishing silently; click dismisses
+
+Suite L — Toolbar & popover UX: ALL PASS
+RUN page-inertness (headless Chromium)
+PASS M1 near-miss clicks around the toolbar are absorbed — the page modal survives
+PASS M2 a genuine outside click (far from the toolbar) still dismisses the modal — moat stays tight
+PASS M3 clicking a Nudge widget (Pick) does not touch the page modal
+PASS M4 a document capture-phase pointerdown dropdown (à la @roots/ui) stays open when reaching for the toolbar, and Pick still activates
+PASS M5 the pointerdown swallow left our own controls intact (composer typing + grip drag)
+
+Suite M — Page inertness: ALL PASS
+RUN escape-clear (headless Chromium)
+PASS O1 single pick: Escape clears highlight + composer (clean page)
+PASS O2 Shift multi-selection: Escape clears both outlines (clean page)
+PASS O3 lasso: Escape clears the stroke (clean page)
+PASS O4 page eats Escape at window capture: marks still clear
+PASS O5 page eats Escape at document capture: marks still clear
+PASS O6 P/F tool hotkeys still switch when the page owns the keyboard
+PASS O7 Escape disarms the tool AND still reaches the page
+
+Suite O — Escape clears marks: ALL PASS
+RUN multi-select (headless Chromium)
+PASS P1 Shift from the very first click collects 2 elements
+PASS P2 plain click, then Shift+click adds the second element
+PASS P3 a third Shift+click extends the same selection
+PASS P4 Shift+click on a collected element toggles it off
+PASS P5 the typed nudge survives extending the selection
+PASS P6 a plain click resets the multi set to one element
+PASS P7 a deliberate Shift+click right beside the composer still lands
+PASS P8 a region mark stays a region — Shift+click does not fold elements into it
+
+Suite P — Multi-selection: ALL PASS
+RUN reload-resilience (headless Chromium)
+PASS Q1 draft + target survive a page reload
+PASS Q2 the restored mark snaps back onto its live element
+PASS Q3 an element rendered ~1s after load is found inside the retry window
+PASS Q4 element gone: text kept, anchor honestly reported as lost
+PASS Q5 a mark whose element is gone still sends (queued offline, no crash)
+PASS Q6 Escape before the reload leaves nothing to restore
+PASS Q7 a Shift-collected set of elements survives the reload
+PASS Q8 quota failure followed by reload preserves a sendable draft
+PASS Q9 ambiguous acknowledgement survives reload with exactly one queued submission
+PASS Q10 malformed console context cannot leave Send disabled
+Q11 scroll geometry: {"offset":0,"scroll":120,"text":"Keep this draft while scrolling","start":5,"end":9,"focused":true,"disabled":true,"composerMovement":120}
+PASS Q11 page scroll keeps highlight/composer anchored without changing a pending draft
+PASS Q12 nested container scroll keeps the draft beside its target
+PASS Q12 resizing refreshes the live anchor without resetting text
+PASS Q13 scrolling after target removal hides the stale highlight and keeps the draft
+Q14 region geometry: {"before":{"offset":-5,"stroke":307,"composer":307},"nested":{"offset":-5,"stroke":207,"composer":207},"page":{"offset":-5,"stroke":127,"composer":127}}
+PASS Q14 freeform stroke and composer follow nested and page scrolling
+PASS Q14 persisted region uses the same updated coordinates as its visible stroke
+PASS Q14 reload preserves region shape and relocates it with its original target
+Q15 drag geometry: {"before":{"x":301,"y":650,"width":340,"height":293},"dropped":{"x":471,"y":230,"width":340,"height":293}}
+PASS Q15 region/element header dragging, release, scroll, reload, resize and controls
+PASS Q16 changed tab identity and failed first read recover with the exact original submission
+Q17 tip geometry: {"left":400,"lines":1,"error":0,"bottom":761,"correctSide":true}
+Q17 tip geometry: {"left":400,"lines":12,"error":0,"bottom":792,"correctSide":true}
+Q17 tip geometry: {"left":400,"lines":3,"error":0,"bottom":768,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":1,"error":0,"bottom":761,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":12,"error":0,"bottom":792,"correctSide":true}
+Q17 tip geometry: {"left":900,"lines":3,"error":0,"bottom":768,"correctSide":true}
+PASS Q17 measured arrow alignment for growing/shrinking drafts on both sides
+
+Suite Q — Reload resilience: ALL PASS
+RUN amend (headless Chromium)
+[nudge-bridge] http://localhost:4788 (demo: /demo) - store: <tmp>/nudge-amend-store
+[nudge-bridge] stored nudge_1: "The card needs more spacing." @ #t
+[nudge-bridge] amended nudge_1: "and the title one size smaller"
+PASS N1 open nudge takes a follow-up — original immutable, stored with timestamp, inbox mirror carries both
+[nudge-bridge] stored nudge_2: "First thought." @ #t
+[nudge-bridge] amended nudge_2: "second"
+[nudge-bridge] amended nudge_2: "third"
+PASS N2 multiple follow-ups accrue in order; an empty follow-up is rejected (400)
+[nudge-bridge] stored nudge_3: "Almost done." @ #t
+PASS N3 a resolved nudge refuses a follow-up (409, no re-open); unknown id is 404
+[nudge-bridge] stored nudge_4: "Please make the banner wider." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_4: "and with more presence"
+PASS N4 a REAL watcher wakes on the fresh nudge AND re-wakes on the amendment (owning agent sees the follow-up)
+[nudge-bridge] stored nudge_5: "UI nudge to amend." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_5: "one more detail"
+PASS N5 History "+ amend" round-trips: follow-up reaches the store, the "+1" badge shows, and its TEXT is readable under the expanded row
+[nudge-bridge] stored nudge_6: "Second UI nudge." @ #t [Amend-Agent]
+[nudge-bridge] amended nudge_6: "first line
+second line"
+PASS N6 submit contract: Enter sends, Shift+Enter is a newline (not send), the field clears after a successful send
+
+Suite N — Amend: ALL PASS
+RUN cancel (headless Chromium)
+[nudge-bridge] http://localhost:4791 (demo: /demo) - store: <tmp>/nudge-cancel-store
+[nudge-bridge] stored nudge_1: "This needs more spacing." @ #t [Agent A]
+PASS X1 a new nudge reaches the agent in ms — a × is therefore a cancel of RUNNING work, not a tidy-up
+[nudge-bridge] discarded nudge_1 — withdrawal sent to Agent A
+PASS X2 × reaches the working agent — actionable stop line, not just a vanished row
+PASS X4 DELETE answers who was notified + how they wake — the toolbar can stop guessing
+PASS X5 durable trace left behind (id, time, route) — prompt text deliberately gone
+PASS X6 gone from store, inbox and the tab snapshot — the row disappears
+PASS X10 a withdrawn nudge cannot be resolved (404) — no phantom completion
+[nudge-bridge] owner chosen: Agent A for localhost:5191
+[nudge-bridge] owner chosen: Agent B for localhost:5192
+[nudge-bridge] stored nudge_2: "Belongs to A." @ #t [Agent A]
+[nudge-bridge] discarded nudge_2 — withdrawal sent to Agent A
+PASS X3 the withdrawal goes to the owning agent only — B never hears about A's nudge
+[nudge-bridge] stored nudge_3: "Gone again at once." @ #t [Agent B]
+[nudge-bridge] discarded nudge_3 — withdrawal sent to Agent B
+PASS X8 a nudge that never reached this agent produces no stop line — nothing to cancel, no noise
+[nudge-bridge] stored nudge_4: "Already done." @ #t [Agent A]
+[nudge-bridge] discarded nudge_4 — no live recipient confirmed
+PASS X11 discarding a DONE nudge is housekeeping — no stop line, no marker, no false claim
+[nudge-bridge] stored nudge_5: "Pull path." @ #t [Agent A]
+[nudge-bridge] discarded nudge_5 — withdrawal sent to Agent A
+PASS X9 a CLI session sees the withdrawal in its next prompt context — as close to a stop as pull can get
+PASS X9b naming a withdrawn nudge answers "withdrawn", not "never existed" — the ambiguity is gone
+[nudge-bridge] owner chosen: Agent C for localhost:5191
+[nudge-bridge] stored nudge_6: "Without WS." @ #t [Agent C]
+[nudge-bridge] discarded nudge_6 — withdrawal sent to Agent C
+PASS X7 file fallback carries the withdrawal too — a WS-less / restarted watcher still stops
+[nudge-bridge] owner chosen: Agent A for localhost:4791
+[nudge-bridge] stored nudge_7: "This one stays." @ h1 [Agent A]
+[nudge-bridge] stored nudge_8: "Away with it." @ h1 [Agent A]
+[nudge-bridge] owner chosen: Replacement pull agent for localhost:4791
+[nudge-bridge] discarded nudge_8 — withdrawal sent to Agent A
+PASS X12 real × click after owner switch: row leaves, neighbours stay, original push recipient is named and stops
+[nudge-bridge] discarded nudge_7 — withdrawal sent to Agent A
+PASS X12b withdrawing the last nudge closes the popover and clears the badge
+
+Suite X green — the × is a withdrawal now, not a silent delete.
+RUN capture-stall (headless Chromium)
+[nudge-bridge] http://localhost:4795 (demo: /demo) - store: <tmp>/nudge-stall-store
+[nudge-bridge] stored nudge_1: "Healthy path — with picture." @ .banner [suite-y]
+PASS Y1 healthy Freeform: composer opens, screenshot + stroke ship with the nudge
+PASS Y2 stalled capture: composer opens anyway (827 ms) and the toolbar is back
+[nudge-bridge] stored nudge_2: "Stalled — but the nudge still has to go out." @ .banner [suite-y]
+PASS Y3 the nudge ships without the picture — stroke + element context intact
+PASS Y4 honest about it: toast in the feed + a console warning naming the timeout
+[nudge-bridge] stored nudge_3: "Healthy again." @ .banner [suite-y]
+PASS Y5 recovery: once capture works again, screenshots come back — no stuck state left behind
+
+Suite Y green — a stuck screenshot can no longer take the overlay down with it.
+RUN off-means-off (headless Chromium)
+[nudge-bridge] http://localhost:4786 (demo: /demo) - store: <tmp>/nudge-offsuite-store
+[nudge-bridge] owner chosen: Off Suite :5201 for localhost:5201
+PASS Z1 icon click hides the toolbar AND reports inactive — both displays agree
+PASS Z2 off survives reload, a new tab, and a second localhost origin
+PASS Z3 one toggle reaches every open tab live — no reload needed
+PASS Z4 a pushState route change re-announces the state — the icon stays honest
+
+Suite Z — Off means off: ALL PASS
+RUN battletest (headless Chromium)
+[nudge-bridge] http://localhost:4793 (demo: /demo) - store: <tmp>/nudge-battle-store
+[nudge-bridge] owner chosen: Owner-Alpha for *
+[nudge-bridge] stored nudge_1: "[BATTLE] this nudge belongs to Owner-Alpha" @ #g-brand [Owner-Alpha]
+PASS I1 nudge created via the real extension, owned by Owner-Alpha, context captured (#g-brand)
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_2: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] stored nudge_3: "forged by Kidnap-2" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_4: "forged by Kidnap-3" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_5: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_6: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_7: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_8: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_9: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_10: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_11: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_12: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_13: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_14: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_15: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_16: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_17: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_18: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_19: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_20: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_21: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_22: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_23: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_24: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_25: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_26: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_27: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_28: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_29: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_30: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_31: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_32: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_33: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_34: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_35: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_36: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_37: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_38: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_39: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_40: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_41: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_42: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_43: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_44: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_45: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_46: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_47: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_48: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_49: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_50: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_51: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_52: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_53: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_54: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_55: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_56: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_57: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_58: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_59: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_60: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_61: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_62: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_63: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_64: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_65: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_66: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_67: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_68: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_69: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_70: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_71: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_72: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_73: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_74: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_75: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_76: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_77: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_78: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_79: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_80: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_81: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_82: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_83: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_84: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_85: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_86: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_87: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_88: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_89: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_90: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_91: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_92: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_93: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_94: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_95: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_96: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_97: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_98: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_99: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_100: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_101: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_102: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_103: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_104: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_105: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_106: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_107: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_108: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_109: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_110: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_111: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_112: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_113: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_114: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_115: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_116: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_117: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_118: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_119: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_120: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_121: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_122: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_123: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_124: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_125: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_126: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_127: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_128: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_129: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_130: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_131: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_132: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_133: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_134: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_135: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_136: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_137: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_138: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_139: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_140: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_141: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_142: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_143: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_144: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_145: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_146: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_147: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_148: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_149: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_150: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_151: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_152: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_153: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_154: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_155: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_156: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_157: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_158: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_159: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_160: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_161: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_162: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_163: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_164: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_165: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_166: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_167: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_168: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_169: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_170: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_171: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_172: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_173: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_174: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_175: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_176: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_177: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_178: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_179: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_180: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_181: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_182: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_183: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_184: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_185: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_186: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_187: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_188: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_189: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_190: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_191: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_192: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_193: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_194: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_195: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_196: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_197: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_198: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_199: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_200: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_201: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_202: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_203: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_204: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_205: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_206: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_207: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_208: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_209: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_210: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_211: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_212: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_213: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_214: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_215: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_216: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_217: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_218: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_219: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_220: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_221: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_222: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_223: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_224: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_225: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_226: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_227: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_228: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_229: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_230: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_231: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_232: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_233: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_234: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_235: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_236: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_237: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_238: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_239: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_240: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_241: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_242: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_243: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_244: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_245: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_246: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_247: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_248: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_249: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_250: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_251: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_252: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_253: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_254: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_255: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_256: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_257: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_258: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_259: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_260: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_261: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_262: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_263: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_264: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_265: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_266: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_267: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_268: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_269: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_270: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_271: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_272: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_273: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_274: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_275: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_276: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_277: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_278: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_279: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_280: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_281: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_282: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_283: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_284: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_285: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_286: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_287: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_288: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_289: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_290: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_291: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_292: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_293: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_294: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_295: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_296: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_297: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_298: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_299: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_300: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_301: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_302: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_303: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_304: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_305: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_306: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_307: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_308: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_309: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_310: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_311: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_312: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_313: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_314: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_315: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_316: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_317: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_318: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_319: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_320: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_321: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_322: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_323: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_324: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_325: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_326: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_327: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_328: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_329: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_330: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_331: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_332: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_333: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_334: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_335: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_336: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_337: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_338: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_339: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_340: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_341: "forged by Kidnap-4" @ #x [Kidnap-4]
+PASS I2 kidnap storm survived (85 rounds × 4 agents × 5 attack types) — owner + context rock solid
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_342: "[BATTLE2] new nudge under Kidnap-4" @ #g-deep-title [Kidnap-4]
+PASS I3 channel ownership is reassignable, but each nudge keeps ITS owner (old=Alpha, new=Kidnap-4)
+PASS I4 Nudge History shows each nudge's true owner per row (header owner is a kidnapper, the row is not)
+PASS I5 inbox mirror (what the agent reads) carries owner + captured selector + url — no kidnapper can claim it
+
+Suite I — Kidnap Battletest: ALL PASS (the bridge is rock solid)
+Evidence: artifacts/safari/regression-RC8Qt2/report.json

@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "<toolchain>/node",
+    "<js0-worktree>/bridge/bridge.mjs"
+  ],
+  "port": 51024,
+  "store": "<tmp>/nudge-comparison-IvDyLh/store",
+  "pid": 43883,
+  "build": [
+    {
+      "file": "<toolchain>/node",
+      "sha256": "4a8ab2181dd5648befd2d4932bd4ceb9782d8b81fad23ae758ecc4e170e972f9"
+    },
+    {
+      "file": "<js0-worktree>/bridge/bridge.mjs",
+      "sha256": "088cb439c43e2e40ee857f909892823192528dcd5fadb098945e98bc21593533"
+    }
+  ]
+}

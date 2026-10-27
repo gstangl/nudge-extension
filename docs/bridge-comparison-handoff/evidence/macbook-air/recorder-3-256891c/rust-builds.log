@@ -1,0 +1,19 @@
+   Compiling nudge-bridge-experiment v0.1.1 (<repo>/bridge-rust)
+    Finished `release` profile [optimized] target(s) in 7.33s
+   Compiling nudge-bridge-experiment v0.1.1 (<repo>/bridge-rust)
+    Finished `release` profile [optimized] target(s) in 6.66s
+{
+  "production": [
+    {
+      "file": "<repo>/artifacts/bridge-comparison/bin/rust-production",
+      "sha256": "ef5006000d8c4bce710518f5ec8b3e11012feb69d7dbb9e70ecc8403ce22f421"
+    }
+  ],
+  "fault": [
+    {
+      "file": "<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks",
+      "sha256": "beb152cce70a30c09a5aa64cc3b7371f68b2d159815b2704192a2b441dcdba8f"
+    }
+  ],
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (Homebrew)"
+}

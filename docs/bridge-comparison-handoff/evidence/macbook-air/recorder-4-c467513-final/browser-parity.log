@@ -1,0 +1,19 @@
+PASS chromium: fresh extension / HTTP + WS / green pull owner
+PASS chromium: live push/pull changes update the toolbar and open status menu without reload
+PASS chromium: repeated real grip drag and persisted position
+PASS chromium: grip and tool buttons remain usable during Pick and Freeform
+PASS chromium: toolbar remains reachable at all viewport corners and after window resize
+PASS chromium: status popover, Escape, repeated Pick and Cancel
+PASS chromium: DOM pick, typing, send, context and early console/network hook
+PASS chromium: DOM resolve feedback
+PASS chromium: Freeform before/overview/after evidence
+PASS chromium: real keyboard P/F/Escape and editable-field shortcut gating
+PASS chromium: real Shift multi-select, toggle, retained draft and UI send
+PASS chromium: DOM draft, newline and target survive real browser reload
+PASS chromium: real History amendment, multiline entry, immutable owner and withdrawal
+PASS chromium: page outside-click popover survives toolbar controls and near-miss
+PASS chromium: ambiguous RPC acknowledgement survives reload without duplicate or page-visible control tokens
+PASS chromium: transport and DOM send: 127.0.0.1/
+PASS chromium: transport and DOM send: localhost/strict
+Cleanup: test resources
+Evidence: artifacts/safari/chromium-parity-4X6Ls2/report.json

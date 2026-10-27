@@ -1,0 +1,19 @@
+{"at":92.516541,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":114.510166,"kind":"pass","data":"P01"}
+{"at":120.792625,"kind":"pass","data":"R01-stable-owners"}
+{"at":125.676291,"kind":"pass","data":"P02-P03-replay-conflict"}
+{"at":130.148791,"kind":"pass","data":"P04-concurrent-retries"}
+{"at":143.752416,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":158.155291,"kind":"pass","data":"P05-process-crash-replay"}
+{"at":171.054125,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":183.761375,"kind":"pass","data":"P06-withdrawn-replay"}
+{"at":187.495875,"kind":"pass","data":"P07-resolve-amend-owner"}
+{"at":189.308083,"kind":"pass","data":"P13-write-failure-recovery"}
+{"at":194.994291,"kind":"pass","data":"P03-lost-response-after-commit"}
+{"at":198.312708,"kind":"pass","data":"P12-invalid-input-healthy-peer"}
+{"at":224.007166,"kind":"pass","data":"L03-single-writer"}
+{"at":240.2235,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":273.136333,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":301.876416,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":347.162,"kind":"stderr","data":"experimental Rust bridge listening on isolated port 51364\n"}
+{"at":358.434666,"kind":"pass","data":"P15-seeded-reference-model"}

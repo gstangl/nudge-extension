@@ -1,0 +1,57 @@
+{
+  "source": "50438eca8385d46ac649e319588956a87bb9b7422186c2d52c3a985e9f145461",
+  "candidate": [
+    "<toolchain>/node",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "results": [
+    {
+      "trial": 0,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 1,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 2,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 3,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 4,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    },
+    {
+      "trial": 5,
+      "verdict": "passed",
+      "observed": {
+        "label": "Tie 7",
+        "session": "tie_session_7"
+      }
+    }
+  ]
+}

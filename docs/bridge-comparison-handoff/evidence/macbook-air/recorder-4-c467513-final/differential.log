@@ -1,0 +1,25 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/differential-1793128849932",
+  "results": [
+    {
+      "name": "mirror",
+      "verdict": "passed"
+    },
+    {
+      "name": "withdrawal",
+      "verdict": "passed"
+    },
+    {
+      "name": "roster",
+      "verdict": "passed"
+    },
+    {
+      "name": "discovery",
+      "verdict": "passed"
+    },
+    {
+      "name": "selection",
+      "verdict": "passed"
+    }
+  ]
+}

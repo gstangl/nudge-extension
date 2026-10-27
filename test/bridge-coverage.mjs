@@ -19,7 +19,7 @@ const portable=['bridge-boundary','bridge-realtime','browser-protocol','bridge-l
 const browser=['e2e','fixture-gauntlet','toolbar-ux','page-inertness','escape-clear','multi-select','reload-resilience','amend','cancel','capture-stall','off-means-off','battletest']
 const shared=['bridge-conformance','bridge-image-conformance','bridge-retention','bridge-origin-headers','bridge-half-close','bridge-owner-tie','browser-protocol','bridge-boundary','bridge-realtime']
 const direct={'bridge-commit-faults':['commit-fault-js','commit-fault-rust'],'bridge-withdrawal-fault':['withdrawal-fault-js','withdrawal-fault-rust'],'bridge-rollback':['rollback'],'bridge-canonical-retry':['canonical-retry'],'bridge-differential':['differential'],'bridge-mutants':['negative-controls'],'bridge-harness-interrupt':['interrupt'],'browser-coexistence':['browser-coexistence'],'browser-parity':['browser-parity'],'chrome-delivery':['chromium-js','chromium-rust']}
-const diagnostics=(process.argv.flatMap((a,i)=>a==='--diagnostic'?[process.argv[i+1]]:[])).map(entry=>{const [file,report]=entry.split('=');const r=JSON.parse(fs.readFileSync(report,'utf8'));return {file,report,verdict:r.verdict}})
+const diagnostics=(process.argv.flatMap((a,i)=>a==='--diagnostic'?[process.argv[i+1]]:[])).map(entry=>{const [file,report]=entry.split('=');const r=JSON.parse(fs.readFileSync(report,'utf8'));return {file,report,verdict:r.verdict??(Array.isArray(r.results)&&r.results.length&&r.results.every(x=>x.verdict==='passed')?'passed':'failed')}})
 function executors(assertion){
  const file=assertion.split(':')[0].trim(),name=path.basename(file,'.mjs')
  const ids=[]

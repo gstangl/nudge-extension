@@ -1,0 +1,59 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/conformance-1793127743868",
+  "verdict": "passed",
+  "source": "3aa0781fa0723e70520aaeb71d4316a286f96897d3f6c8d4a4d69c3febceb4b5",
+  "argv": [
+    "<toolchain>/node",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "results": [
+    {
+      "id": "P01",
+      "verdict": "passed"
+    },
+    {
+      "id": "R01-stable-owners",
+      "verdict": "passed"
+    },
+    {
+      "id": "P02-P03-replay-conflict",
+      "verdict": "passed"
+    },
+    {
+      "id": "P04-concurrent-retries",
+      "verdict": "passed"
+    },
+    {
+      "id": "P05-process-crash-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P06-withdrawn-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P07-resolve-amend-owner",
+      "verdict": "passed"
+    },
+    {
+      "id": "P13-write-failure-recovery",
+      "verdict": "passed"
+    },
+    {
+      "id": "P03-lost-response-after-commit",
+      "verdict": "passed"
+    },
+    {
+      "id": "P12-invalid-input-healthy-peer",
+      "verdict": "passed"
+    },
+    {
+      "id": "L03-single-writer",
+      "verdict": "passed"
+    },
+    {
+      "id": "P15-seeded-reference-model",
+      "verdict": "passed"
+    }
+  ]
+}

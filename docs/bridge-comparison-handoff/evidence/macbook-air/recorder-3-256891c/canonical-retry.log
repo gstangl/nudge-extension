@@ -1,0 +1,53 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/canonical-retry-1793128132181",
+  "results": [
+    {
+      "id": "js-rust-js/plain",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-rust-js/number_spellings",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-rust-js/unicode_keys",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-rust-js/surrogate_boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-rust-js/falsy_console",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-rust-js/lone_surrogate_body",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/plain",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/number_spellings",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/unicode_keys",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/surrogate_boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/falsy_console",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-js-rust/lone_surrogate_body",
+      "verdict": "passed"
+    }
+  ]
+}

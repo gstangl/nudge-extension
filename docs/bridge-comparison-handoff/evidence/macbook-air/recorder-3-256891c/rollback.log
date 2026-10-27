@@ -1,0 +1,10 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/rollback-1793128131551",
+  "results": [
+    {
+      "id": "M01-M03-current-snapshot-direct-readers",
+      "verdict": "passed",
+      "scope": "Modern v2 receipts, submit/retry/resolve/withdraw and unchanged CLI files; pending browser queue, images and older release range unqualified"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/image-1793126918998",
+  "results": [
+    {
+      "id": "valid-png",
+      "verdict": "passed"
+    },
+    {
+      "id": "jpeg-overview",
+      "verdict": "passed"
+    },
+    {
+      "id": "trailing",
+      "verdict": "passed"
+    },
+    {
+      "id": "truncated-iend",
+      "verdict": "passed"
+    },
+    {
+      "id": "corrupt-iend",
+      "verdict": "passed"
+    }
+  ]
+}

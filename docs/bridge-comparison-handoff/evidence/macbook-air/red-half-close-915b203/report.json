@@ -1,0 +1,55 @@
+{
+  "source": "b2aa804cb63e640029b3a67a53f2bb84dae342835d6fe5955842c96223d1ad91",
+  "argv": [
+    "<repo>/artifacts/bridge-comparison/bin/rust-production"
+  ],
+  "build": [
+    {
+      "file": "<repo>/artifacts/bridge-comparison/bin/rust-production",
+      "sha256": "68468ea5c39fe6c5ea589ae02e535f64b6f89e3cee1f5d08fdd0ed3aa120936e"
+    }
+  ],
+  "results": [
+    {
+      "name": "valid",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 200 OK"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "invalid-utf8",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "valid",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 28,
+      "statuses": [
+        "HTTP/1.1 200 OK",
+        ""
+      ]
+    },
+    {
+      "verdict": "failed",
+      "error": "valid halfClose=true: 28/40 attempts lacked the expected status\n\n28 !== 0\n"
+    }
+  ]
+}

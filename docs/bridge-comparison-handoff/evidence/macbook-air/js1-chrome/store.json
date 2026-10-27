@@ -1,0 +1,2257 @@
+{
+  "seq": 30,
+  "pins": [
+    {
+      "id": "nudge_1",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.259Z",
+      "author": null,
+      "text": "comparison_990e240a2ceb54e95b40c830",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "6570c6ad23364e14b968fee6b86255dd",
+      "submissionId": "0fee9742a8d64926a1edaa75a06c4072",
+      "submissionCreatedAt": "2026-10-27T19:24:25.241Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_2",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.392Z",
+      "author": null,
+      "text": "comparison_feb0a9aab08d7ea3815fc57e",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "642ed097990b46d08477508a4ab702f2",
+      "submissionId": "3d5faeb9966a4dcf85d30545f3c95f17",
+      "submissionCreatedAt": "2026-10-27T19:24:25.374Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_3",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.493Z",
+      "author": null,
+      "text": "comparison_bad5aaf6c1b2a35d163edb5a",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "2296eb9a179f41b2912e78939e14ecb5",
+      "submissionId": "69d42e5b8f794f76a9fd2653fc840038",
+      "submissionCreatedAt": "2026-10-27T19:24:25.474Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_4",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.642Z",
+      "author": null,
+      "text": "comparison_276250074b87a37e11f4eaf6",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "bf6e6aae6bca4465b2729e45684ca38a",
+      "submissionId": "a63b5a8e01484af88968f2f6348a6b05",
+      "submissionCreatedAt": "2026-10-27T19:24:25.624Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_5",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.792Z",
+      "author": null,
+      "text": "comparison_c6b5252fdd9aa88c4233ba3d",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "7141797d2dc941a59c04767c25ca1fff",
+      "submissionId": "ae006ba1e2f04396a782958fd084bf66",
+      "submissionCreatedAt": "2026-10-27T19:24:25.774Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_6",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:25.959Z",
+      "author": null,
+      "text": "comparison_7b04d73757c12e4884842dc7",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "5ef9e65a06c14be3b29b1a963762a738",
+      "submissionId": "5892972d891549d6a83d91c15bd1992b",
+      "submissionCreatedAt": "2026-10-27T19:24:25.941Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_7",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.110Z",
+      "author": null,
+      "text": "comparison_c3d0cf0e476971390ff72baa",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "7511ae7b1c064968847c6ab8b5edc3cc",
+      "submissionId": "8fcbe813eefe4d898fbbcb58b9df9bb2",
+      "submissionCreatedAt": "2026-10-27T19:24:26.090Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_8",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.259Z",
+      "author": null,
+      "text": "comparison_42f8e848a5a4c6cef6b34b91",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "3dab6710988046329ea4197d92465d00",
+      "submissionId": "a9a93b687d8f4114a5e2ea456a94e988",
+      "submissionCreatedAt": "2026-10-27T19:24:26.240Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_9",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.426Z",
+      "author": null,
+      "text": "comparison_8e4ddbcc982252b0ee073d60",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "b3c125c8b0a34537bdb0d667960e5679",
+      "submissionId": "0bcbc978bc2e4bdbb992c15f3dba9d05",
+      "submissionCreatedAt": "2026-10-27T19:24:26.407Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_10",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.592Z",
+      "author": null,
+      "text": "comparison_c84a19d172cba3b0007acec6",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "ca2c89471fd04694903dbe41a1ea9119",
+      "submissionId": "d91762b063e0454d85705bd03c974a1d",
+      "submissionCreatedAt": "2026-10-27T19:24:26.575Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_11",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.726Z",
+      "author": null,
+      "text": "comparison_61248a79d6e8193acc74901c",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "a3d9eb0a7137404799ce60aa08289043",
+      "submissionId": "fa40d348447c48afa469666cc7cf64a7",
+      "submissionCreatedAt": "2026-10-27T19:24:26.708Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_12",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:26.913Z",
+      "author": null,
+      "text": "comparison_9f109a520c5f554adfa70f36",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "5e747199c7794d13ac915c28bc36a9de",
+      "submissionId": "5a8eab1fee80414ca0f6f1cefcf30298",
+      "submissionCreatedAt": "2026-10-27T19:24:26.891Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_13",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.093Z",
+      "author": null,
+      "text": "comparison_64034a59f28584b99410af8d",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "8c0fb3096e814af8aec1f0abb1a69252",
+      "submissionId": "88856f71ba394d1aa15631ad9c2f3f16",
+      "submissionCreatedAt": "2026-10-27T19:24:27.076Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_14",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.276Z",
+      "author": null,
+      "text": "comparison_41bcc4c6f22c0ec9734230b0",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "9213d6bb4a95485fa911048fe3f7e036",
+      "submissionId": "78a0bcea3418409094c5711dcdd936c3",
+      "submissionCreatedAt": "2026-10-27T19:24:27.258Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_15",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.459Z",
+      "author": null,
+      "text": "comparison_9b204dd2a3f6ab34256bedcb",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "9904626dc99845ed9f21cb87d1fc7903",
+      "submissionId": "90064cf1e9d040a39c93bc9e5cdbb0b4",
+      "submissionCreatedAt": "2026-10-27T19:24:27.441Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_16",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.642Z",
+      "author": null,
+      "text": "comparison_182666d5a465f88234c3955d",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "a9b7aea33115473db3d2ec8c9e4f857f",
+      "submissionId": "836c4c95c144492b836d032335852ab0",
+      "submissionCreatedAt": "2026-10-27T19:24:27.625Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_17",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.776Z",
+      "author": null,
+      "text": "comparison_8c3c94a3f9f2ae63dd776514",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "8ca2e30d04fb4b33b56132a44cefa296",
+      "submissionId": "1e3538acb73845d1b7d63a27f2649af1",
+      "submissionCreatedAt": "2026-10-27T19:24:27.758Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_18",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:27.942Z",
+      "author": null,
+      "text": "comparison_da2e6cc5bd34f2f6351edd89",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "cc402da179524de18c7857c23f47f610",
+      "submissionId": "0cbcd4cede794894b7d49c1f985b259c",
+      "submissionCreatedAt": "2026-10-27T19:24:27.925Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_19",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:28.126Z",
+      "author": null,
+      "text": "comparison_5e201561d7987fb282692bd0",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "15c65f64f73b434da28cdfbf26fd79a6",
+      "submissionId": "e96402bc456a4b37a02f0cc9eb4d8057",
+      "submissionCreatedAt": "2026-10-27T19:24:28.108Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_20",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:28.310Z",
+      "author": null,
+      "text": "comparison_ee2d6a29ef972ca0d66bb370",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "db21908797094c908d7d903c6e21fc86",
+      "submissionId": "440a611dfd3447d69de5b068ec6a8ffe",
+      "submissionCreatedAt": "2026-10-27T19:24:28.292Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_21",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:28.494Z",
+      "author": null,
+      "text": "comparison_a59c6dee5cbb58c45c236a95",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "66a57979a7e845368cf3e50ec1893e70",
+      "submissionId": "cf011b457a1b4664b8260a7a571676cf",
+      "submissionCreatedAt": "2026-10-27T19:24:28.475Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_22",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:28.676Z",
+      "author": null,
+      "text": "comparison_d2152455079d31f70e8c21a9",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "c38397a987e04367a318881f73b00e0d",
+      "submissionId": "336ed4d441a245e38217df71d14eab28",
+      "submissionCreatedAt": "2026-10-27T19:24:28.658Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_23",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:28.843Z",
+      "author": null,
+      "text": "comparison_4832504472c6c52144b23bfe",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "5d0bbec4d9f041efa9704aa17f12ddc7",
+      "submissionId": "93f683693c784ff4be378270b82e8c2e",
+      "submissionCreatedAt": "2026-10-27T19:24:28.825Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_24",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.009Z",
+      "author": null,
+      "text": "comparison_193e11024ee1a6da9f4e844c",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "e1e78f98fe884f3690797a8bff135d7d",
+      "submissionId": "9aee0255ec254975b96f8f4cc207768d",
+      "submissionCreatedAt": "2026-10-27T19:24:28.991Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_25",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.176Z",
+      "author": null,
+      "text": "comparison_df13d0992b9786d5277ec65e",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "401b7219121849d8a54e3c909f745627",
+      "submissionId": "7786348e52fc4b408e2f6909fe0876ec",
+      "submissionCreatedAt": "2026-10-27T19:24:29.158Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_26",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.359Z",
+      "author": null,
+      "text": "comparison_66cb477f23c13033d8032252",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "27bbe476c43d4710937159e2409884e6",
+      "submissionId": "5b6e1640f9fe488fb52faa9f4365ac9a",
+      "submissionCreatedAt": "2026-10-27T19:24:29.341Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_27",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.526Z",
+      "author": null,
+      "text": "comparison_e7400176ada019fbc2f6ae2f",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "adfe0d53852d40aeab49b11b99efa148",
+      "submissionId": "5680a73cdcb748a9a49a465e731a5ce9",
+      "submissionCreatedAt": "2026-10-27T19:24:29.508Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_28",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.709Z",
+      "author": null,
+      "text": "comparison_ca0e575b8463f5bf7e26ef01",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "6de758fcde7d42708728c40eec492c95",
+      "submissionId": "e8fb8e9a4ab0417ea5fa90c5ad290a03",
+      "submissionCreatedAt": "2026-10-27T19:24:29.692Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_29",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:29.876Z",
+      "author": null,
+      "text": "comparison_bb3599462641c0a43e0ed3dc",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "c919cb9b395d42b9a47f291ff5e78120",
+      "submissionId": "36e4c1c33fc04ce99657fdf03f9387bb",
+      "submissionCreatedAt": "2026-10-27T19:24:29.859Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    },
+    {
+      "id": "nudge_30",
+      "status": "open",
+      "createdAt": "2026-10-27T19:24:30.043Z",
+      "author": null,
+      "text": "comparison_1fb6f1f7e4028d115a46df4d",
+      "url": "http://localhost:51077/demo",
+      "title": "Nudge — Demo",
+      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "owner": {
+        "label": "comparison_alpha",
+        "session": "comparison_alpha"
+      },
+      "browserSource": {
+        "browser": "chrome",
+        "session": "7ba6adeb55ca4766beda23aedb61f41e",
+        "tab": "6863142bfe004c5c84f6564fe2efd63a",
+        "document": "23ded561f38b48c0b5d2931baf116baf"
+      },
+      "selectionGeneration": "273c6161742e40fcaf1d4da57585460c",
+      "submissionId": "a63a0e4401ed441cbbd0b73bc4015f52",
+      "submissionCreatedAt": "2026-10-27T19:24:30.025Z",
+      "viewport": {
+        "w": 1280,
+        "h": 900,
+        "dpr": 1
+      },
+      "target": {
+        "selector": "#card-conversion",
+        "source": "src/components/Card.astro:8:2",
+        "xpath": "/html/body[1]/section[1]/div[1]/div[2]",
+        "innerText": "CONVERSION Heat pump Centralised or decentralised",
+        "outerHTML": "<div class=\"card\" id=\"card-conversion\" data-astro-source-file=\"src/components/Card.astro\" data-astro-source-loc=\"8:2\">\n        <div class=\"tag\">Conversion</div>\n        <h3>Heat pump</h3>\n        <ul><li><span>Centralised</span><span></span></li><li><span>or decentralised</span><span></span></li></ul>\n      </div>",
+        "styles": {
+          "box": {
+            "borderRadius": "0px",
+            "display": "block",
+            "height": "183.5px",
+            "margin": "0px",
+            "padding": "20px",
+            "width": "310.664px"
+          },
+          "surface": {
+            "backgroundColor": "rgb(255, 255, 255)"
+          },
+          "typography": {
+            "color": "rgb(26, 26, 26)",
+            "fontFamily": "-apple-system, \"Helvetica Neue\", sans-serif",
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "textAlign": "start"
+          }
+        },
+        "rect": {
+          "x": 484.6640625,
+          "y": 375.296875,
+          "w": 310.6640625,
+          "h": 183.5
+        }
+      },
+      "targets": null,
+      "annotations": null,
+      "console": [
+        "[error] Demo error: SCOP value could not be loaded (test data)",
+        "[net] GET /api/scop-values -> 404"
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "submissionId": "0fee9742a8d64926a1edaa75a06c4072",
+      "signature": "7d2c7455c91945bd91d9eb45619213146edad825d8dc0decf77221d9c87a1616",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.241Z",
+      "withdrawn": false,
+      "id": "nudge_1"
+    },
+    {
+      "submissionId": "3d5faeb9966a4dcf85d30545f3c95f17",
+      "signature": "4f1629bb114c4d8c3961c4d5e700738ede46b31626f0297b9c674f3e77d3743e",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.374Z",
+      "withdrawn": false,
+      "id": "nudge_2"
+    },
+    {
+      "submissionId": "69d42e5b8f794f76a9fd2653fc840038",
+      "signature": "6fa1f7d3b28eb7fd72ef58bf8f06a56148a2c7d671a91722f05383fd90c41d64",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.474Z",
+      "withdrawn": false,
+      "id": "nudge_3"
+    },
+    {
+      "submissionId": "a63b5a8e01484af88968f2f6348a6b05",
+      "signature": "9bb086c6688dce0512c108a5cda060f0c2281c588429b622e555d259f35eff30",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.624Z",
+      "withdrawn": false,
+      "id": "nudge_4"
+    },
+    {
+      "submissionId": "ae006ba1e2f04396a782958fd084bf66",
+      "signature": "0f796f655a5b1d983447b741711439ac8d7a265a5f3f2bcc92ad50b4e94617a9",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.774Z",
+      "withdrawn": false,
+      "id": "nudge_5"
+    },
+    {
+      "submissionId": "5892972d891549d6a83d91c15bd1992b",
+      "signature": "5c854106b060020a8293a28c2061eddabfe4ab0bb43f0d4359ad08326c27ad1c",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:25.941Z",
+      "withdrawn": false,
+      "id": "nudge_6"
+    },
+    {
+      "submissionId": "8fcbe813eefe4d898fbbcb58b9df9bb2",
+      "signature": "6d86f2162d4fff89498307b3cb6ed5e6e2ccd4156f514cdfbdad61be864d7efa",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.090Z",
+      "withdrawn": false,
+      "id": "nudge_7"
+    },
+    {
+      "submissionId": "a9a93b687d8f4114a5e2ea456a94e988",
+      "signature": "2e9e862a56049b943b6592d2913b79036b0c4a68214282fcaf3e95697a1e317d",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.240Z",
+      "withdrawn": false,
+      "id": "nudge_8"
+    },
+    {
+      "submissionId": "0bcbc978bc2e4bdbb992c15f3dba9d05",
+      "signature": "69037b6b7b7d38b983ab3558ea9295be094b08f9f6e14ac9bd927bf18619d5ef",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.407Z",
+      "withdrawn": false,
+      "id": "nudge_9"
+    },
+    {
+      "submissionId": "d91762b063e0454d85705bd03c974a1d",
+      "signature": "f200edd2d812cc18f86c38d5505a2684e760e6703c1d6b8a41eff289c771bf46",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.575Z",
+      "withdrawn": false,
+      "id": "nudge_10"
+    },
+    {
+      "submissionId": "fa40d348447c48afa469666cc7cf64a7",
+      "signature": "c6cdd3ac0b7962d174b46f2152aaf1f1412635ec51da11ab3d25d62b7a317971",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.708Z",
+      "withdrawn": false,
+      "id": "nudge_11"
+    },
+    {
+      "submissionId": "5a8eab1fee80414ca0f6f1cefcf30298",
+      "signature": "db311178d0f0abd2a3d4bebad3334be0e2aebfc123370821a5d89e8401a04e66",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:26.891Z",
+      "withdrawn": false,
+      "id": "nudge_12"
+    },
+    {
+      "submissionId": "88856f71ba394d1aa15631ad9c2f3f16",
+      "signature": "a1e89ee441d9782ec0252b6e1eaa46a9bcaf2587e3484a3c2fb3d00822c17d09",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.076Z",
+      "withdrawn": false,
+      "id": "nudge_13"
+    },
+    {
+      "submissionId": "78a0bcea3418409094c5711dcdd936c3",
+      "signature": "6eeedc9413bab5806897f567343e98d319406389b1727d7436145290c0e90a40",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.258Z",
+      "withdrawn": false,
+      "id": "nudge_14"
+    },
+    {
+      "submissionId": "90064cf1e9d040a39c93bc9e5cdbb0b4",
+      "signature": "a52d6ff3127bb6f8b0b6e41d7d30031f3ec1a25f4a42f0e0c87fb0cb88860867",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.441Z",
+      "withdrawn": false,
+      "id": "nudge_15"
+    },
+    {
+      "submissionId": "836c4c95c144492b836d032335852ab0",
+      "signature": "45a1fbfdf36a0f66631a902a42b0771b700d7a5a8ad43bf2050e21dc6ba6575a",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.625Z",
+      "withdrawn": false,
+      "id": "nudge_16"
+    },
+    {
+      "submissionId": "1e3538acb73845d1b7d63a27f2649af1",
+      "signature": "246b9b2e0b52b0bbcbf62cc617817b9ea50124704e32ee1ba995c3abc3b85500",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.758Z",
+      "withdrawn": false,
+      "id": "nudge_17"
+    },
+    {
+      "submissionId": "0cbcd4cede794894b7d49c1f985b259c",
+      "signature": "98327e98b25c50f5a34609018923e72e32c419c3978aa804ecf79803745e95ac",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:27.925Z",
+      "withdrawn": false,
+      "id": "nudge_18"
+    },
+    {
+      "submissionId": "e96402bc456a4b37a02f0cc9eb4d8057",
+      "signature": "f73f96f6f42cc245a1153d2175d039808084176cacbe65846fcaca27fb330e3b",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.108Z",
+      "withdrawn": false,
+      "id": "nudge_19"
+    },
+    {
+      "submissionId": "440a611dfd3447d69de5b068ec6a8ffe",
+      "signature": "3862eb417e6338dc6a7d86074a2077be3e354fba2887e0fefcdf855899aa7d9e",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.292Z",
+      "withdrawn": false,
+      "id": "nudge_20"
+    },
+    {
+      "submissionId": "cf011b457a1b4664b8260a7a571676cf",
+      "signature": "3bbd0c8b63255c80eeab149704a707aa33e64cf555657bd9d8d28f0003850886",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.475Z",
+      "withdrawn": false,
+      "id": "nudge_21"
+    },
+    {
+      "submissionId": "336ed4d441a245e38217df71d14eab28",
+      "signature": "dcb956990e26bb2cfb3ba2af1a03b63620880703f28d4cbd9df692dc4f6aa579",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.658Z",
+      "withdrawn": false,
+      "id": "nudge_22"
+    },
+    {
+      "submissionId": "93f683693c784ff4be378270b82e8c2e",
+      "signature": "469c0714a6e370b628a93582ceb82ff1351ba7ae1e384ad4640bc5f7ca1cbccc",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.825Z",
+      "withdrawn": false,
+      "id": "nudge_23"
+    },
+    {
+      "submissionId": "9aee0255ec254975b96f8f4cc207768d",
+      "signature": "ff0b083e3a5d2710e43bef19e56fe28735336648bb96c5b33c02b7fc417f1b15",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:28.991Z",
+      "withdrawn": false,
+      "id": "nudge_24"
+    },
+    {
+      "submissionId": "7786348e52fc4b408e2f6909fe0876ec",
+      "signature": "8db41a2c89eb272d922f7ba41c585e3857801057bd20eafac9219d150da5b211",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:29.158Z",
+      "withdrawn": false,
+      "id": "nudge_25"
+    },
+    {
+      "submissionId": "5b6e1640f9fe488fb52faa9f4365ac9a",
+      "signature": "ebd0e1183eb01bfb141da6246f7a866b0596662e726b2c5e0bc39e30d25855af",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:29.341Z",
+      "withdrawn": false,
+      "id": "nudge_26"
+    },
+    {
+      "submissionId": "5680a73cdcb748a9a49a465e731a5ce9",
+      "signature": "9e1e3c2833bfa1501380a2e96238428809337e49d23cc5dfd4c1ba9434f68cd0",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:29.508Z",
+      "withdrawn": false,
+      "id": "nudge_27"
+    },
+    {
+      "submissionId": "e8fb8e9a4ab0417ea5fa90c5ad290a03",
+      "signature": "9ee4685fbef4be0eccac02054228f042220fb120b720c84f0c8ffca0f643c74e",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:29.692Z",
+      "withdrawn": false,
+      "id": "nudge_28"
+    },
+    {
+      "submissionId": "36e4c1c33fc04ce99657fdf03f9387bb",
+      "signature": "58aaae48c95d15e26cc1735ac022d422831e48923217045d5a398363cb3f49cf",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:29.859Z",
+      "withdrawn": false,
+      "id": "nudge_29"
+    },
+    {
+      "submissionId": "a63a0e4401ed441cbbd0b73bc4015f52",
+      "signature": "bdf3af72da47c977d0a2cefd0a70de8581aeffc532fa1e6ad15196c0dd2b4c5d",
+      "signatureVersion": 2,
+      "createdAt": "2026-10-27T19:24:30.025Z",
+      "withdrawn": false,
+      "id": "nudge_30"
+    }
+  ]
+}

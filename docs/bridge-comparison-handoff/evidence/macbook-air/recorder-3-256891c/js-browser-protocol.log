@@ -1,0 +1,21 @@
+[nudge-bridge] http://localhost:4821 (demo: /demo) - store: <tmp>/nudge-browser-protocol-XBTCyt
+PASS foreign HTTP origin is rejected before mutation
+PASS incomplete source and submission identities cannot downgrade to legacy
+[nudge-bridge] stored nudge_1: "source-bound" @ #target
+PASS submission retry is exactly-once and content conflicts
+[nudge-bridge] evidence captured for nudge_1
+PASS source-bound after evidence rejects wrong documents and accepts exact duplicate delivery
+[nudge-bridge] stored nudge_2: "pending evidence" @ http://localhost:5322/fixture
+[nudge-bridge] evidence captured for nudge_2
+PASS private requests follow same-tab reload/query continuity, invalidate old documents and retain original plus accepted provenance
+[nudge-bridge] stored nudge_3: "pending evidence" @ http://localhost:5322/fixture
+[nudge-bridge] evidence captured for nudge_3
+PASS route/hash/closed source defer without cross-tab fallback; visibility hello retries invalidate prior requests
+[nudge-bridge] discarded nudge_1 — no live recipient confirmed
+PASS withdrawn submission receipt cannot resurrect a nudge
+[nudge-bridge] stored nudge_4: "pending evidence" @ http://localhost:5322/fixture
+[nudge-bridge] http://localhost:4821 (demo: /demo) - store: <tmp>/nudge-browser-protocol-XBTCyt
+[nudge-bridge] evidence captured for nudge_4
+PASS restart reconstructs pending evidence with fresh tokens and preserves withdrawal receipts
+[nudge-bridge] stored nudge_5: "legacy" @ http://localhost:5322/fixture
+PASS legacy evidence retains resolved-before-image eligibility without claiming browser provenance

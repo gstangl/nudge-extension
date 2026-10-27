@@ -1,0 +1,91 @@
+
+> nudge-test@1.0.0 test:ci
+> npm test && npm run test:runtime && npm run test:setup
+
+
+> nudge-test@1.0.0 test
+> vitest run
+
+
+ RUN  v3.2.7 <repo>/test
+
+ ✓ unit/images.test.mjs (22 tests) 44ms
+stderr | unit/store.test.mjs > store.mjs — corrupt-store recovery > backs up a wrong-shape store.json, restarts empty, and floors seq from the inbox mirror
+[nudge-store] store.json UNUSABLE (wrong shape) — backed up to <tmp>/nudge-store-unit-66063/store.json.corrupt-1793127590218, starting empty at seq 2
+
+ ✓ unit/queue.test.mjs (27 tests) 65ms
+ ✓ unit/store.test.mjs (29 tests) 66ms
+ ✓ unit/package-runtime.test.mjs (5 tests) 208ms
+ ✓ unit/preview-hosts.test.mjs (9 tests) 226ms
+ ✓ unit/lifecycle.test.mjs (7 tests) 319ms
+ ✓ unit/capture-identity.test.mjs (28 tests) 33ms
+ ✓ unit/selection.test.mjs (20 tests) 44ms
+ ✓ unit/connection-generation.test.mjs (5 tests) 32ms
+ ✓ unit/status-check.test.mjs (10 tests) 474ms
+   ✓ read-only Nudge readiness > keeps setup checks under status and does not expose a separate retired command  447ms
+ ✓ unit/delivery-ledger.test.mjs (2 tests) 47ms
+ ✓ unit/bridge-catalog.test.mjs (2 tests) 9ms
+ ✓ unit/draft-retry.test.mjs (15 tests) 95ms
+stderr | unit/toolbar-toggle.test.mjs > native toolbar activation startup > registers action and shortcut handlers before fallible icon initialization
+[groundworks-nudge] initial toolbar icon unavailable Error: Icon renderer unavailable
+    at new Canvas [90m(<repo>/test/[39munit/toolbar-toggle.test.mjs:25:43[90m)[39m
+    at drawCrosshairIcon (evalmachine.<anonymous>:265:13)
+    at iconImages (evalmachine.<anonymous>:282:57)
+    at evalmachine.<anonymous>:288:54
+[90m    at Script.runInContext (node:vm:150:12)[39m
+[90m    at Script.runInNewContext (node:vm:155:17)[39m
+[90m    at Object.runInNewContext (node:vm:311:38)[39m
+    at harness [90m(<repo>/test/[39munit/toolbar-toggle.test.mjs:30:8[90m)[39m
+    at [90m<repo>/test/[39munit/toolbar-toggle.test.mjs:41:15
+    at [90mfile://<repo>/test/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:155:11
+
+ ✓ unit/toolbar-toggle.test.mjs (4 tests) 9ms
+ ✓ unit/bridge-candidate.test.mjs (2 tests) 7ms
+ ✓ unit/images-store.test.mjs (4 tests) 37ms
+ ✓ unit/toolbar-action.test.mjs (10 tests) 9ms
+ ✓ unit/after-retry.test.mjs (5 tests) 14ms
+ ✓ unit/http-boundary.test.mjs (43 tests) 11ms
+ ✓ unit/runtime.test.mjs (5 tests) 6ms
+
+ Test Files  20 passed (20)
+      Tests  254 passed (254)
+   Start at  19:59:49
+   Duration  1.35s (transform 205ms, setup 0ms, collect 850ms, tests 1.76s, environment 2ms, prepare 1.38s)
+
+
+> nudge-test@1.0.0 test:runtime
+> node runtime-neutral.mjs
+
+[nudge-bridge] http://localhost:4817 (demo: /demo) - store: <tmp>/nudge-runtime-integration-APDmoB
+PASS Codex identity reaches the shared roster with runtime, surface, and pull capability
+PASS status without checks and identity retain the existing bridge response
+PASS status check observes the real bridge and current session without asserting a browser installation
+[nudge-bridge] stored nudge_1: "Tighten this spacing" @ .card [Runtime parity]
+PASS CLI reads the shared store and scopes the queue to the Codex owner and port
+PASS open pill reference resolves to full browser context
+PASS hook opt-in stays silent for foreign Codex sessions and works for the armed one
+PASS resolve persists completion and reports the correct evidence requirement
+[nudge-bridge] stored nudge_2: "[TEST] exact port scope" @ http://localhost:5175/exact [Runtime parity]
+[nudge-bridge] stored nudge_3: "[TEST] exact port scope" @ http://localhost:51750/prefix [Runtime parity]
+[nudge-bridge] stored nudge_4: "[TEST] exact port scope" @ http://localhost:5199/?from=:5175 [Runtime parity]
+[nudge-bridge] stored nudge_5: "[TEST] exact port scope" @ http://localhost:80/explicit [Runtime parity]
+[nudge-bridge] stored nudge_6: "[TEST] exact port scope" @ http://localhost/implicit [Runtime parity]
+[nudge-bridge] stored nudge_7: "[TEST] exact port scope" @ http://localhost:8000/prefix [Runtime parity]
+[nudge-bridge] discarded nudge_2 — withdrawal sent to Runtime parity
+[nudge-bridge] discarded nudge_3 — withdrawal sent to Runtime parity
+[nudge-bridge] discarded nudge_4 — withdrawal sent to Runtime parity
+[nudge-bridge] discarded nudge_5 — withdrawal sent to Runtime parity
+[nudge-bridge] discarded nudge_6 — withdrawal sent to Runtime parity
+[nudge-bridge] discarded nudge_7 — withdrawal sent to Runtime parity
+PASS CLI queue and withdrawals use exact URL ports, not port prefixes or query text
+
+Runtime-neutral Nudge integration: ALL PASS
+
+> nudge-test@1.0.0 test:setup
+> node setup-agent.mjs
+
+PASS runtime-neutral CLI launcher installs and runs
+PASS Claude Code, Codex and Grok replace stale Skills with exact canonical copies
+PASS optional hooks preserve settings and install idempotently for Claude Code and Codex
+
+Nudge agent setup: ALL PASS

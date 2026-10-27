@@ -1,0 +1,16 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/origin-headers-1793126924744",
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 18:48:44 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: malformed Origin must not become missing Origin\n    at file://<repo>/test/bridge-origin-headers.mjs:11:14\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+      "response": ""
+    }
+  ]
+}

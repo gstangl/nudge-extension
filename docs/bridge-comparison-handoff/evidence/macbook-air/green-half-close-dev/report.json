@@ -1,0 +1,68 @@
+{
+  "source": "b2aa804cb63e640029b3a67a53f2bb84dae342835d6fe5955842c96223d1ad91",
+  "argv": [
+    "./bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "build": [
+    {
+      "file": "<dev-worktree>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "b7c93efbf145c645585d09a1413d649259f3a1af6f85d3606be7c39780c0566a"
+    }
+  ],
+  "results": [
+    {
+      "name": "valid",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 200 OK"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "invalid-utf8",
+      "halfClose": false,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "valid",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 200 OK"
+      ]
+    },
+    {
+      "name": "duplicate",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    },
+    {
+      "name": "invalid-utf8",
+      "halfClose": true,
+      "attempts": 40,
+      "missing": 0,
+      "statuses": [
+        "HTTP/1.1 403 Forbidden"
+      ]
+    }
+  ]
+}

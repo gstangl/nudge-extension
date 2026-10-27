@@ -1,0 +1,15 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/retention-1793128123510",
+  "verdict": "passed",
+  "source": "40aae9874383c2036609babc124ed248a7844c80f74058126c810278ed3266fd",
+  "argv": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "ef5006000d8c4bce710518f5ec8b3e11012feb69d7dbb9e70ecc8403ce22f421"
+    }
+  ],
+  "scope": "P09/P10 old open preserved, old resolved pruned, unknown-age receipt retained, ID never reused, old withdrawal marker collected"
+}

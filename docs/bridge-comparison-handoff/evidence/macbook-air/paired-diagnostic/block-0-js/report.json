@@ -1,0 +1,24 @@
+{
+  "verdict": "passed",
+  "boundary": "T0 dispatch -> TW unchanged watcher stdout; includes input/pipe observer cost",
+  "queueBoundary": "composer hidden: UI acknowledgement upper bound only; TQ storage acknowledgement not instrumented",
+  "actualAgentReceipt": "unavailable",
+  "wake": "pull",
+  "intentionalWaitMs": null,
+  "source": "043f31cf886cf6ec9ccb401a002eb05c1fb78654a81725d310504453b3975852",
+  "browser": "chrome",
+  "statistics": {
+    "attempts": 20,
+    "successful": 20,
+    "failed": 0,
+    "p50": 20.604542000000038,
+    "p95": 23.0012499999998,
+    "p99": 61.08162500000003,
+    "max": 61.08162500000003
+  },
+  "reconciliation": {
+    "attempted": 20,
+    "stored": 20,
+    "failed": 0
+  }
+}

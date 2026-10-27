@@ -1,0 +1,40 @@
+{"at":201.224459,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":219.665334,"kind":"pass","data":"P01"}
+{"at":234.574459,"kind":"stderr","data":"[nudge-bridge] stored nudge_1: \"Reference owner_a\" @ #reference [session_alpha]\n"}
+{"at":236.348417,"kind":"stderr","data":"[nudge-bridge] stored nudge_2: \"Reference owner_b\" @ #reference [session_beta]\n"}
+{"at":236.786459,"kind":"pass","data":"R01-stable-owners"}
+{"at":237.868584,"kind":"stderr","data":"[nudge-bridge] stored nudge_3: \"Reference a\" @ #reference [session_alpha]\n"}
+{"at":243.58425,"kind":"pass","data":"P02-P03-replay-conflict"}
+{"at":246.092,"kind":"stderr","data":"[nudge-bridge] stored nudge_4: \"Reference race\" @ #reference [session_alpha]\n"}
+{"at":247.958209,"kind":"pass","data":"P04-concurrent-retries"}
+{"at":343.14625,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":365.150334,"kind":"pass","data":"P05-process-crash-replay"}
+{"at":366.5205,"kind":"stderr","data":"[nudge-bridge] discarded nudge_3 — no live recipient confirmed\n"}
+{"at":459.08075,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":480.218875,"kind":"pass","data":"P06-withdrawn-replay"}
+{"at":481.711709,"kind":"stderr","data":"[nudge-bridge] stored nudge_5: \"Reference resolve\" @ #reference\n"}
+{"at":482.846792,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"First amendment\"\n"}
+{"at":483.631084,"kind":"stderr","data":"[nudge-bridge] amended nudge_5: \"Second amendment\"\n"}
+{"at":484.972292,"kind":"pass","data":"P07-resolve-amend-owner"}
+{"at":486.628292,"kind":"stderr","data":"[nudge-bridge] stored nudge_6: \"Reference write_fault\" @ #reference\n"}
+{"at":487.406,"kind":"pass","data":"P13-write-failure-recovery"}
+{"at":491.43,"kind":"stderr","data":"[nudge-bridge] stored nudge_7: \"Reference lost_reply\" @ #reference\n"}
+{"at":493.003584,"kind":"pass","data":"P03-lost-response-after-commit"}
+{"at":497.693167,"kind":"stderr","data":"[nudge-bridge] stored nudge_8: \"Reference healthy\" @ #reference\n"}
+{"at":498.325584,"kind":"pass","data":"P12-invalid-input-healthy-peer"}
+{"at":604.482459,"kind":"pass","data":"L03-single-writer"}
+{"at":605.546334,"kind":"stderr","data":"[nudge-bridge] stored nudge_9: \"Reference model_9\" @ #reference\n"}
+{"at":697.41225,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":719.444,"kind":"stderr","data":"[nudge-bridge] stored nudge_10: \"Reference model_0\" @ #reference\n"}
+{"at":720.506875,"kind":"stderr","data":"[nudge-bridge] stored nudge_11: \"Reference model_5\" @ #reference\n"}
+{"at":721.444834,"kind":"stderr","data":"[nudge-bridge] stored nudge_12: \"Reference model_6\" @ #reference\n"}
+{"at":723.370375,"kind":"stderr","data":"[nudge-bridge] stored nudge_13: \"Reference model_3\" @ #reference\n"}
+{"at":724.1705,"kind":"stderr","data":"[nudge-bridge] stored nudge_14: \"Reference model_4\" @ #reference\n"}
+{"at":724.926292,"kind":"stderr","data":"[nudge-bridge] stored nudge_15: \"Reference model_1\" @ #reference\n"}
+{"at":728.287875,"kind":"stderr","data":"[nudge-bridge] stored nudge_16: \"Reference model_8\" @ #reference\n"}
+{"at":729.061042,"kind":"stderr","data":"[nudge-bridge] stored nudge_17: \"Reference model_7\" @ #reference\n"}
+{"at":823.778875,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":849.002959,"kind":"stderr","data":"[nudge-bridge] stored nudge_18: \"Reference model_2\" @ #reference\n"}
+{"at":946.298459,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":1068.885667,"kind":"stderr","data":"[nudge-bridge] http://localhost:51176 (demo: /demo) - store: <tmp>/nudge-comparison-S68Wb0/store\n"}
+{"at":1089.453167,"kind":"pass","data":"P15-seeded-reference-model"}

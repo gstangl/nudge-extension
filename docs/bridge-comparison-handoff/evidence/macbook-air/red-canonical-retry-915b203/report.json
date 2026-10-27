@@ -1,0 +1,384 @@
+{
+  "source": "50438eca8385d46ac649e319588956a87bb9b7422186c2d52c3a985e9f145461",
+  "js": [
+    "<toolchain>/node",
+    "<repo>/bridge/bridge.mjs"
+  ],
+  "rust": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "id": "js-rust-js/plain",
+      "verdict": "passed",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "js",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "rust",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 1,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 2,
+          "implementation": "js",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 2,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "js-rust-js/number_spellings",
+      "verdict": "failed",
+      "error": "js-rust-js/number_spellings: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "js",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "rust",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "js-rust-js/unicode_keys",
+      "verdict": "failed",
+      "error": "js-rust-js/unicode_keys: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "js",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "rust",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "js-rust-js/surrogate_boundary",
+      "verdict": "failed",
+      "error": "js-rust-js/surrogate_boundary: hop 0 refuses changed content under the same id\n\n200 !== 409\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "js",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "js-rust-js/falsy_console",
+      "verdict": "failed",
+      "error": "js-rust-js/falsy_console: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "js",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "rust",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rust-js-rust/plain",
+      "verdict": "passed",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "rust",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "js",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 1,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 2,
+          "implementation": "rust",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 2,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rust-js-rust/number_spellings",
+      "verdict": "failed",
+      "error": "rust-js-rust/number_spellings: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "rust",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "js",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rust-js-rust/unicode_keys",
+      "verdict": "failed",
+      "error": "rust-js-rust/unicode_keys: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "rust",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "js",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rust-js-rust/surrogate_boundary",
+      "verdict": "failed",
+      "error": "rust-js-rust/surrogate_boundary: hop 0 refuses changed content under the same id\n\n200 !== 409\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "rust",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 200,
+          "body": {
+            "id": "nudge_1",
+            "replay": true,
+            "withdrawn": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "rust-js-rust/falsy_console",
+      "verdict": "failed",
+      "error": "rust-js-rust/falsy_console: hop 1 replays the first effect\n+ actual - expected\n\n  [\n+   409,\n-   200,\n    {\n+     error: 'submission_conflict'\n-     id: 'nudge_1',\n-     replay: true,\n-     withdrawn: false\n    }\n  ]\n",
+      "steps": [
+        {
+          "hop": 0,
+          "implementation": "rust",
+          "status": 201,
+          "body": {
+            "id": "nudge_1",
+            "replay": false,
+            "withdrawn": false
+          }
+        },
+        {
+          "hop": 0,
+          "control": "changed-text",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        },
+        {
+          "hop": 1,
+          "implementation": "js",
+          "status": 409,
+          "body": {
+            "error": "submission_conflict"
+          }
+        }
+      ]
+    }
+  ]
+}

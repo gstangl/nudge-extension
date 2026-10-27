@@ -1,0 +1,20 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/mutants-1793128135022",
+  "results": [
+    {
+      "mutant": "drop",
+      "verdict": "killed",
+      "assertion": "AssertionError [ERR_ASSERTION]: stored effect count differs from attempted work"
+    },
+    {
+      "mutant": "duplicate",
+      "verdict": "killed",
+      "assertion": "AssertionError [ERR_ASSERTION]: stored effect count differs from attempted work"
+    },
+    {
+      "mutant": "misroute",
+      "verdict": "killed",
+      "assertion": "AssertionError [ERR_ASSERTION]: wrong owner"
+    }
+  ]
+}

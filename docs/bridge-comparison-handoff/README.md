@@ -1,6 +1,7 @@
 # Neutral GitHub handoff
 
-Start with [EXECUTION.md](EXECUTION.md). It is the complete execution commission
+Start with [EXECUTION.md](EXECUTION.md). The MacBook Air execution and its W6
+decision are in [MACBOOK-AIR-RESULTS.md](MACBOOK-AIR-RESULTS.md). It is the complete execution commission
 for a new local MacBook Air session. All source, test fixtures, protocols and
 selected raw text evidence are on this branch; no ignored local folder is needed.
 

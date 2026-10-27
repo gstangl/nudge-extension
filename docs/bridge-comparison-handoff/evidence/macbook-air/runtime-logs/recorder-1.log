@@ -1,0 +1,298 @@
+RUN rust-builds
+PASSED rust-builds
+RUN portable
+PASSED portable
+RUN js-bridge-conformance
+PASSED js-bridge-conformance
+RUN js-bridge-image-conformance
+PASSED js-bridge-image-conformance
+RUN js-bridge-retention
+PASSED js-bridge-retention
+RUN js-bridge-origin-headers
+PASSED js-bridge-origin-headers
+RUN js-browser-protocol
+PASSED js-browser-protocol
+RUN js-bridge-boundary
+PASSED js-bridge-boundary
+RUN js-bridge-realtime
+PASSED js-bridge-realtime
+RUN rust-bridge-conformance
+FAILED rust-bridge-conformance
+{
+  "out": "<repo>/artifacts/bridge-comparison/conformance-1793126923426",
+  "verdict": "failed",
+  "source": "c40fdec3f52f613be801a89a1f92a1e3879c411abc864d384fb5dfb2568be128",
+  "argv": [
+    "<repo>/bridge-rust/target/release/nudge-bridge-experiment"
+  ],
+  "results": [
+    {
+      "id": "P01",
+      "verdict": "passed"
+    },
+    {
+      "id": "R01-stable-owners",
+      "verdict": "passed"
+    },
+    {
+      "id": "P02-P03-replay-conflict",
+      "verdict": "passed"
+    },
+    {
+      "id": "P04-concurrent-retries",
+      "verdict": "passed"
+    },
+    {
+      "id": "P05-process-crash-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P06-withdrawn-replay",
+      "verdict": "passed"
+    },
+    {
+      "id": "P07-resolve-amend-owner",
+      "verdict": "passed"
+    },
+    {
+      "id": "P13-write-failure-recovery",
+      "verdict": "passed"
+    },
+    {
+      "id": "P03-lost-response-after-commit",
+      "verdict": "passed"
+    },
+    {
+      "id": "P12-invalid-input-healthy-peer",
+      "verdict": "passed"
+    },
+    {
+      "id": "L03-single-writer",
+      "verdict": "passed"
+    },
+    {
+      "id": "P15-seeded-reference-model",
+      "verdict": "passed"
+    }
+  ]
+}
+
+RUN rust-bridge-image-conformance
+PASSED rust-bridge-image-conformance
+RUN rust-bridge-retention
+PASSED rust-bridge-retention
+RUN rust-bridge-origin-headers
+FAILED rust-bridge-origin-headers
+{
+  "out": "<repo>/artifacts/bridge-comparison/origin-headers-1793126924744",
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 18:48:44 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "failed",
+      "error": "AssertionError [ERR_ASSERTION]: malformed Origin must not become missing Origin\n    at file://<repo>/test/bridge-origin-headers.mjs:11:14\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)",
+      "response": ""
+    }
+  ]
+}
+
+RUN rust-browser-protocol
+PASSED rust-browser-protocol
+RUN rust-bridge-boundary
+PASSED rust-bridge-boundary
+RUN rust-bridge-realtime
+PASSED rust-bridge-realtime
+RUN commit-fault-js
+PASSED commit-fault-js
+RUN commit-fault-rust
+PASSED commit-fault-rust
+RUN withdrawal-fault-rust
+PASSED withdrawal-fault-rust
+RUN withdrawal-fault-js
+PASSED withdrawal-fault-js
+RUN rollback
+PASSED rollback
+RUN negative-controls
+PASSED negative-controls
+RUN interrupt
+PASSED interrupt
+RUN rust-unit
+PASSED rust-unit
+RUN browser-regression
+FAILED browser-regression
+e-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_334: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_335: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_336: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_337: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_338: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_339: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_340: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_341: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_342: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_343: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_344: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_345: "forged by Kidnap-4" @ #x [Kidnap-4]
+[nudge-bridge] owner chosen: Kidnap-1 for *
+[nudge-bridge] stored nudge_346: "forged by Kidnap-1" @ #x [Kidnap-1]
+[nudge-bridge] owner chosen: Kidnap-2 for *
+[nudge-bridge] stored nudge_347: "forged by Kidnap-2" @ #x [Kidnap-2]
+[nudge-bridge] owner chosen: Kidnap-3 for *
+[nudge-bridge] stored nudge_348: "forged by Kidnap-3" @ #x [Kidnap-3]
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_349: "forged by Kidnap-4" @ #x [Kidnap-4]
+PASS I2 kidnap storm survived (87 rounds × 4 agents × 5 attack types) — owner + context rock solid
+[nudge-bridge] owner chosen: Kidnap-4 for *
+[nudge-bridge] stored nudge_350: "[BATTLE2] new nudge under Kidnap-4" @ #g-deep-title [Kidnap-4]
+PASS I3 channel ownership is reassignable, but each nudge keeps ITS owner (old=Alpha, new=Kidnap-4)
+PASS I4 Nudge History shows each nudge's true owner per row (header owner is a kidnapper, the row is not)
+PASS I5 inbox mirror (what the agent reads) carries owner + captured selector + url — no kidnapper can claim it
+
+Suite I — Kidnap Battletest: ALL PASS (the bridge is rock solid)
+Evidence: artifacts/safari/regression-1Y9xAh/report.json
+
+RUN browser-parity
+PASSED browser-parity
+RUN browser-coexistence
+PASSED browser-coexistence
+RUN chromium-js
+PASSED chromium-js
+RUN chromium-rust
+PASSED chromium-rust
+{
+  "out": "<repo>/artifacts/bridge-comparison/checks-UFRXXl",
+  "verdict": "failed",
+  "results": [
+    {
+      "id": "rust-builds",
+      "verdict": "passed"
+    },
+    {
+      "id": "portable",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-image-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-retention",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-origin-headers",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-browser-protocol",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-realtime",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-conformance",
+      "verdict": "failed"
+    },
+    {
+      "id": "rust-bridge-image-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-retention",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-origin-headers",
+      "verdict": "failed"
+    },
+    {
+      "id": "rust-browser-protocol",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-realtime",
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-rust",
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-rust",
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "rollback",
+      "verdict": "passed"
+    },
+    {
+      "id": "negative-controls",
+      "verdict": "passed"
+    },
+    {
+      "id": "interrupt",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-unit",
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-regression",
+      "verdict": "failed"
+    },
+    {
+      "id": "browser-parity",
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-coexistence",
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-rust",
+      "verdict": "passed"
+    }
+  ]
+}

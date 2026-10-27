@@ -1,0 +1,24 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/paired-CHuQqI",
+  "verdict": "inconclusive",
+  "paired": [
+    {
+      "block": 0,
+      "jsP95": 23.0012499999998,
+      "rustP95": 22.57074999999986,
+      "differenceMs": -0.43049999999993815
+    },
+    {
+      "block": 1,
+      "jsP95": 23.8525410000002,
+      "rustP95": 173.3877080000002,
+      "differenceMs": 149.535167
+    },
+    {
+      "block": 2,
+      "jsP95": 349.4401250000001,
+      "rustP95": 223.31816600000002,
+      "differenceMs": -126.12195900000006
+    }
+  ]
+}

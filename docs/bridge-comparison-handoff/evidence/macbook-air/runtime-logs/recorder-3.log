@@ -1,0 +1,210 @@
+RUN rust-builds
+PASSED rust-builds
+RUN portable
+PASSED portable
+RUN js-bridge-conformance
+PASSED js-bridge-conformance
+RUN js-bridge-image-conformance
+PASSED js-bridge-image-conformance
+RUN js-bridge-retention
+PASSED js-bridge-retention
+RUN js-bridge-origin-headers
+PASSED js-bridge-origin-headers
+RUN js-bridge-half-close
+PASSED js-bridge-half-close
+RUN js-bridge-owner-tie
+PASSED js-bridge-owner-tie
+RUN js-browser-protocol
+PASSED js-browser-protocol
+RUN js-bridge-boundary
+PASSED js-bridge-boundary
+RUN js-bridge-realtime
+PASSED js-bridge-realtime
+RUN rust-bridge-conformance
+PASSED rust-bridge-conformance
+RUN rust-bridge-image-conformance
+PASSED rust-bridge-image-conformance
+RUN rust-bridge-retention
+PASSED rust-bridge-retention
+RUN rust-bridge-origin-headers
+PASSED rust-bridge-origin-headers
+RUN rust-bridge-half-close
+PASSED rust-bridge-half-close
+RUN rust-bridge-owner-tie
+PASSED rust-bridge-owner-tie
+RUN rust-browser-protocol
+PASSED rust-browser-protocol
+RUN rust-bridge-boundary
+PASSED rust-bridge-boundary
+RUN rust-bridge-realtime
+PASSED rust-bridge-realtime
+RUN commit-fault-js
+PASSED commit-fault-js
+RUN commit-fault-rust
+PASSED commit-fault-rust
+RUN withdrawal-fault-rust
+PASSED withdrawal-fault-rust
+RUN withdrawal-fault-js
+PASSED withdrawal-fault-js
+RUN rollback
+PASSED rollback
+RUN canonical-retry
+PASSED canonical-retry
+RUN negative-controls
+PASSED negative-controls
+RUN interrupt
+PASSED interrupt
+RUN rust-unit
+PASSED rust-unit
+RUN browser-regression
+PASSED browser-regression
+RUN browser-parity
+PASSED browser-parity
+RUN browser-coexistence
+PASSED browser-coexistence
+RUN chromium-js
+PASSED chromium-js
+RUN chromium-rust
+PASSED chromium-rust
+{
+  "out": "<repo>/artifacts/bridge-comparison/checks-aYh1nd",
+  "verdict": "passed",
+  "results": [
+    {
+      "id": "rust-builds",
+      "verdict": "passed"
+    },
+    {
+      "id": "portable",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-image-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-retention",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-origin-headers",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-half-close",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-owner-tie",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-browser-protocol",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-realtime",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-image-conformance",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-retention",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-origin-headers",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-half-close",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-owner-tie",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-browser-protocol",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-boundary",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-realtime",
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-rust",
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-rust",
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "rollback",
+      "verdict": "passed"
+    },
+    {
+      "id": "canonical-retry",
+      "verdict": "passed"
+    },
+    {
+      "id": "negative-controls",
+      "verdict": "passed"
+    },
+    {
+      "id": "interrupt",
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-unit",
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-regression",
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-parity",
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-coexistence",
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-js",
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-rust",
+      "verdict": "passed"
+    }
+  ]
+}

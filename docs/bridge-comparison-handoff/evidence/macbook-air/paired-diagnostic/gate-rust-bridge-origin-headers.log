@@ -1,0 +1,15 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/origin-headers-1793129093987",
+  "results": [
+    {
+      "name": "duplicate",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 19:24:54 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    },
+    {
+      "name": "invalid-utf8",
+      "verdict": "passed",
+      "response": "HTTP/1.1 403 Forbidden\r\ncontent-type: application/json\r\ncontent-length: 49\r\nconnection: close\r\ndate: Tue, 27 Oct 2026 19:24:54 GMT\r\n\r\n{\"error\":\"foreign or malformed request rejected\"}"
+    }
+  ]
+}

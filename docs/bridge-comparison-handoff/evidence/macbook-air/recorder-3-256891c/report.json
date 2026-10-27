@@ -1,0 +1,461 @@
+{
+  "source": "40aae9874383c2036609babc124ed248a7844c80f74058126c810278ed3266fd",
+  "revision": "256891c71693a041cff29cfa41322cbdacff4813",
+  "scope": "Local checks only; no remote CI, native Chrome/OS or actual host receipt",
+  "runtime": {
+    "node": "v26.12.1",
+    "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13) (Homebrew)",
+    "os": "Darwin",
+    "release": "25.6.0",
+    "arch": "arm64",
+    "cpu": "Apple M2"
+  },
+  "build": [
+    {
+      "file": "<repo>/bridge-rust/target/release/nudge-bridge-experiment",
+      "sha256": "ef5006000d8c4bce710518f5ec8b3e11012feb69d7dbb9e70ecc8403ce22f421"
+    }
+  ],
+  "results": [
+    {
+      "id": "rust-builds",
+      "command": [
+        "<toolchain>/node",
+        "test/build-bridge-candidates.mjs"
+      ],
+      "startedAt": "2026-10-27T19:06:09.244Z",
+      "elapsedMs": 14139.432083,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "portable",
+      "command": [
+        "<toolchain>/node",
+        "test/run-portable-regression.mjs"
+      ],
+      "startedAt": "2026-10-27T19:06:23.387Z",
+      "elapsedMs": 131885.34216600002,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-conformance",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-conformance.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:35.273Z",
+      "elapsedMs": 1353.9444579999836,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-image-conformance",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-image-conformance.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:36.627Z",
+      "elapsedMs": 321.09987500001444,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-retention",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-retention.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:36.948Z",
+      "elapsedMs": 291.7424170000013,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-origin-headers",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-origin-headers.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:37.240Z",
+      "elapsedMs": 293.17091600000276,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-half-close",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-half-close.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:37.534Z",
+      "elapsedMs": 342.186916000006,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-owner-tie",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-owner-tie.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:37.876Z",
+      "elapsedMs": 893.785125000024,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-browser-protocol",
+      "command": [
+        "<toolchain>/node",
+        "test/browser-protocol.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:38.770Z",
+      "elapsedMs": 2012.1800419999927,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-boundary",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-boundary.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:40.783Z",
+      "elapsedMs": 401.7950420000125,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "js-bridge-realtime",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-realtime.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:41.185Z",
+      "elapsedMs": 867.9825410000049,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-conformance",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-conformance.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:42.053Z",
+      "elapsedMs": 959.1957079999847,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-image-conformance",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-image-conformance.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:43.012Z",
+      "elapsedMs": 395.03416599999764,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-retention",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-retention.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:43.408Z",
+      "elapsedMs": 261.29295900001307,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-origin-headers",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-origin-headers.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:43.669Z",
+      "elapsedMs": 204.43499999999767,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-half-close",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-half-close.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:43.874Z",
+      "elapsedMs": 241.37012499998673,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-owner-tie",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-owner-tie.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:44.116Z",
+      "elapsedMs": 338.05254200001946,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-browser-protocol",
+      "command": [
+        "<toolchain>/node",
+        "test/browser-protocol.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:44.454Z",
+      "elapsedMs": 2096.926624999993,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-boundary",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-boundary.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:46.551Z",
+      "elapsedMs": 307.24137500001234,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-bridge-realtime",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-realtime.mjs"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:08:46.858Z",
+      "elapsedMs": 747.8954999999842,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-js",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-commit-faults.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:47.607Z",
+      "elapsedMs": 1600.5952080000134,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "commit-fault-rust",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-commit-faults.mjs"
+      ],
+      "candidate": "[\"<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks\"]",
+      "startedAt": "2026-10-27T19:08:49.207Z",
+      "elapsedMs": 619.471332999994,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-rust",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-withdrawal-fault.mjs"
+      ],
+      "candidate": "[\"<repo>/artifacts/bridge-comparison/bin/rust-fault-hooks\"]",
+      "startedAt": "2026-10-27T19:08:49.827Z",
+      "elapsedMs": 545.2357499999925,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "withdrawal-fault-js",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-withdrawal-fault.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:50.373Z",
+      "elapsedMs": 1117.0565420000057,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rollback",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-rollback.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:51.490Z",
+      "elapsedMs": 628.365708999976,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "canonical-retry",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-canonical-retry.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:52.118Z",
+      "elapsedMs": 2840.697749999992,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "negative-controls",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-mutants.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:54.959Z",
+      "elapsedMs": 451.59095899999375,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "interrupt",
+      "command": [
+        "<toolchain>/node",
+        "test/bridge-harness-interrupt.mjs"
+      ],
+      "startedAt": "2026-10-27T19:08:55.411Z",
+      "elapsedMs": 2174.1926669999957,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "rust-unit",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--manifest-path",
+        "bridge-rust/Cargo.toml"
+      ],
+      "startedAt": "2026-10-27T19:08:57.586Z",
+      "elapsedMs": 2657.3995830000204,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-regression",
+      "command": [
+        "<toolchain>/node",
+        "test/run-browser-regression.mjs",
+        "--headless"
+      ],
+      "startedAt": "2026-10-27T19:09:00.243Z",
+      "elapsedMs": 125053.569166,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-parity",
+      "command": [
+        "<toolchain>/node",
+        "test/browser-parity.mjs",
+        "--chromium",
+        "--headless"
+      ],
+      "startedAt": "2026-10-27T19:11:05.298Z",
+      "elapsedMs": 12565.456707999983,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "browser-coexistence",
+      "command": [
+        "<toolchain>/node",
+        "test/browser-coexistence.mjs",
+        "--chromium-only",
+        "--headless"
+      ],
+      "startedAt": "2026-10-27T19:11:17.864Z",
+      "elapsedMs": 13922.120125000016,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-js",
+      "command": [
+        "<toolchain>/node",
+        "test/chrome-delivery.mjs",
+        "--browser",
+        "chromium",
+        "--headless",
+        "--samples",
+        "3"
+      ],
+      "startedAt": "2026-10-27T19:11:31.786Z",
+      "elapsedMs": 7168.572500000009,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    },
+    {
+      "id": "chromium-rust",
+      "command": [
+        "<toolchain>/node",
+        "test/chrome-delivery.mjs",
+        "--browser",
+        "chromium",
+        "--headless",
+        "--samples",
+        "3"
+      ],
+      "candidate": "[\"<repo>/bridge-rust/target/release/nudge-bridge-experiment\"]",
+      "startedAt": "2026-10-27T19:11:38.955Z",
+      "elapsedMs": 7028.719749999989,
+      "exitCode": 0,
+      "signal": null,
+      "verdict": "passed"
+    }
+  ],
+  "sourceUnchanged": true,
+  "verdict": "passed"
+}

@@ -1,0 +1,11 @@
+file://<repo>/test/portless-worktrees.mjs:14
+if (!portless || !fs.existsSync(portless)) throw new Error('Set NUDGE_PORTLESS_BIN to an installed Portless CLI file')
+                                                 ^
+
+Error: Set NUDGE_PORTLESS_BIN to an installed Portless CLI file
+    at file://<repo>/test/portless-worktrees.mjs:14:50
+    at ModuleJob.run (node:internal/modules/esm/module_job:569:25)
+    at async node:internal/modules/esm/loader:650:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)
+
+Node.js v26.12.1

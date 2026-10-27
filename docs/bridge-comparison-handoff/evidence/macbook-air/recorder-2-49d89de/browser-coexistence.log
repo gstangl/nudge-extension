@@ -1,0 +1,9 @@
+PASS Chromium-only: same-route tabs have distinct privileged tab identities; installations have distinct sessions/authors
+PASS Chromium-only: shared bridge queue/history and owner choice reach both installations
+PASS Chromium-only: overlay off-state is installation-local and propagates only within that profile
+PASS Chromium-only: inactive same-route source defers after-evidence; foreground return captures only source pixels
+PASS Chromium-only: closed source remains unavailable despite same-route tabs in both installations
+PASS Chromium-only: offline queues are durable, independent and retain original tokens
+PASS Chromium-only: Chromium CDP worker termination preserves session/tab identity and durable queue
+PASS Chromium-only: both independent offline queues reconnect without duplicate submissions
+Evidence: artifacts/safari/coexistence-XMnFLK/report.json

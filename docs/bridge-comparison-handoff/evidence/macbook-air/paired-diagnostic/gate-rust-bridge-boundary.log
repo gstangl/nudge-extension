@@ -1,0 +1,7 @@
+PASS Host and Origin independently gate HTTP and WS
+PASS invalid annotations cannot create poisoned records or receipts
+PASS valid multibyte text survives a real split HTTP request
+PASS withdrawal acknowledges the original pull session, not the new push owner
+PASS restart preserves recoverable prompts with malformed historical annotations
+PASS offline original and ownerless legacy work never claim a new recipient
+Evidence: artifacts/safari/boundary-ZWVrrZ

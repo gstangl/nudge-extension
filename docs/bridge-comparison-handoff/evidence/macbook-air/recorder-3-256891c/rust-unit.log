@@ -1,0 +1,37 @@
+   Compiling nudge-bridge-experiment v0.1.1 (<repo>/bridge-rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.84s
+     Running unittests src/lib.rs (bridge-rust/target/debug/deps/nudge_bridge_experiment-0e3078f9a71fcf27)
+
+running 17 tests
+test tests::falsy_fields_hash_like_or_null ... ok
+test tests::immutable_independent_signature_example ... ok
+test tests::javascript_lone_surrogate_store_is_valid_not_corrupt ... ok
+test tests::json_quoting_and_key_order_match_json_stringify ... ok
+test tests::labels_are_display_only ... ok
+test tests::numbers_use_ecmascript_spelling ... ok
+test tests::malformed_images_and_geometry_are_refused ... ok
+test tests::request_bytes_keep_unpaired_surrogates_for_signatures ... ok
+test tests::signature_matches_reviewed_fixture ... ok
+test tests::source_requires_all_four_tokens ... ok
+test tests::route_is_exact_and_query_free ... ok
+test store_behavior::failed_commit_keeps_disk_and_memory_authoritative ... ok
+test store_behavior::corrupt_bytes_are_preserved_and_inbox_prevents_identity_reuse ... ok
+test store_behavior::maintenance_does_not_insert_an_unsupported_null_journal ... ok
+test store_behavior::withdrawal_restart_and_replay_cannot_recreate_work ... ok
+test store_behavior::lease_cannot_be_stolen_or_release_replacement_ownership ... ok
+test store_behavior::independent_seeded_retries_conserve_order_and_identity ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests src/main.rs (bridge-rust/target/debug/deps/nudge_bridge_experiment-b00a33426364cc07)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests nudge_bridge_experiment
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

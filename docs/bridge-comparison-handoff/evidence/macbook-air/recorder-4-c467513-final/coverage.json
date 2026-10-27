@@ -1,0 +1,3265 @@
+{
+  "scope": "Local recorder evidence only; a passing check covers its mapped assertions, never the whole catalog",
+  "recorder": {
+    "dir": "../nudge-bridge-comparison-macbook-air/artifacts/bridge-comparison/checks-k3j4Qd",
+    "revision": "c467513848925c8ac036546fdeeb6f81b453e1d1",
+    "source": "043f31cf886cf6ec9ccb401a002eb05c1fb78654a81725d310504453b3975852",
+    "verdict": "passed"
+  },
+  "diagnostics": [
+    {
+      "file": "test/chrome-delivery.mjs",
+      "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+      "verdict": "passed"
+    },
+    {
+      "file": "test/chrome-delivery.mjs",
+      "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+      "verdict": "passed"
+    },
+    {
+      "file": "test/bridge-compare.mjs",
+      "report": "artifacts/bridge-comparison/paired-CHuQqI/report.json",
+      "verdict": "inconclusive"
+    },
+    {
+      "file": "test/bridge-resources.mjs",
+      "report": "artifacts/bridge-comparison/resources-1793129172276/report.json",
+      "verdict": "passed"
+    }
+  ],
+  "totals": {
+    "partially-exercised": 36,
+    "passed": 41,
+    "unavailable": 31,
+    "not-run": 2,
+    "partially-run": 5
+  },
+  "cases": [
+    {
+      "id": "U01",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Never-returning storage RPC and editable-draft timeout assertion is not implemented in this queue unit lane."
+      ]
+    },
+    {
+      "id": "U02",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U03",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "All discard/receipt-removal completion orderings need a deterministic queue schedule driver."
+      ]
+    },
+    {
+      "id": "U04",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U05",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U06",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U07",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Exact at/before/after every retry and clock-allowance boundary has not been expanded in both languages."
+      ]
+    },
+    {
+      "id": "U08",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/queue.test.mjs: serialized durable browser submission queue",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U09",
+      "requirements": [
+        "BR-03"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-canonical-retry.mjs: JS/Rust cross-implementation replay of number spellings, UTF-16 key order, falsy fields and surrogate truncation",
+          "file": "test/bridge-canonical-retry.mjs",
+          "checks": [
+            {
+              "id": "canonical-retry",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U10",
+      "requirements": [
+        "BR-01"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U11",
+      "requirements": [
+        "BR-01"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U12",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/store.test.mjs: receipt conflicts, failed rename, sequence and owner cases",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-owner-tie.mjs: equal-since election follows roster join order across fresh processes",
+          "file": "test/bridge-owner-tie.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-owner-tie",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-owner-tie",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U13",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/hook-optin.mjs: G opt-in assertions",
+          "file": "test/hook-optin.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/runtime-neutral.mjs: runtime isolation",
+          "file": "test/runtime-neutral.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U14",
+      "requirements": [
+        "BR-06"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-realtime.mjs: roster-updates-without-heartbeat-spam",
+          "file": "test/bridge-realtime.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/wake-mode.mjs: W1-W5",
+          "file": "test/wake-mode.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "A deterministic freshness/late-heartbeat/replacement clock adapter is missing for both candidates."
+      ]
+    },
+    {
+      "id": "U15",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: five actual connection callback transitions",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Complete fake-time retry growth/reset/cap and simultaneous visibility/error schedule driver remains missing."
+      ]
+    },
+    {
+      "id": "U16",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: five actual connection callback transitions",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U17",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/http-boundary.test.mjs: body completion/rejection boundaries",
+          "file": "test/unit/http-boundary.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-boundary.mjs: split multibyte and malformed input",
+          "file": "test/bridge-boundary.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Full abort-before/during/after and late callback permutations remain missing."
+      ]
+    },
+    {
+      "id": "U18",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/lifecycle.test.mjs: identified lifecycle and writer lease cases",
+          "file": "test/unit/lifecycle.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-lifecycle.mjs: real process ownership",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U19",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/lifecycle.test.mjs: identified lifecycle and writer lease cases",
+          "file": "test/unit/lifecycle.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-lifecycle.mjs: real process ownership",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "PID reuse/EPERM and recovery-guard schedules need the complete candidate-neutral lease driver."
+      ]
+    },
+    {
+      "id": "U20",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/preview-hosts.test.mjs: exact local hosts",
+          "file": "test/unit/preview-hosts.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/origin-routing.mjs: K routing assertions",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U21",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/http-boundary.test.mjs: body completion/rejection boundaries",
+          "file": "test/unit/http-boundary.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-boundary.mjs: split multibyte and malformed input",
+          "file": "test/bridge-boundary.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Deep-value and all body/frame/token boundary expansions remain incomplete."
+      ]
+    },
+    {
+      "id": "U22",
+      "requirements": [
+        "BR-09"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/capture-identity.test.mjs: document generations",
+          "file": "test/unit/capture-identity.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/browser-protocol.mjs: stale document and foreign capture token assertions",
+          "file": "test/browser-protocol.mjs",
+          "checks": [
+            {
+              "id": "js-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "U23",
+      "requirements": [
+        "BR-06"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Controllable wall/monotonic clock providers and OS clock-jump isolation are not implemented."
+      ]
+    },
+    {
+      "id": "U24",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls",
+          "file": "test/unit/delivery-ledger.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P01",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P02",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P03",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P04",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P05",
+      "requirements": [
+        "BR-01"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P06",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P07",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P08",
+      "requirements": [
+        "BR-03"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-canonical-retry.mjs: JS/Rust cross-implementation replay of number spellings, UTF-16 key order, falsy fields and surrogate truncation",
+          "file": "test/bridge-canonical-retry.mjs",
+          "checks": [
+            {
+              "id": "canonical-retry",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P09",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-retention.mjs: retained open work, old resolved/receipts, sequence and marker collection",
+          "file": "test/bridge-retention.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-retention",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-retention",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/store.test.mjs: retry horizon and display labels",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P10",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-retention.mjs: retained open work, old resolved/receipts, sequence and marker collection",
+          "file": "test/bridge-retention.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-retention",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-retention",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/store.test.mjs: retry horizon and display labels",
+          "file": "test/unit/store.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P11",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P06-withdrawn-replay",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/browser-protocol.mjs: restart receipt and capture reconstruction",
+          "file": "test/browser-protocol.mjs",
+          "checks": [
+            {
+              "id": "js-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-withdrawal-fault.mjs: modern/legacy post-commit crash reconstructs original recipient stop marker",
+          "file": "test/bridge-withdrawal-fault.mjs",
+          "checks": [
+            {
+              "id": "withdrawal-fault-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "withdrawal-fault-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Full withdrawal/receipt pruning race matrix and additional partial-write/marker boundaries remain unqualified."
+      ]
+    },
+    {
+      "id": "P12",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-boundary.mjs: Host/Origin, invalid annotations and healthy peer",
+          "file": "test/bridge-boundary.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-image-conformance.mjs: valid PNG/JPEG and rejected malformed PNG",
+          "file": "test/bridge-image-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-image-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-image-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-origin-headers.mjs: malformed duplicate and non-UTF8 Origin cannot become missing Origin",
+          "file": "test/bridge-origin-headers.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-origin-headers",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-origin-headers",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop",
+          "file": "test/bridge-differential.mjs",
+          "checks": [
+            {
+              "id": "differential",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "P13",
+      "requirements": [
+        "BR-01"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P13-write-failure-recovery",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-commit-faults.mjs: four semantic crash barriers",
+          "file": "test/bridge-commit-faults.mjs",
+          "checks": [
+            {
+              "id": "commit-fault-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "commit-fault-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Bounded ENOSPC, rename/sync failure and partial-write driver is missing; four process barriers do not cover them."
+      ]
+    },
+    {
+      "id": "P14",
+      "requirements": [
+        "BR-01"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No isolated power-loss/reordering fault filesystem or VM is provisioned; common policy claims process crash only."
+      ]
+    },
+    {
+      "id": "P15",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: P01, P02-P03-replay-conflict, P04-concurrent-retries, P05-process-crash-replay, P06-withdrawn-replay, P07-resolve-amend-owner, P15-seeded-reference-model",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "C01",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+          "file": "test/bridge-brutal.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: current vs retired sockets",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Browser queue recovery while both watcher and bridge start absent is not candidate-neutral yet."
+      ]
+    },
+    {
+      "id": "C02",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+          "file": "test/bridge-brutal.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: current vs retired sockets",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Actual isolated Chrome native respawn lane is missing; explicit harness restart cannot substitute."
+      ]
+    },
+    {
+      "id": "C03",
+      "requirements": [
+        "BR-06",
+        "BR-12"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Frozen-process/non-progress driver and a truthful status deadline assertion are missing."
+      ]
+    },
+    {
+      "id": "C04",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Independent HTTP-only and WS-only black-hole proxy schedules and UI deadlines are missing."
+      ]
+    },
+    {
+      "id": "C05",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+          "file": "test/bridge-brutal.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: current vs retired sockets",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-half-close.mjs: valid and malformed-Origin requests answered after client half-close",
+          "file": "test/bridge-half-close.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-half-close",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-half-close",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Slow-body concurrency, TCP reset during response and the full response-boundary fault matrix are not implemented; half-closed request writes are covered."
+      ]
+    },
+    {
+      "id": "C06",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Controlled never-reading WS peer, buffer accounting and healthy-client starvation assertions are missing."
+      ]
+    },
+    {
+      "id": "C07",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Multi-tab simultaneous reconnect storm driver with resource bounds is missing."
+      ]
+    },
+    {
+      "id": "C08",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-brutal.mjs: existing serial adversarial bridge cases",
+          "file": "test/bridge-brutal.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/connection-generation.test.mjs: current vs retired sockets",
+          "file": "test/unit/connection-generation.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Complete seeded hello/snapshot/drain/resolve flapping campaign is missing beyond existing individual regressions."
+      ]
+    },
+    {
+      "id": "C09",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "partial",
+      "execution": "not-run",
+      "assertions": [
+        {
+          "assertion": "test/latency-bench.mjs: legacy diagnostic only, not accepted comparative evidence",
+          "file": "test/latency-bench.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Forced missed-fs-event plus WS/watch/poll individual-path observers are missing; legacy benchmark setup is not qualified."
+      ]
+    },
+    {
+      "id": "C10",
+      "requirements": [
+        "BR-05",
+        "BR-06"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/wake-mode.mjs: W1-W5",
+          "file": "test/wake-mode.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-realtime.mjs: roster metadata changes",
+          "file": "test/bridge-realtime.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop",
+          "file": "test/bridge-differential.mjs",
+          "checks": [
+            {
+              "id": "differential",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Candidate-neutral full replacement/expiration browser matrix remains missing."
+      ]
+    },
+    {
+      "id": "C11",
+      "requirements": [
+        "BR-06"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/wake-mode.mjs: W1-W5",
+          "file": "test/wake-mode.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-realtime.mjs: roster metadata changes",
+          "file": "test/bridge-realtime.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-realtime",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "C12",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual background/frozen-tab lifecycle and detached-worker observation driver is missing."
+      ]
+    },
+    {
+      "id": "C13",
+      "requirements": [
+        "BR-02",
+        "BR-04"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Worker termination at each enqueue/commit/removal/notification barrier needs a browser fault driver."
+      ]
+    },
+    {
+      "id": "C14",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Persistent browser close/offline-reopen queue test driver is missing."
+      ]
+    },
+    {
+      "id": "C15",
+      "requirements": [
+        "BR-06",
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No dedicated machine/VM for real OS sleep/resume is provisioned without interrupting everyday use."
+      ]
+    },
+    {
+      "id": "C16",
+      "requirements": [
+        "BR-06",
+        "BR-08"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Isolated OS clock/CPU/storage contention controls and external recovery observers are missing."
+      ]
+    },
+    {
+      "id": "R01",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-conformance.mjs: R01-stable-owners",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/chrome-delivery.mjs: intended watcher receipt and foreign watcher silence",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "R02",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/hook-optin.mjs: G opt-in assertions",
+          "file": "test/hook-optin.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Actual unarmed host input/context receipt boundary is not instrumented; hook fixture proof is narrower."
+      ]
+    },
+    {
+      "id": "R03",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "partial",
+      "execution": "partially-run",
+      "assertions": [
+        {
+          "assertion": "test/origin-routing.mjs: K host ownership cases",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/portless-worktrees.mjs: shared proxy host isolation",
+          "file": "test/portless-worktrees.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Pre-commit/offline owner-switch product meaning is not settled; only existing commit-time/immutable-owner behavior is retained."
+      ]
+    },
+    {
+      "id": "R04",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "partial",
+      "execution": "partially-run",
+      "assertions": [
+        {
+          "assertion": "test/origin-routing.mjs: K host ownership cases",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/portless-worktrees.mjs: shared proxy host isolation",
+          "file": "test/portless-worktrees.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Full ownerless/offline browser queue transition driver is missing; no new assignment rule is inferred."
+      ]
+    },
+    {
+      "id": "R05",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "partial",
+      "execution": "partially-run",
+      "assertions": [
+        {
+          "assertion": "test/origin-routing.mjs: K host ownership cases",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/portless-worktrees.mjs: shared proxy host isolation",
+          "file": "test/portless-worktrees.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "PID reuse/re-arm/dead selected-owner browser schedule remains incomplete."
+      ]
+    },
+    {
+      "id": "R06",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "partially-run",
+      "assertions": [
+        {
+          "assertion": "test/origin-routing.mjs: K host ownership cases",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/portless-worktrees.mjs: shared proxy host isolation",
+          "file": "test/portless-worktrees.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "R07",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "partial",
+      "execution": "partially-run",
+      "assertions": [
+        {
+          "assertion": "test/origin-routing.mjs: K host ownership cases",
+          "file": "test/origin-routing.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/portless-worktrees.mjs: shared proxy host isolation",
+          "file": "test/portless-worktrees.mjs",
+          "checks": [],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop",
+          "file": "test/bridge-differential.mjs",
+          "checks": [
+            {
+              "id": "differential",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Portless DNS/process lifecycle test prerequisites are optional and not provisioned as a full paired lane."
+      ]
+    },
+    {
+      "id": "R08",
+      "requirements": [
+        "BR-09"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Two real Google Chrome profiles/windows and cross-source capture schedule driver is missing."
+      ]
+    },
+    {
+      "id": "R09",
+      "requirements": [
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-boundary.mjs: original withdrawal recipient and ownerless work",
+          "file": "test/bridge-boundary.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "R10",
+      "requirements": [
+        "BR-09"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/browser-protocol.mjs: private request tokens, retired documents, reload/query/route continuity",
+          "file": "test/browser-protocol.mjs",
+          "checks": [
+            {
+              "id": "js-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "R11",
+      "requirements": [
+        "BR-09"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/browser-protocol.mjs: private request tokens, retired documents, reload/query/route continuity",
+          "file": "test/browser-protocol.mjs",
+          "checks": [
+            {
+              "id": "js-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-browser-protocol",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "R12",
+      "requirements": [
+        "BR-09",
+        "BR-10"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/browser-coexistence.mjs: shared protocol/source assertions; Chromium fixture lane only",
+          "file": "test/browser-coexistence.mjs",
+          "checks": [
+            {
+              "id": "browser-coexistence",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Actual Safari/native UI acceptance is outside the Chromium protocol fixture lane and is not observed."
+      ]
+    },
+    {
+      "id": "L01",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Concurrent Rust native launcher is not implemented; current Rust binary is bridge-only."
+      ]
+    },
+    {
+      "id": "L02",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Rust native/CLI launcher identity handshake is not implemented; shared process adapter refusal is narrower."
+      ]
+    },
+    {
+      "id": "L03",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "L04",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Complete Rust recovery-guard failure schedule is not implemented."
+      ]
+    },
+    {
+      "id": "L05",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Isolated Rust native launcher and test registration are not implemented."
+      ]
+    },
+    {
+      "id": "L06",
+      "requirements": [
+        "BR-08",
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Rust native input framing/detached launcher is not implemented."
+      ]
+    },
+    {
+      "id": "L07",
+      "requirements": [
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No isolated actual Chrome test-native registration/launcher lane is provisioned."
+      ]
+    },
+    {
+      "id": "L08",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-lifecycle.mjs: existing lifecycle assertions",
+          "file": "test/bridge-lifecycle.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-conformance.mjs: L03-single-writer",
+          "file": "test/bridge-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "All termination/active-request boundaries plus foreign-listener process-tree verification remain incomplete."
+      ]
+    },
+    {
+      "id": "L09",
+      "requirements": [
+        "BR-08"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-boundary.mjs: independent Host/Origin HTTP/WS matrix",
+          "file": "test/bridge-boundary.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-boundary",
+              "verdict": "passed"
+            },
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-brutal.mjs: loopback/LAN boundary",
+          "file": "test/bridge-brutal.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "L10",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Relocatable Rust/Node runtime package with independent install/uninstall test environment is missing."
+      ]
+    },
+    {
+      "id": "M01",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader",
+          "file": "test/bridge-rollback.mjs",
+          "checks": [
+            {
+              "id": "rollback",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-canonical-retry.mjs: JavaScript-written store with an unpaired surrogate is read, not classified corrupt",
+          "file": "test/bridge-canonical-retry.mjs",
+          "checks": [
+            {
+              "id": "canonical-retry",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop",
+          "file": "test/bridge-differential.mjs",
+          "checks": [
+            {
+              "id": "differential",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Supported historical version range is undeclared; v1 receipt safe refusal is not full historic replay qualification."
+      ]
+    },
+    {
+      "id": "M02",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Explicit old/new supported extension capability/version matrix is not provisioned."
+      ]
+    },
+    {
+      "id": "M03",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader",
+          "file": "test/bridge-rollback.mjs",
+          "checks": [
+            {
+              "id": "rollback",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-canonical-retry.mjs: JS->Rust->JS and Rust->JS->Rust retries keep one effect and the visible work",
+          "file": "test/bridge-canonical-retry.mjs",
+          "checks": [
+            {
+              "id": "canonical-retry",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Pending browser queue and image/after-evidence rollback variants remain missing."
+      ]
+    },
+    {
+      "id": "M04",
+      "requirements": [
+        "BR-10",
+        "BR-12"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "An interruptible Rust installation/lease-handoff packaging driver is not implemented."
+      ]
+    },
+    {
+      "id": "M05",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Rust native launcher is not implemented; bridge-only executable does not prove native launch without Node."
+      ]
+    },
+    {
+      "id": "M06",
+      "requirements": [
+        "BR-10",
+        "BR-12"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "No Apple Silicon host or architecture-specific isolated native/browser package lane is available here."
+      ]
+    },
+    {
+      "id": "M07",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Exact-revision Linux CI has not run; Windows support remains open."
+      ]
+    },
+    {
+      "id": "M08",
+      "requirements": [
+        "BR-10"
+      ],
+      "coverage": "partial",
+      "execution": "not-run",
+      "assertions": [
+        {
+          "assertion": "test/safari-e2e.mjs: resource smoke; JavaScript packaging only",
+          "file": "test/safari-e2e.mjs",
+          "checks": [],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Corrupt/missing Rust package-resource variants need a real relocatable runtime package."
+      ]
+    },
+    {
+      "id": "E01",
+      "requirements": [
+        "BR-01",
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "TQ storage acknowledgement is not instrumented; composer disappearance is only a queue UI acknowledgement upper bound."
+      ]
+    },
+    {
+      "id": "E02",
+      "requirements": [
+        "BR-09",
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/e2e.mjs: Suite A element/region/multi-context",
+          "file": "test/e2e.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-image-conformance.mjs: PNG/JPEG wire admission",
+          "file": "test/bridge-image-conformance.mjs",
+          "checks": [
+            {
+              "id": "js-bridge-image-conformance",
+              "verdict": "passed"
+            },
+            {
+              "id": "rust-bridge-image-conformance",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop",
+          "file": "test/bridge-differential.mjs",
+          "checks": [
+            {
+              "id": "differential",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "All ready region/multi-element/image payload profiles have not run in actual paired Google Chrome lanes."
+      ]
+    },
+    {
+      "id": "E03",
+      "requirements": [
+        "BR-04",
+        "BR-09"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/capture-stall.mjs: Suite Y pending/failed capture",
+          "file": "test/capture-stall.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/draft-retry.test.mjs: preserved retry payload",
+          "file": "test/unit/draft-retry.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "E04",
+      "requirements": [
+        "BR-02"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/e2e.mjs: Suite A durable rapid sends",
+          "file": "test/e2e.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+          "file": "test/reload-resilience.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/queue.test.mjs: capacity and replay",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Full real double-click/keyboard/late-RPC browser schedule has not been parameterized for both candidates."
+      ]
+    },
+    {
+      "id": "E05",
+      "requirements": [
+        "BR-04"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/e2e.mjs: Suite A durable rapid sends",
+          "file": "test/e2e.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+          "file": "test/reload-resilience.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/queue.test.mjs: capacity and replay",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Fixed offered-load burst schedule and full real browser capacity boundary remain missing."
+      ]
+    },
+    {
+      "id": "E06",
+      "requirements": [
+        "BR-02",
+        "BR-04"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/e2e.mjs: Suite A durable rapid sends",
+          "file": "test/e2e.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/reload-resilience.mjs: Q8/Q9/Q16 exact submission restoration",
+          "file": "test/reload-resilience.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/unit/queue.test.mjs: capacity and replay",
+          "file": "test/unit/queue.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Full worker/page/extension interruption matrix remains missing beyond current Chromium regression cases."
+      ]
+    },
+    {
+      "id": "E07",
+      "requirements": [
+        "BR-06"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/off-means-off.mjs: Suite Z",
+          "file": "test/off-means-off.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/toolbar-ux.mjs: Suite L live status/menu behavior",
+          "file": "test/toolbar-ux.mjs",
+          "checks": [
+            {
+              "id": "browser-regression",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "E08",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "Synthetic watcher is not an actual agent-session input receipt."
+      ]
+    },
+    {
+      "id": "E09",
+      "requirements": [
+        "BR-06",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Supported isolated push-host input receipt observer and busy/idle host lane are not implemented/provisioned."
+      ]
+    },
+    {
+      "id": "E10",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Supported isolated pull-host input receipt observer and authorized-next-prompt timing lane are not implemented/provisioned."
+      ]
+    },
+    {
+      "id": "E11",
+      "requirements": [
+        "BR-05",
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual host restart/re-arm/withdrawal input observer is missing."
+      ]
+    },
+    {
+      "id": "E12",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Actual host/model scheduling/input observations are missing; TW is the observed transport boundary."
+      ]
+    },
+    {
+      "id": "B01",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/chrome-delivery.mjs: actual pointer Send, request identity, exact unchanged watcher and independent ledger",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "Diagnostic sample counts only; frozen five blocks of 2000 sends per candidate and formal uncertainty are not complete."
+      ]
+    },
+    {
+      "id": "B02",
+      "requirements": [
+        "BR-05",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Five/25-tab and one/five-session scaling workload is not implemented as a shared offered-load schedule."
+      ]
+    },
+    {
+      "id": "B03",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Small/typical/10000-history fixtures with paired timing and resource lanes are not implemented."
+      ]
+    },
+    {
+      "id": "B04",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "512 KiB/2 MiB/maximum valid image distribution fixtures and paired browser timing are missing."
+      ]
+    },
+    {
+      "id": "B05",
+      "requirements": [
+        "BR-04",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Independent human-cadence/burst offered-load scheduler is missing; diagnostic sends are sequential."
+      ]
+    },
+    {
+      "id": "B06",
+      "requirements": [
+        "BR-08",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Isolated slow-disk/CPU/network/slow-reader drivers with synchronized external clocks are incomplete."
+      ]
+    },
+    {
+      "id": "B07",
+      "requirements": [
+        "BR-07",
+        "BR-11"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Cold native/worker-idle/resume timing lanes are not provisioned."
+      ]
+    },
+    {
+      "id": "B08",
+      "requirements": [
+        "BR-01",
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Two-hour development and 24-hour-per-candidate soaks have not run; full essential conformance is still incomplete."
+      ]
+    },
+    {
+      "id": "B09",
+      "requirements": [
+        "BR-01",
+        "BR-07"
+      ],
+      "coverage": "missing",
+      "execution": "unavailable",
+      "assertions": [],
+      "missing_prerequisites": [
+        "Deterministic barriers exist; production random-kill/flap campaign with bounded healthy suffix is missing."
+      ]
+    },
+    {
+      "id": "B10",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-resources.mjs: serial 300-request bridge-only RSS/CPU diagnostic",
+          "file": "test/bridge-resources.mjs",
+          "checks": [],
+          "diagnostics": [
+            {
+              "file": "test/bridge-resources.mjs",
+              "report": "artifacts/bridge-comparison/resources-1793129172276/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "Whole delivery process-tree/browser resources, wakeups and long-run post-drain trends are missing; current samples are bridge-only."
+      ]
+    },
+    {
+      "id": "H01",
+      "requirements": [
+        "BR-01",
+        "BR-02",
+        "BR-05"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-mutants.mjs: real dropped, duplicated and misrouted candidates",
+          "file": "test/bridge-mutants.mjs",
+          "checks": [
+            {
+              "id": "negative-controls",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "H02",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls",
+          "file": "test/unit/delivery-ledger.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "H03",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/bridge-catalog.test.mjs: empty, duplicate and unknown-key catalog mutations",
+          "file": "test/unit/bridge-catalog.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "H04",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/unit/bridge-candidate.test.mjs: live/foreign endpoint refusal and separate executable hash",
+          "file": "test/unit/bridge-candidate.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/chrome-delivery.mjs: source and executable byte revalidation",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "H05",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/bridge-candidate.test.mjs: live/foreign endpoint refusal and separate executable hash",
+          "file": "test/unit/bridge-candidate.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        },
+        {
+          "assertion": "test/chrome-delivery.mjs: source and executable byte revalidation",
+          "file": "test/chrome-delivery.mjs",
+          "checks": [
+            {
+              "id": "chromium-js",
+              "verdict": "passed"
+            },
+            {
+              "id": "chromium-rust",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": [
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/js1-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            },
+            {
+              "file": "test/chrome-delivery.mjs",
+              "report": "artifacts/bridge-comparison/rust-chrome-macbook-air/report.json",
+              "verdict": "passed"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "Actual during-run source/fixture/policy mutation campaign remains missing beyond byte revalidation."
+      ]
+    },
+    {
+      "id": "H06",
+      "requirements": [
+        "BR-12"
+      ],
+      "coverage": "mapped",
+      "execution": "passed",
+      "assertions": [
+        {
+          "assertion": "test/bridge-harness-interrupt.mjs: SIGTERM preserves partial events and reaps bridge/watchers",
+          "file": "test/bridge-harness-interrupt.mjs",
+          "checks": [
+            {
+              "id": "interrupt",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": []
+    },
+    {
+      "id": "H07",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/unit/delivery-ledger.test.mjs: omission, timing and identity controls",
+          "file": "test/unit/delivery-ledger.test.mjs",
+          "checks": [
+            {
+              "id": "portable",
+              "verdict": "passed"
+            }
+          ],
+          "diagnostics": []
+        }
+      ],
+      "missing_prerequisites": [
+        "Clock-origin validity outside the single harness clock remains a calibration prerequisite."
+      ]
+    },
+    {
+      "id": "H08",
+      "requirements": [
+        "BR-11"
+      ],
+      "coverage": "partial",
+      "execution": "partially-exercised",
+      "assertions": [
+        {
+          "assertion": "test/bridge-compare.mjs: retained seeded serial paired attempts and load samples",
+          "file": "test/bridge-compare.mjs",
+          "checks": [],
+          "diagnostics": [
+            {
+              "file": "test/bridge-compare.mjs",
+              "report": "artifacts/bridge-comparison/paired-CHuQqI/report.json",
+              "verdict": "inconclusive"
+            }
+          ]
+        }
+      ],
+      "missing_prerequisites": [
+        "Observer-overhead calibration, statistical paired uncertainty and formal background-load qualification remain missing."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/withdrawal-fault-1793128845261",
+  "results": [
+    {
+      "modern": true,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<toolchain>/node",
+          "sha256": "4a8ab2181dd5648befd2d4932bd4ceb9782d8b81fad23ae758ecc4e170e972f9"
+        },
+        {
+          "file": "<repo>/bridge/bridge.mjs",
+          "sha256": "12491c02537dc2b0e2399ac36b64e7169576ad2501cdcfd1582a5733da05e937"
+        }
+      ]
+    },
+    {
+      "modern": false,
+      "verdict": "passed",
+      "build": [
+        {
+          "file": "<toolchain>/node",
+          "sha256": "4a8ab2181dd5648befd2d4932bd4ceb9782d8b81fad23ae758ecc4e170e972f9"
+        },
+        {
+          "file": "<repo>/bridge/bridge.mjs",
+          "sha256": "12491c02537dc2b0e2399ac36b64e7169576ad2501cdcfd1582a5733da05e937"
+        }
+      ]
+    }
+  ]
+}

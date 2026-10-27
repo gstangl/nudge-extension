@@ -1,0 +1,33 @@
+{
+  "out": "<repo>/artifacts/bridge-comparison/commit-faults-1793127757766",
+  "results": [
+    {
+      "barrier": "write-start",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "write-complete",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "pre-rename",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    },
+    {
+      "barrier": "post-rename",
+      "verdict": "passed",
+      "uncertainRequest": {
+        "error": "TypeError: fetch failed"
+      }
+    }
+  ]
+}
