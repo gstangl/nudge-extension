@@ -1,0 +1,5 @@
+{
+  "schema_version": 2,
+  "required_contracts": [],
+  "features": [{"id":"bridge-delivery","title":"Bridge delivery comparison","spec":"docs/specs/bridge-delivery.md","files":["bridge/**","bridge-rust/**","test/bridge-*.mjs","test/chrome-delivery.mjs","test/support/**","test/fixtures/bridge-comparison/**"],"documentation":["docs/bridge-comparison.md"],"depends_on":[],"contracts":[],"checks":["existing-fast-gate","bridge-reference","bridge-negative-controls","rust-unit"]}]
+}

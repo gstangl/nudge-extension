@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "frozen_before_rust": true,
+  "scope": "Engineering experiment; no product service-level promise",
+  "durability": "process-crash on functioning OS/filesystem; rename without data fsync in both candidates",
+  "primary_boundary": "ready real Google Chrome pointer dispatch T0 to unchanged watcher stdout TW",
+  "actual_agent_boundary": "TS unavailable until a supported isolated host input receipt is recorded",
+  "queue_boundary": "UI acknowledgement upper bound; storage acknowledgement TQ unavailable without separate instrumentation",
+  "percentile": "nearest rank, ceil(n*q)-1, successful values only alongside full attempt denominator",
+  "normalization_allowlist": ["timestamps", "pids", "ports", "temporary absolute root", "opaque capture tokens", "object key order"],
+  "hard_failures": ["accepted loss", "duplicate stored effect", "foreign implicit delivery", "false acceptance", "unsafe compatibility"],
+  "healthy_targets_ms": {"p50": 50, "p95": 150, "p99": 300},
+  "recovery_targets_ms": {"foreground_detection": 5000, "restored_delivery": 5000},
+  "legacy_deadlines": {"agent_fresh_ms": 12000, "agent_sweep_ms": 5000, "ws_ping_ms": 30000, "retry_horizon_ms": 604800000, "clock_allowance_ms": 300000},
+  "primary_benefit": "Chrome-to-watcher p95 improvement of at least 20 percent and 20 ms",
+  "alternative_benefit": "at least 30 percent in a dominant measured resource/recovery cost or demonstrated removal of an installation failure class",
+  "noninferiority": {"latency_percent": 10, "latency_ms": 20, "recovery_percent": 10, "recovery_ms": 250},
+  "qualification": {"blocks_per_candidate": 5, "sends_per_block": 2000, "cadence_ms": 2000, "development_soak_hours": 2, "qualification_soak_hours": 24},
+  "uncertainty": "paired block bootstrap, deterministic seed, 95 percent percentile interval; fewer than five pairs is inconclusive",
+  "coverage_target": {"critical_branch_percent": 95, "critical_line_percent": 95, "all_critical_guards": true},
+  "eligibility": "All essential conformance, required real Chrome/native/host/OS and compatible rollback evidence before adoption. Missing evidence stays unavailable or not-run.",
+  "baseline_feasibility": "JS0 visible Google Chrome 30/30, p50 39.165 ms, p95 89.284 ms; diagnostic sample only. Geometry preparation removed from timed locator auto-wait; prior attempts retained."
+}

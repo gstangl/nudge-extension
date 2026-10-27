@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "kind": "independent-design-examples",
+  "status": "not-executed",
+  "authority": "Existing repository obligations and the owner-authorized comparison intent; unresolved policy remains proposed.",
+  "provenance": "The planner wrote expected effects from explicit event timelines and simple counted inputs, without executing a bridge or calling its helpers. The implementation agent must review them independently against canonical requirements before binding executable fixtures.",
+  "interpretation": {
+    "events": "Domain-level descriptions, not an implemented HTTP or test-runner API.",
+    "symbols": "A/B/C and session-alpha/session-beta are synthetic aliases. A fixture adapter may instantiate valid wire identifiers but cannot derive expected ownership, ordering or counts from candidate output.",
+    "order": "Sequence is durable acceptance order inside one browser queue; separate profiles do not promise a global click order.",
+    "ambiguity": "A lost response does not establish whether commit occurred. Retry must reconcile using the original submission identity.",
+    "durability": "Examples cover bridge process restart with a functioning OS/filesystem. OS/power-loss durability is a separate predeclared policy.",
+    "effect": "Exactly one stored work item is distinct from watcher notifications or LLM executions.",
+    "review": "These examples are independent design inputs, not owner approval of every new numeric target. Scenario mappings point back to the canonical plan."
+  },
+  "cases": [
+    {
+      "id": "RC01-response-lost-after-commit",
+      "scenario_ids": ["U04", "U05", "P03"],
+      "requirement_ids": ["BR-01", "BR-02"],
+      "initial": {"records": [], "receipts": [], "queue": []},
+      "inputs": {"A": {"submission_id": "submission_alpha_0001", "text": "Tighten the card spacing", "host": "alpha.app.localhost"}},
+      "events": ["Accept A durably in the browser queue", "Commit A and its receipt in the bridge", "Drop the acceptance reply", "Restart bridge and browser worker", "Retry the exact original A"],
+      "expected": {"stored_record_count": 1, "distinct_submission_ids": ["submission_alpha_0001"], "receipt_count": 1, "retry_returns_original_record": true, "queue_after_validated_replay": [], "confirmed_work_missing": 0},
+      "rejected_counterexample": "Two stored records, a changed retry identity, an uncommitted success or a cleared queue before a validated receipt."
+    },
+    {
+      "id": "RC02-conflicting-retry",
+      "scenario_ids": ["U09", "P08"],
+      "requirement_ids": ["BR-03"],
+      "initial": {"A": {"submission_id": "submission_alpha_0001", "text": "Tighten the card spacing", "committed": true}},
+      "events": ["Retry the same submission ID with text changed to Delete the card"],
+      "expected": {"outcome": "explicit-conflict", "stored_record_count": 1, "original_text": "Tighten the card spacing", "overwrites": 0, "new_work_items": 0},
+      "rejected_counterexample": "Success with replaced text, a silently accepted conflicting retry or a second work item."
+    },
+    {
+      "id": "RC03-offline-fifo",
+      "scenario_ids": ["U02", "U03", "C01", "E05"],
+      "requirement_ids": ["BR-04", "BR-07"],
+      "initial": {"bridge": "offline", "queue": []},
+      "events": ["One browser queue durably accepts A then B then C", "Restore the bridge and retain stable ownership", "Drain without faults"],
+      "expected": {"queue_before_recovery": ["A", "B", "C"], "first_commit_order": ["A", "B", "C"], "stored_record_count": 3, "queue_after_recovery": [], "lost_work": 0, "duplicate_stored_effects": 0},
+      "rejected_counterexample": "B disappears, C overtakes B within the same queue, or recovery requires assigning new submission IDs."
+    },
+    {
+      "id": "RC04-host-and-opt-in-isolation",
+      "scenario_ids": ["U13", "R01", "R02"],
+      "requirement_ids": ["BR-05"],
+      "initial": {"owners": {"alpha.app.localhost": "session-alpha", "beta.app.localhost": "session-beta"}, "armed": ["session-alpha", "session-beta"], "unarmed": ["session-gamma"]},
+      "events": ["Commit A from alpha.app.localhost", "Commit B from beta.app.localhost", "Observe each session's implicit watcher/hook channels without explicit cross-reference requests"],
+      "expected": {"implicit_work": {"session-alpha": ["A"], "session-beta": ["B"], "session-gamma": []}, "automatic_registration_of_gamma": false, "cross_deliveries": 0},
+      "rejected_counterexample": "A foreign implicit queue/context or readiness borrowed from another session; gamma becomes armed merely because a bridge exists."
+    },
+    {
+      "id": "RC05-write-failure-is-not-acceptance",
+      "scenario_ids": ["U10", "P13"],
+      "requirement_ids": ["BR-01", "BR-04"],
+      "initial": {"committed": ["A"], "queue": ["B"]},
+      "events": ["Begin storage of B", "Fail the commit before durable bridge acceptance under the chosen policy", "Observe the response", "Remove the fault and retry B"],
+      "expected": {"success_confirmed_during_fault": false, "A_preserved": true, "B_recoverable_until_validated_receipt": true, "final_records": ["A", "B"], "duplicate_stored_effects": 0},
+      "rejected_counterexample": "An in-memory receipt returns success despite failed persistence, or the browser removes B on a failed response."
+    },
+    {
+      "id": "RC06-withdrawn-replay-stays-withdrawn",
+      "scenario_ids": ["P06", "P11", "R09"],
+      "requirement_ids": ["BR-02", "BR-05"],
+      "initial": {"A": {"submission_id": "submission_alpha_0001", "committed": true, "owner": "session-alpha"}},
+      "events": ["Withdraw A under the supported protocol", "Restart the bridge", "Retry A with its original submission ID within the retained retry horizon"],
+      "expected": {"new_open_records_for_A": 0, "original_identity_retained_in_receipt": true, "replay_indicates_withdrawn": true, "withdrawal_recipient": "session-alpha"},
+      "rejected_counterexample": "The retry recreates open work or sends its withdrawal to the currently selected unrelated owner."
+    },
+    {
+      "id": "RC07-defined-queue-capacity",
+      "scenario_ids": ["U06", "E05"],
+      "requirement_ids": ["BR-04"],
+      "policy_dependency": "The reviewed supported queue capacity is 25 in the inspected source; keep this example bound to the declared policy if the capacity changes.",
+      "initial": {"queue_entry_count": 25, "bridge": "offline", "all_entries_distinct": true},
+      "events": ["Attempt acceptance of one additional distinct submission"],
+      "expected": {"additional_submission_accepted": false, "explicit_capacity_outcome": true, "existing_entries_preserved": 25, "silent_evictions": 0, "editable_extra_draft_retained": true},
+      "rejected_counterexample": "The oldest prompt is silently removed or acceptance is reported without recoverable storage."
+    },
+    {
+      "id": "RC08-retired-document-evidence",
+      "scenario_ids": ["U22", "R10", "R11"],
+      "requirement_ids": ["BR-09"],
+      "initial": {"tab": "tab-alpha", "old_document": "document-1", "current_document": "document-2", "current_mark": "mark-B"},
+      "events": ["A delayed document-1 capture for mark-A arrives after document-2 registration and mark-B publication"],
+      "expected": {"current_document": "document-2", "current_mark": "mark-B", "old_pixels_replace_current_evidence": false, "old_document_reclaims_registration": false},
+      "rejected_counterexample": "A visually valid old screenshot is accepted for the new document merely because the tab URL matches."
+    },
+    {
+      "id": "RC09-foreign-listener-is-not-recovery",
+      "scenario_ids": ["U18", "L02", "H04"],
+      "requirement_ids": ["BR-12"],
+      "initial": {"requested_test_endpoint": "occupied-by-unrelated-listener", "listener_identity": "incompatible"},
+      "events": ["Request bridge readiness or startup"],
+      "expected": {"readiness_success": false, "foreign_process_terminated": false, "second_writer_started": false, "store_mutated": false, "bounded_diagnostic": true},
+      "rejected_counterexample": "An occupied TCP port is counted as a healthy bridge, or the unknown listener is killed to win the port."
+    },
+    {
+      "id": "RC10-failure-denominator",
+      "scenario_ids": ["U24", "H02", "H08"],
+      "requirement_ids": ["BR-11"],
+      "inputs": {"deadline_ms": 300, "attempts": [{"id": "A", "observed_ms": 40}, {"id": "B", "observed_ms": 60}, {"id": "C", "outcome": "timeout"}]},
+      "events": ["Generate a result report from all three independent attempt records"],
+      "expected": {"attempt_count": 3, "successful_observation_count": 2, "timeout_count": 1, "deadline_success_numerator": 2, "deadline_success_denominator": 3, "all_attempts_passed": false, "p99_qualification_claim": "insufficient-sample"},
+      "rejected_counterexample": "The reporter says 2 of 2 succeeded, drops C, or treats three attempts as a qualified p99 estimate."
+    },
+    {
+      "id": "RC11-pull-host-is-not-auto-wake",
+      "scenario_ids": ["C11", "E10", "E12"],
+      "requirement_ids": ["BR-06", "BR-11"],
+      "initial": {"session": "session-alpha", "opted_in": true, "wake": "pull"},
+      "events": ["Submit A from the eligible browser", "Observe watcher receipt of A", "Wait without a new user prompt", "Deliver an authorized next prompt and observe the scoped context"],
+      "expected": {"TW_can_be_observed_before_TS": true, "automatic_model_turn_claimed": false, "intentional_wait_counted_as_bridge_latency": false, "next_prompt_context_contains_A": true},
+      "rejected_counterexample": "Watcher stdout is relabeled as actual agent receipt or pull mode is advertised as autonomous push."
+    },
+    {
+      "id": "RC12-stale-connection-callback",
+      "scenario_ids": ["U15", "U16", "C08"],
+      "requirement_ids": ["BR-07"],
+      "initial": {"current_connection": "connection-2", "retired_connection": "connection-1", "current_connection_ready": true},
+      "events": ["Late close/error callbacks arrive from connection-1", "Deliver a valid current snapshot on connection-2", "Submit A"],
+      "expected": {"current_connection": "connection-2", "current_socket_closed_by_old_callback": false, "stale_callback_marks_current_connection_offline": false, "A_eventually_delivered": true, "parallel_reconnect_loops_created": 0},
+      "rejected_counterexample": "A callback closes a shared mutable current socket or starts an orphan reconnect loop."
+    }
+  ]
+}
