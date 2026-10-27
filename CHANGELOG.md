@@ -27,6 +27,12 @@ The changelog is English throughout.
   units); answer clients that half-close after their request. Independent
   owner-tie, cross-implementation retry and half-close checks run for both
   candidates in the comparison recorder.
+- Experimental Rust bridge candidate: write the inbox mirror and withdrawal
+  marker byte-for-byte like the JavaScript store, send the same WS pin
+  projection, default unlabelled sessions to `?`, normalize claimed hosts,
+  discover a host-less watcher's Portless previews with the shared helper,
+  keep only lasso points in annotations and validate both selection images
+  before writing. A reference-vs-candidate differential check covers them.
 - Wait for the fixture gauntlet's static server before the first navigation.
 
 ## 0.35.2 · Bridge 0.20.1 — 2026-10-27 (Isolated bridge comparison)

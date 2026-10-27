@@ -80,6 +80,55 @@ pub fn js_number(x: f64) -> String {
 fn cap_units(v: &Value, n: usize) -> Vec<u16> {
     js_string(v).encode_utf16().take(n).collect()
 }
+/// JavaScript truthiness of a JSON value.
+pub fn js_truthy(v: &Value) -> bool {
+    match v {
+        Value::Null => false,
+        Value::Bool(b) => *b,
+        Value::Number(n) => n.as_f64().is_some_and(|x| x != 0.0 && !x.is_nan()),
+        Value::String(s) => !s.is_empty(),
+        _ => true,
+    }
+}
+/// `String.prototype.slice(start, end)` over UTF-16 units.
+pub fn js_substring(s: &str, start: usize, end: usize) -> String {
+    let units = s.encode_utf16().collect::<Vec<_>>();
+    String::from_utf16_lossy(&units[start.min(units.len())..end.min(units.len()).max(start.min(units.len()))])
+}
+/// `String.prototype.trim`: ECMAScript WhiteSpace and LineTerminator only.
+pub fn js_trim(s: &str) -> &str {
+    s.trim_matches(|c: char| {
+        matches!(c, '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | ' ' | '\u{a0}' | '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}' | '\u{205f}' | '\u{3000}' | '\u{feff}')
+    })
+}
+/// `JSON.stringify(browserSource)` in the sanitizer's insertion order.
+pub fn source_json(v: &Value) -> String {
+    let keys = ["browser", "session", "tab", "document"];
+    let mut extra = v.as_object().map(|o| o.keys().filter(|k| !keys.contains(&k.as_str())).cloned().collect::<Vec<_>>()).unwrap_or_default();
+    extra.sort();
+    let fields = keys.iter().map(|k| k.to_string()).chain(extra).filter(|k| v.get(k.as_str()).is_some());
+    format!(
+        "{{{}}}",
+        fields.map(|k| format!("{}:{}", Value::String(k.clone()), v[k.as_str()])).collect::<Vec<_>>().join(",")
+    )
+}
+/// Speaking label for a text-less prompt (the store's `markLabel`).
+pub fn mark_label(p: &Value) -> String {
+    if let Some(t) = p["targets"].as_array().filter(|t| !t.is_empty()) {
+        return format!("Mark: {} elements", t.len());
+    }
+    let inner = js_string(&p["target"]["innerText"]);
+    let t = js_trim(&inner);
+    if !t.is_empty() {
+        let more = if t.encode_utf16().count() > 48 { "…" } else { "" };
+        return format!("Mark: “{}{more}”", js_substring(t, 0, 48));
+    }
+    if js_truthy(&p["target"]["selector"]) {
+        format!("Mark: {}", js_string(&p["target"]["selector"]))
+    } else {
+        "Mark without element".into()
+    }
+}
 pub fn cap(v: &Value, n: usize) -> String {
     // A Rust string cannot hold the unpaired surrogate JavaScript may leave at
     // the cut; it is stored as U+FFFD. Signatures use the exact UTF-16 units.
@@ -976,7 +1025,7 @@ impl Store {
             .unwrap_or(0)
             + 1;
         let id = format!("nudge_{seq}");
-        let mut pin = json!({"id":id,"status":"open","createdAt":now(),"author":opt(&p["author"],80),"text":cap(&p["text"],4000),"url":cap(&p["url"],2000),"title":cap(&p["title"],300),"ua":opt(&p["ua"],300),"owner":owner,"browserSource":source(&p["browserSource"]),"selectionGeneration":js_token(&p["selectionGeneration"]),"submissionId":sid,"submissionCreatedAt":if modern{opt(&p["submissionCreatedAt"],40)}else{Value::Null},"viewport":rect(&p["viewport"]),"target":target(&p["target"]),"targets":targets(&p["targets"]),"annotations":p.get("annotations").cloned().unwrap_or(Value::Null),"console":p["console"].as_array().map(|a|a.iter().skip(a.len().saturating_sub(20)).map(|l|json!(cap(l,500))).collect::<Vec<_>>())});
+        let mut pin = json!({"id":id,"status":"open","createdAt":now(),"author":opt(&p["author"],80),"text":cap(&p["text"],4000),"url":cap(&p["url"],2000),"title":cap(&p["title"],300),"ua":opt(&p["ua"],300),"owner":owner,"browserSource":source(&p["browserSource"]),"selectionGeneration":js_token(&p["selectionGeneration"]),"submissionId":sid,"submissionCreatedAt":if modern{opt(&p["submissionCreatedAt"],40)}else{Value::Null},"viewport":rect(&p["viewport"]),"target":target(&p["target"]),"targets":targets(&p["targets"]),"annotations":p["annotations"].as_array().map(|a|json!(a.iter().map(|x|json!({"type":"lasso","points":x["points"]})).collect::<Vec<_>>())).unwrap_or(Value::Null),"console":p["console"].as_array().map(|a|a.iter().skip(a.len().saturating_sub(20)).map(|l|json!(cap(l,500))).collect::<Vec<_>>())});
         for (field, suffix) in [("screenshot", ""), ("screenshotFull", "_full")] {
             if !p[field].is_null() {
                 pin[field] = json!(
@@ -1076,55 +1125,105 @@ impl Store {
         }
         Ok((200, response, Some(pin)))
     }
+    /// Direct-reader files, byte-for-byte the JavaScript store's
+    /// `writeInboxMirror` / `writeWithdrawnMarker` documents.
     pub fn mirror(&self, p: &Value, withdrawn: bool) -> io::Result<()> {
         fs::create_dir_all(self.dir.join("inbox"))?;
         let id = p["id"].as_str().unwrap_or("");
-        let get = |v: &Value| v.as_str().unwrap_or("").to_string();
-        let mut body = if withdrawn {
-            format!(
-                "# {id} (#{}) - withdrawn\n\nThe user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n- withdrawn: {}\n",
+        let text = |v: &Value| js_string(v);
+        let truthy = |v: &Value| js_truthy(v);
+        let selector = if truthy(&p["target"]["selector"]) { text(&p["target"]["selector"]) } else { "-".into() };
+        let body = if withdrawn {
+            let mut body = format!(
+                "# {id} (#{}) - withdrawn\n\nThe user withdrew this nudge. Stop work on it IMMEDIATELY, do not commit, do not resolve.\n\n- withdrawn: {}\n- created: {}\n- url: {}\n- selector: `{selector}`\n",
                 label(id),
-                get(&p["withdrawnAt"])
-            )
+                text(&p["withdrawnAt"]),
+                text(&p["createdAt"]),
+                text(&p["url"])
+            );
+            if truthy(&p["owner"]["label"]) {
+                body += &format!("- agent: {}\n", text(&p["owner"]["label"]))
+            }
+            if truthy(&p["owner"]["session"]) {
+                body += &format!("- session: {}\n", text(&p["owner"]["session"]))
+            }
+            body
         } else {
+            let line = |key: &str, v: &Value| if truthy(v) { format!("\n- {key}: {}", text(v)) } else { String::new() };
+            let code = |key: &str, v: &Value| if truthy(v) { format!("\n- {key}: `{}`", text(v)) } else { String::new() };
+            let provenance = if truthy(&p["browserSource"]) {
+                format!("\n- browser provenance: `{}`", source_json(&p["browserSource"]))
+            } else {
+                "\n- browser provenance: legacy / unverified".into()
+            };
+            let after_provenance = if truthy(&p["afterBrowserSource"]) {
+                format!("\n- after provenance: `{}`", source_json(&p["afterBrowserSource"]))
+            } else {
+                String::new()
+            };
+            let console = match p["console"].as_array() {
+                Some(c) if !c.is_empty() => format!(
+                    "\n\n## Console\n```\n{}\n```\n",
+                    c.iter().map(text).collect::<Vec<_>>().join("\n")
+                ),
+                _ => String::new(),
+            };
+            let many = match p["targets"].as_array() {
+                Some(t) if !t.is_empty() => format!(
+                    "\n\n## Elements ({})\n{}\n",
+                    t.len(),
+                    t.iter()
+                        .enumerate()
+                        .map(|(i, t)| format!(
+                            "{}. `{}`{}",
+                            i + 1,
+                            text(&t["selector"]),
+                            if truthy(&t["source"]) { format!(" — `{}`", text(&t["source"])) } else { String::new() }
+                        ))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                ),
+                _ => String::new(),
+            };
+            let after = if truthy(&p["screenshotAfter"]) {
+                format!("\n## Evidence (after)\n\n![after](../{})\n", text(&p["screenshotAfter"]))
+            } else {
+                String::new()
+            };
+            let quote = if truthy(&p["text"]) {
+                text(&p["text"])
+            } else {
+                format!("_({} — reference for \"this one\" in chat)_", mark_label(p))
+            };
+            let amends = match p["amendments"].as_array() {
+                Some(a) if !a.is_empty() => format!(
+                    "\n{}\n",
+                    a.iter()
+                        .map(|a| {
+                            let at = text(&a["at"]);
+                            let time = if at.is_empty() { String::new() } else { format!(" ({})", js_substring(&at, 11, 16)) };
+                            format!("\n> **Amendment{time}:** {}", text(&a["text"]))
+                        })
+                        .collect::<String>()
+                ),
+                _ => String::new(),
+            };
+            let shot = if truthy(&p["screenshot"]) {
+                format!("\n![screenshot](../{})\n", text(&p["screenshot"]))
+            } else {
+                String::new()
+            };
             format!(
-                "# {id} (#{}) - {}\n\n> {}\n\n",
+                "# {id} (#{}) - {}\n\n> {quote}\n{amends}\n- url: {}\n- selector: `{selector}`{}{}{}{provenance}{after_provenance}\n- created: {}\n{shot}{many}{console}{after}",
                 label(id),
-                get(&p["status"]),
-                get(&p["text"])
+                text(&p["status"]),
+                text(&p["url"]),
+                code("source", &p["target"]["source"]),
+                line("author", &p["author"]),
+                line("agent", &p["owner"]["label"]),
+                text(&p["createdAt"])
             )
         };
-        body += &format!(
-            "- url: {}\n- selector: `{}`\n- created: {}\n",
-            get(&p["url"]),
-            get(&p["target"]["selector"]),
-            get(&p["createdAt"])
-        );
-        if !p["owner"].is_null() {
-            body += &format!(
-                "- agent: {}\n- session: {}\n",
-                get(&p["owner"]["label"]),
-                get(&p["owner"]["session"])
-            )
-        }
-        if !withdrawn {
-            if let Some(a) = p["amendments"].as_array() {
-                for item in a {
-                    body += &format!("\n> **Amendment:** {}\n", get(&item["text"]))
-                }
-            }
-            for (k, title) in [
-                ("screenshot", "Screenshot"),
-                ("screenshotAfter", "Evidence (after)"),
-            ] {
-                if let Some(s) = p[k].as_str() {
-                    body += &format!("\n## {title}\n\n![image](../{s})\n")
-                }
-            }
-            if !p["browserSource"].is_null() {
-                body += &format!("\n- browser provenance: `{}`\n", p["browserSource"]);
-            }
-        }
         let file = self.dir.join("inbox").join(format!(
             "{id}{}.md",
             if withdrawn { ".withdrawn" } else { "" }

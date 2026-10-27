@@ -60,6 +60,7 @@ struct App {
     completed: HashMap<String, Completed>,
     next: usize,
     joined: u64,
+    discovery: HashMap<String, (Value, Instant)>,
     roster_sig: String,
 }
 type Shared = Arc<Mutex<App>>;
@@ -70,11 +71,61 @@ fn tab(v: &Value) -> String {
     json!([v["browser"], v["session"], v["tab"]]).to_string()
 }
 fn key(v: &Value) -> String {
-    if !s(&v["session"]).is_empty() {
-        format!("s:{}", s(&v["session"]))
+    if js_truthy(&v["session"]) {
+        format!("s:{}", js_substring(&js_string(&v["session"]), 0, 128))
     } else {
-        format!("p:{}", v["pid"])
+        format!("p:{}", js_string(&v["pid"]))
     }
+}
+/// The shared preview discovery helper next to this checkout (`agent/`), the
+/// same file the JavaScript bridge runs for watchers that name no hosts.
+fn preview_script() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    exe.ancestors().map(|d| d.join("agent/preview-hosts.mjs")).find(|f| f.is_file())
+}
+fn run_discovery(script: PathBuf, pid: String) -> Option<Vec<u8>> {
+    use std::io::Read;
+    let node = std::env::var_os("NUDGE_NODE").unwrap_or_else(|| "node".into());
+    let mut child = std::process::Command::new(node)
+        .arg(script)
+        .arg(pid)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .ok()?;
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) if status.success() => break,
+            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(20)),
+            _ => {
+                let _ = child.kill();
+                let _ = child.wait();
+                return None;
+            }
+        }
+    }
+    let mut out = vec![];
+    child.stdout.take()?.take(64_001).read_to_end(&mut out).ok()?;
+    (out.len() <= 64_000).then_some(out)
+}
+/// `refreshLegacyHosts`: discover a host-less watcher's previews off the event
+/// loop; failed discovery never broadens ownership.
+fn discover_hosts(shared: Shared, key: String, pid: Value) {
+    let Some(script) = preview_script() else { return };
+    let arg = js_string(&pid);
+    tokio::spawn(async move {
+        let Ok(Some(out)) = tokio::task::spawn_blocking(move || run_discovery(script, arg)).await else { return };
+        let Ok(Value::Array(hosts)) = serde_json::from_slice::<Value>(&out) else { return };
+        let mut a = shared.lock().unwrap();
+        let Some(agent) = a.agents.get_mut(&key).filter(|agent| agent.value["pid"] == pid) else { return };
+        let next = if !hosts.is_empty() || !agent.value["hosts"].is_null() { Value::Array(hosts) } else { Value::Null };
+        if agent.value["hosts"] != next {
+            agent.value["hosts"] = next;
+            a.broadcast()
+        }
+    });
 }
 /// Newest armed session in join order: `reduce((a, b) => b.since >= a.since ? b : a)`,
 /// so equal `since` values elect the session that joined last.
@@ -192,19 +243,27 @@ impl App {
         };
         json!({"status":"pending","reason":reason})
     }
+    /// The store's `pinForClient` projection; absent JavaScript values are omitted.
     fn client_pin(&self, p: &Value) -> Value {
-        let mut v = json!({"id":p["id"],"label":label(s(&p["id"])),"status":p["status"],"author":p["author"],"owner":p["owner"],"text":p["text"],"url":p["url"],"createdAt":p["createdAt"],"isRegion":p["annotations"].as_array().is_some_and(|a|a.iter().any(|x|x["type"]=="lasso")),"target":{"selector":p["target"]["selector"],"rect":p["target"]["rect"],"innerText":opt(&p["target"]["innerText"],80)}});
-        for k in [
-            "resolvedAt",
-            "amendments",
-            "screenshot",
-            "screenshotAfter",
-            "browserSource",
-            "targets",
-        ] {
-            if !p[k].is_null() {
+        let inner = js_substring(&js_string(&p["target"]["innerText"]), 0, 80);
+        let mut target = json!({"selector":p["target"]["selector"],"rect":p["target"]["rect"]});
+        if !inner.is_empty() {
+            target["innerText"] = json!(inner)
+        }
+        let mut v = json!({"id":p["id"],"label":label(s(&p["id"])),"status":p["status"],"author":p["author"],"owner":if js_truthy(&p["owner"]){p["owner"].clone()}else{Value::Null},"text":p["text"],"url":p["url"],"createdAt":p["createdAt"],"isRegion":p["annotations"].as_array().is_some_and(|a|a.iter().any(|x|x["type"]=="lasso")),"target":target});
+        for k in ["resolvedAt", "screenshot", "screenshotAfter"] {
+            if p.get(k).is_some() {
                 v[k] = p[k].clone()
             }
+        }
+        if js_truthy(&p["browserSource"]) {
+            v["browserSource"] = p["browserSource"].clone()
+        }
+        if let Some(a) = p["amendments"].as_array() {
+            v["amendments"] = json!(a.iter().map(|a| json!({"text":a["text"],"at":a["at"]})).collect::<Vec<_>>())
+        }
+        if let Some(t) = p["targets"].as_array() {
+            v["targets"] = json!(t.iter().map(|t| json!({"selector":t["selector"]})).collect::<Vec<_>>())
         }
         let e = self.evidence(p);
         if !e.is_null() {
@@ -394,6 +453,13 @@ impl App {
             p
         };
         let mut sel = json!({"at":now(),"url":cap(&p["url"],2000),"title":cap(&p["title"],300),"selector":cap(&t["selector"],500),"source":opt(&t["source"],500),"xpath":opt(&t["xpath"],500),"innerText":cap(&t["innerText"],300),"outerHTML":cap(&t["outerHTML"],1200),"styles":styles(&t["styles"]),"rect":rect(&t["rect"]),"viewport":rect(&p["viewport"]),"targets":targets(&p["targets"]),"browserSource":src,"selectionGeneration":generation});
+        // Validate both images before any file is touched (the store's order).
+        for (field, overview_image) in [("screenshot", false), ("screenshotFull", true)] {
+            let given = !p[field].is_null() && p[field] != "";
+            if given && (if overview_image { overview(&p[field]).is_none() } else { image(&p[field]).is_none() }) {
+                return (409, json!({"error":"invalid_selection_image"}));
+            }
+        }
         for (field, suffix) in [("screenshot", ""), ("screenshotFull", "_full")] {
             if !p[field].is_null() && p[field] != "" {
                 match self.store.save_image("selection", suffix, &p[field]) {
@@ -643,7 +709,14 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
                 if !valid {
                     return response(400, json!({"error":"invalid local app host"}), origin);
                 }
-                h.clone()
+                let mut seen = Vec::<String>::new();
+                for v in h.as_array().unwrap() {
+                    let normal = host(&format!("http://{}", s(v)));
+                    if !seen.contains(&normal) {
+                        seen.push(normal)
+                    }
+                }
+                json!(seen)
             } else {
                 a.agents
                     .get(&k)
@@ -651,7 +724,10 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
                     .map(|old| old.value["hosts"].clone())
                     .unwrap_or(Value::Null)
             };
-            let mut v = json!({"label":opt(&payload["label"],60),"pid":payload["pid"],"since":payload["since"],"session":opt(&payload["session"],128),"wake":if payload["wake"]=="push"{"push"}else{"pull"},"hosts":hosts,"lastSeen":chrono::Utc::now().timestamp_millis()});
+            // The JavaScript roster: `String(v || fallback).slice(0, n)` per field.
+            let field = |v: &Value, n| if js_truthy(v) { json!(js_substring(&js_string(v), 0, n)) } else { Value::Null };
+            let label = if js_truthy(&payload["label"]) { js_substring(&js_string(&payload["label"]), 0, 60) } else { "?".into() };
+            let mut v = json!({"label":label,"pid":payload["pid"],"since":payload["since"],"session":field(&payload["session"],128),"wake":if payload["wake"]=="push"{"push"}else{"pull"},"hosts":hosts,"lastSeen":chrono::Utc::now().timestamp_millis()});
             for (k, n) in [
                 ("project", 60),
                 ("branch", 60),
@@ -660,7 +736,7 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
                 ("surface", 20),
                 ("firstMsg", 90),
             ] {
-                v[k] = opt(&payload[k], n)
+                v[k] = field(&payload[k], n)
             }
             let joined = match a.agents.get(&k) {
                 Some(old) => old.joined,
@@ -669,6 +745,7 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
                     a.joined
                 }
             };
+            let discover = payload.get("hosts").is_none().then(|| k.clone());
             a.agents.insert(
                 k,
                 Agent {
@@ -680,6 +757,14 @@ async fn handler(State(shared): State<Shared>, req: Request<Body>) -> Response {
             let owns = a.owns(&v);
             if a.sig() != a.roster_sig {
                 a.broadcast()
+            }
+            if let Some(k) = discover {
+                let pid = payload["pid"].clone();
+                let recent = a.discovery.get(&k).is_some_and(|(p, at)| *p == pid && at.elapsed() < Duration::from_secs(10));
+                if !recent {
+                    a.discovery.insert(k.clone(), (pid.clone(), Instant::now()));
+                    discover_hosts(shared.clone(), k, pid);
+                }
             }
             (200, json!({"ok":true,"owner":owns}))
         }
@@ -906,6 +991,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         completed: HashMap::new(),
         next: 0,
         joined: 0,
+        discovery: HashMap::new(),
         roster_sig: String::new(),
     }));
     let sweep = shared.clone();

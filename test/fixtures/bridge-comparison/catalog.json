@@ -536,7 +536,8 @@
       "assertions": [
         "test/bridge-boundary.mjs: Host/Origin, invalid annotations and healthy peer",
         "test/bridge-image-conformance.mjs: valid PNG/JPEG and rejected malformed PNG",
-        "test/bridge-origin-headers.mjs: malformed duplicate and non-UTF8 Origin cannot become missing Origin"
+        "test/bridge-origin-headers.mjs: malformed duplicate and non-UTF8 Origin cannot become missing Origin",
+        "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop"
       ],
       "missing_prerequisites": [],
       "coverage": "mapped",
@@ -741,7 +742,8 @@
       "expected": "Correct roster/liveness expiration and current eligible ownership",
       "assertions": [
         "test/wake-mode.mjs: W1-W5",
-        "test/bridge-realtime.mjs: roster metadata changes"
+        "test/bridge-realtime.mjs: roster metadata changes",
+        "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop"
       ],
       "missing_prerequisites": [
         "Candidate-neutral full replacement/expiration browser matrix remains missing."
@@ -943,7 +945,8 @@
       "expected": "Exact full-host binding, no cross-wake; DNS failure distinguished from bridge failure",
       "assertions": [
         "test/origin-routing.mjs: K host ownership cases",
-        "test/portless-worktrees.mjs: shared proxy host isolation"
+        "test/portless-worktrees.mjs: shared proxy host isolation",
+        "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop"
       ],
       "missing_prerequisites": [
         "Portless DNS/process lifecycle test prerequisites are optional and not provisioned as a full paired lane."
@@ -1194,7 +1197,8 @@
       "expected": "CLI, hook and watcher keep interpreting data; no schema-only appearance of success",
       "assertions": [
         "test/bridge-rollback.mjs: current-snapshot JS to Rust to JS and unchanged direct CLI reader",
-        "test/bridge-canonical-retry.mjs: JavaScript-written store with an unpaired surrogate is read, not classified corrupt"
+        "test/bridge-canonical-retry.mjs: JavaScript-written store with an unpaired surrogate is read, not classified corrupt",
+        "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop"
       ],
       "missing_prerequisites": [
         "Supported historical version range is undeclared; v1 receipt safe refusal is not full historic replay qualification."
@@ -1334,7 +1338,8 @@
       "expected": "Correct payload/evidence delivered; size/capture costs separately labeled",
       "assertions": [
         "test/e2e.mjs: Suite A element/region/multi-context",
-        "test/bridge-image-conformance.mjs: PNG/JPEG wire admission"
+        "test/bridge-image-conformance.mjs: PNG/JPEG wire admission",
+        "test/bridge-differential.mjs: reference-vs-candidate inbox mirror, withdrawal marker, WS pin projection, roster labels/hosts, Portless discovery and failed-selection crop"
       ],
       "missing_prerequisites": [
         "All ready region/multi-element/image payload profiles have not run in actual paired Google Chrome lanes."

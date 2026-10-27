@@ -16,6 +16,7 @@ const commands=[
  ['withdrawal-fault-js',process.execPath,['test/bridge-withdrawal-fault.mjs']],
  ['rollback',process.execPath,['test/bridge-rollback.mjs']],
  ['canonical-retry',process.execPath,['test/bridge-canonical-retry.mjs']],
+ ['differential',process.execPath,['test/bridge-differential.mjs']],
  ['negative-controls',process.execPath,['test/bridge-mutants.mjs']],
  ['interrupt',process.execPath,['test/bridge-harness-interrupt.mjs']],
  ['rust-unit','cargo',['test','--locked','--manifest-path','bridge-rust/Cargo.toml']],
