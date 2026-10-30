@@ -9,6 +9,9 @@ The changelog is English throughout.
 
 ## Unreleased
 
+- Scope guided setup readiness checks to the complete public preview URL, so
+  HTTPS Portless worktrees sharing a proxy port are checked independently.
+
 - Add a pinned, project-local Archify installation and reproducible, source-linked
   architecture map of the shared Chrome/Safari core and local bridge.
 - Synchronize the toolbar test with label and viewport updates before grabbing

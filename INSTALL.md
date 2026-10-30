@@ -41,8 +41,11 @@ at first use. Reuse permission already given in the conversation. A decline or
 an unanswered question installs nothing and leaves ordinary work available.
 
 1. Locate `groundworks-nudge` with `command -v groundworks-nudge`. If it exists,
-   run `groundworks-nudge status --check`, with `--browser chrome|safari` and
-   `--port <app-port>` only when the intended browser and app port are known.
+   run `groundworks-nudge status --check`, adding `--browser chrome|safari`
+   and `--url <preview-url>` when the intended browser and public preview URL
+   are known. For Portless, use the complete HTTP/HTTPS hostname and proxy port,
+   never the internal app port or shared proxy port alone. Reserve `--port`
+   for direct localhost apps.
    Pass `--runtime codex|claude-code|grok` when automatic detection cannot
    identify the current runtime. The report has
    `kind: groundworks-nudge-readiness` and `schemaVersion: 1`. An older
@@ -74,9 +77,9 @@ an unanswered question installs nothing and leaves ordinary work available.
    session. If this guide was entered from that Skill, continue its arming
    steps using the checks already performed. Browser activation may still be
    pending; do not require an armed session before allowing the Skill to arm.
-   Check again after arming, with its returned agent id and the intended app
-   port. A missing or stale native Skill entry may require a fresh agent
-   session; do not claim runtime discovery from a copied file alone.
+   Check again after arming, with its returned `--agent-id` and the intended
+   `--url <preview-url>`. A missing or stale native Skill entry may require a
+   fresh agent session; do not claim runtime discovery from a copied file alone.
 6. Finish with one deliberately submitted test prompt on the intended app.
    Confirm receipt in the selected session and preserve the existing queue's
    ownership. A `ready` report proves observed connections only. It does not
