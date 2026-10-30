@@ -19,8 +19,10 @@ import crypto from 'node:crypto'
 import * as store from './store.mjs'
 import { acquireStoreLease } from './lease.mjs'
 import { ORIGIN_OK, admissionError, readJsonBody } from './http-boundary.mjs'
+import { execFile } from 'node:child_process'
+import { previewHost } from '../agent/preview-hosts.mjs'
 
-const VERSION = '0.19.2'
+const VERSION = '0.20.1'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
@@ -88,7 +90,7 @@ function handle(req, res) {
     const fresh = freshAgents()
     const pickAlive = (h) => { const k = chosenByHost.get(h) || chosenByHost.get('*'); return !!k && fresh.some(a => agentKey(a) === k) }
     const tabHosts = [...new Set([...wss.clients].map(c => hostOf(c.meta?.url || '')).filter(Boolean))]
-    const routes = tabHosts.map(h => { const o = ownerForHost(h); return { host: h, owner: o ? { label: o.label, session: o.session, wake: o.wake } : null, viaFallback: !pickAlive(h) } })
+    const routes = tabHosts.map(h => { const o = ownerForHost(h); const claimed = !!o?.hosts?.includes(h); return { host: h, owner: o ? { label: o.label, session: o.session, wake: o.wake } : null, viaFallback: !pickAlive(h) && !claimed, via: pickAlive(h) ? 'selection' : claimed ? 'worktree' : 'fallback' } })
     return json(res, 200, { app: 'groundworks-nudge', version: VERSION, capabilities: { sourceBoundEvidence: 1, submissionIdempotency: 1, lifecycleIdentity: 1 }, workspace: path.dirname(store.STORE_DIR), store: store.STORE_DIR, agentLive: !!gOwner, agentLabel: gOwner?.label || null, agentWake: gOwner?.wake || null, agents: agentsForClient(qHost), owners: [...chosenByHost], routes, tabs: [...wss.clients].map(c => c.meta).filter(Boolean) })
   }
   // Agent heartbeat: a live watcher (watch-nudges.mjs) checks in every ~2 s. This is
@@ -106,6 +108,14 @@ function handle(req, res) {
       const existing = roster.get(key)
       if (existing && existing.pid !== who.pid && existing.since > who.since)
         return json(res, 200, { ok: true, owner: false, replaced: true })
+      let hosts = null
+      if (who.hosts !== undefined) {
+        if (!Array.isArray(who.hosts) || who.hosts.length > 64) return json(res, 400, { error: 'hosts must be an array of local app hosts' })
+        try { hosts = [...new Set(who.hosts.map(host => {
+          if (typeof host !== 'string' || host.length > 259 || previewHost(`http://${host}`) !== host.replace(/^127\.0\.0\.1(?=:|$)/, 'localhost')) throw new Error('invalid host')
+          return previewHost(`http://${host}`)
+        }))] } catch { return json(res, 400, { error: 'invalid local app host' }) }
+      } else hosts = existing?.pid === who.pid ? existing.hosts : null
       roster.set(key, {
         label: String(who.label || '?').slice(0, 60), pid: who.pid, since: who.since,
         session: who.session ? String(who.session).slice(0, 128) : null,
@@ -118,9 +128,11 @@ function handle(req, res) {
         // pulled on the next prompt (pull)? Missing/invalid is always pull, so
         // the extension never claims an autonomous wake a session cannot do.
         wake: who.wake === 'push' ? 'push' : 'pull',
+        hosts,
         firstMsg: String(who.firstMsg || '').slice(0, 90) || null,
         lastSeen: Date.now(),
       })
+      if (who.hosts === undefined) refreshLegacyHosts(key, who.pid)
       // Push whenever the visible session list OR the ownership map changed — a
       // new session must reach the Switch-session dropdown at once
       // (2026-07-06); ownership is per-host now, no single global owner.
@@ -136,7 +148,7 @@ function handle(req, res) {
       // session (new watcher pid) stays selectable (2026-07-06)
       const target = freshAgents().find(a => (session && a.session === session) || a.pid === pid)
       if (!target) return json(res, 404, { error: 'no such live agent' })
-      const h = host ? normHost(String(host).slice(0, 120)) : '*'
+      const h = host ? normHost(String(host).slice(0, 259)) : '*'
       chosenByHost.set(h, agentKey(target))
       log(`owner chosen: ${target.label} for ${h}`)
       pushSnapshot()
@@ -267,6 +279,22 @@ httpServer.listen(PORT, '127.0.0.1', () => {
 // old single-owner behaviour (newest fresh agent owns every host).
 const roster = new Map() // pid -> full identity + lastSeen (standby sessions incl.)
 const chosenByHost = new Map() // host -> agentKey ('*' = default for un-picked hosts)
+const legacyDiscovery = new Map()
+function refreshLegacyHosts(key, pid) {
+  const pending = legacyDiscovery.get(key)
+  if (pending?.pid === pid && Date.now() - pending.at < 10000) return
+  legacyDiscovery.set(key, { pid, at: Date.now() })
+  execFile(process.execPath, [path.join(HERE, '../agent/preview-hosts.mjs'), String(pid)], { timeout: 5000, maxBuffer: 64000 }, (error, output) => {
+    if (error) return
+    const agent = roster.get(key)
+    if (!agent || agent.pid !== pid) return
+    try {
+      const hosts = JSON.parse(output)
+      const next = hosts.length || agent.hosts !== null ? hosts : null
+      if (JSON.stringify(agent.hosts) !== JSON.stringify(next)) { agent.hosts = next; pushSnapshot() }
+    } catch { /* failed discovery never broadens ownership */ }
+  })
+}
 const agentKey = (a) => a.session ? `s:${a.session}` : `p:${a.pid}`
 const freshAgents = () => { const now = Date.now(); return [...roster.values()].filter(a => now - a.lastSeen < 12_000) }
 // 127.0.0.1 and localhost are the SAME dev server — normalize so a pick made on
@@ -289,13 +317,17 @@ function ownerForHost(host) {
   if (!f.length) return null
   const key = (host && chosenByHost.get(host)) || chosenByHost.get('*')
   if (key) { const c = f.find(a => agentKey(a) === key); if (c) return c }
-  return f.reduce((a, b) => (b.since >= a.since ? b : a)) // fallback: newest (single-owner behaviour)
+  const claimed = host ? f.filter(a => a.hosts?.includes(host)) : f
+  if (claimed.length) return claimed.reduce((a, b) => (b.since >= a.since ? b : a))
+  const legacy = f.filter(a => a.hosts === null)
+  return legacy.length ? legacy.reduce((a, b) => (b.since >= a.since ? b : a)) : null
 }
 // provenance stamp for a nudge on a given host — immutable once written onto a pin
 const ownerStamp = (host) => { const o = ownerForHost(host); return o ? { label: o.label, session: o.session } : null }
 // does this agent own at least one host (explicit pick, '*' default, or the newest fallback)?
 function agentOwnsAnything(a) {
   const k = agentKey(a)
+  if (a.hosts?.some(host => agentKey(ownerForHost(host) || {}) === k)) return true
   if ([...chosenByHost.values()].includes(k)) return true
   const fallback = ownerForHost('') // '*' default or newest
   return !!fallback && agentKey(fallback) === k

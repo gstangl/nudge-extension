@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import vm from 'node:vm'
 import fs from 'node:fs'
 
-const context = vm.createContext({ URL, AbortSignal, fetch, crypto, Date })
+const context = vm.createContext({ URL, AbortSignal, fetch, crypto, Date, setTimeout, clearTimeout })
 vm.runInContext(fs.readFileSync(new URL('../../extension/queue.js', import.meta.url), 'utf8'), context)
 const NOW = Date.parse('2026-01-10T12:00:00Z')
 const copy = value => structuredClone(value)
@@ -18,6 +18,7 @@ function fixture(initial) {
   let serial = 0
   const request = async (url, options) => {
     state.requests.push(url)
+    await state.transportGate
     if (state.offline) throw new Error('offline')
     if (url.endsWith('/.identity')) return { ok: true, json: async () => ({ app: 'groundworks-nudge', capabilities: { submissionIdempotency: state.capability ? 1 : 0 } }) }
     const p = JSON.parse(options.body)
@@ -27,17 +28,53 @@ function fixture(initial) {
     if (state.loseResponse) { state.loseResponse = false; throw new Error('response lost after commit') }
     return { ok: state.status < 400, status: state.status, json: async () => state.body || receipt }
   }
-  const restart = () => context.NudgeQueue.create({ storage, fetch: request, endpoint: async () => 'http://localhost:4822', now: () => NOW, uuid: () => `migration_${++serial}` })
+  const restart = () => context.NudgeQueue.create({ storage, fetch: request, endpoint: async () => 'http://localhost:4822', now: () => NOW, uuid: () => `migration_${++serial}`, acknowledgementMs: 20 })
   return { state, storage, receipts, restart, owner: restart() }
 }
 
 describe('serialized durable browser submission queue', () => {
+  it('durably accepts another prompt without waiting behind a stalled transport', async () => {
+    const { owner, state } = fixture()
+    let release
+    state.transportGate = new Promise(resolve => { release = resolve })
+    const first = owner.handle(submit(payload(1)))
+    const notifications = []
+    const second = owner.handle(submit(payload(2)), { onDelivered: receipt => notifications.push(receipt) })
+    try {
+      const response = await Promise.race([second, new Promise(resolve => setTimeout(() => resolve('still waiting'), 150))])
+      expect(response).toMatchObject({ ok: true, queued: true, reason: 'delivery_pending' })
+      expect(state.data.nudgeQueue.entries.map(e => e.payload.submissionId)).toEqual(['submission_1', 'submission_2'])
+      expect(await owner.handle({ action: 'status' })).toMatchObject({ ok: true, entries: [{ submissionId: 'submission_1' }, { submissionId: 'submission_2' }] })
+    } finally { release(); await Promise.all([first, second]); await owner.handle({ action: 'flush' }) }
+    expect(state.sent.map(p => p.submissionId)).toEqual(['submission_1', 'submission_2'])
+    expect(notifications).toEqual([{ submissionId: 'submission_2', id: 'nudge_2', withdrawn: false }])
+  })
   it('persists before transport and acknowledges only a validated delivered response', async () => {
     const { owner, state } = fixture()
     const reply = await owner.handle(submit(payload()))
     expect(reply).toMatchObject({ ok: true, queued: false, id: 'nudge_1' })
     expect(state.writes).toBe(2)
     expect(state.data.nudgeQueue.entries).toEqual([])
+  })
+  it('does not acknowledge a failed enqueue behind an older blocked delivery', async () => {
+    const { owner, state } = fixture()
+    let release
+    state.transportGate = new Promise(resolve => { release = resolve })
+    const first = owner.handle(submit(payload(1)))
+    await first
+    state.failWrite = 2
+    try {
+      expect(await owner.handle(submit(payload(2)))).toMatchObject({ ok: false, error: 'storage_unavailable' })
+      expect(state.data.nudgeQueue.entries.map(e => e.payload.submissionId)).toEqual(['submission_1'])
+    } finally { release(); await owner.handle({ action: 'flush' }) }
+    expect(state.sent.map(p => p.submissionId)).toEqual(['submission_1'])
+  })
+  it('revalidates retries with the bridge instead of reusing a stale delivered receipt', async () => {
+    const { owner, state } = fixture()
+    expect(await owner.handle(submit(payload()))).toMatchObject({ id: 'nudge_1', withdrawn: false })
+    state.body = { id: 'nudge_1', withdrawn: true }
+    expect(await owner.handle(submit(payload()))).toMatchObject({ id: 'nudge_1', withdrawn: true })
+    expect(state.sent).toHaveLength(2)
   })
   it('serializes two visible-window submissions and concurrent flushes without loss or duplicates', async () => {
     const { owner, state } = fixture()
@@ -190,6 +227,13 @@ describe('local content-script HTTP transport', () => {
     expect(f.calls.every(c => c.options.frameId === 0)).toBe(true)
     expect(f.calls[1].request.url).toBe('http://localhost:4822/comments')
     expect(JSON.parse(f.calls[1].request.body).submissionId).toBe('submission_1')
+  })
+  it.each(['http://task-a.app.localhost:1355/', 'https://task-a.app.localhost:1355/', 'https://localhost:1355/', 'https://127.0.0.1:1355/'])('transports local page submissions through their own tab: %s', async url => {
+    const f = installed()
+    const from = { ...f.sender(1), url }
+    const reply = await f.send(submit(payload(1, { url, submissionCreatedAt: new Date().toISOString() })), from)
+    expect(reply).toMatchObject({ ok: true, id: 'nudge_1', queued: false })
+    expect(f.calls.every(call => call.tabId === 1)).toBe(true)
   })
   it('retains durable work when its transport tab closes and retries from a new local tab', async () => {
     const f = installed()

@@ -33,7 +33,9 @@ const hb = o => fetch(`${B}/agent/heartbeat`, { method: 'POST', headers: { 'Cont
 // two sessions labelled the way a user would, with the :PORT suffix in the name
 const A = { label: 'Estimate Templates :5175', pid: 701, session: 'estT', since: now - 5 * 60000, project: 'roots-apps', branch: 'feat/x', host: 'Zed' }
 const M = { label: 'Maps-Refactor :5276', pid: 702, session: 'mapR', since: now - 3 * 60000, project: 'roots-apps', branch: 'feat/y', host: 'Zed' }
-const beat = setInterval(() => { hb(A); hb(M) }, 1000)
+// L9 deliberately stops the bridge. An expected heartbeat rejection must not
+// terminate the harness before it can assert the visible offline state.
+const beat = setInterval(() => { hb(A).catch(() => {}); hb(M).catch(() => {}) }, 1000)
 await hb(A); await hb(M); await sleep(200)
 await fetch(`${B}/agent/owner`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid: A.pid, session: A.session, host: `localhost:${PAGE}` }) })
 await sleep(300)
@@ -116,6 +118,31 @@ try {
     s = await state(); if (!(s.queue && !s.who)) fail(`L3: opening queue must close who: ${JSON.stringify(s)}`)
     await p.keyboard.press('Escape')
     pass('L3 only one popover open at a time (queue ↔ switch-session are mutually exclusive)')
+  }
+
+  // Expanded prose must use the row width, with stable metadata and no overflow.
+  {
+    const prompt = 'Make the published state clearly distinguishable from staging. '.repeat(8) + '\n\nKeep the page thumbnail and description together.'
+    await fetch(`${B}/comments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: prompt, url: `http://localhost:${PAGE}/`, target: { selector: '#t' } }) })
+    await p.waitForTimeout(300)
+    await click('.pill .count')
+    const row = p.locator('.q-row').filter({ has: p.locator('.q-text', { hasText: 'Make the published state' }) })
+    const collapsed = await row.boundingBox()
+    const idBefore = await row.locator('.q-id').boundingBox()
+    await row.locator('.q-text').click()
+    await p.waitForTimeout(250)
+    const prose = await row.locator('.q-detail-text').boundingBox()
+    const idAfter = await row.locator('.q-id').boundingBox()
+    const expanded = await row.boundingBox()
+    if (prose.width < collapsed.width - 32 || prose.y < idAfter.y + idAfter.height) fail('L10: expanded prose must span the row below metadata')
+    if (Math.abs((idBefore.x - collapsed.x) - (idAfter.x - expanded.x)) > 1 || Math.abs((idBefore.y - collapsed.y) - (idAfter.y - expanded.y)) > 1) fail('L10: metadata jumps within the row on expansion')
+    if (await row.locator('.q-detail-text').textContent() !== prompt) fail('L10: full prompt or paragraphs lost')
+    await p.screenshot({ path: path.join(STORE, 'expanded-prompt.png') })
+    await row.locator('.q-id').click()
+    await p.waitForTimeout(250)
+    if (Math.abs((await row.boundingBox()).height - collapsed.height) > 1) fail('L10: collapse does not restore compact row')
+    await p.keyboard.press('Escape')
+    pass('L10 expanded prompt uses full width below stable metadata and collapses cleanly')
   }
 
   // ---------- L4: P/F tool hotkeys, tightly gated ----------

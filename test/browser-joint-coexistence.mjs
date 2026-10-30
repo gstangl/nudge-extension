@@ -14,7 +14,7 @@ import { setFixtureTitle, openPermissionWindow, closePermissionWindow, grantCurr
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 export function stageBrowserResources({ out, port, family }) {
-  assert(['chromium-test', 'safari-test'].includes(family))
+  assert(['chromium', 'chromium-test', 'safari-test'].includes(family))
   const result = JSON.parse(execFileSync(process.execPath, ['scripts/package-safari.mjs', '--mode', 'test', '--bridge-port', String(port), '--out', path.relative(ROOT, out)], { cwd: ROOT, encoding: 'utf8' }))
   const platformFile = path.join(out, 'platform.js'), platform = fs.readFileSync(platformFile, 'utf8')
   const end = platform.indexOf('\n'), preset = JSON.parse(platform.slice('globalThis.__nudgePlatform = '.length, end))

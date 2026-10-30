@@ -44,7 +44,7 @@ try {
   await waitFor(async () => {
     const live = await (await fetch(`${BASE}/.identity`)).json()
     const agent = live.agents?.find((item) => item.session === AGENT_ID)
-    return agent?.runtime === 'Codex' && agent?.surface === 'CLI' && agent?.wake === 'pull'
+    return agent?.runtime === 'Codex' && agent?.surface === 'CLI' && agent?.wake === 'pull' && agent?.label === 'Runtime parity'
   }, 'Codex watcher did not register with a stable runtime-neutral identity')
   pass('Codex identity reaches the shared roster with runtime, surface, and pull capability')
 
@@ -59,7 +59,7 @@ try {
   if (readiness.kind !== 'groundworks-nudge-readiness' || readiness.schemaVersion !== 1
       || readiness.state !== 'browser_required' || readiness.checks.bridge.state !== 'connected'
       || readiness.checks.session.state !== 'armed' || readiness.checks.session.wake !== 'pull') {
-    fail('status check confused a live bridge and armed session with a connected browser')
+    fail('status check confused a live bridge and armed session with a connected browser: ' + JSON.stringify(readiness))
   }
   pass('status check observes the real bridge and current session without asserting a browser installation')
 
@@ -91,6 +91,27 @@ try {
   const hookContext = JSON.parse(ownHook).hookSpecificOutput?.additionalContext || ''
   if (!hookContext.includes('REFERENCED nudge_1') || !hookContext.includes(STORE)) fail('armed Codex hook did not receive the referenced shared context')
   pass('hook opt-in stays silent for foreign Codex sessions and works for the armed one')
+
+  const slowIdentity = await (await fetch(`${BASE}/.identity`)).json()
+  const relay = spawn(process.execPath, ['--input-type=module', '-e', `
+    import http from 'node:http'
+    const server = http.createServer((req,res) => setTimeout(() => {
+      res.writeHead(200, {'Content-Type':'application/json'})
+      res.end(process.env.NUDGE_FIXTURE_IDENTITY)
+    },600))
+    server.listen(0,'127.0.0.1',()=>console.log(server.address().port))
+  `], { env: { ...ENV, NUDGE_FIXTURE_IDENTITY: JSON.stringify(slowIdentity) }, stdio: ['ignore', 'pipe', 'inherit'] })
+  children.push(relay)
+  const relayPort = await new Promise((resolve,reject) => {
+    relay.once('error',reject)
+    relay.stdout.once('data',data => resolve(Number(String(data).trim())))
+  })
+  const delayedHook = execFileSync(process.execPath, [HOOK], {
+    env: { ...ENV, NUDGE_PORT: String(relayPort), CODEX_THREAD_ID: AGENT_ID },
+    input: JSON.stringify({ prompt: 'Nudge 1' }), encoding: 'utf8', timeout: 5000,
+  }).trim()
+  if (!JSON.parse(delayedHook || '{}').hookSpecificOutput?.additionalContext?.includes('REFERENCED nudge_1')) fail('healthy delayed identity lost the native hook context')
+  pass('native hook retains opted-in context with a healthy delayed bridge identity')
 
   const resolved = JSON.parse(run(['resolve', created.id, '--wait-evidence', '0']))
   if (!resolved.resolved || resolved.evidence !== 'not_required') fail('element nudge resolve result is dishonest')

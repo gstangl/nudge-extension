@@ -8,6 +8,43 @@ permissions:
   contents: read
 
 jobs:
+  portless-worktrees:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            bridge/package-lock.json
+            test/package-lock.json
+      - run: npm ci
+        working-directory: bridge
+      - run: npm ci
+        working-directory: test
+      - run: npx playwright install --with-deps chromium
+        working-directory: test
+      - name: Install pinned optional preview test tool
+        run: npm install --prefix "$RUNNER_TEMP/nudge-portless" --ignore-scripts --no-audit --no-fund portless@0.15.7
+      - name: Verify real Portless worktrees and browser delivery
+        run: node test/portless-worktrees.mjs
+        env:
+          NUDGE_PORTLESS_BIN: ${{ runner.temp }}/nudge-portless/node_modules/portless/dist/cli.js
+          NUDGE_PORTLESS_EVIDENCE_ROOT: artifacts/safari/portless-worktrees
+      - name: Verify HTTPS Portless worktrees and browser delivery
+        run: node test/portless-worktrees.mjs --tls
+        env:
+          NUDGE_PORTLESS_BIN: ${{ runner.temp }}/nudge-portless/node_modules/portless/dist/cli.js
+          NUDGE_PORTLESS_EVIDENCE_ROOT: artifacts/safari/portless-worktrees
+      - name: Retain Portless implementation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portless-worktree-verification
+          path: artifacts/safari/portless-worktrees/
+          if-no-files-found: error
   nudge:
     runs-on: ubuntu-latest
     timeout-minutes: 25

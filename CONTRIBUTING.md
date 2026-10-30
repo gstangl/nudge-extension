@@ -123,6 +123,9 @@ so tests do not require running inside a coding-agent session.
 ## Versioning and changelog
 
 - The extension version in `extension/manifest.json` is the product version.
+  For prereleases, Chrome's numeric `version` is a monotonically increasing
+  browser build number; `version_name` and the Git tag carry the public
+  prerelease identifier, such as `1.0.0-beta.1`.
   The bridge has its own version in `bridge/bridge.mjs` (`VERSION`) and
   `bridge/package.json`.
 - Bump on every behaviour change, and add a `CHANGELOG.md` entry in the same

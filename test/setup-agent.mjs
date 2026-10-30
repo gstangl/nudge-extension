@@ -47,6 +47,8 @@ try {
     path.join(HOME_DIR, '.grok/skills'),
   ]) {
     const main = fs.readFileSync(path.join(home, 'groundworks-nudge/SKILL.md'), 'utf8')
+    const header = /^---\n([\s\S]*?)\n---/.exec(main)?.[1] || ''
+    if (!/^trigger: \/groundworks-nudge$/m.test(header) || !/^argument-hint: "\[short session label\]"$/m.test(header)) fail('Installed Skill lost its custom session-name invocation metadata')
     if (main !== fs.readFileSync(path.join(HERE, '../agent/NUDGE-SKILL.md'), 'utf8')) fail(`Skill differs from repository source in ${home}`)
     if (fs.existsSync(path.join(home, 'nudge/SKILL.md'))) fail(`legacy alias remains in ${home}`)
   }

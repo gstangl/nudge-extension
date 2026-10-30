@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import vm from 'node:vm'
 import fs from 'node:fs'
 
@@ -8,7 +8,8 @@ const event = () => {
   return { addListener: listener => listeners.push(listener), emit: (...args) => listeners.forEach(listener => listener(...args)), listeners }
 }
 const sender = (id = 1, document = 'runtime_document_1') => ({ id: 'extension-test', frameId: 0, documentId: document, url: 'http://localhost:5322/route?query=1#hash', tab: { id, windowId: 10, url: 'http://localhost:5322/route?query=1#hash' } })
-function harness({ session = {}, local = {}, sessionAvailable = true, windowsAvailable = true } = {}) {
+afterEach(() => vi.useRealTimers())
+function harness({ session = {}, local = {}, sessionAvailable = true, windowsAvailable = true, localRead = null } = {}) {
   const state = { active: 1, focused: true, url: sender().url, captures: 0, grabbed: 0, captureHook: null, encodeHook: null, queueInstalled: 0, currentDocuments: {}, probeHook: null }
   const storage = { async get(key) { return { [key]: structuredClone(session[key]) } }, async set(update) { Object.assign(session, structuredClone(update)) } }
   const tabs = { onActivated: event(), onUpdated: event(), onRemoved: event(),
@@ -24,7 +25,7 @@ function harness({ session = {}, local = {}, sessionAvailable = true, windowsAva
     },
   }
   const windows = { onFocusChanged: event(), async get() { return { focused: state.focused } } }
-  const localStorage = {async get(key) {return key === null ? structuredClone(local) : {[key]:structuredClone(local[key])}},async remove(keys){for(const key of Array.isArray(keys)?keys:[keys])delete local[key]}}
+  const localStorage = {async get(key) {if(localRead)await localRead(key);return key === null ? structuredClone(local) : {[key]:structuredClone(local[key])}},async remove(keys){for(const key of Array.isArray(keys)?keys:[keys])delete local[key]}}
   const api = { runtime: { id: 'extension-test', onMessage: event() }, action: { onClicked: event() }, commands: { onCommand: event() }, storage: { session: sessionAvailable ? storage : undefined, local:localStorage }, tabs, windows: windowsAvailable ? windows : undefined }
   class Canvas {
     getContext() { return { drawImage() {} } }
@@ -46,7 +47,28 @@ function harness({ session = {}, local = {}, sessionAvailable = true, windowsAva
 }
 
 describe('privileged browser identity and capture continuity', () => {
-  it('retains same-session ambiguous retries, cleans closed/restarted tab leftovers and never deletes the offline queue', async () => {
+  it.each(['http://task-a.app.localhost:1355/route', 'https://task-a.app.localhost:1355/route', 'https://localhost:1355/route', 'https://127.0.0.1:1355/route'])('registers and captures a local top-level document: %s', async url => {
+    const h = harness()
+    h.state.url = url
+    const from = { ...sender(), url, tab: { ...sender().tab, url } }
+    const registered = await h.register(from)
+    expect(registered.ok).toBe(true)
+    expect(await h.capture(registered.source, from)).toMatchObject({ ok: true })
+  })
+  it('reports a stalled cleanup stage without releasing pending identity operations', async () => {
+    vi.useFakeTimers()
+    let release
+    const h = harness({ localRead: () => new Promise(resolve => { release = resolve }) })
+    const pending = h.register()
+    await vi.advanceTimersByTimeAsync(2401)
+    expect(await pending).toEqual({ ok: false, error: 'Registration timeout: reading retry storage for cleanup' })
+    expect(h.session.nudgeBrowserIdentity).toBeUndefined()
+    release()
+    const next = await h.register()
+    expect(next.ok).toBe(true)
+    expect(Object.keys(h.session.nudgeBrowserIdentity.tabs)).toHaveLength(1)
+  })
+  it('retains restart retries until expiry, cleans closed tabs and never deletes the offline queue', async () => {
     const first=harness(), initial=await first.register()
     const key=`nudgeDraftRetry-${initial.source.tab}`
     const local = {[key]:{payload:{browserSource:initial.source,submissionCreatedAt:new Date().toISOString()}},nudgeQueue:{entries:['preserved']}}
@@ -57,6 +79,9 @@ describe('privileged browser identity and capture continuity', () => {
     await resumed.register(sender(2),'content_document_2') // drain serialized removal
     expect(local[key]).toBeUndefined()
     local[key]={payload:{browserSource:initial.source,submissionCreatedAt:new Date().toISOString()}}
+    await harness({local}).register()
+    expect(local[key]).toBeTruthy()
+    local[key].payload.submissionCreatedAt = new Date(Date.now() - 8 * 24 * 3600e3).toISOString()
     await harness({local}).register()
     expect(local[key]).toBeUndefined()
     expect(local.nudgeQueue).toEqual({entries:['preserved']})
@@ -174,6 +199,31 @@ describe('privileged browser identity and capture continuity', () => {
     const old = await h.register()
     expect(await h.register(sender(1, 'runtime_document_2'), 'content_document_2')).toMatchObject({ ok: false })
     expect(await h.capture(old.source)).toMatchObject({ ok: true })
+  })
+  it('recovers a proven current document after a worker restart missed navigation', async () => {
+    const first = harness()
+    const old = await first.register()
+    const resumed = harness({ session: first.session })
+    resumed.state.currentDocuments[1] = 'content_document_2'
+    const from = sender(1, 'runtime_document_2')
+    const fresh = await resumed.register(from, 'content_document_2')
+    expect(fresh).toMatchObject({ ok: true, source: { tab: old.source.tab, session: old.source.session, document: 'content_document_2' } })
+    expect(await resumed.capture(fresh.source, from)).toMatchObject({ ok: true })
+    expect(await resumed.register()).toMatchObject({ ok: false })
+    expect(await resumed.capture(old.source)).toMatchObject({ ok: false })
+  })
+  it('still requires a navigation boundary for replacement tokens in the same runtime document', async () => {
+    const h = harness()
+    await h.register()
+    h.state.currentDocuments[1] = 'replacement_token'
+    expect(await h.register(sender(), 'replacement_token')).toMatchObject({ ok: false })
+  })
+  it('does not infer a missed navigation when the browser has no runtime document IDs', async () => {
+    const h = harness()
+    const from = { ...sender(), documentId: undefined }
+    await h.register(from)
+    h.state.currentDocuments[1] = 'content_document_2'
+    expect(await h.register(from, 'content_document_2')).toMatchObject({ ok: false })
   })
   it('checks active tab and focused window without activating either', async () => {
     const h = harness()

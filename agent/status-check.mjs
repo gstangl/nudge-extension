@@ -7,6 +7,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import { bridgeIdentity, compatibleIdentity } from '../bridge/lifecycle.mjs'
 import { resolveAgentId, resolveAgentRuntime, resolveStoreDir } from './runtime.mjs'
+import { previewHost } from './preview-hosts.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const GUIDE = 'https://github.com/gstangl/nudge-extension/blob/main/INSTALL.md#guided-setup-for-agents'
@@ -32,20 +33,21 @@ function skillState(root, home, runtime) {
 function appHost(tab, appPort) {
   try {
     const url = new URL(tab.url)
-    if (url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) return null
-    if (appPort && Number(url.port || 80) !== appPort) return null
-    return url.host
+    const host = previewHost(tab.url)
+    if (appPort && Number(url.port || (url.protocol === 'https:' ? 443 : 80)) !== appPort) return null
+    return host
   } catch { return null }
 }
 
 export async function checkStatus({
   root = ROOT, home = os.homedir(), env = process.env, nodeVersion = process.versions.node,
   runtime = resolveAgentRuntime(env), agentId = resolveAgentId(env), browser = null,
-  appPort = null, port = Number(env.NUDGE_PORT || 4700), fetchImpl = fetch,
+  appPort = null, appUrl = null, port = Number(env.NUDGE_PORT || 4700), fetchImpl = fetch,
 } = {}) {
   if (browser !== null && !['chrome', 'safari'].includes(browser)) throw new Error('browser must be chrome or safari')
   if (appPort !== null && (!Number.isInteger(appPort) || appPort < 1 || appPort > 65535)) throw new Error('app port must be between 1 and 65535')
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('invalid bridge port')
+  const intendedHost = appUrl === null ? null : previewHost(appUrl)
   const checks = {
     node: { state: Number(nodeVersion.split('.')[0]) >= 22 ? 'ready' : 'unsupported', version: nodeVersion },
     dependency: { state: 'ready' },
@@ -70,7 +72,7 @@ export async function checkStatus({
   }
   if (checks.bridge.state === 'connected') {
     const tabs = Array.isArray(identity.tabs) ? identity.tabs.filter(tab =>
-      appHost(tab, appPort) && ['chrome', 'safari'].includes(browserName(tab.browserSource?.browser))) : null
+      appHost(tab, appPort) && (!intendedHost || previewHost(tab.url) === intendedHost) && ['chrome', 'safari'].includes(browserName(tab.browserSource?.browser))) : null
     const selected = tabs?.filter(tab => !browser || browserName(tab.browserSource.browser) === browser)
     checks.browser = {
       state: selected === null || selected === undefined ? 'unverified' : selected.length ? 'connected' : 'not_connected',
@@ -98,7 +100,7 @@ export async function checkStatus({
 
   return {
     kind: 'groundworks-nudge-readiness', schemaVersion: 1, state,
-    scope: { browser, appPort, currentSessionKnown: !!agentId }, checks,
+    scope: { browser, appPort, appUrl, currentSessionKnown: !!agentId }, checks,
     source: { root, skill: path.join(root, 'agent/NUDGE-SKILL.md'), localGuide: path.join(root, 'INSTALL.md'), guide: GUIDE },
     proof: 'Connection checks only; browser installation, prompt delivery and automatic wake require their own evidence.',
   }

@@ -13,7 +13,10 @@ import { pressExtension, grantCurrentSite, setFixtureTitle, openPermissionWindow
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
-const PORT = 4822, PAGE = 5322, DRIVER = 4821
+const PORT = Number(process.env.NUDGE_PARITY_BRIDGE_PORT || 4822)
+const PAGE = Number(process.env.NUDGE_PARITY_PAGE_PORT || 5322), DRIVER = 4821
+for (const port of [PORT, PAGE]) assert(Number.isInteger(port) && port > 0 && port <= 65535 && ![4700, 1355].includes(port), 'Use valid isolated parity ports')
+assert.notEqual(PORT, PAGE)
 const B = `http://localhost:${PORT}`
 const isChrome = process.argv.includes('--chromium')
 const headless = process.argv.includes('--headless')

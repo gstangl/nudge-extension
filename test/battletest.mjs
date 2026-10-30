@@ -17,11 +17,11 @@ const EXT = process.env.NUDGE_EXT || path.join(HERE, '../extension')
 const FIXTURES = path.join(HERE, 'fixtures')
 const STORE = '/tmp/nudge-battle-store'
 const PORT = 4793
-const PAGEPORT = 5321
+const PAGEPORT = Number(process.env.NUDGE_TEST_PAGE_PORT || 5321)
 const B = `http://localhost:${PORT}`
 fs.rmSync(STORE, { recursive: true, force: true })
 
-const statics = spawn('python3', ['-m', 'http.server', String(PAGEPORT), '-d', FIXTURES], { stdio: 'ignore' })
+const statics = spawn('python3', ['-m', 'http.server', String(PAGEPORT), '--bind', '127.0.0.1', '-d', FIXTURES], { stdio: 'ignore' })
 let bridge = spawn('node', [path.join(HERE, '../bridge/bridge.mjs')], { env: { ...process.env, NUDGE_STORE: STORE, NUDGE_PORT: String(PORT) }, stdio: ['ignore', 'ignore', 'inherit'] })
 const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 async function up() { for (let i = 0; i < 30; i++) { await sleep(150); try { if ((await (await fetch(`${B}/.identity`)).json()).store === STORE) return true } catch { /* wait */ } } return false }
@@ -51,7 +51,8 @@ try {
   let sw = ctx.serviceWorkers()[0] || await ctx.waitForEvent('serviceworker', { timeout: 10000 })
   await sw.evaluate((p) => chrome.storage.local.set({ nudgePort: p }), PORT)
   const page = ctx.pages()[0] || await ctx.newPage()
-  await page.goto(`http://localhost:${PAGEPORT}/tailwind-gauntlet.html`, { waitUntil: 'domcontentloaded' })
+  const response = await page.goto(`http://127.0.0.1:${PAGEPORT}/tailwind-gauntlet.html`, { waitUntil: 'domcontentloaded' })
+  if (!response.ok()) throw new Error(`Fixture HTTP ${response.status()}`)
   await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
   await page.waitForTimeout(600)
   // drag the pill off the nav button (fixture puts one top-right)

@@ -41,8 +41,11 @@ at first use. Reuse permission already given in the conversation. A decline or
 an unanswered question installs nothing and leaves ordinary work available.
 
 1. Locate `groundworks-nudge` with `command -v groundworks-nudge`. If it exists,
-   run `groundworks-nudge status --check`, with `--browser chrome|safari` and
-   `--port <app-port>` only when the intended browser and app port are known.
+   run `groundworks-nudge status --check`, adding `--browser chrome|safari`
+   and `--url <preview-url>` when the intended browser and public preview URL
+   are known. For Portless, use the complete HTTP/HTTPS hostname and proxy port,
+   never the internal app port or shared proxy port alone. Reserve `--port`
+   for direct localhost apps.
    Pass `--runtime codex|claude-code|grok` when automatic detection cannot
    identify the current runtime. The report has
    `kind: groundworks-nudge-readiness` and `schemaVersion: 1`. An older
@@ -74,9 +77,9 @@ an unanswered question installs nothing and leaves ordinary work available.
    session. If this guide was entered from that Skill, continue its arming
    steps using the checks already performed. Browser activation may still be
    pending; do not require an armed session before allowing the Skill to arm.
-   Check again after arming, with its returned agent id and the intended app
-   port. A missing or stale native Skill entry may require a fresh agent
-   session; do not claim runtime discovery from a copied file alone.
+   Check again after arming, with its returned `--agent-id` and the intended
+   `--url <preview-url>`. A missing or stale native Skill entry may require a
+   fresh agent session; do not claim runtime discovery from a copied file alone.
 6. Finish with one deliberately submitted test prompt on the intended app.
    Confirm receipt in the selected session and preserve the existing queue's
    ownership. A `ready` report proves observed connections only. It does not
@@ -224,7 +227,19 @@ Click the dot for a one-line explanation of the current state.
 
 ## Working with several projects
 
-Each localhost port is owned by one agent session. When two dev servers run
+Each local hostname and port is owned by one agent session. HTTP and HTTPS Portless
+addresses such as `task-a.app.localhost:1355` and `task-b.app.localhost:1355`
+are separate hosts even when they share the same proxy port. The Skill's
+project-scoped watcher verifies Portless's serving processes against its Git
+worktree and binds those hosts automatically, including later server starts.
+Discovery uses the process listening on the internal app port; a shared proxy
+process does not establish ownership. The proxy TLS state selects HTTPS URLs.
+Use `groundworks-nudge previews --project <worktree>` to inspect that mapping.
+For another local preview, pass its actual browser address to `watch --url`.
+The toolbar's **Switch session** dropdown remains an explicit override.
+Project-scoped sessions do not claim unrelated hosts. Older unscoped sessions
+retain the existing fallback described in [PRODUCT.md](docs/PRODUCT.md#accepted-trade-offs--the-price-of-the-usp).
+When two dev servers run
 (say `localhost:5173` and `localhost:5174`), arm one session per project and
 pick the owner per port in the toolbar's **Switch session** dropdown. A prompt
 on one port never wakes the other project's agent.

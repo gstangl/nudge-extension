@@ -1,6 +1,6 @@
 {
   "name": "@groundworks/nudge-bridge",
-  "version": "0.19.2",
+  "version": "0.20.1",
   "private": true,
   "license": "MIT",
   "type": "module",

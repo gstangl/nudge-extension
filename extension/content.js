@@ -17,10 +17,33 @@
   globalThis.__nudgeContentLoaded = true
   const NUDGE_PLATFORM = globalThis.__nudgePlatform || { bridgePort: null }
   const documentToken = crypto.randomUUID().replaceAll('-', '')
+  async function boundedReply(operation, ms = 3000) {
+    let timer
+    try {
+      return await Promise.race([
+        operation,
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Extension reply timed out')), ms) }),
+      ])
+    } finally { clearTimeout(timer) }
+  }
   let browserSource = null
-  const sourceReady = Promise.resolve(chrome.runtime.sendMessage({ type: 'nudge-source-register', document: documentToken }))
-    .then(result => { browserSource = result?.ok ? result.source : null; return browserSource })
-    .catch(() => null)
+  let sourceRequest = null
+  function ensureSource() {
+    if (browserSource) return Promise.resolve(browserSource)
+    // A transient startup/navigation race must not disable sending for the
+    // entire document. Coalesce callers and retry at the next explicit send.
+    if (!sourceRequest) sourceRequest = Promise.resolve()
+      .then(() => boundedReply(chrome.runtime.sendMessage({ type: 'nudge-source-register', document: documentToken })))
+      .then(result => {
+        browserSource = result?.ok ? result.source : null
+        if (!browserSource) console.warn('[groundworks-nudge] tab registration failed:', result?.error || 'worker returned no source')
+        return browserSource
+      })
+      .catch(error => { console.warn('[groundworks-nudge] tab registration failed:', String(error)); return null })
+      .finally(() => { sourceRequest = null })
+    return sourceRequest
+  }
+  const sourceReady = ensureSource()
   // Bridge endpoints. TEST SUITES may re-point them via
   // chrome.storage.local.nudgePort (set through the extension's service worker
   // BEFORE pages load) — real Chrome never sets it and stays on 4700. Root
@@ -66,7 +89,7 @@
   draw.setAttribute('class', 'draw')
   root.appendChild(draw)
   const composer = el('div', 'composer',
-    '<div class="tip"></div><div class="inner"><div class="layers"></div><div class="meta"></div><textarea placeholder="Nudge… (↩ send · ⇧↩ newline · Esc cancel · ⇧click add element · empty ↩ = numbered mark)"></textarea><div class="row"><button class="cancel">Cancel</button><button class="send">Send</button></div></div>')
+    '<div class="tip"></div><div class="inner"><div class="layers"></div><div class="meta" title="Drag to move"></div><textarea placeholder="Nudge… (↩ send · ⇧↩ newline · Esc cancel · ⇧click add element · empty ↩ = numbered mark)"></textarea><div class="row"><button class="cancel">Cancel</button><button class="send">Send</button></div></div>')
   const feed = el('div', 'feed')
   // queue popover: click the pill badge -> read-only list of this route's open
   // prompts (what the count MEANS). No management UI on the page — resolving
@@ -95,7 +118,26 @@
     f.textContent = face('fonts/rn-sans.woff2', 'normal') + face('fonts/rn-sans-italic.woff2', 'italic') + mono
     document.head.appendChild(f)
   }
+  const composerGrip = composer.querySelector('.meta')
   const ta = composer.querySelector('textarea')
+  const inputKeyHandlers = new WeakMap()
+  root.addEventListener('groundworks-nudge-input-key', (event) => {
+    let key
+    try { key = JSON.parse(event.detail) } catch { return }
+    if (!key || typeof key.key !== 'string' || key.key.length > 64) return
+    const path = event.composedPath()
+    // MAIN-world capture fences the real key before it traverses the page.
+    // Handle only Nudge's UI commands here; cancelling this shadow-local event
+    // cancels the original default. All ordinary editing stays native.
+    const command = { key: key.key, shiftKey: key.shiftKey === true,
+      ctrlKey: key.ctrlKey === true, metaKey: key.metaKey === true,
+      altKey: key.altKey === true, isComposing: key.isComposing === true,
+      composedPath: () => path, preventDefault: () => event.preventDefault(),
+      stopPropagation: () => event.stopPropagation() }
+    const field = path.find(node => inputKeyHandlers.has(node))
+    if (field) inputKeyHandlers.get(field)(command)
+    else onWinKeyDown(command)
+  })
   const btnPick = pill.querySelector('.btn-pick')
   const btnDraw = pill.querySelector('.btn-draw')
   pill.querySelector('.count').addEventListener('click', (e) => {
@@ -140,7 +182,7 @@
     btnDraw.classList.toggle('active', next === 'drawing')
     draw.classList.toggle('on', next === 'drawing')
     if (next !== 'picking' && next !== 'composing') hl.classList.remove('on')
-    if (next !== 'composing') { composer.style.display = 'none'; picked = null; clearStroke(); clearMulti() }
+    if (next !== 'composing') { endComposerDrag(); composer.style.display = 'none'; picked = null; clearStroke(); clearMulti() }
     document.documentElement.style.cursor = next === 'picking' ? 'crosshair' : ''
     updatePill() // toolbar icon reflects on/off
     saveSnap() // leaving the composer also CLEARS the restore point (see below)
@@ -390,10 +432,11 @@
     // hover chip = cheap label only; the unique finder selector is computed on click
     highlight(t.getBoundingClientRect(), sourceHint(t) || fastPath(t))
   }
-  function highlight(r, label) {
+  function highlight(r, label, anchored = false) {
     // one persistent node, only inline geometry changes -> the CSS transition
     // makes the box GLIDE between elements instead of jumping (frontman pattern)
     hl.classList.add('on')
+    hl.classList.toggle('anchored', anchored)
     hl.classList.toggle('flip', r.top < 30) // no room above -> chip flips below
     Object.assign(hl.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' })
     hl.querySelector('.chip').textContent = label ?? ''
@@ -630,6 +673,7 @@
       el: centerEl, rect: bbox, selector, source,
       frozen: elementContext(centerEl, selector, source),
       stroke: strokePts.map(([x, y]) => [Math.round(x), Math.round(y)]),
+      regionAnchor: regionPosition(centerEl),
     }
     // the circled region is the mark, send stays optional (same as element picks)
     postSelection(null, { keepShot: false })
@@ -668,17 +712,140 @@
   }
   // place BESIDE the mark, tip pointing back at it (right side preferred)
   function placeComposer(anchorRect) {
-    const W = 340, GAP = 14
+    const W = Math.min(340, viewW() - 16, innerWidth - 16), GAP = 14
+    composer.style.display = 'block'
+    if (picked?.composerPosition) {
+      composer.classList.add('moved')
+      fitComposer(picked.composerPosition)
+      return
+    }
+    composer.classList.remove('moved')
     const fitsRight = anchorRect.right + GAP + W <= window.innerWidth - 8
     const left = fitsRight ? anchorRect.right + GAP : Math.max(8, anchorRect.left - W - GAP)
     const top = Math.min(Math.max(8, anchorRect.top), window.innerHeight - 240)
     composer.classList.toggle('tip-left', fitsRight)  // composer right of mark -> tip on its left edge
     composer.classList.toggle('tip-right', !fitsRight)
+    fitComposer({ x: left, y: top })
+    // Growing drafts move upward at the viewport edge. Aim from the fitted
+    // position and actual height, not the requested top or a fixed tip limit.
     const h = anchorRect.height ?? (anchorRect.bottom - anchorRect.top)
-    const tipY = Math.min(Math.max(16, anchorRect.top + h / 2 - top - 6), 150)
+    const tip = composer.querySelector('.tip')
+    const halfTip = tip.offsetHeight / 2
+    const targetY = anchorRect.top + h / 2 - composer.offsetTop - composer.clientTop
+    const tipY = Math.min(Math.max(16, targetY - halfTip), composer.clientHeight - tip.offsetHeight - 16)
     composer.style.setProperty('--tip-y', `${tipY}px`)
-    Object.assign(composer.style, { display: 'block', left: left + 'px', top: top + 'px' })
   }
+  // A manually placed draft stays in viewport coordinates; the mark itself
+  // still follows its content. Measure the grown textarea, not a fixed height.
+  function fitComposer(position) {
+    const x = Math.max(8, Math.min(position.x, Math.min(viewW(), innerWidth) - composer.offsetWidth - 8))
+    const y = Math.max(8, Math.min(position.y, Math.min(viewH(), innerHeight) - composer.offsetHeight - 8))
+    Object.assign(composer.style, { left: x + 'px', top: y + 'px' })
+  }
+  let composerDrag = null
+  function moveComposer(e) {
+    if (!composerDrag || e.pointerId !== composerDrag.id || !picked) return
+    e.preventDefault()
+    e.stopPropagation()
+    picked.composerPosition = { x: e.clientX - composerDrag.x, y: e.clientY - composerDrag.y }
+    placeComposer(picked.rect)
+  }
+  function endComposerDrag(e) {
+    if (!composerDrag || (e?.pointerId != null && e.pointerId !== composerDrag.id)) return
+    const id = composerDrag.id
+    composerDrag = null
+    composerGrip.classList.remove('dragging')
+    window.removeEventListener('pointermove', moveComposer, true)
+    window.removeEventListener('pointerup', endComposerDrag, true)
+    window.removeEventListener('pointercancel', endComposerDrag, true)
+    window.removeEventListener('blur', endComposerDrag, true)
+    try { if (composerGrip.hasPointerCapture(id)) composerGrip.releasePointerCapture(id) } catch { /* context ended */ }
+    if (picked?.composerPosition) {
+      picked.composerPosition = { x: composer.offsetLeft, y: composer.offsetTop }
+      saveSnap()
+    }
+  }
+  function startComposerDrag(e) {
+    if (!e.isPrimary || e.button !== 0 || !picked) return
+    e.preventDefault()
+    const r = composer.getBoundingClientRect()
+    composerDrag = { id: e.pointerId, x: e.clientX - r.left, y: e.clientY - r.top }
+    composerGrip.classList.add('dragging')
+    window.addEventListener('pointermove', moveComposer, true)
+    window.addEventListener('pointerup', endComposerDrag, true)
+    window.addEventListener('pointercancel', endComposerDrag, true)
+    window.addEventListener('blur', endComposerDrag, true)
+    try { composerGrip.setPointerCapture(e.pointerId) } catch { /* window listeners remain the fallback */ }
+  }
+  composerGrip.addEventListener('lostpointercapture', endComposerDrag)
+  const composerObserver = new ResizeObserver(() => {
+    if (picked && composer.style.display === 'block') placeComposer(picked.rect)
+  })
+  composerObserver.observe(composer)
+  // Fixed overlay coordinates belong to the viewport, not the picked element.
+  // Re-read the live anchor after page OR nested-container scrolling. Only
+  // move existing UI: opening it again would erase text/caret and send state.
+  function regionPosition(el) {
+    const rect = el?.isConnected ? el.getBoundingClientRect() : null
+    const ownScroll = el && el !== document.scrollingElement && el !== document.body
+    return { left: rect?.left ?? -scrollX, top: rect?.top ?? -scrollY,
+      x: ownScroll ? el.scrollLeft || 0 : 0, y: ownScroll ? el.scrollTop || 0 : 0 }
+  }
+  function followRegion() {
+    if (!picked?.stroke || !picked.el?.isConnected) return
+    const next = regionPosition(picked.el)
+    const previous = picked.regionAnchor || next
+    const dx = next.left - previous.left - next.x + previous.x
+    const dy = next.top - previous.top - next.y + previous.y
+    picked.regionAnchor = next
+    if (!dx && !dy) return
+    const r = picked.rect
+    picked.rect = { left: r.left + dx, top: r.top + dy, right: r.right + dx,
+      bottom: r.bottom + dy, width: r.width, height: r.height }
+    picked.stroke = picked.stroke.map(([x, y]) => [x + dx, y + dy])
+    redrawStroke(picked.stroke)
+    saveSnap()
+  }
+  let anchorFrame = 0
+  function scheduleAnchor() {
+    if (dead || anchorFrame || !picked || composer.style.display !== 'block') return
+    anchorFrame = requestAnimationFrame(() => {
+      anchorFrame = 0
+      if (dead || !picked || composer.style.display !== 'block') return
+      placeComposer(picked.rect) // also fit a draft whose live anchor disappeared
+      if (picked.stroke) {
+        // A region is anchored to the content beneath its centroid. Moving the
+        // same stroke and rectangle keeps capture coordinates aligned too.
+        if (picked.el && !picked.el.isConnected) {
+          const replacement = findNode(picked.frozen)
+          if (replacement && sameish(replacement, picked.frozen)) picked.el = replacement
+          else return // do not silently attach a region to unrelated content
+        }
+        followRegion()
+        placeComposer(picked.rect)
+        return
+      }
+      if (!picked.el?.isConnected) {
+        const replacement = findNode(picked.frozen)
+        if (replacement && sameish(replacement, picked.frozen)) attachPicked(replacement)
+        else {
+          picked.el = null
+          hl.classList.remove('on')
+          layersRow.style.display = 'none'
+          renderMeta()
+          return
+        }
+      }
+      const rect = picked.el.getBoundingClientRect()
+      picked.rect = rect
+      if (multi.length < 2 && rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth)
+        highlight(rect, undefined, true)
+      else hl.classList.remove('on')
+      placeComposer(rect)
+    })
+  }
+  addEventListener('scroll', scheduleAnchor, { capture: true, passive: true })
+  addEventListener('resize', scheduleAnchor)
   function openComposer(anchorRect) {
     mode = 'composing'
     document.documentElement.style.cursor = ''
@@ -699,17 +866,28 @@
   // so a longer nudge is fully visible while typing instead of a fixed peephole
   const autoGrow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
   ta.addEventListener('input', () => { autoGrow(); saveSnap() }) // every keystroke is a candidate last word before a reload
-  ta.addEventListener('keydown', (e) => {
+  const composerKeyDown = (e) => {
     // Enter sends (empty = numbered mark), Shift+Enter inserts a newline —
     // same convention as the History amend input
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
     e.stopPropagation()
-  })
+  }
+  inputKeyHandlers.set(ta, composerKeyDown)
+  ta.addEventListener('keydown', composerKeyDown)
 
   // ---------- console + network excerpt from the MAIN-world hook ----------
   function getConsole() {
     return new Promise((res) => {
-      const done = (e) => { removeEventListener('groundworks-nudge-console-res', done); clearTimeout(t); res(JSON.parse(e.detail || '[]')) }
+      const done = (e) => {
+        removeEventListener('groundworks-nudge-console-res', done)
+        clearTimeout(t)
+        // Page events are untrusted. A malformed response must not clear the
+        // fallback timer and leave this promise (and Send) pending forever.
+        try {
+          const entries = JSON.parse(e.detail || '[]')
+          res(Array.isArray(entries) ? entries : [])
+        } catch { res([]) }
+      }
       const t = setTimeout(() => { removeEventListener('groundworks-nudge-console-res', done); res([]) }, 300)
       addEventListener('groundworks-nudge-console-res', done)
       dispatchEvent(new CustomEvent('groundworks-nudge-console-req'))
@@ -736,7 +914,7 @@
     // The subsequent 350 ms hide window is reserved for pixels, not worker wake.
     if (browserSource) {
       try {
-        const ready = await chrome.runtime.sendMessage({ type: 'nudge-capture-ready', browserSource })
+        const ready = await boundedReply(chrome.runtime.sendMessage({ type: 'nudge-capture-ready', browserSource }))
         if (!ready?.ok) { console.warn('[groundworks-nudge] capture deferred:', ready?.error || 'source unavailable'); return null }
       } catch { return null }
     }
@@ -797,7 +975,7 @@
 
     let out = null
     try {
-      await nextFrames()
+      await boundedReply(nextFrames(), CAPTURE_TIMEOUT)
       // TIMEOUT + the restore paths above make the overlay independent of the
       // screenshot. captureVisibleTab does not always settle: with a debugger
       // attached to the tab (BrowserTools MCP, 2026-07-29) it neither resolves nor
@@ -833,6 +1011,12 @@
   // content world so the bridge retains its exact loopback Origin boundary.
   // In particular this is not an arbitrary privileged HTTP proxy.
   chrome.runtime.onMessage.addListener((message, sender, reply) => {
+    if (message?.type === 'nudge-queue-delivered') {
+      if (sender.id !== chrome.runtime.id || message.url !== location.href || !/^nudge_\d+$/.test(message.receipt?.id || '')) return
+      const { id, withdrawn } = message.receipt
+      notify('check', withdrawn ? `${id} was already withdrawn` : message.hasText ? `${id} delivered` : `${id} marked`)
+      return
+    }
     if (message?.type !== 'nudge-queue-http') return
     if (sender.id !== chrome.runtime.id || ![
       `${HTTP}/.identity`, `${HTTP}/comments`,
@@ -856,6 +1040,26 @@
   let pendingSubmission = null
   let pendingRestore = null
   const retryStorageKey = () => browserSource ? `nudgeDraftRetry-${browserSource.tab}` : null
+  async function restorePendingSubmission() {
+    const restore = pendingRestore
+    if (!restore || restore.target !== picked) return true
+    if (pendingSubmission?.target === picked && pendingSubmission.ref === restore.ref) return true
+    // Retry storage reads after transient startup failures. An extension restart
+    // can replace the privileged tab token; the private random reference still
+    // identifies the exact original payload without creating a new submission.
+    const key = retryStorageKey()
+    if (!key) return false
+    const matches = entry => entry?.ref === restore.ref && entry.payload?.text === restore.text &&
+      samePage(entry.payload?.url || '')
+    let entry = (await boundedReply(chrome.storage.local.get(key)))[key]
+    if (!matches(entry)) {
+      const stored = await boundedReply(chrome.storage.local.get(null))
+      entry = Object.entries(stored).find(([name, value]) => name.startsWith('nudgeDraftRetry-') && matches(value))?.[1]
+    }
+    if (!entry || !matches(entry) || picked !== restore.target) return false
+    pendingSubmission = { target: restore.target, payload: entry.payload, ref: entry.ref, durable: true }
+    return true
+  }
   // the 5s orphan check leaves a WINDOW: an event can fire on a freshly
   // invalidated context before `dead` flips (bit us 2026-07-05:
   // "Uncaught: Extension context invalidated at flushQueue/onVisibility")
@@ -872,20 +1076,47 @@
     } catch { /* context ended; durable background queue remains */ }
   }
 
+  // Fallback when the worker does not answer. Only an idempotent bridge may
+  // receive it; an older bridge could store a retried payload twice.
+  async function submitDirect(payload) {
+    if (bridgeCapabilities.submissionIdempotency !== 1) throw new Error('Bridge idempotency unknown')
+    const response = await fetch(`${HTTP}/comments`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload), signal: AbortSignal.timeout(8000),
+    })
+    const body = await response.json().catch(() => null)
+    if (response.status === 409) return { ok: false, error: 'submission_conflict' }
+    if (!response.ok || !/^nudge_\d+$/.test(body?.id || '')) throw new Error(`Direct delivery failed: HTTP ${response.status}`)
+    return { ok: true, queued: false, id: body.id, withdrawn: body.withdrawn === true }
+  }
+
   async function send() {
     if (!picked || composer.querySelector('.send').disabled) return
     const btn = composer.querySelector('.send')
     btn.disabled = true // acquire before any await; double-click is one submission
-    // A new submission must not race initial privileged identity registration.
-    // If registration failed it remains explicitly legacy rather than inventing
-    // a page-controlled tab token.
-    await sourceReady
-    if (pendingRestore?.target === picked && !await pendingRestore.ready) {
-      notify('alert', 'Previous delivery state unavailable — review History before creating a new prompt')
+    try {
+      await sendDraft()
+    } catch {
+      notify('alert', 'Send interrupted — draft kept; check History before retrying')
+    } finally {
       btn.disabled = false
+    }
+  }
+
+  async function sendDraft() {
+    // A new submission must not race initial privileged identity registration.
+    // Retry a failed registration using the privileged worker; never invent a
+    // page-controlled tab token.
+    await sourceReady
+    if (!await ensureSource()) {
+      notify('alert', 'Tab registration unavailable — prompt kept; try sending again')
       return
     }
-    if (!picked) { btn.disabled = false; return }
+    if (pendingRestore?.target === picked && !await restorePendingSubmission().catch(() => false)) {
+      notify('alert', 'Previous delivery state unavailable — review History before creating a new prompt')
+      return
+    }
+    if (!picked) return
     // Empty send = NUMBERED MARK (0.20.0, reverses the 0.10.0 pure-mark rule):
     // the nudge's number is the referent for chat — the user marks fast in the
     // browser, then prompts in the owning Agent session. The watcher wake
@@ -893,7 +1124,8 @@
     const target = picked
     let r
     if (target.stroke) {
-      r = target.rect // lasso bbox is viewport-stable
+      followRegion()
+      r = target.rect // current viewport coordinates of the anchored region
     } else {
       // Re-read the rect (page may have scrolled) - but editors like ProseMirror
       // re-render nodes, leaving the picked element detached (rect = 0/0/0/0);
@@ -911,6 +1143,7 @@
     const rect = { left: r.left, top: r.top, width: r.width || (r.right - r.left), height: r.height || (r.bottom - r.top) }
     // Screenshot ONLY for the Freeform (lasso) tool (region = pixels). Element nudges
     // ship DOM context only — faster, lighter, no overlay flicker.
+    const annotations = target.stroke ? [{ type: 'lasso', points: target.stroke.map(point => [...point]) }] : null
     const res = target.stroke ? await captureRegion(rect, { withHighlight: false }) : null
     let payload = {
       text: ta.value.trim(),
@@ -924,7 +1157,7 @@
         rect: { x: rect.left, y: rect.top, w: rect.width, h: rect.height },
       },
       targets: multiTargets() || null, // Shift-collected co-targets of ONE prompt
-      annotations: target.stroke ? [{ type: 'lasso', points: target.stroke }] : null,
+      annotations,
       console: await getConsole(),
       screenshot: res?.dataUrl || null,
       screenshotFull: res?.fullDataUrl || null,
@@ -944,24 +1177,36 @@
     try {
       const key = retryStorageKey()
       if (!key) throw new Error('Source identity unavailable')
-      await chrome.storage.local.set({ [key]: { ref: pendingSubmission.ref, payload } })
+      await boundedReply(chrome.storage.local.set({ [key]: { ref: pendingSubmission.ref, payload } }))
+      pendingSubmission.durable = true
       if (!saveSnapNow()) throw new Error('Draft reference unavailable')
     } catch {
       notify('alert', 'Retry storage unavailable — prompt kept; nothing sent')
-      btn.disabled = false; return
+      return
     }
     try {
-      const result = await queueRequest('submit', { payload })
+      let result
+      try {
+        result = await boundedReply(queueRequest('submit', { payload }), 5000)
+      } catch (error) {
+        // No answer from the queue owner (suspended, restarting or stalled
+        // worker). The bridge deduplicates by submissionId, so posting the
+        // same payload directly is safe: a late queue delivery replays the
+        // same receipt instead of creating a second nudge.
+        console.warn('[groundworks-nudge] queue worker did not acknowledge; delivering directly', error)
+        result = await submitDirect(payload)
+      }
       if (!result?.ok) {
         notify('alert', `${queueReason(result?.error)} — prompt kept`)
-        btn.disabled = false; return
+        return
       }
       pendingSubmission = null
       const id = result.id
       // the moment of truth: tell the user what actually happens to this prompt.
       // A pull owner (CLI) is live but won't START on its own — say so, or the
       // green icon's "agent working" would be a lie (user feedback: nudges "don't arrive").
-      if (result.queued) notify('alert', `${queueReason(result.reason)} — queued; see status`)
+      if (result.queued && result.reason === 'delivery_pending') notify('clock', 'Saved in queue — delivery in progress')
+      else if (result.queued) notify('alert', `${queueReason(result.reason)} — queued; see status`)
       else if (result.withdrawn) notify('clock', `${id} was already withdrawn`)
       else if (!payload.text) notify('check', `${id} marked`)
       else if (agentLive && agentWake === 'pull') notify('clock', `${id} received · arrives with the next message`)
@@ -976,17 +1221,17 @@
           notify('clock', 'Tip: set your name in Options — nudges are anonymous')
         })
       }
-    } catch {
+    } catch (error) {
+      console.warn('[groundworks-nudge] delivery not acknowledged', error)
       notify('alert', 'Delivery not acknowledged — prompt kept; retry safely')
-      btn.disabled = false; return
+      return
     }
-    btn.disabled = false
     if (picked === target) setMode('idle')
     // Clear the acknowledged draft reference durably BEFORE removing its
     // private retry payload. A reload can now neither duplicate the send nor
     // restore a reference whose only copy was prematurely discarded.
     if (saveSnapNow()) {
-      try { await chrome.storage.local.remove(retryStorageKey()) } catch { /* bounded worker cleanup retries later */ }
+      try { await boundedReply(chrome.storage.local.remove(retryStorageKey())) } catch { /* bounded worker cleanup retries later */ }
     }
   }
 
@@ -1241,6 +1486,13 @@
   const qExpanded = new Set() // accordion: which rows show their full text
   const qAmendDraft = new Map() // id -> in-progress follow-up text, survives WS re-renders
   const qAccordion = (row, id) => {
+    const detail = document.createElement('div')
+    detail.className = 'q-detail'
+    const text = document.createElement('div')
+    text.className = 'q-detail-text'
+    text.textContent = row.querySelector('.q-text').textContent
+    detail.appendChild(text)
+    row.insertBefore(detail, row.querySelector('.q-amend-list, .q-amend'))
     row.classList.toggle('open', qExpanded.has(id))
     row.addEventListener('click', () => {
       qExpanded.has(id) ? qExpanded.delete(id) : qExpanded.add(id)
@@ -1313,12 +1565,14 @@
         amSending = false
       }
       panel.querySelector('.q-amend-send').addEventListener('click', (e) => { e.stopPropagation(); submitAmend() })
-      input.addEventListener('keydown', (e) => {
+      const amendmentKeyDown = (e) => {
         e.stopPropagation()
         if (e.key === 'Escape') { closeAmend(); return }
         // Enter (or ⌘/Ctrl+Enter) sends; Shift+Enter inserts a newline
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAmend() }
-      })
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitAmend() }
+      }
+      inputKeyHandlers.set(input, amendmentKeyDown)
+      input.addEventListener('keydown', amendmentKeyDown)
       qAccordion(row, p.id)
       row.querySelector('.q-add').addEventListener('click', (e) => {
         e.stopPropagation()
@@ -1471,17 +1725,21 @@
     try { chrome.runtime.sendMessage({ type: 'nudge-state', active: mode !== 'off', bridgeOk: wsOk, agentLive, open: openCount }) } catch { /* extension reloading */ }
   }
   let sock, retryTimer, retryDelay = 3000, hadOutage = false, lastHelloUrl = null
+  let endpointReady = false
   let dead = false // set by the orphan cleanup: NOTHING may reconnect afterwards
   function connect() {
-    if (dead) return
+    if (dead || !endpointReady || (sock && [0, 1].includes(sock.readyState))) return
     clearTimeout(retryTimer)
-    try { sock = new WebSocket(WS) } catch { return scheduleRetry() }
-    sock.onopen = () => {
-      try { sock.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
+    let current
+    try { current = new WebSocket(WS); sock = current } catch { return scheduleRetry() }
+    current.onopen = () => {
+      if (dead || sock !== current) return
+      try { current.send(JSON.stringify({ type: 'hello', url: location.href, browserSource })); lastHelloUrl = location.href } catch { /* racing close */ }
       if (hadOutage) { notify('check', 'Bridge reconnected'); hadOutage = false }
       wsOk = true; retryDelay = 3000; updatePill(); flushQueue()
     }
-    sock.onmessage = (e) => {
+    current.onmessage = (e) => {
+      if (dead || sock !== current) return
       try {
         const msg = JSON.parse(e.data)
         if (msg.type === 'pins') {
@@ -1501,14 +1759,15 @@
         if (msg.type === 'reload' && NUDGE_PLATFORM.developmentReload) chrome.runtime.sendMessage({ type: 'nudge-dev-reload' })
       } catch { /* ignore malformed frames */ }
     }
-    sock.onclose = () => {
+    current.onclose = () => {
+      if (dead || sock !== current) return
       if (wsOk && !hadOutage) { notify('alert', 'Bridge disconnected'); hadOutage = true }
       wsOk = false; agentLive = false; updatePill(); scheduleRetry()
       if (statusMenu.classList.contains('on')) renderStatusMenu()
       // ask the SW to (re)start the bridge via the native host — Chrome heals itself
       try { chrome.runtime.sendMessage({ type: 'nudge-bridge-down' }) } catch { /* orphan */ }
     }
-    sock.onerror = () => { try { sock.close() } catch { /* already closed */ } }
+    current.onerror = () => { if (dead || sock !== current) return; try { current.close() } catch { /* already closed */ } }
   }
   // exponential backoff, capped LOW (browser-tools-mcp reconnects at a fixed 5s —
   // a tab must not be blind for half a minute after a bridge restart), plus an
@@ -1520,7 +1779,7 @@
     retryDelay = Math.min(8000, retryDelay * 1.5)
   }
   const onVisibility = () => {
-    if (dead || document.hidden) return
+    if (dead || !endpointReady || document.hidden) return
     if (!wsOk) { retryDelay = 3000; connect() }
     else {
       flushQueue()
@@ -1553,15 +1812,12 @@
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
   document.addEventListener('click', onClickSuppress, true)
-  // WINDOW capture, the first hop — not document (bit us 2026-07-29: "the
-  // marks don't go away"). Dialog/dropdown libraries (Radix, Headless
-  // UI, @roots/ui) handle Escape on window capture and stopPropagation() it while
-  // their layer is open; a document-capture listener downstream then never runs,
-  // so Esc silently stopped clearing the pick — and P/F stopped switching tools —
-  // on exactly the real apps Nudge is for. Same lesson as the moat below. (A page
-  // listener on the SAME node can't suppress us: stopImmediatePropagation does not
-  // cross into the content script's isolated world — only halting propagation one
-  // node earlier does. Suite O pins both directions.)
+  // Window capture keeps page shortcuts ahead of document-capture dialogs.
+  // Earlier page listeners on window can still consume keys. page-hook.js
+  // fences keys from Nudge chrome at document_start, before those listeners;
+  // this controller handles its shadow-local UI commands above. Suite O keeps
+  // Escape's existing page-dialog contract; input-contract covers early canvas
+  // handlers during real typing and submission.
   window.addEventListener('keydown', onWinKeyDown, true)
 
   // ---------- moat: reaching for the toolbar must not dismiss page state ----------
@@ -1620,6 +1876,13 @@
     // acts on `click`, so swallowing its pointerdown blocks the page's
     // outside-detector without any loss.
     const path = e.composedPath()
+    // Start header dragging here, before page capture-phase outside-click
+    // handlers can dismiss the UI whose element the user is describing.
+    if (path.includes(composerGrip)) {
+      if (e.type === 'pointerdown') startComposerDrag(e)
+      e.stopImmediatePropagation()
+      return
+    }
     if (path.includes(grip) || path.includes(draw)) return
     const t = path[0]
     if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return
@@ -1675,7 +1938,12 @@
     try { chrome.runtime.getURL('') } catch {
       clearInterval(orphanCheck)
       dead = true
+      cancelAnimationFrame(anchorFrame)
+      removeEventListener('scroll', scheduleAnchor, true)
+      removeEventListener('resize', scheduleAnchor)
       cancelPillDrag()
+      endComposerDrag()
+      composerObserver.disconnect()
       popoverObserver.disconnect()
       for (const observer of popoverResizeObservers) observer.disconnect()
       for (const timer of afterRetryTimers.values()) clearTimeout(timer)
@@ -1743,11 +2011,13 @@
       sel: [ta.selectionStart, ta.selectionEnd],
       focused: root.activeElement === ta,
       rect: picked.rect,
+      position: picked.composerPosition || null,
       ctx: picked.frozen || contextOf(picked),
       stroke: picked.stroke || null,
+      regionAnchor: picked.stroke ? picked.regionAnchor : null,
       multi: multi.map(m => ({ ctx: m.frozen || contextOf(m) })),
-      retryRef: pendingSubmission?.target === picked && pendingSubmission.payload.text === ta.value.trim()
-        ? pendingSubmission.ref : null,
+      retryRef: pendingSubmission?.target === picked && pendingSubmission.durable && pendingSubmission.payload.text === ta.value.trim()
+        ? pendingSubmission.ref : pendingRestore?.target === picked ? pendingRestore.ref : null,
     } : null
     try {
       sessionStorage.setItem(SNAP_KEY, JSON.stringify({
@@ -1808,7 +2078,8 @@
     try { stillTrue = document.querySelector(picked.selector) === n } catch { /* invalid selector */ }
     if (!stillTrue) picked.selector = cssPath(n)
     picked.source = sourceHint(n) || picked.source
-    picked.rect = n.getBoundingClientRect()
+    if (!picked.stroke) picked.rect = n.getBoundingClientRect()
+    else { followRegion(); placeComposer(picked.rect) }
     picked.frozen = elementContext(n, picked.selector, picked.source) // refreeze for the NEXT reload
     if (!picked.stroke) {
       const chain = [n]
@@ -1862,7 +2133,9 @@
     draw.appendChild(strokePath)
   }
   function restoreComposer(c) {
-    picked = { el: null, rect: c.rect, selector: c.ctx?.selector, source: c.ctx?.source, frozen: c.ctx, stroke: c.stroke || null, generation: crypto.randomUUID().replaceAll('-', '') }
+    picked = { el: null, rect: c.rect, selector: c.ctx?.selector, source: c.ctx?.source, frozen: c.ctx, stroke: c.stroke || null, regionAnchor: c.regionAnchor || null, generation: crypto.randomUUID().replaceAll('-', '') }
+    if (Number.isFinite(c.position?.x) && Number.isFinite(c.position?.y))
+      picked.composerPosition = { x: c.position.x, y: c.position.y }
     multi = (c.multi || []).map(m => ({ el: null, selector: m.ctx?.selector, source: m.ctx?.source, frozen: m.ctx, outline: null }))
     if (multi.length) trackMulti()
     mode = 'composing'
@@ -1875,14 +2148,7 @@
     ta.value = c.text || ''
     if (/^[A-Za-z0-9_-]{8,128}$/.test(c.retryRef || '')) {
       const target = picked
-      pendingRestore = { target, ready: sourceReady.then(async () => {
-        const key = retryStorageKey()
-        if (!key) return false
-        const entry = (await chrome.storage.local.get(key))[key]
-        if (!entry || entry.ref !== c.retryRef || entry.payload?.text !== (c.text || '').trim()) return false
-        if (picked === target) pendingSubmission = {target, payload:entry.payload, ref:entry.ref}
-        return true
-      }).catch(() => false) }
+      pendingRestore = { target, ref: c.retryRef, text: (c.text || '').trim() }
     }
     autoGrow()
     // only steal the focus back if the composer HAD it — otherwise the page's own
@@ -1944,13 +2210,14 @@
   } catch { /* extension reloading */ }
 
   // resolve the (test-only) port override, THEN open the connection
+  const startConnection = () => sourceReady.finally(() => { endpointReady = true; connect() })
   try {
     chrome.storage.local.get('nudgePort')
       .then(({ nudgePort }) => {
         const endpointPort = NUDGE_PLATFORM.bridgePort || nudgePort
         if (endpointPort) { HTTP = `http://localhost:${endpointPort}`; WS = `ws://localhost:${endpointPort}` }
-        sourceReady.finally(connect)
+        startConnection()
       })
-      .catch(() => sourceReady.finally(connect))
-  } catch { sourceReady.finally(connect) }
+      .catch(startConnection)
+  } catch { startConnection() }
 })()

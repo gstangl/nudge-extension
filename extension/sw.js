@@ -21,24 +21,30 @@ const randomToken = () => crypto.randomUUID().replaceAll('-', '')
 const sourceStore = chrome.storage.session
 let identity = null
 let identityTail = Promise.resolve()
+let identityStage = 'idle'
 const tabEpochs = new Map()
 const windowEpochs = new Map()
 let focusEpoch = 0
 const tokenOK = value => typeof value === 'string' && /^[A-Za-z0-9_-]{8,128}$/.test(value)
 const routeOf = value => { const u = new URL(value); return u.origin + u.pathname + u.hash }
 const serializedIdentity = work => {
-  const operation = identityTail.then(work)
+  const operation = identityTail.then(async () => {
+    try { return await work() }
+    finally { identityStage = 'idle' }
+  })
   identityTail = operation.catch(() => {})
   return operation
 }
 async function readIdentity() {
   if (identity) return identity
+  identityStage = 'reading session identity'
   const stored = sourceStore ? (await sourceStore.get('nudgeBrowserIdentity')).nudgeBrowserIdentity : null
   identity = stored?.version === 1 && tokenOK(stored.session) && stored.tabs && typeof stored.tabs === 'object'
     ? stored : { version: 1, session: randomToken(), tabs: {} }
   return identity
 }
 async function saveIdentity(next) {
+  identityStage = 'saving session identity'
   if (sourceStore) await sourceStore.set({ nudgeBrowserIdentity: next })
   identity = next
 }
@@ -46,9 +52,10 @@ function validateSender(sender, documentToken) {
   if (sender.id !== chrome.runtime.id || !Number.isInteger(sender.tab?.id) || !Number.isInteger(sender.tab?.windowId) || sender.frameId > 0 || !tokenOK(documentToken)) throw new Error('missing or invalid tab/document identity')
   if (sender.documentLifecycle && sender.documentLifecycle !== 'active') throw new Error('source document is not active')
   const url = new URL(sender.url || sender.tab.url)
-  if (url.protocol !== 'http:' || !['localhost', '127.0.0.1'].includes(url.hostname)) throw new Error('source is not a local top-level document')
+  if (!['http:', 'https:'].includes(url.protocol) || !/^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname)) throw new Error('source is not a local top-level document')
 }
 async function proveCurrentDocument(sender, documentToken) {
+  identityStage = 'probing current document'
   // `loading` also occurs for same-document SPA/hash navigation. Probe the
   // current top-level content script rather than mistaking that event for proof
   // that its document died. Do not target the claimed documentId here: that
@@ -69,7 +76,12 @@ function sourceFor(sender, documentToken, register = false) {
     const current = await readIdentity()
     let record = current.tabs[sender.tab.id]
     if (register) {
-      if (record?.document && !record.navigationPending && (record.document !== documentToken || (record.runtimeDocument && record.runtimeDocument !== sender.documentId))) throw new Error('source successor requires a navigation boundary')
+      // The worker may miss the loading event across suspension/restart. A
+      // browser-issued document ID change can establish that boundary, but
+      // only if the live top-level receiver below independently proves it.
+      const runtimeSuccessor = typeof sender.documentId === 'string' &&
+        typeof record?.runtimeDocument === 'string' && record.runtimeDocument !== sender.documentId
+      if (record?.document && !record.navigationPending && !runtimeSuccessor && (record.document !== documentToken || (record.runtimeDocument && record.runtimeDocument !== sender.documentId))) throw new Error('source successor requires a navigation boundary')
       await proveCurrentDocument(sender, documentToken)
       if (epoch !== captureEpoch(sender)) throw new Error('source changed during document registration')
       record = { tab: record?.tab || randomToken(), document: documentToken, runtimeDocument: sender.documentId || null, navigationPending: false }
@@ -109,17 +121,22 @@ chrome.tabs.onRemoved.addListener(tabId => {
 })
 // Private retry payloads are per-tab, not an unbounded second offline queue.
 // Queue entries survive independently. Retain same-session ambiguous retries;
-// collect prior-browser-session leftovers and entries beyond the retry horizon.
+// retain prior-session retries too: restored drafts can still reference them.
+// Only collect entries beyond the bridge retry horizon.
 if (chrome.storage.local?.get && chrome.storage.local?.remove) serializedIdentity(async () => {
   const current = await readIdentity()
+  identityStage = 'reading retry storage for cleanup'
   const stored = await chrome.storage.local.get(null)
   const keys = Object.keys(stored).filter(key => {
     if (!key.startsWith('nudgeDraftRetry-')) return false
     const payload = stored[key]?.payload
     const at = Date.parse(payload?.submissionCreatedAt || '')
-    return payload?.browserSource?.session !== current.session || (Number.isFinite(at) && Date.now() > at + 7 * 24 * 3600e3 + 5 * 60_000)
+    return Number.isFinite(at) && Date.now() > at + 7 * 24 * 3600e3 + 5 * 60_000
   })
-  if (keys.length) await chrome.storage.local.remove(keys)
+  if (keys.length) {
+    identityStage = 'removing expired retry storage'
+    await chrome.storage.local.remove(keys)
+  }
 }).catch(error => console.warn('[groundworks-nudge] retry cleanup deferred', error))
 const captureEpoch = sender => `${tabEpochs.get(sender.tab.id) || 0}:${windowEpochs.get(sender.tab.windowId) || 0}:${focusEpoch}`
 async function captureContext(sender, expected) {
@@ -140,9 +157,21 @@ async function validateCapture(sender, expected, before) {
 }
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type !== 'nudge-source-register') return
+  // Keep the underlying identity operation serialized even if its caller
+  // times out. Releasing the lock while a storage write is still pending could
+  // let an old write overwrite a newer identity. Report the stalled stage.
+  let replied = false
+  const timer = setTimeout(() => {
+    replied = true
+    sendResponse({ ok: false, error: `Registration timeout: ${identityStage}` })
+  }, 2400)
+  const reply = response => {
+    clearTimeout(timer)
+    if (!replied) { replied = true; sendResponse(response) }
+  }
   Promise.resolve().then(() => sourceFor(sender, msg.document, true))
-    .then(source => sendResponse({ ok: true, source }))
-    .catch(error => sendResponse({ ok: false, error: String(error) }))
+    .then(source => reply({ ok: true, source }))
+    .catch(error => reply({ ok: false, error: String(error) }))
   return true
 })
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -218,7 +247,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type !== 'nudge-dev-reload') return
   if (!NUDGE_PLATFORM.developmentReload) return
-  chrome.tabs.query({ url: ['http://localhost/*', 'http://127.0.0.1/*'] }, async (tabs) => {
+  chrome.tabs.query({ url: ['http://localhost/*', 'http://*.localhost/*', 'http://127.0.0.1/*', 'https://localhost/*', 'https://*.localhost/*', 'https://127.0.0.1/*'] }, async (tabs) => {
     await Promise.all(tabs.map((t) => chrome.tabs.reload(t.id).catch(() => {})))
     chrome.runtime.reload()
   })
@@ -290,7 +319,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 // grey while the toolbar kept running top right — two displays contradicting
 // each other (2026-08-05, estimate/#/ersteinschaetzung).
 // So re-fetch the state after every navigation; the tab knows it.
-const LOCAL_TAB = /^http:\/\/(localhost|127\.0\.0\.1)([:/]|$)/
+const LOCAL_TAB = /^https?:\/\/(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)([:/]|$)/
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
   if (info.url || info.status === 'loading' || info.status === 'complete') tabActionStates.delete(tabId)
   if (!info.url && info.status !== 'complete') return // title, favicon and audio updates are none of our business
