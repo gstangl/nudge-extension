@@ -228,8 +228,8 @@ describe('local content-script HTTP transport', () => {
     expect(f.calls[1].request.url).toBe('http://localhost:4822/comments')
     expect(JSON.parse(f.calls[1].request.body).submissionId).toBe('submission_1')
   })
-  it('transports named local page submissions through their own tab', async () => {
-    const f = installed(), url = 'http://task-a.app.localhost:1355/'
+  it.each(['http://task-a.app.localhost:1355/', 'https://task-a.app.localhost:1355/', 'https://localhost:1355/', 'https://127.0.0.1:1355/'])('transports local page submissions through their own tab: %s', async url => {
+    const f = installed()
     const from = { ...f.sender(1), url }
     const reply = await f.send(submit(payload(1, { url, submissionCreatedAt: new Date().toISOString() })), from)
     expect(reply).toMatchObject({ ok: true, id: 'nudge_1', queued: false })

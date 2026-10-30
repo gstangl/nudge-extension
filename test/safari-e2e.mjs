@@ -15,6 +15,9 @@ const out = fs.mkdtempSync(path.join(smokeRoot, 'smoke-'))
 try {
   execFileSync(process.execPath, ['scripts/package-safari.mjs', '--mode', 'test', '--bridge-port', '4820', '--out', path.relative(ROOT, out)], { cwd: ROOT, stdio: 'pipe' })
   const manifest = JSON.parse(fs.readFileSync(path.join(out, 'manifest.json'), 'utf8'))
+  for (const group of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
+    for (const pattern of ['https://localhost/*', 'https://*.localhost/*', 'https://127.0.0.1/*']) assert(group.matches.includes(pattern), `Safari resources must admit ${pattern}`)
+  }
   assert(!manifest.permissions.includes('nativeMessaging'), 'Safari test manifest must omit nativeMessaging')
   assert.equal(manifest.background.service_worker, 'safari-sw.js')
   assert(manifest.content_scripts.filter(s => s.world !== 'MAIN').every(s => s.js[0] === 'platform.js'), 'platform.js must run before isolated content scripts')

@@ -17,6 +17,32 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 1.0.0-beta.2 · Bridge 0.20.1 — 2026-10-30 (HTTPS Portless worktree previews)
+
+Chrome numeric build: `1.0.0.2`; displayed version: `1.0.0-beta.2`.
+
+### Fixed
+- Discover HTTPS Portless previews from the proxy TLS state. Bind each route
+  through the process listening on its internal app port and its real worktree
+  directory; use the recorded route PID only without a listener. Shared proxy
+  processes, the proxy port and sibling worktrees never establish ownership.
+- Accept HTTP and HTTPS local URLs in explicit watcher/context scope and browser
+  readiness checks. Keep complete named-host identity independent of scheme.
+- Run the Chrome content scripts, fonts, screenshot identity, durable prompt
+  transport and navigation status updates on HTTPS localhost pages too. Safari
+  staging inherits the same local HTTPS permissions from the shared manifest.
+  The bridge's existing HTTP/WS localhost-origin fence already admits HTTPS.
+
+### Verification
+- Regression units cover TLS discovery, listener/proxy PID disagreement,
+  sibling and unreadable listeners, PID fallback, real directory containment,
+  Linux TCP/TCP6 inode lookup and local HTTPS browser transport/readiness.
+- The real Portless worktree suite has separate HTTP and TLS lanes: two Git
+  worktrees/watchers, forged shared proxy route PIDs, visible Chromium toolbar,
+  URL-scoped `status --check`, explicit `watch --url`, prompt delivery without
+  cross-wake, native context hooks and reload. Safari resource smoke verifies
+  HTTPS matches; real Safari runtime acceptance remains separate.
+
 ## 1.0.0-beta.1 · Bridge 0.20.0 — 2026-10-13 (First 1.0 beta)
 
 ### Added

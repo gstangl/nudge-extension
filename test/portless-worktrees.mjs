@@ -8,15 +8,17 @@ import net from 'node:net'
 import { spawn, execFileSync } from 'node:child_process'
 import { once } from 'node:events'
 import { chromium } from 'playwright'
+import { stageBrowserResources } from './browser-joint-coexistence.mjs'
 
 const root = path.resolve(import.meta.dirname, '..')
+const tls = process.argv.includes('--tls')
 const portless = process.env.NUDGE_PORTLESS_BIN
 if (!portless || !fs.existsSync(portless)) throw new Error('Set NUDGE_PORTLESS_BIN to an installed Portless CLI file')
 const evidenceRoot = process.env.NUDGE_PORTLESS_EVIDENCE_ROOT ? path.resolve(process.env.NUDGE_PORTLESS_EVIDENCE_ROOT) : os.tmpdir()
 fs.mkdirSync(evidenceRoot, { recursive: true })
 const out = fs.mkdtempSync(path.join(evidenceRoot, 'nudge-portless-worktrees-'))
 const repo = path.join(out, 'repo'), state = path.join(out, 'proxy'), store = path.join(out, 'store')
-const children = [], report = { results: [], scope: 'Two real Git worktrees and Portless instances with isolated Chromium extension and bridge' }
+const children = [], report = { results: [], scope: `Two real Git worktrees and ${tls ? 'HTTPS' : 'HTTP'} Portless with isolated Chromium extension and bridge` }
 report.browserLogs = []
 let context
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -60,7 +62,7 @@ try {
   git(['worktree', 'add', '-b', 'task-b', b])
   child('bridge', path.join(root, 'bridge/bridge.mjs'), [])
   await until(async () => (await identity()).store === store, 'isolated bridge')
-  child('proxy', portless, ['proxy', 'start', '--foreground', '--port', String(proxyPort), '--no-tls', '--skip-trust'])
+  child('proxy', portless, ['proxy', 'start', '--foreground', '--port', String(proxyPort), ...(tls ? ['--https'] : ['--no-tls']), '--skip-trust'])
   await until(() => fs.existsSync(path.join(state, 'proxy.port')), 'isolated proxy state')
   const watchA = child('watch-a', cli, ['watch', '--label', 'Worktree A', '--agent-id', 'worktree-a', '--project', a, '--wake', 'pull'], a)
   const watchB = child('watch-b', cli, ['watch', '--label', 'Worktree B', '--agent-id', 'worktree-b', '--project', b, '--wake', 'pull'], b)
@@ -72,6 +74,22 @@ try {
   const previewsA = await until(() => { const p = run(['previews', '--project', a]); return p.previews.length === 1 && p.previews }, 'first worktree preview')
   const previewsB = await until(() => { const p = run(['previews', '--project', b]); return p.previews.length === 1 && p.previews }, 'second worktree preview')
   const urlA = previewsA[0].url, urlB = previewsB[0].url
+  assert.equal(new URL(urlA).protocol, tls ? 'https:' : 'http:')
+  assert.equal(new URL(urlB).protocol, tls ? 'https:' : 'http:')
+  const registered = JSON.parse(fs.readFileSync(path.join(state, 'routes.json'), 'utf8'))
+  // Some supervisors record the proxy/wrapper rather than the app listener.
+  // Overwrite both route PIDs with the real shared proxy, forcing listener proof.
+  const proxyPid = children.find(entry => entry.name === 'proxy').processHandle.pid
+  fs.writeFileSync(path.join(state, 'routes.json'), JSON.stringify([
+    ...registered.map(route => ({ ...route, pid: proxyPid })),
+    { hostname: 'stopped.app.localhost', port: await freePort(), pid: process.pid },
+  ]))
+  for (const [project, host] of [[a, new URL(urlA).host], [b, new URL(urlB).host]]) {
+    const discovered = run(['previews', '--project', project]).previews
+    assert.deepEqual(discovered.map(p => p.host), [host])
+    assert.notEqual(discovered[0].pid, proxyPid)
+  }
+  pass('Listener ownership survives shared proxy route PIDs and excludes the sibling worktree')
   assert.notEqual(new URL(urlA).hostname, new URL(urlB).hostname)
   assert.equal(new URL(urlA).port, new URL(urlB).port)
   assert.notEqual(previewsA[0].serverPort, previewsB[0].serverPort)
@@ -90,8 +108,8 @@ try {
   pass('Unclaimed named hosts are not adopted by project-scoped sessions')
 
   const resource = `artifacts/safari/portless-${proxyPort}`
-  execFileSync(process.execPath, ['scripts/package-safari.mjs', '--mode', 'test', '--bridge-port', String(bridgePort), '--out', resource], { cwd: root, stdio: 'pipe' })
-  context = await chromium.launchPersistentContext('', { headless: true, channel: 'chromium', args: [`--disable-extensions-except=${path.join(root, resource)}`, `--load-extension=${path.join(root, resource)}`] })
+  report.resources = stageBrowserResources({ out: path.join(root, resource), port: bridgePort, family: 'chromium' })
+  context = await chromium.launchPersistentContext('', { headless: !process.argv.includes('--visible'), ignoreHTTPSErrors: tls, channel: 'chromium', args: [`--disable-extensions-except=${path.join(root, resource)}`, `--load-extension=${path.join(root, resource)}`] })
   const pageA = await context.newPage(), pageB = await context.newPage()
   for (const [page, url, name] of [[pageA, urlA, 'Worktree A'], [pageB, urlB, 'Worktree B']]) {
     page.on('console', message => report.browserLogs.push({ name, type: message.type(), text: message.text() }))
@@ -100,6 +118,18 @@ try {
     await page.locator('.pill .status.ok').waitFor({ timeout: 15000 })
     await until(async () => (await page.locator('.pill .who').innerText()).includes(name), 'correct visible toolbar owner')
   }
+  for (const [url, session] of [[urlA, 'worktree-a'], [urlB, 'worktree-b']]) {
+    const readiness = run(['status', '--check', '--browser', 'chrome', '--agent-id', session, '--url', url])
+    assert.equal(readiness.checks.browser.state, 'connected')
+    assert.equal(readiness.checks.session.state, 'connected')
+  }
+  pass('URL-scoped status --check observes the real connected browser and project owner')
+  const explicit = child('explicit-url-watch', cli, ['watch', '--label', 'Explicit URL', '--agent-id', 'explicit-url', '--url', urlA, '--wake', 'pull'], a)
+  await until(async () => (await identity()).agents.find(agent => agent.session === 'explicit-url')?.hosts?.includes(new URL(urlA).host), 'explicit URL watcher')
+  const explicitEnded = once(explicit.processHandle, 'exit')
+  explicit.processHandle.kill('SIGTERM'); await explicitEnded
+  await until(async () => (await fetch(base + '/.identity?host=' + encodeURIComponent(new URL(urlA).host)).then(r => r.json())).agentLabel === 'Worktree A', 'project owner after explicit URL watcher exit')
+  pass('watch --url accepts the public preview URL and releases its claim on exit')
   const live = await identity()
   for (const [url, session] of [[urlA, 'worktree-a'], [urlB, 'worktree-b']]) {
     const route = live.routes.find(route => route.host === new URL(url).host)

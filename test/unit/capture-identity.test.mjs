@@ -47,8 +47,8 @@ function harness({ session = {}, local = {}, sessionAvailable = true, windowsAva
 }
 
 describe('privileged browser identity and capture continuity', () => {
-  it('registers and captures a named local top-level document', async () => {
-    const h = harness(), url = 'http://task-a.app.localhost:1355/route'
+  it.each(['http://task-a.app.localhost:1355/route', 'https://task-a.app.localhost:1355/route', 'https://localhost:1355/route', 'https://127.0.0.1:1355/route'])('registers and captures a local top-level document: %s', async url => {
+    const h = harness()
     h.state.url = url
     const from = { ...sender(), url, tab: { ...sender().tab, url } }
     const registered = await h.register(from)

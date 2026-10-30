@@ -34,6 +34,9 @@ separate installation gate, not proven by dragging this in-page toolbar.
   real Git worktrees, an isolated real Portless proxy on a random side port,
   two real servers/watchers and Chromium extension delivery. Requires Node 24+
   and an installed Portless CLI; never reuses the live proxy or prompt store.
+  Repeat with `--tls` for HTTPS (isolated certificates, no system trust changes);
+  add `--visible` for visible Chromium. Both lanes check `status --check`,
+  listener ownership with shared proxy route PIDs and explicit `watch --url`.
   Guards automatic late-start binding, full-host ownership, distinct internal
   ports, no cross-wake, URL-scoped CLI, native hooks, older watcher pairing
   and reload. Run after preview-discovery, host-claim or Skill binding changes.
@@ -69,6 +72,8 @@ separate installation gate, not proven by dragging this in-page toolbar.
   explicitly headless Chromium, side bridge/page ports 4822/5322. Real pointer
   drag, keyboard, multi-select, draft, amend/withdraw and exact PNG/JPEG pixels.
   This is implementation verification, not Safari or native-app acceptance.
+  If a default side port is occupied, set `NUDGE_PARITY_BRIDGE_PORT` and
+  `NUDGE_PARITY_PAGE_PORT` to free isolated ports; leave the existing listener alone.
 - `node test/run-browser-regression.mjs --headless` — serial isolated A/F/L/M/O/P/Q/N/X/Y/Z/I
   regression with native startup disabled before loading. Omit `--headless` for
   visible Chromium. Never run browser suites concurrently: focus and ports are

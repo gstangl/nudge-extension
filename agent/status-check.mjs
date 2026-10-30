@@ -33,9 +33,9 @@ function skillState(root, home, runtime) {
 function appHost(tab, appPort) {
   try {
     const url = new URL(tab.url)
-    if (url.protocol !== 'http:' || !/^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname)) return null
-    if (appPort && Number(url.port || 80) !== appPort) return null
-    return url.host
+    const host = previewHost(tab.url)
+    if (appPort && Number(url.port || (url.protocol === 'https:' ? 443 : 80)) !== appPort) return null
+    return host
   } catch { return null }
 }
 

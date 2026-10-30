@@ -33,9 +33,9 @@ function fixture() {
 }
 
 describe('read-only Nudge readiness', () => {
-  it('checks each named local host independently on the same proxy port', async () => {
+  it.each(['http', 'https'])('checks each named local host independently on the same %s proxy port', async scheme => {
     const f = fixture()
-    f.identity.tabs = ['task-a.app.localhost', 'task-b.app.localhost'].map(host => ({ url: `http://${host}:1355/app`, browserSource: { browser: 'chromium' } }))
+    f.identity.tabs = ['task-a.app.localhost', 'task-b.app.localhost'].map(host => ({ url: `${scheme}://${host}:1355/app`, browserSource: { browser: 'chromium' } }))
     f.identity.routes = [
       { host: 'task-a.app.localhost:1355', owner: { session: 'current-session' } },
       { host: 'task-b.app.localhost:1355', owner: { session: 'other-session' } },
