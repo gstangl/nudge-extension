@@ -78,9 +78,9 @@ describe('bounded toolbar action rendering', () => {
     expect(h.state.badges).toHaveLength(3)
     expect(h.state.canvases).toBe(6)
   })
-  it('refreshes the icon on named local navigation but ignores foreign lookalikes', () => {
+  it.each(['http', 'https'])('refreshes the icon on %s local navigation but ignores foreign lookalikes', scheme => {
     const h = harness()
-    for (const url of ['http://task-a.app.localhost:1355/next', 'http://app.localhost.evil:1355/next']) {
+    for (const url of [`${scheme}://task-a.app.localhost:1355/next`, `${scheme}://app.localhost.evil:1355/next`]) {
       h.api.tabs.onUpdated.emit(1, { url }, { url })
     }
     expect(h.state.requests).toEqual([[1, { type: 'nudge-state-req' }]])

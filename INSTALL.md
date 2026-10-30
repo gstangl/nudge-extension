@@ -224,11 +224,13 @@ Click the dot for a one-line explanation of the current state.
 
 ## Working with several projects
 
-Each local hostname and port is owned by one agent session. HTTP Portless
+Each local hostname and port is owned by one agent session. HTTP and HTTPS Portless
 addresses such as `task-a.app.localhost:1355` and `task-b.app.localhost:1355`
 are separate hosts even when they share the same proxy port. The Skill's
 project-scoped watcher verifies Portless's serving processes against its Git
 worktree and binds those hosts automatically, including later server starts.
+Discovery uses the process listening on the internal app port; a shared proxy
+process does not establish ownership. The proxy TLS state selects HTTPS URLs.
 Use `groundworks-nudge previews --project <worktree>` to inspect that mapping.
 For another local preview, pass its actual browser address to `watch --url`.
 The toolbar's **Switch session** dropdown remains an explicit override.

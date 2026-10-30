@@ -52,7 +52,7 @@ function validateSender(sender, documentToken) {
   if (sender.id !== chrome.runtime.id || !Number.isInteger(sender.tab?.id) || !Number.isInteger(sender.tab?.windowId) || sender.frameId > 0 || !tokenOK(documentToken)) throw new Error('missing or invalid tab/document identity')
   if (sender.documentLifecycle && sender.documentLifecycle !== 'active') throw new Error('source document is not active')
   const url = new URL(sender.url || sender.tab.url)
-  if (url.protocol !== 'http:' || !/^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname)) throw new Error('source is not a local top-level document')
+  if (!['http:', 'https:'].includes(url.protocol) || !/^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname)) throw new Error('source is not a local top-level document')
 }
 async function proveCurrentDocument(sender, documentToken) {
   identityStage = 'probing current document'
@@ -247,7 +247,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type !== 'nudge-dev-reload') return
   if (!NUDGE_PLATFORM.developmentReload) return
-  chrome.tabs.query({ url: ['http://localhost/*', 'http://*.localhost/*', 'http://127.0.0.1/*'] }, async (tabs) => {
+  chrome.tabs.query({ url: ['http://localhost/*', 'http://*.localhost/*', 'http://127.0.0.1/*', 'https://localhost/*', 'https://*.localhost/*', 'https://127.0.0.1/*'] }, async (tabs) => {
     await Promise.all(tabs.map((t) => chrome.tabs.reload(t.id).catch(() => {})))
     chrome.runtime.reload()
   })
@@ -319,7 +319,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 // grey while the toolbar kept running top right — two displays contradicting
 // each other (2026-08-05, estimate/#/ersteinschaetzung).
 // So re-fetch the state after every navigation; the tab knows it.
-const LOCAL_TAB = /^http:\/\/(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)([:/]|$)/
+const LOCAL_TAB = /^https?:\/\/(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)([:/]|$)/
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
   if (info.url || info.status === 'loading' || info.status === 'complete') tabActionStates.delete(tabId)
   if (!info.url && info.status !== 'complete') return // title, favicon and audio updates are none of our business

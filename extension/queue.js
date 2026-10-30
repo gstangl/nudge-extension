@@ -182,7 +182,7 @@
       let local = false
       try {
         const url = new URL(sender.url || sender.tab?.url)
-        local = url.protocol === 'http:' && /^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname) && !url.username && !url.password
+        local = ['http:', 'https:'].includes(url.protocol) && /^(localhost|127\.0\.0\.1|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+localhost)$/.test(url.hostname) && !url.username && !url.password
       } catch { /* malformed sender URL is rejected below */ }
       if (sender.id !== api.runtime.id || sender.frameId !== 0 || !Number.isInteger(sender.tab?.id) || !local) {
         reply({ ok: false, error: 'queue_sender_rejected' }); return

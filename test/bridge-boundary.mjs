@@ -58,9 +58,9 @@ try {
   await start()
   await check('Host and Origin independently gate HTTP and WS', async () => {
     for (const host of [`localhost:${port}`, `127.0.0.1:${port}`, 'foreign.example', 'localhost.evil', 'localhost:65536']) {
-      for (const origin of [undefined, 'http://localhost:4886', 'http://task-a.app.localhost:1355', 'https://foreign.example', 'http://app.localhost.evil:1355', 'null']) {
+      for (const origin of [undefined, 'http://localhost:4886', 'http://task-a.app.localhost:1355', 'https://task-a.app.localhost:1355', 'https://localhost:1355', 'https://127.0.0.1:1355', 'https://foreign.example', 'http://app.localhost.evil:1355', 'null']) {
         const headers = { Host: host, ...(origin === undefined ? {} : { Origin: origin }) }
-        const allowed = (host === `localhost:${port}` || host === `127.0.0.1:${port}`) && (origin === undefined || origin === 'http://localhost:4886' || origin === 'http://task-a.app.localhost:1355')
+        const allowed = (host === `localhost:${port}` || host === `127.0.0.1:${port}`) && (origin === undefined || origin === 'http://localhost:4886' || ['http://task-a.app.localhost:1355', 'https://task-a.app.localhost:1355', 'https://localhost:1355', 'https://127.0.0.1:1355'].includes(origin))
         assert.equal(await httpStatus(headers), allowed ? 200 : 403, `HTTP ${JSON.stringify(headers)}`)
         assert.equal((await socket(headers)).status, allowed ? 101 : 401, `WS ${JSON.stringify(headers)}`)
       }

@@ -22,7 +22,7 @@ import { ORIGIN_OK, admissionError, readJsonBody } from './http-boundary.mjs'
 import { execFile } from 'node:child_process'
 import { previewHost } from '../agent/preview-hosts.mjs'
 
-const VERSION = '0.20.0'
+const VERSION = '0.20.1'
 const PORT = Number(process.env.NUDGE_PORT || 4700)
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const log = (...a) => console.error('[nudge-bridge]', ...a)
