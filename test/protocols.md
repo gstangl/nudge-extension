@@ -622,7 +622,7 @@ extension re-pointed to the dead port 4799 (no fetch can reach the live bridge).
 | Q11 | Single-element highlight and composer follow real page scrolling; draft, selection, focus and disabled Send state survive | ✅ 2026-10-03 |
 | Q12 | Nested scrolling and responsive viewport changes refresh both anchor positions | ✅ 2026-10-03 |
 | Q13 | Scrolling after element removal hides the stale highlight, preserves the draft and never revives a cancelled composer | ✅ 2026-10-03 |
-| Q15 | Real context-header drags recover clipped region/element composers; release/blur, focus/caret, pending Send, page isolation, scroll/reload position, viewport containment and Send/Cancel remain correct | See composer-drag evidence; headless Chromium only |
+| Q15 | Real context-header drags recover clipped region/element composers; release/blur, focus/caret, pending Send, page isolation, scroll/reload position, viewport containment and Send/Cancel remain correct | Automated by [Suite Q Q15](reload-resilience.mjs); real-browser acceptance is separate |
 | Q14 | Freeform follows nested/page scrolling; persisted capture rectangle and stroke agree, and reload retains region geometry | ✅ 2026-10-03 |
 | Q17 | Arrow alignment after bottom-edge clamping, growing/shrinking drafts and left/right placement | ✅ 2026-10-03 (headless Chromium; 100px before, 0px after) |
 | Q16 | Changed tab identity and transient retry-storage read failure recover the exact original submission without duplicates | ✅ 2026-10-03 |

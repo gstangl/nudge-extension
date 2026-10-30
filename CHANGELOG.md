@@ -9,6 +9,10 @@ The changelog is English throughout.
 
 ## Unreleased
 
+- Archive superseded local PR drafts and fixture evidence, carry remaining
+  acceptance checks into the test catalog, and keep generated artifacts out
+  of source control.
+
 - Scope guided setup readiness checks to the complete public preview URL, so
   HTTPS Portless worktrees sharing a proxy port are checked independently.
 

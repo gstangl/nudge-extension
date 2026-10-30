@@ -119,6 +119,34 @@ leans on — bulletproofed in Suite H (`provenance.mjs`), display in Suite A.
 | G-6 | Suite A flaked at the FIRST UI assert (status dot green) under load — cold start (extension boot + WS + first snapshot) needs > 5 s | startup barriers get generous timeouts (15 s); behavior asserts keep tight ones (flip timing = A12/D5) | ✅ e2e barrier widened (3× stable) |
 | G-5 | Fresh agents (never opened before) spawned watcher processes they never asked for | the SessionStart hook ORDERED every new session to arm immediately; UserPromptSubmit nagged too → arming is now OPT-IN (only on the user's explicit "take over the nudges") | ✅ technical fence: watcher exits(1) without label and normalized Agent id; groundworks-nudge is the registration path |
 
+## Acceptance carried forward from local artifact reviews
+
+Reviewed on 2026-10-30 against the merged implementation. The old PR drafts,
+review notes, screenshot fixtures and source hashes have been archived locally
+with their associated logs. Their original failures and verification limits are
+retained; their old version numbers and test counts are historical snapshots.
+
+| Historical group | Disposition | Maintained coverage |
+|---|---|---|
+| Send recovery, tab registration and draft retry restoration | Implementation merged; historical PR drafts archived | [Draft/reload regressions](reload-resilience.mjs), [capture identity units](unit/capture-identity.test.mjs), [draft retry units](unit/draft-retry.test.mjs) |
+| Durable delivery and freeform scrolling | Implementation merged; original blocked-transport and capture failures retained in the archive | [Queue units](unit/queue.test.mjs), [Suite A](e2e.mjs), [Suite Q](reload-resilience.mjs) |
+| Scroll anchors, draggable composer and fitted arrow | Implementation merged; fixture screenshots and old reviews archived | Suite Q Q11–Q17 and the [real input contract](input-contract.mjs) |
+| Portless worktree binding | Old HTTP-only report superseded by maintained HTTP/HTTPS verification; original fixture evidence archived | [Real Portless worktrees](portless-worktrees.mjs), [preview discovery units](unit/preview-hosts.test.mjs), [origin routing](origin-routing.mjs) |
+
+The former question about enabling a hidden toolbar when the Skill starts is
+already resolved by the existing saved-Off behavior: starting a watcher does not
+override that preference. See the beta.1 scope in the [changelog](../CHANGELOG.md).
+It is not an outstanding implementation task.
+
+The remaining items are acceptance work. A passing source test, connected tab,
+installed Skill file or watcher output alone does not close them.
+
+| ID | Remaining acceptance | Current evidence and next check |
+|---|---|---|
+| AC-1 | Existing target Chrome tab: reload/recovery, clean region capture and complete prompt round trip | Real target Chrome typing/editing and registered browser tabs were observed; automated input, retry and capture regressions pass. Complete the target-app acceptance in I07 and applicable Suite C drills in [protocols.md](protocols.md), using an explicitly opted-in application session and a deliberately submitted prompt. Record its receipt and source-bound evidence without resending historical work. |
+| AC-2 | Native agent invocation, optional session label and actual wake capability | Installer metadata and runtime label propagation are automated. Invoke the Skill in the intended real agent UI, verify its supplied label, and observe an actual new agent turn for push or delivery after the next message for pull. Watcher stdout alone is not agent-turn receipt. Follow [guided setup](../INSTALL.md#guided-setup-for-agents). |
+| AC-3 | Current-candidate real Safari and joint Safari/Chrome acceptance | Chromium and resource smoke checks do not establish real Safari runtime acceptance. The outstanding browser, permission, storage, capture and lifecycle checks remain owned by [Safari validation levels](../docs/SAFARI.md#validation-levels) and the shared [browser contracts](protocols.md). Keep their current-candidate results separate. |
+
 ## Building new legs — order of value
 
 1. ~~A-8~~ done (0.16.2, Suite A leg "chrome inert") · ~~F-6~~ done (brutal D4)
