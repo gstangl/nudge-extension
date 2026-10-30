@@ -40,7 +40,7 @@ jobs:
           NUDGE_PORTLESS_EVIDENCE_ROOT: artifacts/safari/portless-worktrees
       - name: Retain Portless implementation evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: portless-worktree-verification
           path: artifacts/safari/portless-worktrees/
@@ -69,7 +69,7 @@ jobs:
       - run: node test/browser-coexistence.mjs --chromium-only --headless
       - name: Retain implementation evidence (not Safari acceptance)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: developer-preview-verification
           path: artifacts/safari/
