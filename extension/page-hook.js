@@ -10,6 +10,33 @@
   if (window.top !== window) return
   if (globalThis.__nudgeHookInstalled) return
   globalThis.__nudgeHookInstalled = true
+  // Window capture is where canvas apps claim shortcuts. Shadow retargeting
+  // makes their editable checks see our host instead of its textarea. Fence
+  // keys before page listeners exist; leave native editing/default actions
+  // intact. The isolated controller handles submission inside its shadow root.
+  // Escape retains the existing contract: it also reaches page dialogs.
+  for (const type of ['keydown', 'keyup', 'keypress']) {
+    window.addEventListener(type, (event) => {
+      if (event.key === 'Escape') return
+      const inside = event.composedPath().some(node => node?.nodeType === 1 &&
+        node.id === '__groundworks-nudge-host' && node.dataset.nudgeExtension)
+      if (inside) {
+        // Route UI commands (Enter and tool shortcuts), while native typing,
+        // selection and IME defaults remain untouched. This UI event stays
+        // inside the shadow root; it is not an artificial keyboard event.
+        if (type === 'keydown') {
+          const command = new CustomEvent('groundworks-nudge-input-key', {
+            bubbles: true, cancelable: true,
+            detail: JSON.stringify({ key: event.key, shiftKey: event.shiftKey,
+              ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey,
+              isComposing: event.isComposing }),
+          })
+          if (!event.composedPath()[0].dispatchEvent(command)) event.preventDefault()
+        }
+        event.stopImmediatePropagation()
+      }
+    }, true)
+  }
   const buf = []
   const fmt = (a) => {
     if (typeof a === 'string') return a

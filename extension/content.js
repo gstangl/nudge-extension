@@ -120,6 +120,24 @@
   }
   const composerGrip = composer.querySelector('.meta')
   const ta = composer.querySelector('textarea')
+  const inputKeyHandlers = new WeakMap()
+  root.addEventListener('groundworks-nudge-input-key', (event) => {
+    let key
+    try { key = JSON.parse(event.detail) } catch { return }
+    if (!key || typeof key.key !== 'string' || key.key.length > 64) return
+    const path = event.composedPath()
+    // MAIN-world capture fences the real key before it traverses the page.
+    // Handle only Nudge's UI commands here; cancelling this shadow-local event
+    // cancels the original default. All ordinary editing stays native.
+    const command = { key: key.key, shiftKey: key.shiftKey === true,
+      ctrlKey: key.ctrlKey === true, metaKey: key.metaKey === true,
+      altKey: key.altKey === true, isComposing: key.isComposing === true,
+      composedPath: () => path, preventDefault: () => event.preventDefault(),
+      stopPropagation: () => event.stopPropagation() }
+    const field = path.find(node => inputKeyHandlers.has(node))
+    if (field) inputKeyHandlers.get(field)(command)
+    else onWinKeyDown(command)
+  })
   const btnPick = pill.querySelector('.btn-pick')
   const btnDraw = pill.querySelector('.btn-draw')
   pill.querySelector('.count').addEventListener('click', (e) => {
@@ -848,12 +866,14 @@
   // so a longer nudge is fully visible while typing instead of a fixed peephole
   const autoGrow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
   ta.addEventListener('input', () => { autoGrow(); saveSnap() }) // every keystroke is a candidate last word before a reload
-  ta.addEventListener('keydown', (e) => {
+  const composerKeyDown = (e) => {
     // Enter sends (empty = numbered mark), Shift+Enter inserts a newline —
     // same convention as the History amend input
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
     e.stopPropagation()
-  })
+  }
+  inputKeyHandlers.set(ta, composerKeyDown)
+  ta.addEventListener('keydown', composerKeyDown)
 
   // ---------- console + network excerpt from the MAIN-world hook ----------
   function getConsole() {
@@ -1545,12 +1565,14 @@
         amSending = false
       }
       panel.querySelector('.q-amend-send').addEventListener('click', (e) => { e.stopPropagation(); submitAmend() })
-      input.addEventListener('keydown', (e) => {
+      const amendmentKeyDown = (e) => {
         e.stopPropagation()
         if (e.key === 'Escape') { closeAmend(); return }
         // Enter (or ⌘/Ctrl+Enter) sends; Shift+Enter inserts a newline
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAmend() }
-      })
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitAmend() }
+      }
+      inputKeyHandlers.set(input, amendmentKeyDown)
+      input.addEventListener('keydown', amendmentKeyDown)
       qAccordion(row, p.id)
       row.querySelector('.q-add').addEventListener('click', (e) => {
         e.stopPropagation()
@@ -1790,15 +1812,12 @@
   document.addEventListener('mousemove', onMove, true)
   document.addEventListener('pointerdown', onClick, true)
   document.addEventListener('click', onClickSuppress, true)
-  // WINDOW capture, the first hop — not document (bit us 2026-07-29: "the
-  // marks don't go away"). Dialog/dropdown libraries (Radix, Headless
-  // UI, @roots/ui) handle Escape on window capture and stopPropagation() it while
-  // their layer is open; a document-capture listener downstream then never runs,
-  // so Esc silently stopped clearing the pick — and P/F stopped switching tools —
-  // on exactly the real apps Nudge is for. Same lesson as the moat below. (A page
-  // listener on the SAME node can't suppress us: stopImmediatePropagation does not
-  // cross into the content script's isolated world — only halting propagation one
-  // node earlier does. Suite O pins both directions.)
+  // Window capture keeps page shortcuts ahead of document-capture dialogs.
+  // Earlier page listeners on window can still consume keys. page-hook.js
+  // fences keys from Nudge chrome at document_start, before those listeners;
+  // this controller handles its shadow-local UI commands above. Suite O keeps
+  // Escape's existing page-dialog contract; input-contract covers early canvas
+  // handlers during real typing and submission.
   window.addEventListener('keydown', onWinKeyDown, true)
 
   // ---------- moat: reaching for the toolbar must not dismiss page state ----------

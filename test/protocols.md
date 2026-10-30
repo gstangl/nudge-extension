@@ -3,6 +3,33 @@
 Structured testing in three suites. Every entry: what it guards, how it runs,
 last result. Legend: ✅ passed · ⚠️ passed with finding · ⬜ not yet run.
 
+## Mandatory text input and submission — Safari and Chrome
+
+Text entry and delivery are release gates. Run `node test/input-contract.mjs`:
+real keyboard and pointer actions on HTTP **and HTTPS**, an isolated bridge/store,
+and a page whose early window/document capture handlers take canvas shortcuts
+and steal focus after three keys. `run-browser-regression.mjs` includes this gate
+immediately after Suite A, so CI must pass it on every extension change.
+
+A `.fill()` call, assigning `.value`, or dispatching artificial keyboard events
+cannot prove this gate: they bypass the page keyboard handling that broke real
+input. Check the field after the third character, pause, then continue typing.
+
+| Contract | Required proof |
+|---|---|
+| I01 Continuous typing | Composer and History amendment accept a full sentence beyond three characters, including shortcut letters, numbers, spaces and Unicode; retain focus and exact text after a pause |
+| I02 Editing and multiline | Real arrow, Backspace and Shift+Enter actions preserve the expected text, selection/caret and focus; Shift+Enter inserts a newline |
+| I03 Submission | Composer Enter and Send click store the exact prompt once and close the composer; Tab reaches the controls and Space activates Send |
+| I04 History amendments | Enter and the amendment button append the exact text once to the original prompt; multiline entry works |
+| I05 Page isolation | Nudge keydown/keypress/keyup do not trigger canvas shortcuts or move focus; ordinary page inputs, canvas shortcuts and P/F switching from the toolbar still work; preserve the existing Escape/dialog contract |
+| I06 Failed delivery | A rejected transport retains exact typed work durably across reload; reconnect delivers once and leaves the input controls usable |
+| I07 Real-browser acceptance | Repeat typing, editing, keyboard/button submission and amendments in the actual target app in each browser; native clipboard, IME composition and browser/editor-specific focus behavior require their own real-browser evidence |
+
+Retain the browser version, resource digest, per-case result and screenshots.
+Chromium automation does not close real Safari acceptance. The existing shared
+parity runner additionally checks real pointer/keyboard interaction in each
+runtime; its ordinary fixture alone did not cover early canvas capture handlers.
+
 ## Mandatory toolbar interaction parity — Safari and Chrome
 
 The floating **in-page** Nudge toolbar is a release gate, not optional visual

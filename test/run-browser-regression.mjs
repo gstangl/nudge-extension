@@ -13,7 +13,7 @@ const extension = path.join(out,'extension')
 const report = {headless:process.argv.includes('--headless'),results:[]}
 report.resources = JSON.parse(execFileSync(process.execPath,['scripts/package-safari.mjs','--mode','test','--use-storage-port','--out',path.relative(root,extension)],{cwd:root,encoding:'utf8'}))
 const suites = {
-  'e2e':[4720], 'fixture-gauntlet':[4722], 'toolbar-ux':[4785,5196],
+  'e2e':[4720], 'input-contract':[], 'fixture-gauntlet':[4722], 'toolbar-ux':[4785,5196],
   'page-inertness':[5192], 'escape-clear':[5194], 'multi-select':[5195],
   'reload-resilience':[5196,4799], 'amend':[4788,5188], 'cancel':[4791],
   'capture-stall':[4795], 'off-means-off':[4786],
