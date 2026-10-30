@@ -17,11 +17,15 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
-## 1.0.0-beta.2 · Bridge 0.20.1 — 2026-10-30 (HTTPS Portless worktree previews)
+## 1.0.0-beta.2 · Bridge 0.20.1 — 2026-10-30 (HTTPS previews and reliable text input)
 
-Chrome numeric build: `1.0.0.2`; displayed version: `1.0.0-beta.2`.
+Chrome numeric build: `1.0.0.3`; displayed version: `1.0.0-beta.2`.
 
 ### Fixed
+- Keep composer and History amendment typing inside Nudge when the host app
+  installs early canvas keyboard shortcuts. Preserve native text editing,
+  focus and button activation; Enter still submits, Shift+Enter inserts a line,
+  and an IME composition Enter does not submit prematurely.
 - Discover HTTPS Portless previews from the proxy TLS state. Bind each route
   through the process listening on its internal app port and its real worktree
   directory; use the recorded route PID only without a listener. Shared proxy
@@ -34,6 +38,10 @@ Chrome numeric build: `1.0.0.2`; displayed version: `1.0.0-beta.2`.
   The bridge's existing HTTP/WS localhost-origin fence already admits HTTPS.
 
 ### Verification
+- Add a mandatory real-keyboard input/submission gate on HTTP and HTTPS:
+  continue past three characters, edit at the caret, submit by Enter/button,
+  amend history, retain failed delivery and preserve host-page controls.
+  A hostile early capture fixture reproduces the original focus/shortcut loss.
 - Regression units cover TLS discovery, listener/proxy PID disagreement,
   sibling and unreadable listeners, PID fallback, real directory containment,
   Linux TCP/TCP6 inode lookup and local HTTPS browser transport/readiness.
