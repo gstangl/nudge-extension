@@ -9,21 +9,6 @@ The changelog is English throughout.
 
 ## Unreleased
 
-- Archive superseded local PR drafts and fixture evidence, carry remaining
-  acceptance checks into the test catalog, and keep generated artifacts out
-  of source control.
-
-- Scope guided setup readiness checks to the complete public preview URL, so
-  HTTPS Portless worktrees sharing a proxy port are checked independently.
-
-- Add a pinned, project-local Archify installation and reproducible, source-linked
-  architecture map of the shared Chrome/Safari core and local bridge.
-- Synchronize the toolbar test with label and viewport updates before grabbing
-  the handle; assert a real drag and bottom-edge drop before checking the menu.
-  Keep all menu-flip, scrolling and containment assertions unchanged.
-- Wait for fitted, stable toolbar geometry in the shared browser parity runner
-  before sampling drag coordinates after wake-tag and font changes.
-
 ## 1.0.0-beta.3 · Bridge 0.21.0 — 2026-11-18 (Declared send)
 
 Chrome numeric build: `1.0.0.4`; displayed version: `1.0.0-beta.3`.
@@ -105,6 +90,26 @@ Chrome numeric build: `1.0.0.3`; displayed version: `1.0.0-beta.2`.
   URL-scoped `status --check`, explicit `watch --url`, prompt delivery without
   cross-wake, native context hooks and reload. Safari resource smoke verifies
   HTTPS matches; real Safari runtime acceptance remains separate.
+
+
+### Also in the released archive
+The beta.2 archive was built from a later source commit (`b01d9a5`) and also
+carries these changes:
+
+- Archive superseded local PR drafts and fixture evidence, carry remaining
+  acceptance checks into the test catalog, and keep generated artifacts out
+  of source control.
+
+- Scope guided setup readiness checks to the complete public preview URL, so
+  HTTPS Portless worktrees sharing a proxy port are checked independently.
+
+- Add a pinned, project-local Archify installation and reproducible, source-linked
+  architecture map of the shared Chrome/Safari core and local bridge.
+- Synchronize the toolbar test with label and viewport updates before grabbing
+  the handle; assert a real drag and bottom-edge drop before checking the menu.
+  Keep all menu-flip, scrolling and containment assertions unchanged.
+- Wait for fitted, stable toolbar geometry in the shared browser parity runner
+  before sampling drag coordinates after wake-tag and font changes.
 
 ## 1.0.0-beta.1 · Bridge 0.20.0 — 2026-10-13 (First 1.0 beta)
 
