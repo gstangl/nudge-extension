@@ -253,6 +253,58 @@ describe('store.mjs — sanitizing + projections', () => {
   })
 })
 
+// Units (data-nudge-unit) and intents (data-nudge-intents) are page-declared and
+// opaque to Nudge: the store keeps them bounded, and every consumer names them.
+describe('store.mjs — units, intents and page context', () => {
+  const br = { kind: 'sandbox-variant', id: 'sbx:rechenkern/br', label: 'BR · Quellenregal · Runde 18' }
+  const bs = { kind: 'sandbox-variant', id: 'sbx:rechenkern/bs', label: 'BS · Größenkatalog · Runde 18' }
+
+  it('keeps sanitized units, the chosen intent and the page context', () => {
+    const pin = store.addPin({
+      text: 'fewer columns', url: 'http://localhost/sandbox/rechenkern/',
+      units: [br, bs, { kind: 'bad kind!', id: 'x' }, { kind: 'k', id: '   ' }, null],
+      intent: { id: 'round', label: 'Neue Runde', extra: 'dropped' },
+      context: [{ kind: 'sandbox-variant', id: 'sbx:rechenkern/bw', label: 'BW · Probierblatt', intents: [{ id: 'final' }] }],
+    }, null)
+    expect(pin.units).toEqual([br, bs])
+    expect(pin.intent).toEqual({ id: 'round', label: 'Neue Runde' })
+    expect(pin.context).toEqual([{ kind: 'sandbox-variant', id: 'sbx:rechenkern/bw', label: 'BW · Probierblatt' }])
+  })
+
+  it('drops an intent without units, invalid intent ids, and caps units at 12 and context at 4', () => {
+    expect(store.addPin({ text: '', url: 'https://x/', intent: { id: 'final', label: 'Final' } }, null).intent).toBeNull()
+    expect(store.addPin({ text: '', url: 'https://x/', units: [br], intent: { id: 'no spaces', label: 'X' } }, null).intent).toBeNull()
+    const many = Array.from({ length: 20 }, (_, i) => ({ kind: 'k', id: `u${i}`, label: `U${i}` }))
+    const pin = store.addPin({ text: '', url: 'https://x/', units: many, context: many }, null)
+    expect(pin.units).toHaveLength(12)
+    expect(pin.context).toHaveLength(4)
+    expect(store.addPin({ text: 'plain', url: 'https://x/' }, null)).toMatchObject({ units: null, intent: null, context: null })
+  })
+
+  it('treats a different intent under the same submission id as a conflict, and a retry as a replay', () => {
+    const payload = { text: '', url: 'http://localhost/', units: [br], intent: { id: 'round', label: 'Neue Runde' },
+      submissionId: 'intent_retry_check', submissionCreatedAt: new Date().toISOString() }
+    const created = store.submitPin(payload, null)
+    expect(store.submitPin(payload, null)).toMatchObject({ id: created.id, replay: true })
+    expect(store.submitPin({ ...payload, intent: { id: 'reject', label: 'Verwerfen' } }, null).error).toBe('submission_conflict')
+    expect(store.getPins()).toHaveLength(1)
+  })
+
+  it('names units and the intent in every projection and in the inbox mirror', () => {
+    const pin = store.addPin({ text: '', url: 'http://localhost/sandbox/rechenkern/', units: [br, bs], intent: { id: 'round', label: 'Neue Runde' },
+      context: [br] }, null)
+    expect(store.markLabel(pin)).toBe(`Mark: ${br.label} · ${bs.label}`)
+    expect(store.pinLine(pin)).toContain(`[round: ${br.label} · ${bs.label}]`)
+    expect(store.pinForClient(pin)).toMatchObject({ units: [br, bs], intent: { id: 'round', label: 'Neue Runde' } })
+    expect(store.pinSummary(pin)).toMatchObject({ units: [br, bs], intent: { id: 'round' }, context: [br] })
+    const md = fs.readFileSync(path.join(STORE, 'inbox', `${pin.id}.md`), 'utf8')
+    expect(md).toContain('## Intent')
+    expect(md).toContain('`round` — Neue Runde')
+    expect(md).toContain(`1. \`${br.id}\` — ${br.label} (sandbox-variant)`)
+    expect(md).toContain('## Page shows')
+  })
+})
+
 // The id counts up forever (identity: filenames, dedup, commits); the LABEL is
 // the number on the pill and may wrap, because it only has to be unique among
 // the handful of OPEN nudges. These two must never be conflated again.

@@ -15,7 +15,7 @@ report.resources = JSON.parse(execFileSync(process.execPath,['scripts/package-sa
 const suites = {
   'e2e':[4720], 'input-contract':[], 'fixture-gauntlet':[4722], 'toolbar-ux':[4785,5196],
   'page-inertness':[5192], 'escape-clear':[5194], 'multi-select':[5195],
-  'reload-resilience':[5196,4799], 'amend':[4788,5188], 'cancel':[4791],
+  'reload-resilience':[5196,4799], 'units-intents':[4796,5197], 'amend':[4788,5188], 'cancel':[4791],
   'capture-stall':[4795], 'off-means-off':[4786],
   'battletest':[4793],
 }

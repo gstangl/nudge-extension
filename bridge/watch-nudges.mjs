@@ -100,8 +100,15 @@ function scanPins(pins) {
         console.log(`Nudge ${p.id} amended: ${lastAmend.text.slice(0, 120)} — ${p.url}`)
       } else {
         const sel = p.target?.selector || '?'
-        const text = p.text ? p.text.slice(0, 120) : '[mark only — the user will reference it in chat]'
-        console.log(`New nudge ${p.id}: ${text} @ ${sel} — ${p.url}`)
+        // a page-declared unit names itself; an intent turns even an empty
+        // nudge into a work order ("New round" on two variants needs no words)
+        const units = p.units?.length ? p.units.map(u => `${u.label} [${u.id}]`).join(' + ').slice(0, 200) : null
+        if (p.intent) {
+          console.log(`New nudge ${p.id} · intent ${p.intent.id} (${p.intent.label}) on ${units}${p.text ? `: ${p.text.slice(0, 120)}` : ''} — ${p.url}`)
+        } else {
+          const text = p.text ? p.text.slice(0, 120) : '[mark only — the user will reference it in chat]'
+          console.log(`New nudge ${p.id}: ${text} @ ${units || sel} — ${p.url}`)
+        }
       }
     }
   }

@@ -89,6 +89,10 @@ const labelOf = (id) => {
   return Number.isFinite(n) && n > 0 ? ((n - 1) % LABEL_POOL) + 1 : 0
 }
 const lines = [`[Nudge] ${status}`]
+// page-declared units (data-nudge-unit) and the chosen intent, one phrase:
+// "intent round (New round) on BR · Quellenregal [sbx:rechenkern/br]"
+const unitPhrase = (p) => p.units?.length ? p.units.map(u => `${u.label} [${u.id}]`).join(' + ').slice(0, 200) : null
+const intentPhrase = (p) => p.intent ? `intent ${p.intent.id} (${p.intent.label}) on ${unitPhrase(p)}` : null
 if (age <= 15 && (useSel ? selection : newestPin)) {
   // multi-selection (Shift+click): several elements are ONE mark
   const multiLine = (targets) => targets?.length
@@ -101,10 +105,11 @@ if (age <= 15 && (useSel ? selection : newestPin)) {
       `When the user says "this"/"this spot", they mean THIS mark. Details: ${path.join(PIN_DIR, 'selection.json')}`,
     )
   } else {
-    const text = newestPin.text ? `"${newestPin.text.slice(0, 120)}"` : '[mark only]'
+    const said = newestPin.text ? `"${newestPin.text.slice(0, 120)}"` : null
+    const text = intentPhrase(newestPin) ? `${intentPhrase(newestPin)}${said ? ` · ${said}` : ''}` : said || '[mark only]'
     lines.push(
       `CURRENT MARK (${newestPin.id}, pill #${labelOf(newestPin.id)}, ${age} min ago): ${text}`,
-      `  Element: ${newestPin.targets?.length ? `${newestPin.targets.length} elements (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?'} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · already answered' : ''}`,
+      `  Element: ${unitPhrase(newestPin) || (newestPin.targets?.length ? `${newestPin.targets.length} elements (${newestPin.targets.map(t => t.selector).join(' · ').slice(0, 120)})` : newestPin.target?.selector || '?')} · ${routeOf(newestPin.url)}${newestPin.status === 'resolved' ? ' · already answered' : ''}`,
       `When the user says "this"/"this spot", they mean THIS mark. Screenshot: ${path.join(PIN_DIR, 'shots', `${newestPin.id}.png`)}`,
     )
   }
@@ -194,10 +199,11 @@ if (!refPins.length) {
   if (hits.length === 1) refPins.push(hits[0])
 }
 for (const p of refPins) {
-  const text = p.text ? `"${p.text.slice(0, 200)}"` : '[mark only — THIS prompt is the work order]'
-  const els = p.targets?.length
+  const said = p.text ? `"${p.text.slice(0, 200)}"` : null
+  const text = intentPhrase(p) ? `${intentPhrase(p)}${said ? ` · ${said}` : ''}` : said || '[mark only — THIS prompt is the work order]'
+  const els = unitPhrase(p) || (p.targets?.length
     ? `${p.targets.length} elements: ${p.targets.map(t => t.selector).join(' · ').slice(0, 160)}`
-    : (p.target?.selector || '?')
+    : (p.target?.selector || '?'))
   const extra = [
     p.owner?.label ? `Agent: ${p.owner.label}` : null,
     p.amendments?.length ? `${p.amendments.length} amendment(s)` : null,
@@ -220,9 +226,11 @@ if (open.length) {
   // agent gets from the spoken number straight to the inbox file.
   lines.push('  Format: #pill-number (id) · gist · route')
   for (const p of open.slice(0, 10)) {
-    const gist = p.text
+    const gist = p.intent
+      ? `[${p.intent.label}: ${(p.units || []).map(u => u.label).join(' + ').slice(0, 60)}]${p.text ? ` "${p.text.slice(0, 40)}${p.text.length > 40 ? '…' : ''}"` : ''}`
+      : p.text
       ? `"${p.text.slice(0, 60)}${p.text.length > 60 ? '…' : ''}"`
-      : `[Mark: ${(p.target?.innerText || p.target?.selector || '?').trim().slice(0, 40)}]`
+      : `[Mark: ${(p.units?.map(u => u.label).join(' + ') || p.target?.innerText || p.target?.selector || '?').trim().slice(0, 40)}]`
     lines.push(`  #${labelOf(p.id)} (${p.id}) · ${gist} · ${routeOf(p.url)}`)
   }
   if (open.length > 10) lines.push(`  … +${open.length - 10} more`)

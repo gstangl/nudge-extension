@@ -56,7 +56,12 @@ is everything. Nudge names that job; "Pin" named the mechanism.
    a later thought (append-only, re-wakes its agent; 0.19.0).
 4. **Best-in-class UI picking.** Gliding highlight, layer chips (pick the
    ancestor you meant), Shift+click multi-select ("swap these two"),
-   freehand lasso, pick-without-send ("this one").
+   freehand lasso, pick-without-send ("this one"). A page that renders its
+   own choice (variants, records) can **declare a send** instead: it marks its
+   things as units, the chosen ones and a send button (`data-nudge-unit`,
+   `data-nudge-send`), and Nudge carries the choice with its intent to the
+   agent, without tools of its own. Nudge gives units and intents no meaning;
+   the owning project does (2026-11-18).
 
 ## Core: the connection must be reliable — and visibly so
 

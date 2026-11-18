@@ -174,16 +174,39 @@
   let strokePath = null
 
   function clearStroke() { draw.innerHTML = ''; strokePts = []; strokePath = null }
+  // ---------- quiet pages: the page carries the conversation, Nudge stays out of sight ----------
+  // A page that renders its own choice and feedback (a sandbox variant bar) declares
+  // <html data-nudge-chrome="quiet">. Nudge stays ON there — the declared send and
+  // the bridge work — but its toolbar, its markers and its toasts stay hidden until
+  // the user shows the toolbar: the toolbar icon or its shortcut toggles only that
+  // on such a page, and P/F bring it up with their tool (2026-11-18).
+  const QUIET_KEY = 'groundworks-nudge-shown'
+  const quietPage = () => document.documentElement.getAttribute('data-nudge-chrome') === 'quiet'
+  let shownOnQuiet = false
+  try { shownOnQuiet = sessionStorage.getItem(QUIET_KEY) === '1' } catch { /* storage blocked */ }
+  const tucked = () => mode !== 'off' && quietPage() && !shownOnQuiet && (mode === 'idle' || mode === 'off')
+  function showOnQuiet(on) {
+    shownOnQuiet = on
+    try { on ? sessionStorage.setItem(QUIET_KEY, '1') : sessionStorage.removeItem(QUIET_KEY) } catch { /* storage blocked */ }
+  }
+  function applyChrome() {
+    const hidden = mode === 'off' || tucked()
+    pill.style.display = hidden ? 'none' : 'flex'
+    dots.style.display = hidden ? 'none' : 'block'
+  }
+  const chromeWatch = new MutationObserver(() => { if (!dead) applyChrome() })
+  chromeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-nudge-chrome'] })
   function setMode(next) {
     mode = next
-    pill.style.display = next === 'off' ? 'none' : 'flex'
-    dots.style.display = next === 'off' ? 'none' : 'block'
+    applyChrome()
     btnPick.classList.toggle('active', next === 'picking')
     btnDraw.classList.toggle('active', next === 'drawing')
     draw.classList.toggle('on', next === 'drawing')
     if (next !== 'picking' && next !== 'composing') hl.classList.remove('on')
     if (next !== 'composing') { endComposerDrag(); composer.style.display = 'none'; picked = null; clearStroke(); clearMulti() }
     document.documentElement.style.cursor = next === 'picking' ? 'crosshair' : ''
+    // a page's own send control (see "declared send") works while Nudge is on
+    document.documentElement.toggleAttribute('data-nudge-send-ready', next !== 'off')
     updatePill() // toolbar icon reflects on/off
     saveSnap() // leaving the composer also CLEARS the restore point (see below)
   }
@@ -1158,6 +1181,7 @@
       },
       targets: multiTargets() || null, // Shift-collected co-targets of ONE prompt
       annotations,
+      context: pageContext(), // the units the page says it is showing
       console: await getConsole(),
       screenshot: res?.dataUrl || null,
       screenshotFull: res?.fullDataUrl || null,
@@ -1244,6 +1268,7 @@
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-2Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
   }
   function notify(kind, text, host) {
+    if (tucked()) return // a quiet page says it in its own words while the toolbar is out of sight
     const item = document.createElement('div')
     item.className = `item ${kind === 'alert' || kind === 'clock' ? 'warn' : 'ok'}`
     item.innerHTML = `<svg viewBox="0 0 24 24">${FEED_ICONS[kind] || FEED_ICONS.check}</svg><span class="feed-text"></span><span class="feed-host"></span>`
@@ -1255,6 +1280,151 @@
     while (feed.children.length > 4) feed.firstChild.remove() // unobtrusive: short list
     requestAnimationFrame(() => item.classList.add('show'))
     setTimeout(() => { item.classList.add('bye'); setTimeout(() => item.remove(), 300) }, 4500)
+  }
+
+  // ---------- declared send: the PAGE owns the choice, Nudge carries it ----------
+  // A generic DOM contract, not an adapter. A page that lets the user choose
+  // among its own things (variants, records, cards) renders the choice itself
+  // and marks its send control; Nudge only delivers it to the owning agent.
+  //   data-nudge-unit="<kind>"          one thing the page offers (free token)
+  //   data-nudge-unit-id="<stable id>"  its identity (required)
+  //   data-nudge-unit-label="<label>"   what the agent and the queue call it
+  //   data-nudge-unit-selected          it is part of the user's choice
+  //   data-nudge-unit-current           the page is showing it right now
+  //   data-nudge-send="<intent id>"     a button: sends the selected units
+  //   data-nudge-send-label="<label>"   the intent's words (else the button text)
+  //   data-nudge-text                   a field whose value is the prompt
+  //   data-nudge-scope                  optional: where selection and text live
+  // Only a TRUSTED click sends: a script on the page cannot hand the agent work
+  // the user never asked for. Nudge reports back on the button
+  // (data-nudge-state = sending | sent | queued | failed) and dispatches
+  // `groundworks-nudge:sent` on it with a JSON string as detail.
+  const UNIT_KIND = /^[A-Za-z0-9_.:-]{1,64}$/
+  const INTENT_ID = /^[A-Za-z0-9_-]{1,32}$/
+  function unitOf(node) {
+    if (!node?.matches?.('[data-nudge-unit]')) return null
+    const kind = node.getAttribute('data-nudge-unit') || ''
+    const id = (node.getAttribute('data-nudge-unit-id') || '').trim().slice(0, 200)
+    if (!UNIT_KIND.test(kind) || !id) return null
+    const label = (node.getAttribute('data-nudge-unit-label') || '').trim().replace(/\s+/g, ' ').slice(0, 200) || textOf(node).slice(0, 80) || id
+    return { kind, id, label }
+  }
+  function unitsIn(scope, attr, max) {
+    const out = []
+    for (const n of scope.querySelectorAll(`[data-nudge-unit][${attr}]`)) {
+      const u = unitOf(n)
+      if (u && !out.some(o => o.u.id === u.id)) out.push({ u, n })
+      if (out.length >= max) break
+    }
+    return out
+  }
+  // what the page says it is showing: travels with every nudge on it, so a
+  // nudge on a heading still names the variant (or record) it belongs to
+  const pageContext = () => { const c = unitsIn(document, 'data-nudge-unit-current', 4).map(x => x.u); return c.length ? c : null }
+  let declaredBusy = false
+  function declaredReport(btn, state, detail) {
+    btn.setAttribute('data-nudge-state', state)
+    try { btn.dispatchEvent(new CustomEvent('groundworks-nudge:sent', { bubbles: true, detail: JSON.stringify({ state, ...detail }) })) } catch { /* page gone */ }
+  }
+  // a quiet page reports in its own words; Nudge's toasts would only repeat it
+  const say = (kind, text) => { if (!quietPage()) notify(kind, text) }
+  function onDeclaredSend(e) {
+    if (!e.isTrusted || e.button !== 0 || mode === 'off' || inOverlay(e)) return
+    const back = e.target instanceof Element && e.target.closest('[data-nudge-withdraw]')
+    if (back) { withdrawDeclared(back); return }
+    const btn = e.target instanceof Element && e.target.closest('[data-nudge-send]')
+    if (!btn || btn.disabled) return
+    sendDeclared(btn).catch((error) => {
+      console.warn('[groundworks-nudge] declared send failed', error)
+      declaredReport(btn, 'failed', { reason: 'error' })
+      say('alert', 'Send failed — nothing delivered')
+    }).finally(() => { declaredBusy = false })
+  }
+  async function sendDeclared(btn) {
+    if (declaredBusy) return
+    declaredBusy = true
+    const scope = btn.closest('[data-nudge-scope]') || document
+    const chosen = unitsIn(scope, 'data-nudge-unit-selected', 12)
+    if (!chosen.length) { declaredReport(btn, 'failed', { reason: 'nothing_selected' }); return }
+    const id = btn.getAttribute('data-nudge-send') || ''
+    const label = (btn.getAttribute('data-nudge-send-label') || textOf(btn)).slice(0, 40)
+    const intent = INTENT_ID.test(id) && label ? { id, label } : null
+    const field = scope.querySelector('[data-nudge-text]')
+    const text = (field && 'value' in field ? field.value : '').trim()
+    declaredReport(btn, 'sending', {})
+    await sourceReady
+    if (!await ensureSource()) { declaredReport(btn, 'failed', { reason: 'source' }); say('alert', 'Tab registration unavailable — try again'); return }
+    const ctx = (n) => { const selector = cssPath(n); const r = n.getBoundingClientRect(); return { ...elementContext(n, selector, sourceHint(n)), rect: { x: r.left, y: r.top, w: r.width, h: r.height } } }
+    const payload = {
+      text, author,
+      url: location.href, title: document.title,
+      viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
+      ua: navigator.userAgent,
+      target: ctx(chosen[0].n),
+      targets: chosen.length > 1 ? chosen.map(c => ctx(c.n)) : null,
+      annotations: null,
+      units: chosen.map(c => c.u),
+      intent,
+      context: pageContext(),
+      console: null, screenshot: null, screenshotFull: null,
+      browserSource,
+      submissionId: crypto.randomUUID().replaceAll('-', ''),
+      submissionCreatedAt: new Date().toISOString(),
+    }
+    let result
+    try { result = await boundedReply(queueRequest('submit', { payload }), 5000) }
+    catch { result = await submitDirect(payload) } // same submissionId: the bridge deduplicates
+    if (!result?.ok) { declaredReport(btn, 'failed', { reason: result?.error || 'rejected' }); say('alert', `${queueReason(result?.error)} — nothing delivered`); return }
+    const what = `${result.id} · ${intent?.label || 'Nudge'}`
+    if (result.queued) say('clock', `${what} — queued; see status`)
+    else if (agentLive && agentWake === 'pull') say('clock', `${what} — arrives with the next message`)
+    else if (agentLive) say('send', `${what} — agent working`)
+    else say('clock', `${what} — saved, no agent`)
+    declaredReport(btn, result.queued || !agentLive ? 'queued' : 'sent', { id: result.id, label: labelFor(result.id), agent: agentLive })
+  }
+  const labelFor = (id) => { const p = allPins.find(x => x.id === id); return p ? numOf(p) : null }
+  // ---------- declared status: what became of the page's own nudges ----------
+  // Every change of the nudge list or the agent's presence is told to the page as
+  // `groundworks-nudge:status` on document (detail: JSON string) for the nudges
+  // that carry units on this page: waiting (no agent listens), received (a pull
+  // agent gets it with its next message), working (a live agent has it), done.
+  // A withdrawn nudge simply leaves the list. The page may ask again with
+  // `groundworks-nudge:status-request` (it mounted after the last report).
+  let lastStatus = ''
+  function declaredStatus() {
+    const live = wsOk && agentLive
+    const nudges = allPins.filter(p => p.units?.length && samePage(p.url) && (p.status === 'open' || p.status === 'resolved')).slice(-20).map(p => ({
+      id: p.id, label: numOf(p), intent: p.intent || null, text: p.text || '', units: p.units.map(u => ({ id: u.id, label: u.label })),
+      createdAt: p.createdAt, resolvedAt: p.resolvedAt || null, amendments: p.amendments?.length || 0,
+      state: p.status === 'resolved' ? 'done' : !live ? 'waiting' : agentWake === 'pull' ? 'received' : 'working',
+    }))
+    return { ready: mode !== 'off', bridge: wsOk, agent: live ? (agentLabel ? splitLabel(agentLabel).name : 'Agent') : null, nudges }
+  }
+  function emitStatus(force = false) {
+    // updatePill runs during start-up too, before every list below exists
+    try {
+      if (dead) return
+      const detail = JSON.stringify(declaredStatus())
+      if (!force && detail === lastStatus) return
+      lastStatus = detail
+      document.dispatchEvent(new CustomEvent('groundworks-nudge:status', { detail }))
+    } catch { /* not started yet, or the page is gone */ }
+  }
+  function onStatusRequest() { emitStatus(true) }
+  // `data-nudge-withdraw="<nudge id>"`: a trusted click pulls one of this page's
+  // open declared nudges back (the same withdrawal as the History ×), so the page
+  // can offer to change it. Reported as `groundworks-nudge:withdrawn` on document.
+  async function withdrawDeclared(btn) {
+    const id = btn.getAttribute('data-nudge-withdraw') || ''
+    const p = allPins.find(x => x.id === id && x.status === 'open' && x.units?.length && samePage(x.url))
+    // on document: the page usually repaints the button away before the bridge answers
+    const report = (detail) => { try { document.dispatchEvent(new CustomEvent('groundworks-nudge:withdrawn', { detail: JSON.stringify({ id, ...detail }) })) } catch { /* page gone */ } }
+    if (!p) { report({ ok: false, reason: 'not_open' }); return }
+    try {
+      const r = await fetch(`${HTTP}/comments/${id}`, { method: 'DELETE' })
+      const body = await r.json().catch(() => ({}))
+      report({ ok: r.ok, notified: !!body.notified, agent: body.agent || null })
+    } catch { report({ ok: false, reason: 'bridge' }) }
   }
 
   // ---------- resolve-with-proof: after-screenshot on request ----------
@@ -1332,6 +1502,7 @@
     pagePins = all.filter(p => samePage(p.url) && p.status === 'open')
     pageDone = all.filter(p => samePage(p.url) && p.status === 'resolved').slice(-8).reverse()
     updatePill()
+    emitStatus()
     renderDots()
     // the History popover was open when the reload hit — reopen it, but only on
     // the first list (never pop it up minutes later out of nowhere)
@@ -1477,6 +1648,7 @@
   const numOf = (p) => (p.label ?? p.id.replace(/^(?:pin|nudge)_/, ''))
   // speaking label for text-less prompts: WHAT is marked, not just "a mark"
   function markLabel(p) {
+    if (p.units?.length) return (p.intent ? p.intent.label + ': ' : '') + p.units.map(u => u.label).join(' · ').slice(0, 90)
     if (p.targets?.length) return `Mark: ${p.targets.length} elements`
     const t = (p.target?.innerText || '').trim()
     if (t) return `Mark: “${t.length > 48 ? t.slice(0, 48) + '…' : t}”`
@@ -1675,9 +1847,10 @@
     if (!path.includes(queue) && !path.includes(pill.querySelector('.count'))) hideQueue()
     if (whoMenu.classList.contains('on') && !path.includes(whoMenu) && !path.includes(pill.querySelector('.who'))) whoMenu.classList.remove('on')
   }
-  document.addEventListener('pointerdown', onDocPointerDown, true)
+  window.addEventListener('pointerdown', onDocPointerDown, true)
 
   function updatePill() {
+    emitStatus()
     const dot = pill.querySelector('.status')
     // A pull owner IS live (heartbeating) but does NOT auto-start on a new
     // nudge — the icon stays green (honest: an agent owns this host), the TEXT
@@ -1806,12 +1979,18 @@
     if (e.composedPath().some(isEditable) || isEditable(document.activeElement) || isEditable(root.activeElement)) return
     if (whoMenu.classList.contains('on') || queue.classList.contains('on') || statusMenu.classList.contains('on')) return
     const k = e.key.toLowerCase()
+    if ((k === 'p' || k === 'f') && tucked()) showOnQuiet(true)
     if (k === 'p') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'picking' ? 'idle' : 'picking') }
     else if (k === 'f') { e.preventDefault(); e.stopPropagation(); setMode(mode === 'drawing' ? 'idle' : 'drawing') }
   }
-  document.addEventListener('mousemove', onMove, true)
-  document.addEventListener('pointerdown', onClick, true)
-  document.addEventListener('click', onClickSuppress, true)
+  // Window capture, not document: a page that stops presses inside its own
+  // chrome at window capture (the sandbox variant bar shields its rows) would
+  // otherwise keep picks there from ever reaching Nudge (2026-11-16).
+  window.addEventListener('mousemove', onMove, true)
+  window.addEventListener('pointerdown', onClick, true)
+  window.addEventListener('click', onClickSuppress, true)
+  window.addEventListener('click', onDeclaredSend, true)
+  document.addEventListener('groundworks-nudge:status-request', onStatusRequest)
   // Window capture keeps page shortcuts ahead of document-capture dialogs.
   // Earlier page listeners on window can still consume keys. page-hook.js
   // fences keys from Nudge chrome at document_start, before those listeners;
@@ -1897,6 +2076,13 @@
       return
     }
     if (msg.type === 'nudge-toggle') {
+      // on a quiet page the icon shows or hides the toolbar; the bridge stays on
+      if (quietPage() && mode !== 'off') {
+        showOnQuiet(!shownOnQuiet)
+        if (!shownOnQuiet && mode !== 'idle') setMode('idle'); else applyChrome()
+        updatePill()
+        return
+      }
       const off = mode !== 'off'
       persistOff(off) // remember first, then switch — the other tabs follow via onChanged
       setMode(off ? 'off' : 'idle')
@@ -1952,11 +2138,15 @@
       clearTimeout(retryTimer)
       try { if (sock) { sock.onclose = null; sock.onerror = null; sock.close() } } catch { /* already dead */ }
       document.removeEventListener('visibilitychange', onVisibility)
-      document.removeEventListener('mousemove', onMove, true)
-      document.removeEventListener('pointerdown', onClick, true)
-      document.removeEventListener('click', onClickSuppress, true)
+      window.removeEventListener('mousemove', onMove, true)
+      window.removeEventListener('pointerdown', onClick, true)
+      window.removeEventListener('click', onClickSuppress, true)
+      window.removeEventListener('click', onDeclaredSend, true)
+      document.removeEventListener('groundworks-nudge:status-request', onStatusRequest)
+      chromeWatch.disconnect()
+      document.documentElement.removeAttribute('data-nudge-send-ready')
       window.removeEventListener('keydown', onWinKeyDown, true)
-      document.removeEventListener('pointerdown', onDocPointerDown, true)
+      window.removeEventListener('pointerdown', onDocPointerDown, true)
       for (const t of MOAT_EVENTS) window.removeEventListener(t, swallowMoat, true)
       for (const t of CHROME_POINTER_EVENTS) window.removeEventListener(t, swallowChromePointer, true)
       host.remove()

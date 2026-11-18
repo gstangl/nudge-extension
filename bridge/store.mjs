@@ -146,6 +146,10 @@ const payloadSignature = (payload) => crypto.createHash('sha256').update(canonic
   title: cap(payload?.title, 300), ua: cap(payload?.ua, 300), viewport: sanitizeRect(payload?.viewport),
   annotations: payload?.annotations || null, console: payload?.console || null,
   screenshot: payload?.screenshot || null, screenshotFull: payload?.screenshotFull || null,
+  // additive (bridge 0.21): absent fields leave earlier signatures unchanged
+  ...(sanitizeUnits(payload?.units) ? { units: sanitizeUnits(payload.units) } : {}),
+  ...(sanitizeIntent(payload?.intent) ? { intent: sanitizeIntent(payload.intent) } : {}),
+  ...(sanitizeUnits(payload?.context, 4) ? { context: sanitizeUnits(payload.context, 4) } : {}),
 })).digest('hex')
 // 0.18 receipts intentionally covered fewer fields and insertion order. Keep
 // their existing no-mutation replay guarantee; never call them v2 image proof.
@@ -195,6 +199,28 @@ function sanitizeTargets(targets) {
     outerHTML: cap(t?.outerHTML, 1200),
     styles: sanitizeStyles(t?.styles),
   }))
+}
+
+// Units (data-nudge-unit): blocks the PAGE declared as one thing to point at,
+// named by its own id and label. Intent: what the nudge on them is FOR, chosen
+// from the choices the page offered. Context: the units the page said it was
+// showing. All three are opaque to Nudge — the owning agent reads them.
+const UNIT_KIND = /^[A-Za-z0-9_.:-]{1,64}$/
+const INTENT_ID = /^[A-Za-z0-9_-]{1,32}$/
+function sanitizeUnits(units, max = 12) {
+  if (!Array.isArray(units)) return null
+  const out = []
+  for (const u of units.slice(0, max)) {
+    if (!u || typeof u !== 'object' || !UNIT_KIND.test(String(u.kind || ''))) continue
+    const id = cap(u.id, 200).trim()
+    if (!id) continue
+    out.push({ kind: String(u.kind), id, label: cap(u.label, 200).trim() || id })
+  }
+  return out.length ? out : null
+}
+function sanitizeIntent(intent) {
+  if (!intent || typeof intent !== 'object' || !INTENT_ID.test(String(intent.id || ''))) return null
+  return { id: String(intent.id), label: cap(intent.label, 40).trim() || String(intent.id) }
 }
 
 // ---------- current selection (ephemeral, latest-wins) ----------
@@ -316,6 +342,10 @@ export function addPin(payload, owner, receipt = null) {
     target: sanitizeTarget(payload.target),
     targets: sanitizeTargets(payload.targets),
     annotations: payload.annotations?.map(a => ({ type: 'lasso', points: a.points.map(p => [...p]) })) || null,
+    units: sanitizeUnits(payload.units),
+    // an intent is only ever about units: without them it has nothing to act on
+    intent: sanitizeUnits(payload.units) ? sanitizeIntent(payload.intent) : null,
+    context: sanitizeUnits(payload.context, 4),
     console: Array.isArray(payload.console) ? payload.console.slice(-20).map(l => cap(l, 500)) : null,
   }
   if (payload.screenshot) pin.screenshot = saveImage(id, '', payload.screenshot, crop)
@@ -523,11 +553,12 @@ export function pruneWithdrawn(maxAgeMs = 24 * 3600e3) {
 // ---------- projections (one per consumer, together on purpose) ----------
 /** HTTP GET /comments — structured summary for scripts/tools. */
 export function pinSummary(p) {
-  return { id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt, browserSource: p.browserSource || undefined, afterBrowserSource: p.afterBrowserSource || undefined }
+  return { id: p.id, label: labelOf(p.id), status: p.status, author: p.author, owner: p.owner?.label, text: p.text, amendments: p.amendments || undefined, url: p.url, selector: p.target?.selector, source: p.target?.source, targets: p.targets?.length || undefined, units: p.units || undefined, intent: p.intent || undefined, context: p.context || undefined, hasConsole: !!p.console?.length, hasEvidence: !!p.screenshotAfter, createdAt: p.createdAt, browserSource: p.browserSource || undefined, afterBrowserSource: p.afterBrowserSource || undefined }
 }
 // speaking label for text-less prompts — same wording as the extension queue
 // (label parity: browser and agent describe a mark identically)
 export function markLabel(p) {
+  if (p.units?.length) return `Mark: ${p.units.map(u => u.label).join(' · ')}`
   if (p.targets?.length) return `Mark: ${p.targets.length} elements`
   const t = (p.target?.innerText || '').trim()
   if (t) return `Mark: “${t.slice(0, 48)}${t.length > 48 ? '…' : ''}”`
@@ -538,8 +569,11 @@ export function pinLine(p) {
   const route = (() => {
     try { const u = new URL(p.url); return (u.pathname + u.search + u.hash).slice(0, 60) } catch { return p.url.slice(0, 60) }
   })()
-  const text = !p.text ? `[${markLabel(p)} — "this one"]` : (p.text.length > 80 ? `${p.text.slice(0, 80)}…` : p.text)
-  const n = p.targets?.length ? ` · ${p.targets.length} elements` : ''
+  const said = !p.text ? '' : (p.text.length > 80 ? `${p.text.slice(0, 80)}…` : p.text)
+  const text = p.intent
+    ? `[${p.intent.id}: ${(p.units || []).map(u => u.label).join(' · ')}]${said ? ` ${said}` : ''}`
+    : said || `[${markLabel(p)} — "this one"]`
+  const n = p.targets?.length && !p.units?.length ? ` · ${p.targets.length} elements` : ''
   // id first (that is what commits and the inbox use), label in brackets — the
   // agent needs both to map "Nudge 47" onto the file it has to open
   return `${p.id} (#${labelOf(p.id)}) · ${p.status} · ${text}${n} · ${route}`
@@ -560,6 +594,7 @@ export function pinForClient(p) {
       innerText: (p.target?.innerText || '').slice(0, 80) || undefined, // speaking queue label
     },
     targets: p.targets?.map(t => ({ selector: t.selector })) || undefined, // one dot per element
+    units: p.units || undefined, intent: p.intent || undefined, // speaking queue label
   }
 }
 
@@ -576,8 +611,12 @@ function writeInboxMirror(pin) {
   const many = pin.targets?.length
     ? `\n\n## Elements (${pin.targets.length})\n${pin.targets.map((t, i) => `${i + 1}. \`${t.selector}\`${t.source ? ` — \`${t.source}\`` : ''}`).join('\n')}\n`
     : ''
+  const unitLine = (u) => `\`${u.id}\` — ${u.label} (${u.kind})`
+  const intentPart = pin.intent ? `\n\n## Intent\n\n\`${pin.intent.id}\` — ${pin.intent.label}\n` : ''
+  const unitsPart = pin.units?.length ? `\n## Units (${pin.units.length})\n${pin.units.map((u, i) => `${i + 1}. ${unitLine(u)}`).join('\n')}\n` : ''
+  const contextPart = pin.context?.length ? `\n## Page shows\n${pin.context.map(u => `- ${unitLine(u)}`).join('\n')}\n` : ''
   const after = pin.screenshotAfter ? `\n## Evidence (after)\n\n![after](../${pin.screenshotAfter})\n` : ''
-  const quote = pin.text || `_(${markLabel(pin)} — reference for "this one" in chat)_`
+  const quote = pin.text || (pin.intent ? `_(${pin.intent.label} — no further words)_` : `_(${markLabel(pin)} — reference for "this one" in chat)_`)
   // follow-ups the user appended after sending — same nudge, later thoughts
   const amends = pin.amendments?.length
     ? '\n' + pin.amendments.map(a => `\n> **Amendment${a.at ? ` (${a.at.slice(11, 16)})` : ''}:** ${a.text}`).join('') + '\n'
@@ -585,5 +624,5 @@ function writeInboxMirror(pin) {
   fs.writeFileSync(path.join(INBOX_DIR, `${pin.id}.md`),
     // heading carries BOTH: the id (this file's name, what commits cite) and the
     // label the user saw on the pill — so "Nudge 47" is greppable back to nudge_1047
-    `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}${provenance}${afterProvenance}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${many}${con}${after}`)
+    `# ${pin.id} (#${labelOf(pin.id)}) - ${pin.status}\n\n> ${quote}\n${amends}\n- url: ${pin.url}\n- selector: \`${pin.target?.selector || '-'}\`${src}${who}${owns}${provenance}${afterProvenance}\n- created: ${pin.createdAt}\n${pin.screenshot ? `\n![screenshot](../${pin.screenshot})\n` : ''}${intentPart}${unitsPart}${contextPart}${unitsPart ? '' : many}${con}${after}`)
 }

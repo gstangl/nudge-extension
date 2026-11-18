@@ -101,7 +101,7 @@ separate installation gate, not proven by dragging this in-page toolbar.
   This is implementation verification, not Safari or native-app acceptance.
   If a default side port is occupied, set `NUDGE_PARITY_BRIDGE_PORT` and
   `NUDGE_PARITY_PAGE_PORT` to free isolated ports; leave the existing listener alone.
-- `node test/run-browser-regression.mjs --headless` — serial isolated A/F/L/M/O/P/Q/N/X/Y/Z/I
+- `node test/run-browser-regression.mjs --headless` — serial isolated A/F/L/M/O/P/Q/U/N/X/Y/Z/I
   regression with native startup disabled before loading. Omit `--headless` for
   visible Chromium. Never run browser suites concurrently: focus and ports are
   shared. Per-suite logs and the exact staged resource digest are retained.
@@ -162,6 +162,19 @@ separate installation gate, not proven by dragging this in-page toolbar.
   a late-hydrating element is found again, and a mark whose element is gone keeps
   its frozen context instead of silently re-anchoring. Run after any change to the
   session snapshot, the pick context or the composer lifecycle.
+- `node test/units-intents.mjs` — **Suite U (Declared send)**, side port 4796,
+  page server 5197: a variant-bar fixture with re-rendered rounds, presses
+  shielded at window capture and clicks stopped at the bar. A trusted click on
+  the page's send button delivers the units selected across rounds, the
+  intent, the text and the page's current unit, and reports back on the
+  button; `data-nudge-send-label` names the intent; a scripted click, an empty
+  choice and Nudge switched off send nothing; an element nudge carries the
+  page context; the page hears its own nudges waiting and then done; a trusted
+  click on `data-nudge-withdraw` pulls an open one back (a scripted click and a
+  done nudge do not); a quiet page hides toolbar and toasts while sending, and
+  the icon or P show the toolbar without switching Nudge off. Run after any
+  change to the declared send, the payload, the page context, the status
+  report or the toolbar toggle.
 - `node test/amend.mjs` — **Suite N (Amend)**, side port 4788: append-only
   follow-ups to an open nudge — original immutable + inbox mirror, order,
   resolved refuses (409), a REAL watcher re-wakes on the amendment, and the
