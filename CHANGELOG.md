@@ -24,6 +24,54 @@ The changelog is English throughout.
 - Wait for fitted, stable toolbar geometry in the shared browser parity runner
   before sampling drag coordinates after wake-tag and font changes.
 
+## 1.0.0-beta.3 · Bridge 0.21.0 — 2026-11-18 (Declared send)
+
+Chrome numeric build: `1.0.0.4`; displayed version: `1.0.0-beta.3`.
+
+### Added
+- Declared send: a page that renders its own choice among its own things
+  (variants, records, cards) can hand it to the owning agent through Nudge.
+  It marks the things as units (`data-nudge-unit`, `data-nudge-unit-id`,
+  `data-nudge-unit-label`), the chosen ones with `data-nudge-unit-selected`, a
+  text field with `data-nudge-text` and a send button with
+  `data-nudge-send="<intent id>"` (words in `data-nudge-send-label` or the
+  button text). Nudge shows no tools for it: on a trusted click it sends the
+  selected units, the intent and the text, and reports back on the button
+  (`data-nudge-state`, event `groundworks-nudge:sent`). A click from a page
+  script sends nothing. While Nudge is on, `<html data-nudge-send-ready>` tells
+  the page it can rely on the send; switched off, Nudge neither sends nor
+  claims to be ready.
+- Declared status and withdrawal: the page hears what became of its own
+  nudges (`groundworks-nudge:status` on document: waiting, received, working,
+  done; it may ask again with `groundworks-nudge:status-request`) and can pull
+  an open one back with a trusted click on `data-nudge-withdraw="<id>"`
+  (reported as `groundworks-nudge:withdrawn`), so it can offer „change".
+- Quiet pages: `<html data-nudge-chrome="quiet">` keeps Nudge on — the
+  declared send and the bridge work — but hides its toolbar, markers and
+  toasts. There the toolbar icon and its shortcut only show or hide the
+  toolbar instead of switching Nudge off; P and F bring it up with their tool.
+- Page context: units marked `data-nudge-unit-current` travel with every
+  nudge on that page, so an element nudge names the record or variant on
+  screen.
+- Pick mode listens at window capture. A page that stops presses in its own
+  chrome at window capture (the sandbox variant bar does) no longer keeps
+  picks there from reaching Nudge.
+- Bridge 0.21.0 stores `units`, `intent` and `context` additively (bounded,
+  sanitized; an intent requires units) and names them in the inbox mirror,
+  `/comments`, the WebSocket list, the watcher wake line, the context hook and
+  the CLI record. Earlier receipts keep their signatures. A nudge with an
+  intent is a work order even without text.
+- The Skill explains units and intents: the project that declares them
+  defines what they mean.
+
+### Verification
+- Suite U (`test/units-intents.mjs`) drives a variant-bar fixture with
+  re-rendered rounds, a selection across them, presses shielded at window
+  capture and clicks stopped at the bar; it is part of the serial browser
+  regression; it also covers the status reports, the withdrawal and quiet
+  pages. Store units cover sanitizing, caps, intent conflicts under one
+  submission id, and every projection.
+
 ## 1.0.0-beta.2 · Bridge 0.20.1 — 2026-10-30 (HTTPS previews and reliable text input)
 
 Chrome numeric build: `1.0.0.3`; displayed version: `1.0.0-beta.2`.

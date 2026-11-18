@@ -207,7 +207,7 @@
         } finally { signal.removeEventListener('abort', onAbort) }
       }
       owner.handle(message, { fetch: transport, onDelivered: receipt => api.tabs.sendMessage(tabId, {
-        type: 'nudge-queue-delivered', receipt, hasText: !!message.payload?.text, url: sender.url || sender.tab?.url,
+        type: 'nudge-queue-delivered', receipt, hasText: !!(message.payload?.text || message.payload?.intent), url: sender.url || sender.tab?.url,
       }, sender.documentId ? { documentId: sender.documentId } : { frameId: 0 }) }).then(reply)
       return true
     })

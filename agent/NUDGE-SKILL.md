@@ -129,8 +129,9 @@ Then process one prompt at a time.
 
 1. Explicitly named Nudges go first, in the order named.
 2. Otherwise process open prompts oldest-first.
-3. A prompt without text is a reference anchor. Do not process or resolve it
-   until the user gives that numbered mark an instruction.
+3. A prompt without text and without an intent is a reference anchor. Do not
+   process or resolve it until the user gives that numbered mark an
+   instruction. A prompt with an intent is a work order even without text.
 4. A new Nudge never interrupts work already in flight. Finish the current
    bounded task, then pull it.
 5. An amendment belongs to the same work order. Re-read it before resolving.
@@ -142,6 +143,22 @@ Then process one prompt at a time.
 If a Nudge is withdrawn, stop immediately. Do not commit or resolve it. Revert
 partial work that has no independent reason to remain, then report that it was
 stopped.
+
+## Units and intents
+
+A page may declare its things as **units** (`data-nudge-unit`, with an id and
+a label) and render its own choice among them with a send button
+(`data-nudge-send="<intent>"`). Nudge carries that choice: the Nudge holds
+`units` (kind, id, label), the `intent` (id, label), the text from the page's
+field and the page's `context` — the units it said it was showing when the
+Nudge was sent, which also travels with ordinary element Nudges. Nudge assigns no meaning to a
+kind or an intent. The project that declares them defines what they mean: look
+for its rule (its agent instructions or the skill that owns that page, e.g. a
+sandbox playbook) before acting. Without such a rule, treat the intent label as
+the instruction, the units as its subject, and the text as the details.
+
+A Nudge with several units is one work order about all of them together. Never
+split it into one task per unit.
 
 ## Work and resolve
 

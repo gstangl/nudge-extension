@@ -26,6 +26,7 @@ function fixture() {
     document: { title: 'Fixture' }, window: { innerWidth: 800, innerHeight: 600, devicePixelRatio: 1 },
     location: { href: 'http://localhost/fixture' }, samePage: url => url === 'http://localhost/fixture', navigator: { userAgent: 'test' },
     author: 'test', contextOf: t => t.frozen, multiTargets: () => null, getConsole: async () => [],
+    pageContext: () => null,
     notify: vi.fn(), agentLive: false, agentWake: null, mode: 'composing',
     root: { activeElement: textarea }, multi: [], pillWant: {},
     queue: { classList: { contains: () => false } }, qExpanded: [], qAmendDraft: [],

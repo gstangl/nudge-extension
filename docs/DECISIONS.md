@@ -6,6 +6,31 @@ developer (or agent) would otherwise re-litigate. The timeless core lives in
 does NOT duplicate them. Newest first. **If two entries conflict, the newer
 date wins.**
 
+## A page's own choice travels as a declared send (2026-11-18)
+The Groundworks sandbox wanted to give the agent a verdict on its variants
+(develop these further, final, reject). Teaching Nudge the picker's markup
+would be exactly the framework adapter VISION rejects. A first version
+(2026-11-16) let any page declare units and intents and put them into Nudge's
+pick mode and composer; in the first hands-on test the owner found Nudge's
+tools in the way: choosing drafts is not pointing at elements, the DOM chips
+meant nothing there, and the highlight was not the bar's own. Now the page
+renders the choice itself and marks a send control (`data-nudge-send`, the
+selected units, a text field); Nudge only carries it, on a trusted click, and
+reports back. Kinds and intent ids stay opaque tokens whose meaning lives in
+the project that declares them (for the sandbox: its playbook). Transport
+stays Nudge's: the right session, wake, queue, delivery status and withdrawal
+are the same problem as for any nudge.
+The page also owns the follow-up (2026-11-18): Nudge reports each of its
+nudges' state to the page and withdraws one on a trusted click, and a page
+may declare itself quiet, so Nudge's toolbar and toasts stay out of sight
+while the bridge keeps working; the icon then shows or hides the toolbar
+instead of switching Nudge off.
+Rejected — a separate bridge or a page posting to the bridge itself: a second
+send path without Nudge's queue, ownership and connection truth, and any local
+page could hand the agent work the user never asked for. Rejected — writing
+the choice to the sandbox's own files for an agent to watch: it would rebuild
+wake, routing and feedback for every runtime.
+
 ## The bridge stays JavaScript — Rust experiment ended (2026-10-27)
 An experimental Rust bridge was built and compared against the JavaScript
 bridge under a frozen policy (issue #12, branch `agent/bridge-comparison`,
